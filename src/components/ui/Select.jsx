@@ -1,0 +1,29 @@
+export default function Select({ label, error, options = [], className = '', id, ...props }) {
+  const inputId = id || props.name;
+
+  return (
+    <div className={`w-full ${className}`}>
+      {label && (
+        <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-gray-700">
+          {label}
+        </label>
+      )}
+      <select
+        id={inputId}
+        className={[
+          'w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none transition-colors',
+          'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
+          error ? 'border-red-500' : 'border-gray-200',
+        ].join(' ')}
+        {...props}
+      >
+        {options.map(({ value, label: optionLabel }) => (
+          <option key={value} value={value}>
+            {optionLabel}
+          </option>
+        ))}
+      </select>
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}

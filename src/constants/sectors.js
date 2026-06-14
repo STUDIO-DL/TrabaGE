@@ -1,0 +1,18 @@
+export const SECTORS = [
+  'Tecnología',
+  'Finanzas',
+  'Salud',
+  'Educación',
+  'Construcción',
+  'Hostelería',
+  'Comercio',
+  'Transporte',
+  'Energía',
+  'Agricultura',
+  'Telecomunicaciones',
+  'Administración pública',
+  'Legal',
+  'Marketing',
+  'Manufactura',
+  'Otro',
+];
