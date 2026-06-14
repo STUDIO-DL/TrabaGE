@@ -23,3 +23,13 @@ export const formatRelativeTime = (date) => {
   if (diffDays < 7) return `${diffDays}d`;
   return formatDate(d);
 };
+
+export const formatDateRange = (start, end) => {
+  if (!start && !end) return '';
+  const startLabel = start
+    ? formatDate(start, { month: 'short', year: 'numeric' })
+    : '';
+  const endLabel = end ? formatDate(end, { month: 'short', year: 'numeric' }) : 'Actualidad';
+  if (!startLabel) return endLabel;
+  return `${startLabel} – ${endLabel}`;
+};

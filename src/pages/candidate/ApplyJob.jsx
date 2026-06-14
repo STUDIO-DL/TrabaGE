@@ -44,7 +44,7 @@ export default function ApplyJob() {
     <PageContainer title="Aplicar al empleo" backButton bottomNav={false}>
       <form onSubmit={handleSubmit} className="space-y-4 p-4">
         <Input label="Nombre completo" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-        <FileUpload label="Subir CV (PDF)" accept="application/pdf" fileType="document" />
+        <FileUpload label="Subir CV (PDF)" accept="application/pdf" fileType="document" maxSize="2 MB" />
         <Textarea label="Notas adicionales (opcional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" fullWidth loading={loading}>

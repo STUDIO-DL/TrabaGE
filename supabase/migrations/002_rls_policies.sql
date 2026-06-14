@@ -22,12 +22,18 @@ RETURNS TEXT AS $$
 $$ LANGUAGE sql SECURITY DEFINER;
 
 CREATE POLICY "Own role" ON user_roles FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Own role insert" ON user_roles FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Own role update" ON user_roles FOR UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
 
 CREATE POLICY "Public read candidates" ON candidate_profiles FOR SELECT USING (TRUE);
-CREATE POLICY "Own candidate write"    ON candidate_profiles FOR ALL   USING (user_id = auth.uid());
+CREATE POLICY "Own candidate insert" ON candidate_profiles FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Own candidate update" ON candidate_profiles FOR UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Own candidate delete" ON candidate_profiles FOR DELETE TO authenticated USING (user_id = auth.uid());
 
 CREATE POLICY "Public read companies"  ON company_profiles FOR SELECT USING (TRUE);
-CREATE POLICY "Own company write"      ON company_profiles FOR ALL   USING (user_id = auth.uid());
+CREATE POLICY "Own company insert" ON company_profiles FOR INSERT TO authenticated WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Own company update" ON company_profiles FOR UPDATE TO authenticated USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Own company delete" ON company_profiles FOR DELETE TO authenticated USING (user_id = auth.uid());
 
 CREATE POLICY "Own education" ON education FOR ALL USING (candidate_id = auth.uid());
 CREATE POLICY "Own experience" ON experience FOR ALL USING (candidate_id = auth.uid());

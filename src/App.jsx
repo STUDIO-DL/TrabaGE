@@ -17,6 +17,7 @@ import CompanySetup from './pages/setup/CompanySetup';
 
 import CandidateFeed from './pages/candidate/Feed';
 import CandidateJobs from './pages/candidate/Jobs';
+import CandidatePublish from './pages/candidate/Publish';
 import JobDetail from './pages/candidate/JobDetail';
 import ApplyJob from './pages/candidate/ApplyJob';
 import CandidateApplications from './pages/candidate/Applications';
@@ -34,6 +35,9 @@ import Verification from './pages/company/Verification';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CompanyPublicProfile from './pages/shared/CompanyPublicProfile';
+import PrivacyPolicy from './pages/shared/PrivacyPolicy';
+import TermsOfUse from './pages/shared/TermsOfUse';
+import HelpCenter from './pages/shared/HelpCenter';
 import NotFound from './pages/shared/NotFound';
 
 function AppToasts() {
@@ -61,6 +65,7 @@ export default function App() {
                 <Route path="/setup/candidate" element={<CandidateSetup />} />
                 <Route path="/candidate/feed" element={<CandidateFeed />} />
                 <Route path="/candidate/jobs" element={<CandidateJobs />} />
+                <Route path="/candidate/publish" element={<CandidatePublish />} />
                 <Route path="/candidate/jobs/:id" element={<JobDetail />} />
                 <Route path="/candidate/jobs/:id/apply" element={<ApplyJob />} />
                 <Route path="/candidate/applications" element={<CandidateApplications />} />
@@ -86,6 +91,9 @@ export default function App() {
 
             <Route path="/profile/:userId" element={<PublicProfile />} />
             <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
+            <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+            <Route path="/legal/terms" element={<TermsOfUse />} />
+            <Route path="/legal/help" element={<HelpCenter />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </NotificationProvider>

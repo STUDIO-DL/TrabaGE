@@ -1,23 +1,28 @@
+import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
-import EmptyState from '../../components/ui/EmptyState';
-import Spinner from '../../components/ui/Spinner';
+import EmptyState from '../../components/common/EmptyState';
+import { ApplicationListSkeleton } from '../../components/common/Skeleton';
+import { NoApplications } from '../../assets/empty-states';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import { useApplications } from '../../hooks/useApplications';
 
 export default function Applications() {
+  const navigate = useNavigate();
   const { applications, loading } = useApplications();
 
   return (
     <PageContainer title="Mis aplicaciones">
       <div className="p-4">
         {loading ? (
-          <Spinner fullscreen />
+          <ApplicationListSkeleton count={3} />
         ) : applications.length === 0 ? (
           <EmptyState
-            image="/images/no-applications.png"
-            title="Sin aplicaciones"
-            description="Cuando apliques a un empleo, aparecerá aquí."
+            image={NoApplications}
+            title="No has aplicado a ninguna oferta"
+            description="Aún no has enviado solicitudes. Explora ofertas y aplica a las que te interesen."
+            actionLabel="Ver empleos"
+            onAction={() => navigate('/candidate/jobs')}
           />
         ) : (
           applications.map((app) => (

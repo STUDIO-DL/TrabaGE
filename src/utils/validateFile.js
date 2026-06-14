@@ -1,6 +1,6 @@
 const MAX_SIZES = {
   avatar: 2 * 1024 * 1024,
-  document: 5 * 1024 * 1024,
+  document: 2 * 1024 * 1024,
   image: 5 * 1024 * 1024,
 };
 

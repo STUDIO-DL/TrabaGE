@@ -1,7 +1,7 @@
 import PageContainer from '../../components/layout/PageContainer';
 import ApplicantCard from '../../components/company/ApplicantCard';
-import EmptyState from '../../components/ui/EmptyState';
-import Spinner from '../../components/ui/Spinner';
+import EmptyState from '../../components/common/EmptyState';
+import { ApplicationListSkeleton } from '../../components/common/Skeleton';
 import { useApplications } from '../../hooks/useApplications';
 import { applicationsService } from '../../services/applications.service';
 import { storageService } from '../../services/storage.service';
@@ -20,7 +20,7 @@ export default function Applicants() {
     <PageContainer title="Candidatos" backButton bottomNav={false}>
       <div className="p-4">
         {loading ? (
-          <Spinner fullscreen />
+          <ApplicationListSkeleton count={3} />
         ) : applications.length === 0 ? (
           <EmptyState
             title="Sin candidatos"

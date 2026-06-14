@@ -19,6 +19,8 @@ export const authService = {
 
   logout: () => supabase.auth.signOut(),
 
+  deleteAccount: () => supabase.rpc('delete_own_account'),
+
   resetPassword: (email) =>
     supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${import.meta.env.VITE_APP_URL}/login`,

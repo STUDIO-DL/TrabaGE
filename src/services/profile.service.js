@@ -16,6 +16,12 @@ export const profileService = {
   upsertCandidateProfile: (data) =>
     supabase.from('candidate_profiles').upsert(data).select().single(),
 
+  updateCandidateProfile: (userId, data) =>
+    supabase.from('candidate_profiles').update(data).eq('user_id', userId).select().single(),
+
+  updateCandidateProfile: (userId, data) =>
+    supabase.from('candidate_profiles').update(data).eq('user_id', userId).select().single(),
+
   getCandidateFullProfile: (userId) =>
     supabase
       .from('candidate_profiles')

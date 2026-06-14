@@ -34,4 +34,29 @@
     @apply min-h-dvh pb-20;
     padding-bottom: calc(5rem + var(--safe-area-bottom));
   }
+
+  .profile-hero {
+    background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 45%, #172554 100%);
+  }
+
+  .profile-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(circle at 20% 120%, rgba(255, 255, 255, 0.12) 0%, transparent 45%),
+      radial-gradient(circle at 80% -20%, rgba(255, 255, 255, 0.08) 0%, transparent 40%);
+    pointer-events: none;
+  }
+
+  .profile-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: linear-gradient(to top, rgb(249 250 251) 0%, transparent 100%);
+    pointer-events: none;
+  }
 }

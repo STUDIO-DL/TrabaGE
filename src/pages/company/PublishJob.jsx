@@ -45,7 +45,7 @@ export default function PublishJob() {
   };
 
   return (
-    <PageContainer title="Publicar empleo" backButton bottomNav={false}>
+    <PageContainer title="Publicar empleo" backButton>
       <form onSubmit={handleSubmit} className="space-y-4 p-4">
         <Input label="Título" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
         <Textarea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />

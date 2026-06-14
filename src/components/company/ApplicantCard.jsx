@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import Avatar from '../ui/Avatar';
+import UserAvatar from '../common/UserAvatar';
 import Badge from '../ui/Badge';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
@@ -19,7 +19,7 @@ export default function ApplicantCard({ application, onDownloadCv, onContact }) 
   return (
     <Card className="mb-3">
       <div className="mb-3 flex items-start gap-3">
-        <Avatar src={candidate?.avatar_url} name={candidate?.full_name} size="md" />
+        <UserAvatar src={candidate?.avatar_url} alt={candidate?.full_name} size="md" />
         <div className="min-w-0 flex-1">
           <p className="font-semibold text-gray-900">{application.full_name || candidate?.full_name}</p>
           <p className="text-sm text-gray-500">{job?.title}</p>

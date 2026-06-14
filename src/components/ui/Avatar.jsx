@@ -22,7 +22,9 @@ export default function Avatar({ src, name = '', size = 'md', fallback, classNam
       <img
         src={src}
         alt={name || 'Avatar'}
-        className={`rounded-full object-cover ${sizes[size]} ${className}`}
+        loading="lazy"
+        decoding="async"
+        className={`rounded-full border border-slate-200 object-cover ${sizes[size]} ${className}`}
       />
     );
   }
@@ -32,14 +34,16 @@ export default function Avatar({ src, name = '', size = 'md', fallback, classNam
       <img
         src={fallbackSrc}
         alt={name || 'Avatar'}
-        className={`rounded-full object-cover ${sizes[size]} ${className}`}
+        loading="lazy"
+        decoding="async"
+        className={`rounded-full border border-slate-200 object-cover ${sizes[size]} ${className}`}
       />
     );
   }
 
   return (
     <div
-      className={`flex items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-700 ${sizes[size]} ${className}`}
+      className={`flex items-center justify-center rounded-full border border-slate-200 bg-primary-100 font-semibold text-primary-700 ${sizes[size]} ${className}`}
       aria-label={name || 'Avatar'}
     >
       {initials || '?'}

@@ -1,7 +1,8 @@
 import PageContainer from '../../components/layout/PageContainer';
 import NotificationItem from '../../components/notifications/NotificationItem';
-import EmptyState from '../../components/ui/EmptyState';
-import Spinner from '../../components/ui/Spinner';
+import EmptyState from '../../components/common/EmptyState';
+import { NotificationListSkeleton } from '../../components/common/Skeleton';
+import { NoNotifications } from '../../assets/empty-states';
 import Button from '../../components/ui/Button';
 import { useNotifications } from '../../hooks/useNotifications';
 
@@ -21,12 +22,12 @@ export default function Notifications() {
     >
       <div className="p-4">
         {loading ? (
-          <Spinner fullscreen />
+          <NotificationListSkeleton count={5} />
         ) : notifications.length === 0 ? (
           <EmptyState
-            image="/images/no-notifications.png"
-            title="Sin notificaciones"
-            description="Te avisaremos cuando haya novedades."
+            image={NoNotifications}
+            title="No tienes notificaciones"
+            description="Cuando recibas notificaciones importantes, las verás aquí."
           />
         ) : (
           notifications.map((n) => (
