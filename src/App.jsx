@@ -35,9 +35,10 @@ import Verification from './pages/company/Verification';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
 import CompanyPublicProfile from './pages/shared/CompanyPublicProfile';
+import DemoCompanyEntry from './pages/demo/DemoCompanyEntry';
+import HelpCenter from './pages/HelpCenter';
 import PrivacyPolicy from './pages/shared/PrivacyPolicy';
 import TermsOfUse from './pages/shared/TermsOfUse';
-import HelpCenter from './pages/shared/HelpCenter';
 import NotFound from './pages/shared/NotFound';
 
 function AppToasts() {
@@ -57,6 +58,7 @@ export default function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/demo/company" element={<DemoCompanyEntry />} />
 
             <Route element={<ProtectedRoute />}>
               <Route path="/account-type" element={<AccountTypeSelect />} />
@@ -71,6 +73,7 @@ export default function App() {
                 <Route path="/candidate/applications" element={<CandidateApplications />} />
                 <Route path="/candidate/notifications" element={<CandidateNotifications />} />
                 <Route path="/candidate/profile" element={<CandidateProfile />} />
+                <Route path="/help" element={<HelpCenter />} />
               </Route>
 
               <Route element={<RoleRoute role="company" />}>
@@ -82,10 +85,12 @@ export default function App() {
                 <Route path="/company/notifications" element={<CompanyNotifications />} />
                 <Route path="/company/profile" element={<CompanyProfile />} />
                 <Route path="/company/verification" element={<Verification />} />
+                <Route path="/company/help" element={<HelpCenter />} />
               </Route>
 
               <Route element={<RoleRoute role="admin" />}>
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/help" element={<HelpCenter />} />
               </Route>
             </Route>
 

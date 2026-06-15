@@ -1,5 +1,6 @@
 import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
-import { IconBriefcase } from './ProfileIcons';
+import { PROFILE_SECTION_ICONS } from './ProfileIcons';
+import { Briefcase } from '../../constants/icons';
 import { formatDateRange } from '../../utils/formatDate';
 
 const PREVIEW_COUNT = 2;
@@ -11,7 +12,8 @@ export default function ExperienceSection({ items = [], isOwn, onAdd, onEdit, on
 
   return (
     <ProfileSectionCard
-      icon={IconBriefcase}
+      icon={PROFILE_SECTION_ICONS.experience}
+      iconTone="experience"
       title="Experiencia laboral"
       isOwn={isOwn}
       onAdd={onAdd}
@@ -25,6 +27,8 @@ export default function ExperienceSection({ items = [], isOwn, onAdd, onEdit, on
           title={item.position}
           subtitle={item.company}
           meta={formatDateRange(item.start_date, item.end_date) || undefined}
+          entryIcon={Briefcase}
+          entryIconTone="experience"
           isOwn={isOwn}
           onEdit={() => onEdit?.(item)}
           onDelete={() => onDelete?.(item.id)}

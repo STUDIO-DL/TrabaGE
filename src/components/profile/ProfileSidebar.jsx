@@ -1,5 +1,6 @@
 import { formatDate } from '../../utils/formatDate';
-import { IconGlobe, IconMail, IconUser } from './ProfileIcons';
+import AppIcon from '../common/AppIcon';
+import { Languages, Mail, User, ICON_COLORS, ICON_SIZES } from '../../constants/icons';
 
 export default function ProfileSidebar({ profile, email }) {
   const languages = profile?.languages ?? [];
@@ -10,7 +11,7 @@ export default function ProfileSidebar({ profile, email }) {
       <dl className="space-y-5">
         <div>
           <dt className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-gray-900">
-            <IconMail className="h-4 w-4 text-primary-600" />
+            <AppIcon icon={Mail} size={ICON_SIZES.default} className={ICON_COLORS.primary} />
             Correo electrónico
           </dt>
           <dd className="text-sm text-gray-500">{email || 'No especificado'}</dd>
@@ -18,7 +19,7 @@ export default function ProfileSidebar({ profile, email }) {
 
         <div>
           <dt className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-gray-900">
-            <IconGlobe className="h-4 w-4 text-primary-600" />
+            <AppIcon icon={Languages} size={ICON_SIZES.default} className={ICON_COLORS.primary} />
             Idiomas
           </dt>
           <dd className="space-y-1">
@@ -37,7 +38,7 @@ export default function ProfileSidebar({ profile, email }) {
 
         <div>
           <dt className="mb-1.5 flex items-center gap-2 text-sm font-semibold text-gray-900">
-            <IconUser className="h-4 w-4 text-primary-600" />
+            <AppIcon icon={User} size={ICON_SIZES.default} className={ICON_COLORS.primary} />
             Miembro desde
           </dt>
           <dd className="text-sm text-gray-500">{memberSince || 'No especificado'}</dd>

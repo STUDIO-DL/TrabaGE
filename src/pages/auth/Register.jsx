@@ -1,17 +1,23 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useAuth } from '../../hooks/useAuth';
 
 export default function Register() {
-  const { register } = useAuth();
+  const navigate = useNavigate();
+  const { register, enterPreviewMode } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  const handlePreview = () => {
+    enterPreviewMode();
+    navigate('/account-type', { replace: true });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -51,10 +57,30 @@ export default function Register() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-6 py-10">
       <h1 className="text-2xl font-bold text-gray-900">Crear cuenta</h1>
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <Input label="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <Input label="Confirmar contraseña" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+      <p className="mt-2 text-sm text-gray-500">Regístrate o explora la app en vista previa</p>
+
+      <Button className="mt-8" variant="secondary" fullWidth onClick={handlePreview}>
+        Explorar sin cuenta
+      </Button>
+
+      <div className="relative my-8">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-3 text-gray-400">o regístrate</span>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <Input label="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <Input
+          label="Confirmar contraseña"
+          type="password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+        />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <Button type="submit" fullWidth loading={loading}>
           Registrarse

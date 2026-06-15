@@ -27,10 +27,11 @@ export default function Feed() {
             <PostCard
               key={post.id}
               post={post}
-              authorName="Usuario"
-              authorHeadline=""
+              authorName={post.author_name ?? 'Usuario'}
+              authorHeadline={post.author_headline ?? ''}
               authorAvatar={post.author_avatar}
               authorType={post.author_type ?? 'candidate'}
+              authorCompany={post.author_company}
             />
           ))
         )}

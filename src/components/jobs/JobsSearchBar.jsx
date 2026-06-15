@@ -1,5 +1,6 @@
 import Input from '../ui/Input';
-import { IconSearch, IconFilter } from './JobIcons';
+import AppIcon from '../common/AppIcon';
+import { Filter, Search, ICON_SIZES } from '../../constants/icons';
 
 export default function JobsSearchBar({ query = '', onQueryChange, onFiltersToggle, filtersOpen = false }) {
   return (
@@ -11,7 +12,7 @@ export default function JobsSearchBar({ query = '', onQueryChange, onFiltersTogg
           value={query}
           onChange={(e) => onQueryChange?.(e.target.value)}
           placeholder="Buscar empleos por título, habilidad o palabra clave..."
-          icon={IconSearch}
+          icon={Search}
           className="mb-0"
         />
       </div>
@@ -26,7 +27,7 @@ export default function JobsSearchBar({ query = '', onQueryChange, onFiltersTogg
             : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50',
         ].join(' ')}
       >
-        <IconFilter className="h-5 w-5" />
+        <AppIcon icon={Filter} size={ICON_SIZES.default} />
         Filtros
       </button>
     </div>

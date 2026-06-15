@@ -3,6 +3,7 @@ import PageContainer from '../../components/layout/PageContainer';
 import EmptyState from '../../components/common/EmptyState';
 import { ApplicationListSkeleton } from '../../components/common/Skeleton';
 import { NoApplications } from '../../assets/empty-states';
+import CompanyNameWithBadge from '../../components/company/CompanyNameWithBadge';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import { useApplications } from '../../hooks/useApplications';
@@ -28,7 +29,11 @@ export default function Applications() {
           applications.map((app) => (
             <Card key={app.id} className="mb-3">
               <p className="font-semibold text-gray-900">{app.jobs?.title}</p>
-              <p className="text-sm text-gray-500">{app.jobs?.company_profiles?.company_name}</p>
+              <CompanyNameWithBadge
+                company={app.jobs?.company_profiles}
+                showUnverifiedLabel
+                className="mt-0.5"
+              />
               <Badge label={app.status} className="mt-2" />
             </Card>
           ))

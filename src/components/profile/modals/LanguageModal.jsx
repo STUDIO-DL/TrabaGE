@@ -3,6 +3,8 @@ import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Select from '../../ui/Select';
 import Button from '../../ui/Button';
+import AppIcon from '../../common/AppIcon';
+import { Save, ICON_SIZES } from '../../../constants/icons';
 import { LANGUAGE_LEVELS } from '../../../constants/languageLevels';
 
 const empty = { language: '', level: '' };
@@ -47,7 +49,8 @@ export default function LanguageModal({ isOpen, onClose, initial, onSave, loadin
           options={[{ value: '', label: 'Seleccionar' }, ...LANGUAGE_LEVELS]}
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" fullWidth loading={loading}>
+        <Button type="submit" fullWidth loading={loading} className="gap-2">
+          <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
           Guardar
         </Button>
       </form>

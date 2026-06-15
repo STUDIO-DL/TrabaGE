@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import { setOnboardingComplete } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const SLIDES = [
   {
@@ -20,6 +21,7 @@ const SLIDES = [
 
 export default function OnboardingFlow() {
   const navigate = useNavigate();
+  const { enterPreviewMode } = useAuth();
   const [step, setStep] = useState(0);
   const slide = SLIDES[step];
   const isLast = step === SLIDES.length - 1;
@@ -29,10 +31,16 @@ export default function OnboardingFlow() {
     navigate('/login', { replace: true });
   };
 
+  const handlePreview = () => {
+    setOnboardingComplete();
+    enterPreviewMode();
+    navigate('/account-type', { replace: true });
+  };
+
   return (
     <div className="flex min-h-dvh flex-col bg-white px-6 py-10">
-      <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <div className="mb-8 flex h-48 w-48 items-center justify-center rounded-3xl bg-primary-50 text-4xl">
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
+        <div className="mb-8 flex h-48 w-48 items-center justify-center rounded-3xl bg-primary-50 text-4xl font-bold text-primary-600">
           {step + 1}
         </div>
         <h1 className="text-2xl font-bold text-gray-900">{slide.title}</h1>
@@ -49,9 +57,14 @@ export default function OnboardingFlow() {
           ))}
         </div>
         {isLast ? (
-          <Button fullWidth onClick={finish}>
-            Comenzar
-          </Button>
+          <>
+            <Button fullWidth onClick={finish}>
+              Comenzar
+            </Button>
+            <Button variant="secondary" fullWidth onClick={handlePreview}>
+              Explorar sin cuenta
+            </Button>
+          </>
         ) : (
           <Button fullWidth onClick={() => setStep((s) => s + 1)}>
             Siguiente

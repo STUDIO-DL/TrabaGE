@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ProfileSectionCard from './ProfileSectionCard';
-import Input from '../ui/Input';
+import AutocompleteInput from '../ui/AutocompleteInput';
 import Button from '../ui/Button';
-import { IconSparkles } from './ProfileIcons';
+import AppIcon from '../common/AppIcon';
+import { Trash2, ICON_SIZES } from '../../constants/icons';
+import { PROFILE_SECTION_ICONS } from './ProfileIcons';
+import { SKILL_SUGGESTIONS, filterSkillSuggestions } from '../../constants/skills';
 
 const PREVIEW_COUNT = 8;
+const POPULAR_COUNT = 6;
 
 export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
   const [skillName, setSkillName] = useState('');
@@ -13,17 +17,35 @@ export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
   const footerLabel =
     items.length > 0 ? `Ver todas las habilidades (${items.length})` : undefined;
 
-  const handleAdd = async () => {
-    if (!skillName.trim()) return;
+  const existingNames = useMemo(() => items.map((item) => item.name), [items]);
+
+  const suggestions = useMemo(
+    () => filterSkillSuggestions(skillName, existingNames),
+    [skillName, existingNames],
+  );
+
+  const popularSuggestions = useMemo(() => {
+    const taken = new Set(existingNames.map((n) => n.trim().toLowerCase()));
+    return SKILL_SUGGESTIONS.filter((s) => !taken.has(s.toLowerCase())).slice(0, POPULAR_COUNT);
+  }, [existingNames]);
+
+  const addSkill = async (name) => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    if (existingNames.some((n) => n.toLowerCase() === trimmed.toLowerCase())) return;
+
     setAdding(true);
-    await onAdd?.(skillName.trim());
+    await onAdd?.(trimmed);
     setSkillName('');
     setAdding(false);
   };
 
+  const handleAdd = () => addSkill(skillName);
+
   return (
     <ProfileSectionCard
-      icon={IconSparkles}
+      icon={PROFILE_SECTION_ICONS.skills}
+      iconTone="skills"
       title="Habilidades principales"
       isOwn={isOwn}
       isEmpty={!items.length && !isOwn}
@@ -41,26 +63,49 @@ export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
               <button
                 type="button"
                 onClick={() => onDelete?.(item.id)}
-                className="ml-0.5 text-gray-400 hover:text-red-500"
+                className="ml-0.5 rounded p-0.5 text-gray-400 hover:bg-red-50 hover:text-red-500"
                 aria-label="Eliminar"
               >
-                ×
+                <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
               </button>
             )}
           </span>
         ))}
       </div>
+
       {isOwn && (
-        <div className="mt-4 flex gap-2 border-t border-gray-100 pt-4">
-          <Input
-            placeholder="Añadir habilidad"
-            value={skillName}
-            onChange={(e) => setSkillName(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAdd())}
-          />
-          <Button type="button" size="sm" loading={adding} onClick={handleAdd}>
-            Añadir
-          </Button>
+        <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+          <div className="flex gap-2">
+            <AutocompleteInput
+              value={skillName}
+              onChange={setSkillName}
+              onSelect={addSkill}
+              suggestions={suggestions}
+              placeholder="Escribe una habilidad"
+              disabled={adding}
+            />
+            <Button type="button" size="sm" loading={adding} onClick={handleAdd}>
+              Añadir
+            </Button>
+          </div>
+
+          {!skillName.trim() && popularSuggestions.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-medium text-gray-500">Sugerencias</p>
+              <div className="flex flex-wrap gap-2">
+                {popularSuggestions.map((skill) => (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => addSkill(skill)}
+                    className="rounded-full border border-dashed border-gray-300 bg-white px-3 py-1 text-xs text-gray-600 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700"
+                  >
+                    + {skill}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </ProfileSectionCard>

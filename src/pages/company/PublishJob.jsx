@@ -8,11 +8,13 @@ import Select from '../../components/ui/Select';
 import { CITIES } from '../../constants/cities';
 import { JOB_TYPES } from '../../constants/jobTypes';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
 
 export default function PublishJob() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isPreviewMode } = useAuth();
+  const { showToast } = useNotificationContext();
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -26,6 +28,12 @@ export default function PublishJob() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isPreviewMode) {
+      showToast('Modo vista previa: el empleo no se publicará', 'info');
+      return;
+    }
+
     setLoading(true);
     setError('');
 

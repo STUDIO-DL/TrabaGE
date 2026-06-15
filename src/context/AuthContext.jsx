@@ -4,6 +4,15 @@ import { authService } from '../services/auth.service';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
 import { clearOneSignalUserId, setOneSignalUserId } from '../config/onesignal';
 import { ROLE_HOME, ROLE_SETUP, ROLES } from '../constants/roles';
+import {
+  clearPreviewMode,
+  getPreviewMode,
+  getPreviewRole,
+  isPreviewActive,
+  PREVIEW_USER,
+  setPreviewModeActive,
+  setPreviewRoleStorage,
+} from '../constants/preview';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
 
@@ -22,6 +31,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
   const [setupComplete, setSetupComplete] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchRoleAndSetup = useCallback(async (userId, userRole) => {
@@ -35,6 +45,20 @@ export function AuthProvider({ children }) {
       setSetupComplete(Boolean(data?.setup_complete));
     } else {
       setSetupComplete(true);
+    }
+  }, []);
+
+  const hydratePreview = useCallback(() => {
+    setIsPreviewMode(true);
+    setUser(PREVIEW_USER);
+    setSession({ user: PREVIEW_USER });
+    const savedRole = getPreviewRole();
+    if (savedRole) {
+      setRole(savedRole);
+      setSetupComplete(true);
+    } else {
+      setRole(null);
+      setSetupComplete(false);
     }
   }, []);
 
@@ -62,24 +86,70 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
-    authService.getSession().then(({ data }) => {
-      if (!mounted) return;
-      hydrateUser(data.session).finally(() => {
+    if (getPreviewMode()) {
+      hydratePreview();
+      setLoading(false);
+      return undefined;
+    }
+
+    const authTimeout = setTimeout(() => {
+      if (mounted) setLoading(false);
+    }, 4000);
+
+    authService
+      .getSession()
+      .then(({ data }) => {
+        if (!mounted) return;
+        return hydrateUser(data.session);
+      })
+      .catch((err) => {
+        console.warn('[TrabaGE] No se pudo conectar con Supabase:', err?.message || err);
+      })
+      .finally(() => {
+        clearTimeout(authTimeout);
         if (mounted) setLoading(false);
       });
-    });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      if (getPreviewMode()) return;
       hydrateUser(newSession);
     });
 
     return () => {
       mounted = false;
+      clearTimeout(authTimeout);
       subscription.unsubscribe();
     };
-  }, [hydrateUser]);
+  }, [hydrateUser, hydratePreview]);
+
+  const enterPreviewMode = useCallback(() => {
+    clearPreviewMode();
+    setPreviewModeActive();
+    setIsPreviewMode(true);
+    setUser(PREVIEW_USER);
+    setSession({ user: PREVIEW_USER });
+    setRole(null);
+    setSetupComplete(false);
+  }, []);
+
+  const enterPreviewModeAsRole = useCallback((previewRole) => {
+    clearPreviewMode();
+    setPreviewModeActive();
+    setPreviewRoleStorage(previewRole);
+    setIsPreviewMode(true);
+    setUser(PREVIEW_USER);
+    setSession({ user: PREVIEW_USER });
+    setRole(previewRole);
+    setSetupComplete(true);
+  }, []);
+
+  const setPreviewRole = useCallback((nextRole) => {
+    setPreviewRoleStorage(nextRole);
+    setRole(nextRole);
+    setSetupComplete(true);
+  }, []);
 
   const login = useCallback(async (email, password) => {
     const { data, error } = await authService.login(email, password);
@@ -92,23 +162,40 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    if (isPreviewMode || getPreviewMode()) {
+      clearPreviewMode();
+      setIsPreviewMode(false);
+      setSession(null);
+      setUser(null);
+      setRole(null);
+      setSetupComplete(false);
+      return;
+    }
+
     await authService.logout();
     setSession(null);
     setUser(null);
     setRole(null);
     setSetupComplete(false);
-  }, []);
+  }, [isPreviewMode]);
 
   const refreshSetupStatus = useCallback(async () => {
+    if (isPreviewMode) {
+      setSetupComplete(true);
+      return;
+    }
     if (!user?.id || !role) return;
     await fetchRoleAndSetup(user.id, role);
-  }, [user, role, fetchRoleAndSetup]);
+  }, [user, role, fetchRoleAndSetup, isPreviewMode]);
 
   const getHomePath = useCallback(() => {
-    if (!role) return '/login';
-    if (!setupComplete && ROLE_SETUP[role]) return ROLE_SETUP[role];
-    return ROLE_HOME[role] || '/login';
-  }, [role, setupComplete]);
+    const activeRole = role ?? (getPreviewMode() ? getPreviewRole() : null);
+    if (!activeRole) return '/account-type';
+    if (!setupComplete && ROLE_SETUP[activeRole] && !isPreviewActive(isPreviewMode)) {
+      return ROLE_SETUP[activeRole];
+    }
+    return ROLE_HOME[activeRole] || '/login';
+  }, [role, setupComplete, isPreviewMode]);
 
   const value = useMemo(
     () => ({
@@ -117,10 +204,14 @@ export function AuthProvider({ children }) {
       role,
       setupComplete,
       loading,
-      isAuthenticated: Boolean(session),
+      isPreviewMode,
+      isAuthenticated: Boolean(session?.user) || isPreviewActive(isPreviewMode),
       login,
       register,
       logout,
+      enterPreviewMode,
+      enterPreviewModeAsRole,
+      setPreviewRole,
       refreshSetupStatus,
       getHomePath,
       setSetupComplete,
@@ -131,9 +222,13 @@ export function AuthProvider({ children }) {
       role,
       setupComplete,
       loading,
+      isPreviewMode,
       login,
       register,
       logout,
+      enterPreviewMode,
+      enterPreviewModeAsRole,
+      setPreviewRole,
       refreshSetupStatus,
       getHomePath,
     ],

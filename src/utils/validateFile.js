@@ -2,12 +2,14 @@ const MAX_SIZES = {
   avatar: 2 * 1024 * 1024,
   document: 2 * 1024 * 1024,
   image: 5 * 1024 * 1024,
+  verification: 10 * 1024 * 1024,
 };
 
 const ALLOWED_TYPES = {
   avatar: ['image/jpeg', 'image/png', 'image/webp'],
   document: ['application/pdf'],
   image: ['image/jpeg', 'image/png', 'image/webp'],
+  verification: ['application/pdf', 'image/png', 'image/jpeg'],
 };
 
 export const validateFile = (file, type = 'document') => {

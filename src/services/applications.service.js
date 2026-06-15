@@ -6,7 +6,7 @@ export const applicationsService = {
   getCandidateApplications: (candidateId) =>
     supabase
       .from('applications')
-      .select('*, jobs(title, company_profiles(company_name))')
+      .select('*, jobs(title, company_profiles(company_name, is_verified, verification_status))')
       .eq('candidate_id', candidateId)
       .order('applied_at', { ascending: false }),
 

@@ -3,6 +3,8 @@ import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Select from '../../ui/Select';
 import Button from '../../ui/Button';
+import AppIcon from '../../common/AppIcon';
+import { Save, ICON_SIZES } from '../../../constants/icons';
 import { CITIES } from '../../../constants/cities';
 
 export default function SettingsModal({ isOpen, onClose, profile, onSave, loading }) {
@@ -30,7 +32,8 @@ export default function SettingsModal({ isOpen, onClose, profile, onSave, loadin
         <p className="text-xs text-gray-500">
           Más opciones de cuenta estarán disponibles próximamente.
         </p>
-        <Button type="submit" fullWidth loading={loading}>
+        <Button type="submit" fullWidth loading={loading} className="gap-2">
+          <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
           Guardar cambios
         </Button>
       </form>

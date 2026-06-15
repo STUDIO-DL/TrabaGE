@@ -1,5 +1,7 @@
 import { useRef } from 'react';
 import Button from './Button';
+import AppIcon from '../common/AppIcon';
+import { Upload, ICON_SIZES } from '../../constants/icons';
 import { validateFile } from '../../utils/validateFile';
 
 export default function FileUpload({
@@ -39,8 +41,10 @@ export default function FileUpload({
         type="button"
         variant="secondary"
         loading={loading}
+        className="inline-flex items-center gap-2"
         onClick={() => inputRef.current?.click()}
       >
+        <AppIcon icon={Upload} size={ICON_SIZES.default} />
         {label}
       </Button>
       {maxSize && (

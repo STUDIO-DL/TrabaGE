@@ -1,5 +1,6 @@
+import AppIcon from '../common/AppIcon';
 import { JOB_SORT_OPTIONS } from '../../constants/jobSort';
-import { IconChevronDown } from './JobIcons';
+import { ChevronDown, ICON_COLORS, ICON_SIZES } from '../../constants/icons';
 
 export default function JobsToolbar({ count = 0, sort = 'recent', onSortChange }) {
   const sortLabel = JOB_SORT_OPTIONS.find((o) => o.value === sort)?.label ?? 'Más recientes';
@@ -24,7 +25,11 @@ export default function JobsToolbar({ count = 0, sort = 'recent', onSortChange }
             </option>
           ))}
         </select>
-        <IconChevronDown className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+        <AppIcon
+          icon={ChevronDown}
+          size={ICON_SIZES.default}
+          className={`pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 ${ICON_COLORS.inactive}`}
+        />
         <span className="sr-only">{sortLabel}</span>
       </label>
     </div>

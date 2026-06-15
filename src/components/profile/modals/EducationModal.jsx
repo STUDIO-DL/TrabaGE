@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
+import AppIcon from '../../common/AppIcon';
+import { Save, ICON_SIZES } from '../../../constants/icons';
 
 const empty = {
   institution: '',
@@ -62,7 +64,8 @@ export default function EducationModal({ isOpen, onClose, initial, onSave, loadi
           <Input label="Fin" type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" fullWidth loading={loading}>
+        <Button type="submit" fullWidth loading={loading} className="gap-2">
+          <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
           Guardar
         </Button>
       </form>

@@ -2,7 +2,10 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../hooks/useNotifications';
 import { ROLES } from '../../constants/roles';
+import { ICON_COLORS } from '../../constants/icons';
 import { NavIcon } from './NavIcons';
+import AppIcon from '../common/AppIcon';
+import { Plus, ICON_SIZES } from '../../constants/icons';
 
 const candidateNav = [
   { to: '/candidate/feed', label: 'Inicio', icon: 'home' },
@@ -15,7 +18,8 @@ const candidateNav = [
 const companyNav = [
   { to: '/company/feed', label: 'Inicio', icon: 'home' },
   { to: '/company/dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { to: '/company/publish-job', label: 'Publicar', icon: 'publish' },
+  { to: '/company/publish-job', label: 'Publicar', icon: 'publish', prominent: true },
+  { to: '/company/notifications', label: 'Notificaciones', icon: 'bell', showBadge: true },
   { to: '/company/profile', label: 'Perfil', icon: 'user' },
 ];
 
@@ -29,27 +33,60 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white pb-safe">
-      <div className="mx-auto flex max-w-lg items-stretch">
-        {items.map(({ to, label, icon, showBadge }) => (
-          <NavLink
-            key={to}
-            to={to}
-            className={({ isActive }) =>
-              [
-                'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[9px] font-medium leading-tight transition-colors sm:px-1 sm:text-[10px]',
-                isActive ? 'text-primary-600' : 'text-gray-500',
-              ].join(' ')
-            }
-          >
-            <span className="relative">
-              <NavIcon name={icon} className="h-6 w-6" />
-              {showBadge && unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-              )}
-            </span>
-            <span className="truncate">{label}</span>
-          </NavLink>
-        ))}
+      <div className="mx-auto flex max-w-lg items-end">
+        {items.map(({ to, label, icon, showBadge, prominent }) => {
+          if (prominent) {
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-1 px-0.5 pb-2 pt-1"
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={[
+                        'flex h-12 w-12 items-center justify-center rounded-2xl shadow-md transition-colors',
+                        isActive ? 'bg-primary-700' : 'bg-primary-600',
+                      ].join(' ')}
+                    >
+                      <AppIcon icon={Plus} size={ICON_SIZES.nav} className="text-white" />
+                    </span>
+                    <span
+                      className={[
+                        'truncate text-[9px] font-medium leading-tight sm:text-[10px]',
+                        isActive ? ICON_COLORS.primary : ICON_COLORS.inactive,
+                      ].join(' ')}
+                    >
+                      {label}
+                    </span>
+                  </>
+                )}
+              </NavLink>
+            );
+          }
+
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) =>
+                [
+                  'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[9px] font-medium leading-tight transition-colors sm:px-1 sm:text-[10px]',
+                  isActive ? ICON_COLORS.primary : ICON_COLORS.inactive,
+                ].join(' ')
+              }
+            >
+              <span className="relative">
+                <NavIcon name={icon} className="h-6 w-6" />
+                {showBadge && unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary-600 ring-2 ring-white" />
+                )}
+              </span>
+              <span className="truncate">{label}</span>
+            </NavLink>
+          );
+        })}
       </div>
     </nav>
   );

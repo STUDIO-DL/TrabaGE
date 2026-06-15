@@ -1,35 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 import UserAvatar from '../common/UserAvatar';
-import { IconBriefcase, IconLocation } from './ProfileIcons';
+import AppIcon from '../common/AppIcon';
+import { Briefcase, Camera, MapPin, Pencil, Save, X, ICON_SIZES } from '../../constants/icons';
+import { CITIES } from '../../constants/cities';
 
 const EMPTY = {
   name: 'Nombre no especificado',
   headline: 'Titular no especificado',
   city: 'Ubicación no especificada',
-  experience: 'Experiencia no especificada',
-  availability: 'Disponible para trabajar',
-  openToWork: 'Abierto a empleo',
+  years: 'Años de experiencia no especificados',
 };
 
-function IconCamera({ className = 'h-4 w-4' }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M6.827 6.175A2.31 2.31 0 0 1 5.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 0 0-1.134-.175 2.31 2.31 0 0 1-1.64-1.055l-.822-1.316a2.192 2.192 0 0 0-1.736-1.039 48.774 48.774 0 0 0-5.232 0 2.192 2.192 0 0 0-1.736 1.039l-.821 1.316Z"
-      />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0Z" />
-    </svg>
-  );
-}
+const YEAR_OPTIONS = Array.from({ length: 51 }, (_, i) => i);
 
-function IconPencil({ className = 'h-4 w-4' }) {
-  return (
-    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-    </svg>
-  );
+function formatYearsLabel(years) {
+  if (years == null || years === '') return EMPTY.years;
+  const n = Number(years);
+  if (Number.isNaN(n)) return EMPTY.years;
+  if (n === 0) return 'Sin experiencia previa';
+  return `${n} ${n === 1 ? 'año' : 'años'} de experiencia`;
 }
 
 function EditableHeroField({
@@ -69,9 +58,7 @@ function EditableHeroField({
   const Tag = as;
 
   if (!isOwn) {
-    return (
-      <Tag className={displayClassName}>{value || placeholder}</Tag>
-    );
+    return <Tag className={displayClassName}>{value || placeholder}</Tag>;
   }
 
   if (editing) {
@@ -93,15 +80,17 @@ function EditableHeroField({
             type="button"
             disabled={saving || !draft.trim()}
             onClick={save}
-            className="rounded-lg bg-white px-3 py-1 text-xs font-semibold text-primary-700 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-primary-700 disabled:opacity-50"
           >
+            {!saving && <AppIcon icon={Save} size={ICON_SIZES.sm} className="text-primary-700" />}
             {saving ? 'Guardando…' : 'Guardar'}
           </button>
           <button
             type="button"
             onClick={cancel}
-            className="rounded-lg px-3 py-1 text-xs font-medium text-blue-100 hover:text-white"
+            className="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-blue-100 hover:text-white"
           >
+            <AppIcon icon={X} size={ICON_SIZES.sm} />
             Cancelar
           </button>
         </div>
@@ -118,9 +107,187 @@ function EditableHeroField({
         className="mt-1 shrink-0 rounded-lg p-1.5 text-blue-100 opacity-80 hover:bg-white/10 hover:opacity-100"
         aria-label="Editar"
       >
-        <IconPencil />
+        <AppIcon icon={Pencil} size={ICON_SIZES.default} />
       </button>
     </div>
+  );
+}
+
+function EditableHeroSelect({
+  value,
+  placeholder,
+  isOwn,
+  onSave,
+  saving,
+  options,
+  formatDisplay,
+  icon: Icon,
+  className = '',
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? '');
+
+  useEffect(() => {
+    if (!editing) setDraft(value ?? '');
+  }, [value, editing]);
+
+  const display = formatDisplay(value);
+
+  if (!isOwn) {
+    return (
+      <p className={`flex items-center gap-1.5 text-sm text-blue-100 ${className}`}>
+        {Icon && <AppIcon icon={Icon} size={ICON_SIZES.default} className="shrink-0" />}
+        {display}
+      </p>
+    );
+  }
+
+  if (editing) {
+    return (
+      <div className={`flex flex-col gap-2 ${className}`}>
+        <div className="flex items-center gap-2">
+          {Icon && <AppIcon icon={Icon} size={ICON_SIZES.default} className="shrink-0 text-blue-100" />}
+          <select
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="min-w-0 flex-1 rounded-lg border-0 bg-white/15 px-3 py-2 text-sm text-white outline-none ring-2 ring-white/30"
+          >
+            <option value="" className="text-gray-900">
+              Seleccionar…
+            </option>
+            {options.map((option) => (
+              <option key={option.value} value={option.value} className="text-gray-900">
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={saving || draft === ''}
+            onClick={async () => {
+              await onSave?.(draft);
+              setEditing(false);
+            }}
+            className="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-primary-700 disabled:opacity-50"
+          >
+            {!saving && <AppIcon icon={Save} size={ICON_SIZES.sm} className="text-primary-700" />}
+            {saving ? 'Guardando…' : 'Guardar'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(value ?? '');
+              setEditing(false);
+            }}
+            className="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-blue-100 hover:text-white"
+          >
+            <AppIcon icon={X} size={ICON_SIZES.sm} />
+            Cancelar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`group flex items-center gap-2 ${className}`}>
+      <p className="flex min-w-0 flex-1 items-center gap-1.5 text-sm text-blue-100">
+        {Icon && <AppIcon icon={Icon} size={ICON_SIZES.default} className="shrink-0" />}
+        {display}
+      </p>
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="shrink-0 rounded-lg p-1.5 text-blue-100 opacity-80 hover:bg-white/10 hover:opacity-100"
+        aria-label="Editar"
+      >
+        <AppIcon icon={Pencil} size={ICON_SIZES.sm} />
+      </button>
+    </div>
+  );
+}
+
+function EditableHeroYearsBadge({ value, isOwn, onSave, saving }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? '');
+
+  useEffect(() => {
+    if (!editing) setDraft(value ?? '');
+  }, [value, editing]);
+
+  if (!isOwn) {
+    return (
+      <li className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm">
+        <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0" />
+        {formatYearsLabel(value)}
+      </li>
+    );
+  }
+
+  if (editing) {
+    return (
+      <li className="flex w-full flex-col gap-2 rounded-xl bg-white/10 p-3 text-xs backdrop-blur-sm sm:w-auto">
+        <div className="flex items-center gap-2">
+          <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0" />
+          <select
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            className="min-w-0 flex-1 rounded-lg border-0 bg-white/15 px-2 py-1.5 text-white outline-none ring-2 ring-white/30"
+          >
+            <option value="" className="text-gray-900">
+              Seleccionar…
+            </option>
+            {YEAR_OPTIONS.map((year) => (
+              <option key={year} value={String(year)} className="text-gray-900">
+                {year === 0 ? 'Sin experiencia previa' : `${year} ${year === 1 ? 'año' : 'años'}`}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            disabled={saving || draft === ''}
+            onClick={async () => {
+              await onSave?.(Number(draft));
+              setEditing(false);
+            }}
+            className="inline-flex items-center gap-1 rounded-lg bg-white px-3 py-1 text-xs font-semibold text-primary-700 disabled:opacity-50"
+          >
+            {!saving && <AppIcon icon={Save} size={ICON_SIZES.sm} className="text-primary-700" />}
+            {saving ? 'Guardando…' : 'Guardar'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(value ?? '');
+              setEditing(false);
+            }}
+            className="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-blue-100 hover:text-white"
+          >
+            <AppIcon icon={X} size={ICON_SIZES.sm} />
+            Cancelar
+          </button>
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <li className="group flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm">
+      <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0" />
+      <span>{formatYearsLabel(value)}</span>
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="rounded p-0.5 text-blue-100 opacity-80 hover:bg-white/10 hover:opacity-100"
+        aria-label="Editar años de experiencia"
+      >
+        <AppIcon icon={Pencil} size={12} />
+      </button>
+    </li>
   );
 }
 
@@ -133,12 +300,11 @@ export default function ProfileHero({
   savingField,
 }) {
   const inputRef = useRef(null);
-  const experienceCount = profile?.experience?.length ?? 0;
 
-  const experienceLabel =
-    experienceCount > 0
-      ? `${experienceCount} ${experienceCount === 1 ? 'experiencia' : 'experiencias'} registrada${experienceCount === 1 ? '' : 's'}`
-      : EMPTY.experience;
+  const cityOptions = CITIES.map((city) => ({ value: city, label: city }));
+
+  const showYearsBadge =
+    profile?.years_experience != null && profile?.years_experience !== '' || isOwn;
 
   return (
     <section className="profile-hero relative overflow-hidden px-4 pb-8 pt-6 text-white">
@@ -173,7 +339,7 @@ export default function ProfileHero({
                 {avatarLoading ? (
                   <span className="text-xs font-medium">…</span>
                 ) : (
-                  <IconCamera />
+                  <AppIcon icon={Camera} size={ICON_SIZES.default} />
                 )}
               </button>
             </>
@@ -205,23 +371,29 @@ export default function ProfileHero({
             />
           </div>
 
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-blue-100">
-            <IconLocation />
-            {profile?.city || EMPTY.city}
-          </p>
+          <div className="mt-2">
+            <EditableHeroSelect
+              value={profile?.city || ''}
+              placeholder={EMPTY.city}
+              isOwn={isOwn}
+              saving={savingField === 'city'}
+              onSave={(v) => onSaveField?.('city', v)}
+              options={cityOptions}
+              formatDisplay={(v) => v || EMPTY.city}
+              icon={MapPin}
+            />
+          </div>
 
-          <ul className="mt-4 flex flex-wrap gap-2">
-            <li className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm">
-              <IconBriefcase className="h-4 w-4 shrink-0" />
-              {experienceLabel}
-            </li>
-            <li className="rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm">
-              {EMPTY.availability}
-            </li>
-            <li className="rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm">
-              {EMPTY.openToWork}
-            </li>
-          </ul>
+          {showYearsBadge && (
+            <ul className="mt-4 flex flex-wrap gap-2">
+              <EditableHeroYearsBadge
+                value={profile?.years_experience}
+                isOwn={isOwn}
+                saving={savingField === 'years_experience'}
+                onSave={(v) => onSaveField?.('years_experience', v)}
+              />
+            </ul>
+          )}
         </div>
       </div>
     </section>

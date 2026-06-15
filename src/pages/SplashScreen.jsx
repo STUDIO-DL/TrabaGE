@@ -6,22 +6,20 @@ import Spinner from '../components/ui/Spinner';
 
 export default function SplashScreen() {
   const navigate = useNavigate();
-  const { loading, isAuthenticated, getHomePath } = useAuth();
+  const { isAuthenticated, role, getHomePath } = useAuth();
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (loading) return;
-
       if (isAuthenticated) {
-        navigate(getHomePath(), { replace: true });
+        navigate(role ? getHomePath() : '/account-type', { replace: true });
         return;
       }
 
       navigate(getOnboardingComplete() ? '/login' : '/onboarding', { replace: true });
-    }, 3000);
+    }, 2500);
 
     return () => clearTimeout(timer);
-  }, [loading, isAuthenticated, getHomePath, navigate]);
+  }, [isAuthenticated, role, getHomePath, navigate]);
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-primary-600 text-white">

@@ -3,7 +3,7 @@ import { useAuth } from './useAuth';
 import { notificationsService } from '../services/notifications.service';
 
 export function useNotifications() {
-  const { user } = useAuth();
+  const { user, isPreviewMode } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -11,6 +11,15 @@ export function useNotifications() {
 
   const fetchNotifications = useCallback(async () => {
     if (!user?.id) return;
+
+    if (isPreviewMode) {
+      setNotifications([]);
+      setUnreadCount(0);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -23,7 +32,7 @@ export function useNotifications() {
     setUnreadCount(countResult.count ?? 0);
     setError(listResult.error?.message ?? null);
     setLoading(false);
-  }, [user?.id]);
+  }, [user?.id, isPreviewMode]);
 
   const markAsRead = useCallback(
     async (id) => {

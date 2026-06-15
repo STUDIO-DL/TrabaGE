@@ -29,7 +29,7 @@ export const formatDateRange = (start, end) => {
   const startLabel = start
     ? formatDate(start, { month: 'short', year: 'numeric' })
     : '';
-  const endLabel = end ? formatDate(end, { month: 'short', year: 'numeric' }) : 'Actualidad';
+  const endLabel = end ? formatDate(end, { month: 'short', year: 'numeric' }) : 'Presente';
   if (!startLabel) return endLabel;
   return `${startLabel} – ${endLabel}`;
 };

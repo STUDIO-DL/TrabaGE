@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { IconBell } from '../layout/NavIcons';
+import AppIcon from '../common/AppIcon';
+import { Bell, ICON_SIZES } from '../../constants/icons';
 
 export default function JobsHeader() {
   return (
@@ -11,7 +12,7 @@ export default function JobsHeader() {
           className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
           aria-label="Notificaciones"
         >
-          <IconBell className="h-6 w-6" />
+          <AppIcon icon={Bell} size={ICON_SIZES.nav} />
         </Link>
       </div>
     </header>

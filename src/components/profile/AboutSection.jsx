@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import ProfileSectionCard from './ProfileSectionCard';
 import Button from '../ui/Button';
-import { IconUser } from './ProfileIcons';
+import AppIcon from '../common/AppIcon';
+import { Save, X, ICON_SIZES } from '../../constants/icons';
+import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 
 const PREVIEW_LENGTH = 180;
 
-export default function AboutSection({ about, isOwn, onSave, saving = false }) {
+export default function AboutSection({ about, isOwn, onSave, saving = false, publicView = false }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(about || '');
@@ -13,6 +15,25 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
   const hasContent = Boolean(about?.trim());
   const needsExpand = hasContent && about.length > PREVIEW_LENGTH;
   const displayText = hasContent && !expanded && needsExpand ? `${about.slice(0, PREVIEW_LENGTH)}…` : about;
+
+  if (publicView) {
+    if (!hasContent) return null;
+
+    return (
+      <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{displayText}</p>
+        {needsExpand && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-3 text-sm font-medium text-primary-600 hover:text-primary-700"
+          >
+            {expanded ? 'Ver menos' : 'Ver más'}
+          </button>
+        )}
+      </section>
+    );
+  }
 
   const startEdit = () => {
     setDraft(about || '');
@@ -31,7 +52,8 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
 
   return (
     <ProfileSectionCard
-      icon={IconUser}
+      icon={PROFILE_SECTION_ICONS.about}
+      iconTone="about"
       title="Sobre mí"
       isOwn={isOwn && !editing}
       onAdd={startEdit}
@@ -49,10 +71,12 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
             placeholder="Cuéntanos sobre ti…"
           />
           <div className="flex gap-2">
-            <Button type="button" size="sm" loading={saving} onClick={saveEdit}>
+            <Button type="button" size="sm" loading={saving} onClick={saveEdit} className="gap-1.5">
+              <AppIcon icon={Save} size={ICON_SIZES.sm} className="text-white" />
               Guardar
             </Button>
-            <Button type="button" size="sm" variant="ghost" onClick={cancelEdit}>
+            <Button type="button" size="sm" variant="ghost" onClick={cancelEdit} className="gap-1.5">
+              <AppIcon icon={X} size={ICON_SIZES.sm} />
               Cancelar
             </Button>
           </div>

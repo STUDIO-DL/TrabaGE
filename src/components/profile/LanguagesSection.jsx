@@ -1,5 +1,7 @@
 import ProfileSectionCard from './ProfileSectionCard';
-import { IconGlobe } from './ProfileIcons';
+import AppIcon from '../common/AppIcon';
+import { ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
+import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 
 /** Sidebar-only language management when editing own profile */
 export default function LanguagesSection({ items = [], isOwn, onAdd, onEdit, onDelete }) {
@@ -7,7 +9,8 @@ export default function LanguagesSection({ items = [], isOwn, onAdd, onEdit, onD
 
   return (
     <ProfileSectionCard
-      icon={IconGlobe}
+      icon={PROFILE_SECTION_ICONS.language}
+      iconTone="language"
       title="Idiomas"
       isOwn={isOwn}
       onAdd={onAdd}
@@ -22,10 +25,20 @@ export default function LanguagesSection({ items = [], isOwn, onAdd, onEdit, onD
               <p className="text-xs text-gray-500">{item.level || 'Nivel no especificado'}</p>
             </div>
             <div className="flex shrink-0 gap-2">
-              <button type="button" onClick={() => onEdit?.(item)} className="text-xs font-medium text-primary-600">
+              <button
+                type="button"
+                onClick={() => onEdit?.(item)}
+                className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700"
+              >
+                <AppIcon icon={Pencil} size={ICON_SIZES.sm} />
                 Editar
               </button>
-              <button type="button" onClick={() => onDelete?.(item.id)} className="text-xs font-medium text-red-600">
+              <button
+                type="button"
+                onClick={() => onDelete?.(item.id)}
+                className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
+              >
+                <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
                 Eliminar
               </button>
             </div>

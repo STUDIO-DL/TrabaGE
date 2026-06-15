@@ -1,6 +1,6 @@
 export const JOB_TYPES = [
   { value: 'full-time', label: 'Tiempo completo' },
-  { value: 'part-time', label: 'Medio tiempo' },
+  { value: 'part-time', label: 'Media jornada' },
   { value: 'freelance', label: 'Freelance' },
   { value: 'internship', label: 'Prácticas' },
 ];

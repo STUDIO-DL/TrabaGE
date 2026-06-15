@@ -6,6 +6,7 @@ const FULL_PROFILE_SELECT = `
   experience(*),
   certifications(*),
   skills(*),
+  services(*),
   languages(*)
 `;
 
@@ -15,9 +16,6 @@ export const profileService = {
 
   upsertCandidateProfile: (data) =>
     supabase.from('candidate_profiles').upsert(data).select().single(),
-
-  updateCandidateProfile: (userId, data) =>
-    supabase.from('candidate_profiles').update(data).eq('user_id', userId).select().single(),
 
   updateCandidateProfile: (userId, data) =>
     supabase.from('candidate_profiles').update(data).eq('user_id', userId).select().single(),
@@ -43,6 +41,9 @@ export const profileService = {
 
   addSkill: (data) => supabase.from('skills').insert(data).select().single(),
   deleteSkill: (id) => supabase.from('skills').delete().eq('id', id),
+
+  addService: (data) => supabase.from('services').insert(data).select().single(),
+  deleteService: (id) => supabase.from('services').delete().eq('id', id),
 
   addLanguage: (data) => supabase.from('languages').insert(data).select().single(),
   updateLanguage: (id, data) => supabase.from('languages').update(data).eq('id', id).select().single(),

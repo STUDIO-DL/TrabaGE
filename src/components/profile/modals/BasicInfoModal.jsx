@@ -4,6 +4,8 @@ import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import Select from '../../ui/Select';
 import Button from '../../ui/Button';
+import AppIcon from '../../common/AppIcon';
+import { Save, ICON_SIZES } from '../../../constants/icons';
 import { CITIES } from '../../../constants/cities';
 
 const empty = { full_name: '', headline: '', about: '', city: '' };
@@ -65,7 +67,8 @@ export default function BasicInfoModal({ isOpen, onClose, profile, onSave, loadi
           options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]}
         />
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" fullWidth loading={loading}>
+        <Button type="submit" fullWidth loading={loading} className="gap-2">
+          <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
           Guardar
         </Button>
       </form>

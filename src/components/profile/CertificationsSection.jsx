@@ -1,5 +1,6 @@
 import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
-import { IconBadge } from './ProfileIcons';
+import { PROFILE_SECTION_ICONS } from './ProfileIcons';
+import { Award } from '../../constants/icons';
 import { formatDate } from '../../utils/formatDate';
 
 const PREVIEW_COUNT = 2;
@@ -11,7 +12,8 @@ export default function CertificationsSection({ items = [], isOwn, onAdd, onEdit
 
   return (
     <ProfileSectionCard
-      icon={IconBadge}
+      icon={PROFILE_SECTION_ICONS.certification}
+      iconTone="certification"
       title="Licencias y certificados"
       isOwn={isOwn}
       onAdd={onAdd}
@@ -25,6 +27,8 @@ export default function CertificationsSection({ items = [], isOwn, onAdd, onEdit
           title={item.name}
           subtitle={item.issuer}
           meta={item.issued_date ? formatDate(item.issued_date) : undefined}
+          entryIcon={Award}
+          entryIconTone="certification"
           isOwn={isOwn}
           onEdit={() => onEdit?.(item)}
           onDelete={() => onDelete?.(item.id)}

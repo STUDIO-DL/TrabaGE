@@ -5,10 +5,12 @@ import CandidateProfileLayout from '../../components/profile/CandidateProfileLay
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import AboutSection from '../../components/profile/AboutSection';
 import ContactSection from '../../components/profile/ContactSection';
+import EmploymentPreferencesSection from '../../components/profile/EmploymentPreferencesSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
 import SkillsSection from '../../components/profile/SkillsSection';
+import ServicesSection from '../../components/profile/ServicesSection';
 import LanguagesSection from '../../components/profile/LanguagesSection';
 import DocumentsSection from '../../components/profile/DocumentsSection';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
@@ -47,6 +49,8 @@ export default function Profile() {
     deleteCertification,
     addSkill,
     deleteSkill,
+    addService,
+    deleteService,
     addLanguage,
     updateLanguage,
     deleteLanguage,
@@ -66,6 +70,7 @@ export default function Profile() {
   const [savingField, setSavingField] = useState(null);
   const [aboutSaving, setAboutSaving] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
+  const [preferencesSaving, setPreferencesSaving] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [cvLoading, setCvLoading] = useState(false);
@@ -73,7 +78,11 @@ export default function Profile() {
 
   const handleSaveField = async (field, value) => {
     setSavingField(field);
-    const { error } = await updateBasicInfo({ [field]: value });
+    const payload =
+      field === 'years_experience'
+        ? { years_experience: value === '' || value == null ? null : Number(value) }
+        : { [field]: value };
+    const { error } = await updateBasicInfo(payload);
     setSavingField(null);
     showToast(error ? error.message : 'Guardado', error ? 'error' : 'success');
   };
@@ -90,6 +99,16 @@ export default function Profile() {
     const { error } = await updateBasicInfo(data);
     setContactSaving(false);
     showToast(error ? error.message : 'Contacto guardado', error ? 'error' : 'success');
+  };
+
+  const handleSavePreferences = async (jobPreferences) => {
+    setPreferencesSaving(true);
+    const { error } = await updateBasicInfo({ job_preferences: jobPreferences });
+    setPreferencesSaving(false);
+    showToast(
+      error ? error.message : 'Preferencias guardadas',
+      error ? 'error' : 'success',
+    );
   };
 
   const handleSaveSettings = async (data) => {
@@ -256,6 +275,13 @@ export default function Profile() {
           loading={contactSaving}
         />
 
+        <EmploymentPreferencesSection
+          jobPreferences={profile?.job_preferences}
+          isOwn
+          onSave={handleSavePreferences}
+          loading={preferencesSaving}
+        />
+
         <EducationSection
           items={profile?.education}
           isOwn
@@ -288,6 +314,19 @@ export default function Profile() {
           onDelete={async (id) => {
             await deleteSkill(id);
             showToast('Habilidad eliminada', 'success');
+          }}
+        />
+
+        <ServicesSection
+          items={profile?.services}
+          isOwn
+          onAdd={async (name) => {
+            const { error } = await addService(name);
+            showToast(error ? error.message : 'Servicio añadido', error ? 'error' : 'success');
+          }}
+          onDelete={async (id) => {
+            await deleteService(id);
+            showToast('Servicio eliminado', 'success');
           }}
         />
 

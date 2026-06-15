@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { verificationService } from './verification.service';
 
 export const adminService = {
   getAllUsers: () =>
@@ -13,24 +14,11 @@ export const adminService = {
       .select('*, company_profiles(company_name)')
       .order('created_at', { ascending: false }),
 
-  getPendingVerifications: () =>
-    supabase
-      .from('verification_requests')
-      .select('*, company_profiles(company_name, logo_url)')
-      .eq('status', 'pending')
-      .order('submitted_at', { ascending: false }),
+  getPendingVerifications: () => verificationService.getPendingRequests(),
 
-  reviewVerification: (id, status, notes) =>
-    supabase
-      .from('verification_requests')
-      .update({ status, notes, reviewed_at: new Date().toISOString() })
-      .eq('id', id)
-      .select()
-      .single(),
+  reviewVerification: (id, action, reviewNotes) =>
+    verificationService.reviewRequest(id, action, reviewNotes),
 
-  updateCompanyVerificationStatus: (companyId, verifiedStatus) =>
-    supabase
-      .from('company_profiles')
-      .update({ verified_status: verifiedStatus })
-      .eq('user_id', companyId),
+  getVerificationDocumentUrl: (documentPath) =>
+    verificationService.getSignedDocumentUrl(documentPath),
 };

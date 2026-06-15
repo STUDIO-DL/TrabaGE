@@ -6,6 +6,7 @@ import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
 import SkillsSection from '../../components/profile/SkillsSection';
+import ServicesSection from '../../components/profile/ServicesSection';
 import Spinner from '../../components/ui/Spinner';
 import { useProfile } from '../../hooks/useProfile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
@@ -55,10 +56,11 @@ export default function PublicProfile() {
         onShare={handleShare}
         onMessage={handleMessage}
       >
-        <AboutSection about={profile.about} />
+        <AboutSection about={profile.about} publicView />
         <EducationSection items={profile.education} />
         <CertificationsSection items={profile.certifications} />
         <SkillsSection items={profile.skills} />
+        <ServicesSection items={profile.services} />
         <ExperienceSection items={profile.experience} />
       </CandidateProfileLayout>
     </PageContainer>

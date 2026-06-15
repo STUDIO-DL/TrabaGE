@@ -155,6 +155,24 @@ export function useCandidateProfile() {
     [refetch],
   );
 
+  const addService = useCallback(
+    async (name) => {
+      const { error: saveError } = await profileService.addService({ candidate_id: userId, name });
+      if (!saveError) await refetch();
+      return { error: saveError };
+    },
+    [userId, refetch],
+  );
+
+  const deleteService = useCallback(
+    async (id) => {
+      const { error: saveError } = await profileService.deleteService(id);
+      if (!saveError) await refetch();
+      return { error: saveError };
+    },
+    [refetch],
+  );
+
   const addLanguage = useCallback(
     async (data) => {
       const { error: saveError } = await profileService.addLanguage({ ...data, candidate_id: userId });
@@ -202,6 +220,8 @@ export function useCandidateProfile() {
     deleteCertification,
     addSkill,
     deleteSkill,
+    addService,
+    deleteService,
     addLanguage,
     updateLanguage,
     deleteLanguage,

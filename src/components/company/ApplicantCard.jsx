@@ -3,6 +3,8 @@ import UserAvatar from '../common/UserAvatar';
 import Badge from '../ui/Badge';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import AppIcon from '../common/AppIcon';
+import { Download, Eye, MessageCircle, ICON_SIZES } from '../../constants/icons';
 
 const STATUS_LABELS = {
   pending: { variant: 'pending', label: 'Pendiente' },
@@ -29,14 +31,27 @@ export default function ApplicantCard({ application, onDownloadCv, onContact }) 
 
       <div className="flex flex-wrap gap-2">
         <Link to={`/profile/${application.candidate_id}`}>
-          <Button variant="secondary" size="sm">
+          <Button variant="secondary" size="sm" className="inline-flex items-center gap-1.5">
+            <AppIcon icon={Eye} size={ICON_SIZES.default} />
             Ver perfil
           </Button>
         </Link>
-        <Button variant="ghost" size="sm" onClick={() => onDownloadCv?.(application.id)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="inline-flex items-center gap-1.5"
+          onClick={() => onDownloadCv?.(application.id)}
+        >
+          <AppIcon icon={Download} size={ICON_SIZES.default} />
           Descargar CV
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => onContact?.(application)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="inline-flex items-center gap-1.5"
+          onClick={() => onContact?.(application)}
+        >
+          <AppIcon icon={MessageCircle} size={ICON_SIZES.default} />
           Contactar
         </Button>
       </div>

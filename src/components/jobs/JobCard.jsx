@@ -1,9 +1,19 @@
 import { Link } from 'react-router-dom';
-import { IconBriefcase } from '../profile/ProfileIcons';
+import AppIcon from '../common/AppIcon';
+import {
+  Briefcase,
+  Bookmark,
+  ChevronRight,
+  Clock,
+  Eye,
+  MapPin,
+  ICON_COLORS,
+  ICON_SIZES,
+} from '../../constants/icons';
+import CompanyNameWithBadge from '../company/CompanyNameWithBadge';
 import { formatSalary } from '../../utils/formatSalary';
 import { formatRelativeTime } from '../../utils/formatDate';
 import { JOB_CARD_ACCENTS } from '../../constants/jobSort';
-import { IconBookmark, IconMapPin, IconClock, IconChevronRight } from './JobIcons';
 
 function getAccent(index = 0) {
   return JOB_CARD_ACCENTS[index % JOB_CARD_ACCENTS.length];
@@ -22,7 +32,7 @@ export default function JobCard({ job, accentIndex = 0, saved = false, onSaveTog
         <div
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${accent.iconBg} ${accent.iconText}`}
         >
-          <IconBriefcase className="h-5 w-5" />
+          <AppIcon icon={Briefcase} size={ICON_SIZES.default} />
         </div>
         <button
           type="button"
@@ -30,31 +40,35 @@ export default function JobCard({ job, accentIndex = 0, saved = false, onSaveTog
           className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
           aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}
         >
-          <IconBookmark className="h-5 w-5" filled={saved} />
+          <AppIcon
+            icon={Bookmark}
+            size={ICON_SIZES.default}
+            className={saved ? 'fill-current text-primary-600' : ''}
+          />
         </button>
       </div>
 
       <div className="space-y-1">
         <h3 className="text-base font-bold text-gray-900">{job.title}</h3>
-        <p className="text-sm text-gray-500">{company?.company_name ?? 'Nombre de empresa'}</p>
+        <CompanyNameWithBadge company={company} showUnverifiedLabel />
       </div>
 
       <div className="mt-3 space-y-1.5 text-sm text-gray-600">
         {job.city && (
           <div className="flex items-center gap-1.5">
-            <IconMapPin className="shrink-0 text-gray-400" />
+            <AppIcon icon={MapPin} size={ICON_SIZES.default} className={ICON_COLORS.muted} />
             <span>{job.city}</span>
           </div>
         )}
         {job.salary != null && (
           <div className="flex items-center gap-1.5">
-            <IconBriefcase className="h-4 w-4 shrink-0 text-gray-400" />
+            <AppIcon icon={Briefcase} size={ICON_SIZES.default} className={ICON_COLORS.muted} />
             <span>{formatSalary(job.salary)}</span>
           </div>
         )}
         {postedAt && (
           <div className="flex items-center gap-1.5 text-gray-400">
-            <IconClock className="shrink-0" />
+            <AppIcon icon={Clock} size={ICON_SIZES.default} className="shrink-0" />
             <span>Publicado hace {postedAt}</span>
           </div>
         )}
@@ -63,10 +77,11 @@ export default function JobCard({ job, accentIndex = 0, saved = false, onSaveTog
       <div className="mt-4 flex justify-end">
         <Link
           to={`/candidate/jobs/${job.id}`}
-          className={`inline-flex items-center gap-0.5 text-sm font-semibold ${accent.actionText} hover:opacity-80`}
+          className={`inline-flex items-center gap-1 text-sm font-semibold ${accent.actionText} hover:opacity-80`}
         >
+          <AppIcon icon={Eye} size={ICON_SIZES.default} />
           Ver detalles
-          <IconChevronRight />
+          <AppIcon icon={ChevronRight} size={ICON_SIZES.default} />
         </Link>
       </div>
     </article>

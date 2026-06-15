@@ -1,8 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { IconDots } from './ProfileIcons';
+import AppIcon from '../common/AppIcon';
+import { LogOut, MoreVertical, Settings, Trash2, ICON_SIZES } from '../../constants/icons';
+import { useAuth } from '../../hooks/useAuth';
+import { getHelpPath } from '../../data/help-center';
 
 export default function ProfileMenu({ onSettings, onLogout, onDeleteAccount }) {
+  const { role } = useAuth();
+  const helpPath = getHelpPath(role);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -21,13 +26,19 @@ export default function ProfileMenu({ onSettings, onLogout, onDeleteAccount }) {
   };
 
   const items = [
-    { type: 'action', label: 'Configuración', onClick: () => run(onSettings) },
+    { type: 'action', label: 'Configuración', icon: Settings, onClick: () => run(onSettings) },
     { type: 'link', label: 'Política de privacidad', to: '/legal/privacy' },
     { type: 'link', label: 'Términos de uso', to: '/legal/terms' },
-    { type: 'link', label: 'Centro de ayuda', to: '/legal/help' },
+    { type: 'link', label: 'Centro de ayuda', to: helpPath },
     { type: 'divider' },
-    { type: 'action', label: 'Cerrar sesión', onClick: () => run(onLogout) },
-    { type: 'action', label: 'Eliminar cuenta', onClick: () => run(onDeleteAccount), danger: true },
+    { type: 'action', label: 'Cerrar sesión', icon: LogOut, onClick: () => run(onLogout) },
+    {
+      type: 'action',
+      label: 'Eliminar cuenta',
+      icon: Trash2,
+      onClick: () => run(onDeleteAccount),
+      danger: true,
+    },
   ];
 
   return (
@@ -39,7 +50,7 @@ export default function ProfileMenu({ onSettings, onLogout, onDeleteAccount }) {
         aria-label="Menú"
         aria-expanded={open}
       >
-        <IconDots className="h-5 w-5" />
+        <AppIcon icon={MoreVertical} size={ICON_SIZES.default} />
       </button>
 
       {open && (
@@ -65,10 +76,17 @@ export default function ProfileMenu({ onSettings, onLogout, onDeleteAccount }) {
                 key={item.label}
                 type="button"
                 onClick={item.onClick}
-                className={`block w-full px-4 py-2.5 text-left text-sm hover:bg-gray-50 ${
+                className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm hover:bg-gray-50 ${
                   item.danger ? 'text-red-600' : 'text-gray-700'
                 }`}
               >
+                {item.icon && (
+                  <AppIcon
+                    icon={item.icon}
+                    size={ICON_SIZES.sm}
+                    className={item.danger ? 'text-red-600' : 'text-gray-500'}
+                  />
+                )}
                 {item.label}
               </button>
             );

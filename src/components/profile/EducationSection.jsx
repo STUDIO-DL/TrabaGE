@@ -1,5 +1,6 @@
 import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
-import { IconGraduation } from './ProfileIcons';
+import { PROFILE_SECTION_ICONS } from './ProfileIcons';
+import { GraduationCap } from '../../constants/icons';
 import { formatDateRange } from '../../utils/formatDate';
 
 const PREVIEW_COUNT = 2;
@@ -11,7 +12,8 @@ export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onD
 
   return (
     <ProfileSectionCard
-      icon={IconGraduation}
+      icon={PROFILE_SECTION_ICONS.education}
+      iconTone="education"
       title="Educación"
       isOwn={isOwn}
       onAdd={onAdd}
@@ -25,6 +27,8 @@ export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onD
           title={item.institution}
           subtitle={item.program}
           meta={[formatDateRange(item.start_date, item.end_date), item.grade].filter(Boolean).join(' · ')}
+          entryIcon={GraduationCap}
+          entryIconTone="education"
           isOwn={isOwn}
           onEdit={() => onEdit?.(item)}
           onDelete={() => onDelete?.(item.id)}

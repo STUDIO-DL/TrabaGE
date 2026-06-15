@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import ProfileSectionCard from './ProfileSectionCard';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import { IconMail } from './ProfileIcons';
+import AppIcon from '../common/AppIcon';
+import { Save, ICON_SIZES } from '../../constants/icons';
+import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 
 export default function ContactSection({
   contactEmail,
@@ -33,7 +35,8 @@ export default function ContactSection({
 
   return (
     <ProfileSectionCard
-      icon={IconMail}
+      icon={PROFILE_SECTION_ICONS.contact}
+      iconTone="contact"
       title="Datos de contacto"
       isEmpty={!isOwn && !contactEmail && !contactWhatsapp}
       emptyText="Contacto no disponible."
@@ -64,7 +67,8 @@ export default function ContactSection({
             }}
           />
           {dirty && (
-            <Button type="button" fullWidth loading={loading} onClick={handleSave}>
+            <Button type="button" fullWidth loading={loading} onClick={handleSave} className="gap-2">
+              <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
               Guardar contacto
             </Button>
           )}

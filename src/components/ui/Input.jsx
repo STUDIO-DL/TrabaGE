@@ -1,3 +1,6 @@
+import AppIcon from '../common/AppIcon';
+import { ICON_SIZES } from '../../constants/icons';
+
 export default function Input({
   label,
   error,
@@ -17,7 +20,11 @@ export default function Input({
       )}
       <div className="relative">
         {Icon && (
-          <Icon className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <AppIcon
+            icon={Icon}
+            size={ICON_SIZES.default}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
         )}
         <input
           id={inputId}
