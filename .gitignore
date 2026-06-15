@@ -27,6 +27,7 @@ Thumbs.db
 
 # Supabase
 .supabase/
+scripts/admins.local.json
 
 # PWA
 sw.js

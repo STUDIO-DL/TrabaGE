@@ -1,0 +1,14 @@
+[
+  {
+    "email": "tu@email.com",
+    "password": "una-contraseña-segura"
+  },
+  {
+    "email": "compañero1@email.com",
+    "password": "otra-contraseña-segura"
+  },
+  {
+    "email": "compañero2@email.com",
+    "password": "otra-contraseña-segura"
+  }
+]

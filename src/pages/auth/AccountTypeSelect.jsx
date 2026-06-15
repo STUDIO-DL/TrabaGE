@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import Button from '../../components/ui/Button';
 import { ROLE_HOME, ROLE_SETUP, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,8 +8,15 @@ import { supabase } from '../../config/supabase';
 
 export default function AccountTypeSelect() {
   const navigate = useNavigate();
-  const { user, isPreviewMode, enterPreviewModeAsRole, refreshSetupStatus } = useAuth();
+  const { user, role, isPreviewMode, enterPreviewModeAsRole, refreshSetupStatus } = useAuth();
   const previewActive = isPreviewActive(isPreviewMode);
+
+  useEffect(() => {
+    if (previewActive || !role) return;
+    if (role === ROLES.ADMIN) {
+      navigate(ROLE_HOME[ROLES.ADMIN], { replace: true });
+    }
+  }, [previewActive, role, navigate]);
 
   const selectRole = async (role) => {
     if (previewActive) {

@@ -152,9 +152,35 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (email, password) => {
-    const { data, error } = await authService.login(email, password);
-    return { data, error };
-  }, []);
+    clearPreviewMode();
+    setIsPreviewMode(false);
+
+    const { data, error } = await authService.login(email.trim().toLowerCase(), password);
+    if (error) return { data, error, redirectTo: null };
+
+    const { data: sessionData } = await authService.getSession();
+    const session = sessionData?.session ?? data?.session;
+    if (!session) {
+      return { data, error: { message: 'No se pudo iniciar sesión' }, redirectTo: null };
+    }
+
+    await hydrateUser(session);
+
+    const { data: roleData } = await authService.getUserRole(session.user.id);
+    const userRole = roleData?.role ?? ROLES.CANDIDATE;
+
+    let redirectTo = ROLE_HOME[userRole] || '/account-type';
+
+    if (userRole === ROLES.CANDIDATE) {
+      const { data: profile } = await profileService.getCandidateProfile(session.user.id);
+      if (!profile?.setup_complete) redirectTo = ROLE_SETUP[ROLES.CANDIDATE];
+    } else if (userRole === ROLES.COMPANY) {
+      const { data: profile } = await companyService.getCompanyProfile(session.user.id);
+      if (!profile?.setup_complete) redirectTo = ROLE_SETUP[ROLES.COMPANY];
+    }
+
+    return { data, error: null, redirectTo };
+  }, [hydrateUser]);
 
   const register = useCallback(async (email, password, userRole) => {
     const { data, error } = await authService.register(email, password, userRole);

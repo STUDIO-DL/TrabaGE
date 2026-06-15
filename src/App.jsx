@@ -9,6 +9,7 @@ import { useNotificationContext } from './context/NotificationContext';
 import SplashScreen from './pages/SplashScreen';
 import OnboardingFlow from './pages/onboarding/OnboardingFlow';
 import Login from './pages/auth/Login';
+import Explore from './pages/auth/Explore';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import AccountTypeSelect from './pages/auth/AccountTypeSelect';
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="/" element={<SplashScreen />} />
             <Route path="/onboarding" element={<OnboardingFlow />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/explore" element={<Explore />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/demo/company" element={<DemoCompanyEntry />} />
