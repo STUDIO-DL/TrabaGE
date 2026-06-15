@@ -29,7 +29,7 @@ import { generateProfileUrl } from '../../utils/generateShareUrl';
 import { authService } from '../../services/auth.service';
 
 export default function Profile() {
-  const { user, logout } = useAuth();
+  const { user, logout, isPreviewMode } = useAuth();
   const { showToast } = useNotificationContext();
   const {
     profile,
@@ -75,6 +75,8 @@ export default function Profile() {
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [cvLoading, setCvLoading] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
+
+  const canEdit = !isPreviewMode;
 
   const handleSaveField = async (field, value) => {
     setSavingField(field);
@@ -235,21 +237,21 @@ export default function Profile() {
         backButton={false}
         profile={profile}
         email={user?.email}
-        isOwn
-        onAvatarChange={handleAvatar}
+        isOwn={canEdit}
+        onAvatarChange={canEdit ? handleAvatar : undefined}
         avatarLoading={avatarLoading}
         onShare={handleShare}
-        onSettings={() => setSettingsOpen(true)}
-        onLogout={logout}
-        onDeleteAccount={() => setDeleteOpen(true)}
-        onSaveField={handleSaveField}
+        onSettings={canEdit ? () => setSettingsOpen(true) : undefined}
+        onLogout={canEdit ? logout : undefined}
+        onDeleteAccount={canEdit ? () => setDeleteOpen(true) : undefined}
+        onSaveField={canEdit ? handleSaveField : undefined}
         savingField={savingField}
         sidebar={
           <>
             <ProfileSidebar profile={profile} email={user?.email} />
             <LanguagesSection
               items={profile?.languages}
-              isOwn
+              isOwn={canEdit}
               onAdd={() => openLanguage()}
               onEdit={openLanguage}
               onDelete={async (id) => {
@@ -262,7 +264,7 @@ export default function Profile() {
       >
         <AboutSection
           about={profile?.about}
-          isOwn
+          isOwn={canEdit}
           onSave={handleSaveAbout}
           saving={aboutSaving}
         />
@@ -270,21 +272,21 @@ export default function Profile() {
         <ContactSection
           contactEmail={profile?.contact_email}
           contactWhatsapp={profile?.contact_whatsapp}
-          isOwn
+          isOwn={canEdit}
           onSave={handleSaveContact}
           loading={contactSaving}
         />
 
         <EmploymentPreferencesSection
           jobPreferences={profile?.job_preferences}
-          isOwn
+          isOwn={canEdit}
           onSave={handleSavePreferences}
           loading={preferencesSaving}
         />
 
         <EducationSection
           items={profile?.education}
-          isOwn
+          isOwn={canEdit}
           onAdd={() => openEducation()}
           onEdit={openEducation}
           onDelete={async (id) => {
@@ -295,7 +297,7 @@ export default function Profile() {
 
         <CertificationsSection
           items={profile?.certifications}
-          isOwn
+          isOwn={canEdit}
           onAdd={() => openCert()}
           onEdit={openCert}
           onDelete={async (id) => {
@@ -306,7 +308,7 @@ export default function Profile() {
 
         <SkillsSection
           items={profile?.skills}
-          isOwn
+          isOwn={canEdit}
           onAdd={async (name) => {
             const { error } = await addSkill(name);
             showToast(error ? error.message : 'Habilidad añadida', error ? 'error' : 'success');
@@ -319,7 +321,7 @@ export default function Profile() {
 
         <ServicesSection
           items={profile?.services}
-          isOwn
+          isOwn={canEdit}
           onAdd={async (name) => {
             const { error } = await addService(name);
             showToast(error ? error.message : 'Servicio añadido', error ? 'error' : 'success');
@@ -332,7 +334,7 @@ export default function Profile() {
 
         <ExperienceSection
           items={profile?.experience}
-          isOwn
+          isOwn={canEdit}
           onAdd={() => openExperience()}
           onEdit={openExperience}
           onDelete={async (id) => {
@@ -344,7 +346,7 @@ export default function Profile() {
         <DocumentsSection
           cvName={profile?.cv_name}
           coverLetterName={profile?.cover_letter_name}
-          isOwn
+          isOwn={canEdit}
           cvLoading={cvLoading}
           coverLoading={coverLoading}
           onUploadCV={handleUploadCV}

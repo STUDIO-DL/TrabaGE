@@ -67,6 +67,33 @@
   .login-fade-in-delayed {
     animation: loginFadeIn 0.65s ease-out 0.1s both;
   }
+
+  .login-shell {
+    @apply flex min-h-dvh min-w-0 flex-col overflow-x-hidden bg-[#F8FAFC];
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .login-layout {
+    @apply flex min-w-0 flex-1 flex-col md:min-h-0 md:flex-row;
+  }
+
+  .login-marketing-panel {
+    @apply w-full min-w-0 md:w-[45%] md:shrink-0;
+  }
+
+  .login-auth-panel {
+    @apply flex min-w-0 flex-1 flex-col items-center justify-center px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10 lg:px-14;
+  }
+
+  .login-card {
+    @apply w-full min-w-0 overflow-hidden rounded-2xl bg-white shadow-[0_10px_40px_rgba(15,23,42,0.08)];
+    max-width: min(100%, 30rem);
+  }
+
+  .login-headline {
+    font-size: clamp(1.65rem, 2.4vw + 0.75rem, 2.65rem);
+    line-height: 1.15;
+  }
 }
 
 @keyframes loginFadeIn {

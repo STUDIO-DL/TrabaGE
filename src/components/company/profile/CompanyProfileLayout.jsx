@@ -5,9 +5,8 @@ import { useNotificationContext } from '../../../context/NotificationContext';
 import { companyService } from '../../../services/company.service';
 import { storageService } from '../../../services/storage.service';
 import { jobsService } from '../../../services/jobs.service';
-import { getPreviewMediaUrls, setPreviewMediaUrl } from '../../../constants/preview';
+import { getPreviewMediaUrls } from '../../../constants/preview';
 import { validateFile } from '../../../utils/validateFile';
-import { readImageAsDataUrl } from '../../../utils/imageFile';
 import CompanyProfileView from './CompanyProfileView';
 
 export default function CompanyProfileLayout({
@@ -86,17 +85,7 @@ export default function CompanyProfileLayout({
     const mediaKey = type === 'logo' ? 'logo' : 'cover';
 
     if (isPreviewMode) {
-      setLoading(true);
-      try {
-        const dataUrl = await readImageAsDataUrl(file);
-        setPreviewMedia((prev) => ({ ...prev, [mediaKey]: dataUrl }));
-        setPreviewMediaUrl(mediaKey === 'logo' ? 'logo' : 'cover', dataUrl);
-        showToast(type === 'logo' ? 'Logo actualizado' : 'Portada actualizada', 'success');
-      } catch {
-        showToast('No se pudo leer la imagen', 'error');
-      } finally {
-        setLoading(false);
-      }
+      onPreviewAction?.('upload-image');
       return;
     }
 
@@ -142,9 +131,7 @@ export default function CompanyProfileLayout({
 
   const handleAddService = async (name) => {
     if (isPreviewMode) {
-      const item = { id: `preview-svc-${Date.now()}`, name };
-      setPreviewServices((prev) => [...(prev ?? profile?.company_services ?? []), item]);
-      showToast('Servicio añadido', 'success');
+      onPreviewAction?.('add-service');
       return;
     }
 
@@ -166,10 +153,7 @@ export default function CompanyProfileLayout({
 
   const handleDeleteService = async (id) => {
     if (isPreviewMode) {
-      setPreviewServices((prev) =>
-        (prev ?? profile?.company_services ?? []).filter((item) => item.id !== id),
-      );
-      showToast('Servicio eliminado', 'success');
+      onPreviewAction?.('delete-service');
       return;
     }
 
@@ -186,8 +170,7 @@ export default function CompanyProfileLayout({
 
   const handleSaveContact = async (contactData) => {
     if (isPreviewMode) {
-      setPreviewContact(contactData);
-      showToast('Contacto guardado', 'success');
+      onPreviewAction?.('save-contact');
       return;
     }
 

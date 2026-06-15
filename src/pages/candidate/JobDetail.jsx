@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import ApplicationsCounter from '../../components/jobs/ApplicationsCounter';
 import CompanyNameWithBadge from '../../components/company/CompanyNameWithBadge';
@@ -9,12 +9,27 @@ import AppIcon from '../../components/common/AppIcon';
 import Spinner from '../../components/ui/Spinner';
 import { FileText, ICON_SIZES } from '../../constants/icons';
 import { useJob } from '../../hooks/useJobs';
+import { useAuth } from '../../hooks/useAuth';
+import { useNotificationContext } from '../../context/NotificationContext';
 import { formatSalary } from '../../utils/formatSalary';
+import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function JobDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { isPreviewMode } = useAuth();
+  const { showToast } = useNotificationContext();
   const { job, loading } = useJob(id);
   const company = job?.company_profiles;
+
+  const handleApply = () => {
+    if (isPreviewMode) {
+      showToast(GUEST_MODE_MESSAGE, 'info');
+      navigate('/login');
+      return;
+    }
+    navigate(`/candidate/jobs/${id}/apply`);
+  };
 
   if (loading) {
     return (
@@ -68,12 +83,10 @@ export default function JobDetail() {
           </section>
         )}
 
-        <Link to={`/candidate/jobs/${id}/apply`}>
-          <Button fullWidth className="inline-flex items-center justify-center gap-2">
-            <AppIcon icon={FileText} size={ICON_SIZES.default} className="text-white" />
-            Aplicar
-          </Button>
-        </Link>
+        <Button fullWidth className="inline-flex items-center justify-center gap-2" onClick={handleApply}>
+          <AppIcon icon={FileText} size={ICON_SIZES.default} className="text-white" />
+          Aplicar
+        </Button>
       </div>
     </PageContainer>
   );

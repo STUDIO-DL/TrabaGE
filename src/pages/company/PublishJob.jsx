@@ -10,6 +10,7 @@ import { JOB_TYPES } from '../../constants/jobTypes';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
+import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function PublishJob() {
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ export default function PublishJob() {
     e.preventDefault();
 
     if (isPreviewMode) {
-      showToast('Modo vista previa: el empleo no se publicará', 'info');
+      showToast(GUEST_MODE_MESSAGE, 'info');
       return;
     }
 

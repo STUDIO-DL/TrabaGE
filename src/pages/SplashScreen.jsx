@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import logoImg from '../assets/branding/logo.png';
 import { getOnboardingComplete } from '../context/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import Spinner from '../components/ui/Spinner';
 
 export default function SplashScreen() {
@@ -22,10 +23,18 @@ export default function SplashScreen() {
   }, [isAuthenticated, role, getHomePath, navigate]);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center bg-primary-600 text-white">
-      <h1 className="text-3xl font-bold">TrabaGE</h1>
-      <p className="mt-2 text-sm text-primary-100">Donde las oportunidades te encuentran</p>
-      <Spinner color="white" size="md" />
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-white px-6">
+      <img
+        src={logoImg}
+        alt="TrabaGE"
+        width={200}
+        height={48}
+        className="login-fade-in h-12 w-auto sm:h-14"
+        decoding="async"
+      />
+      <div className="login-fade-in-delayed mt-10">
+        <Spinner color="primary" size="md" />
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import RoleRoute from './components/routing/RoleRoute';
+import GuestBar from './components/common/GuestBar';
 import { ToastContainer } from './components/ui/Toast';
 import { useNotificationContext } from './context/NotificationContext';
 
@@ -47,13 +48,11 @@ function AppToasts() {
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
 }
 
-export default function App() {
+function AppRoutes() {
   return (
-    <BrowserRouter>
-      <AuthProvider>
-        <NotificationProvider>
-          <AppToasts />
-          <Routes>
+    <>
+      <GuestBar />
+      <Routes>
             <Route path="/" element={<SplashScreen />} />
             <Route path="/onboarding" element={<OnboardingFlow />} />
             <Route path="/login" element={<Login />} />
@@ -102,7 +101,18 @@ export default function App() {
             <Route path="/legal/terms" element={<TermsOfUse />} />
             <Route path="/legal/help" element={<HelpCenter />} />
             <Route path="*" element={<NotFound />} />
-          </Routes>
+      </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <NotificationProvider>
+          <AppToasts />
+          <AppRoutes />
         </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>

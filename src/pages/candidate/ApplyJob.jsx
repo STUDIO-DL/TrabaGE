@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import Button from '../../components/ui/Button';
@@ -7,18 +7,31 @@ import Textarea from '../../components/ui/Textarea';
 import FileUpload from '../../components/ui/FileUpload';
 import { useAuth } from '../../hooks/useAuth';
 import { applicationsService } from '../../services/applications.service';
+import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function ApplyJob() {
   const { id: jobId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isPreviewMode } = useAuth();
   const [fullName, setFullName] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (isPreviewMode) {
+      navigate('/login', { replace: true });
+    }
+  }, [isPreviewMode, navigate]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isPreviewMode) {
+      setError(GUEST_MODE_MESSAGE);
+      return;
+    }
+
     setLoading(true);
     setError('');
 

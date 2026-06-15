@@ -4,6 +4,7 @@ import Spinner from '../../components/ui/Spinner';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function Profile() {
   const { user, logout, isPreviewMode } = useAuth();
@@ -11,7 +12,7 @@ export default function Profile() {
   const { showToast } = useNotificationContext();
 
   const handlePreviewAction = () => {
-    showToast('Modo vista previa: los cambios no se guardan', 'info');
+    showToast(GUEST_MODE_MESSAGE, 'info');
   };
 
   if (loading) {

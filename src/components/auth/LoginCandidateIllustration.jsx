@@ -1,14 +1,21 @@
 import candidateImg from '../../assets/illustrations/login-candidate.png';
 
-export default function LoginCandidateIllustration() {
+export default function LoginCandidateIllustration({ className = '' }) {
   return (
-    <div className="relative h-[17.5rem] w-full max-w-[21rem] sm:h-[19rem] sm:max-w-[23rem] lg:h-[21rem] lg:max-w-[26rem]">
+    <figure
+      className={[
+        'relative w-full max-w-[15rem] sm:max-w-[17rem] md:max-w-[19rem] lg:max-w-[22rem] xl:max-w-[26rem]',
+        className,
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
       <div
-        className="absolute -left-4 bottom-2 h-[14rem] w-[18rem] rounded-[55%_45%_50%_50%] bg-[#DBEAFE]/80 lg:-left-6 lg:h-[16rem] lg:w-[20rem]"
+        className="absolute -bottom-2 left-1/2 h-[88%] w-[92%] -translate-x-1/2 rounded-[55%_45%_50%_50%] bg-[#DBEAFE]/75 md:-bottom-3"
         aria-hidden
       />
       <div
-        className="absolute bottom-8 right-0 h-[11rem] w-[13rem] rounded-[45%_55%_40%_60%] bg-[#EFF6FF] lg:h-[12rem] lg:w-[14rem]"
+        className="absolute right-0 top-6 h-24 w-28 rounded-[45%_55%_40%_60%] bg-[#EFF6FF] md:top-8 md:h-28 md:w-32 lg:h-32 lg:w-36"
         aria-hidden
       />
       <img
@@ -16,10 +23,10 @@ export default function LoginCandidateIllustration() {
         alt="Profesional sonriente usando un portátil"
         width={416}
         height={416}
-        loading="lazy"
+        fetchPriority="high"
         decoding="async"
-        className="absolute bottom-0 left-6 z-10 aspect-square w-[14.5rem] rounded-full object-cover object-center shadow-[0_20px_40px_rgba(37,99,235,0.15)] sm:w-[16rem] lg:left-8 lg:w-[18rem]"
+        className="relative z-10 mx-auto block aspect-square w-full rounded-full object-contain shadow-[0_16px_40px_rgba(37,99,235,0.18)]"
       />
-    </div>
+    </figure>
   );
 }
