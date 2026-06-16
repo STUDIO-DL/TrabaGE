@@ -48,4 +48,15 @@ export const profileService = {
   addLanguage: (data) => supabase.from('languages').insert(data).select().single(),
   updateLanguage: (id, data) => supabase.from('languages').update(data).eq('id', id).select().single(),
   deleteLanguage: (id) => supabase.from('languages').delete().eq('id', id),
+
+  searchCandidates: (query, limit = 20) => {
+    const term = query?.trim();
+    if (!term) return Promise.resolve({ data: [], error: null });
+
+    return supabase
+      .from('candidate_profiles')
+      .select('user_id, full_name, headline, city, avatar_url, skills(name)')
+      .or(`full_name.ilike.%${term}%,headline.ilike.%${term}%,city.ilike.%${term}%`)
+      .limit(limit);
+  },
 };

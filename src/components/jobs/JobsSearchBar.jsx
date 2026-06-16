@@ -11,7 +11,7 @@ export default function JobsSearchBar({ query = '', onQueryChange, onFiltersTogg
           name="jobSearch"
           value={query}
           onChange={(e) => onQueryChange?.(e.target.value)}
-          placeholder="Buscar empleos por título, habilidad o palabra clave..."
+          placeholder="Buscar por título, ciudad, empresa o palabra clave..."
           icon={Search}
           className="mb-0"
         />

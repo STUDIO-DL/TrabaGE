@@ -2,14 +2,13 @@ import { Link, NavLink } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
 import VerifiedBadge from '../VerifiedBadge';
 import {
-  Bookmark,
+  Bell,
   Briefcase,
   Building2,
   ChevronRight,
   FileText,
   Headphones,
   LayoutDashboard,
-  MessageCircle,
   Newspaper,
   Settings,
   Users,
@@ -22,9 +21,8 @@ const NAV_ITEMS = [
   { to: '/company/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },
   { to: '/company/publish-job', label: 'Ofertas de trabajo', icon: Briefcase },
   { to: '/company/applicants', label: 'Candidatos', icon: Users },
-  { to: '/company/applicants', label: 'CVs guardados', icon: FileText },
   { to: '/company/feed', label: 'Publicaciones', icon: Newspaper },
-  { to: '/company/notifications', label: 'Mensajes', icon: MessageCircle },
+  { to: '/company/notifications', label: 'Notificaciones', icon: Bell },
   { to: '/company/profile', label: 'Perfil de empresa', icon: Building2 },
   { to: '/company/help', label: 'Configuración', icon: Settings },
 ];

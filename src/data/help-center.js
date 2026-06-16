@@ -192,7 +192,7 @@ export const helpCategories = [
       {
         question: '¿Qué tipos de notificaciones envía TrabaGE?',
         answer:
-          'TrabaGE puede enviarte notificaciones sobre:\n\n• Nuevas ofertas de empleo que coincidan con tu perfil o búsquedas guardadas.\n• Actualizaciones sobre el estado de tus postulaciones.\n• Nuevas postulaciones recibidas (para empresas).\n• Mensajes y comunicaciones dentro de la plataforma.\n• Novedades importantes del servicio y actualizaciones de seguridad.',
+          'TrabaGE puede enviarte notificaciones sobre:\n\n• Nuevas ofertas de empleo que coincidan con tu perfil o búsquedas guardadas.\n• Actualizaciones sobre el estado de tus postulaciones.\n• Nuevas postulaciones recibidas (para empresas).\n• Novedades importantes del servicio y actualizaciones de seguridad.',
       },
       {
         question: '¿Cómo activo o desactivo las notificaciones push?',

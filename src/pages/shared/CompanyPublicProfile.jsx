@@ -45,15 +45,6 @@ export default function CompanyPublicProfile() {
     });
   }, [companyId, isPreviewMode]);
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(generateCompanyUrl(companyId));
-      showToast('Enlace copiado', 'success');
-    } catch {
-      showToast('No se pudo copiar el enlace', 'error');
-    }
-  };
-
   const handleContact = () => {
     const { ok, error } = openCompanyContact(profile);
     if (!ok) showToast(error, 'error');
@@ -73,11 +64,13 @@ export default function CompanyPublicProfile() {
         title="Perfil de empresa"
         backButton
         compactBack
-        onShare={handleShare}
+        shareUrl={generateCompanyUrl(companyId)}
+        shareTitle={profile?.company_name || 'Empresa en TrabaGE'}
+        reportTargetId={companyId}
         isOwn={false}
       >
         <ProfileActionBar
-          onMessage={handleContact}
+          onContact={handleContact}
           disabled={!hasCompanyActionableContact(profile)}
           label="Contactar"
         />

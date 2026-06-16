@@ -1,9 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import RoleRoute from './components/routing/RoleRoute';
 import GuestBar from './components/common/GuestBar';
+import InstallPrompt from './components/common/InstallPrompt';
 import { ToastContainer } from './components/ui/Toast';
 import { useNotificationContext } from './context/NotificationContext';
 
@@ -52,6 +53,7 @@ function AppRoutes() {
   return (
     <>
       <GuestBar />
+      <InstallPrompt />
       <Routes>
             <Route path="/" element={<SplashScreen />} />
             <Route path="/onboarding" element={<OnboardingFlow />} />
@@ -81,7 +83,8 @@ function AppRoutes() {
                 <Route path="/setup/company" element={<CompanySetup />} />
                 <Route path="/company/feed" element={<CompanyFeed />} />
                 <Route path="/company/dashboard" element={<Dashboard />} />
-                <Route path="/company/publish-job" element={<PublishJob />} />
+                <Route path="/company/jobs/create" element={<PublishJob />} />
+                <Route path="/company/publish-job" element={<Navigate to="/company/jobs/create" replace />} />
                 <Route path="/company/applicants" element={<Applicants />} />
                 <Route path="/company/notifications" element={<CompanyNotifications />} />
                 <Route path="/company/profile" element={<CompanyProfile />} />

@@ -44,7 +44,7 @@ export default function ContactSection({
       {isOwn ? (
         <div className="space-y-4">
           <p className="text-sm text-gray-500">
-            Estos datos se usan cuando alguien pulsa &quot;Enviar mensaje&quot; en tu perfil público.
+            Estos datos se usan cuando alguien pulsa &quot;Contactar&quot; en tu perfil público.
           </p>
           <Input
             label="Correo de contacto (Gmail u otro)"
@@ -74,7 +74,7 @@ export default function ContactSection({
           )}
         </div>
       ) : (
-        <p className="text-sm text-gray-500">Usa el botón &quot;Enviar mensaje&quot; para contactar.</p>
+        <p className="text-sm text-gray-500">Usa el botón &quot;Contactar&quot; para escribir a esta persona.</p>
       )}
     </ProfileSectionCard>
   );

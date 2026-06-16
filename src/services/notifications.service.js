@@ -25,5 +25,12 @@ export const notificationsService = {
       .eq('recipient_id', userId)
       .eq('read', false),
 
-  create: (data) => supabase.from('notifications').insert(data).select().single(),
+  create: (data) =>
+    supabase.rpc('create_notification', {
+      p_recipient_id: data.recipient_id,
+      p_type: data.type,
+      p_title: data.title,
+      p_body: data.body ?? null,
+      p_metadata: data.metadata ?? null,
+    }),
 };

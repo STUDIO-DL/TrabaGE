@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
 import { ChevronRight, Briefcase, ICON_SIZES } from '../../../constants/icons';
 import { getJobTypeLabel } from '../../../constants/jobTypes';
+import { getWorkModeLabel } from '../../../constants/workModes';
 import Button from '../../ui/Button';
 import DashboardSectionEmpty from './DashboardSectionEmpty';
 
 const STATUS_STYLES = {
+  draft: 'bg-gray-400',
   active: 'bg-emerald-500',
   paused: 'bg-amber-400',
   closed: 'bg-gray-300',
@@ -13,7 +15,7 @@ const STATUS_STYLES = {
 
 function getJobSubtitle(job) {
   if (job.work_mode) {
-    return `${job.work_mode} • ${getJobTypeLabel(job.job_type)}`;
+    return `${getWorkModeLabel(job.work_mode)} • ${getJobTypeLabel(job.job_type)}`;
   }
   const parts = [job.city, getJobTypeLabel(job.job_type)].filter(Boolean);
   return parts.join(' • ') || getJobTypeLabel(job.job_type);
@@ -27,7 +29,7 @@ export default function DashboardJobsList({ jobs }) {
       <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
         <h2 className="text-base font-semibold text-gray-900">Ofertas de trabajo</h2>
         <Link
-          to="/company/publish-job"
+          to="/company/jobs/create"
           className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
         >
           Ver todas
@@ -46,7 +48,7 @@ export default function DashboardJobsList({ jobs }) {
           {jobs.map((job) => (
             <li key={job.id}>
               <Link
-                to="/company/publish-job"
+                to="/company/jobs/create"
                 className="flex items-center gap-3 px-5 py-4 transition hover:bg-gray-50"
               >
                 <span
@@ -68,7 +70,7 @@ export default function DashboardJobsList({ jobs }) {
       )}
 
       <div className="mt-auto border-t border-gray-100 p-4">
-        <Link to="/company/publish-job">
+        <Link to="/company/jobs/create">
           <Button variant="secondary" fullWidth>
             Ver todas las ofertas
           </Button>

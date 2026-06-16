@@ -18,7 +18,7 @@ const candidateNav = [
 const companyNav = [
   { to: '/company/feed', label: 'Inicio', icon: 'home' },
   { to: '/company/dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { to: '/company/publish-job', label: 'Publicar', icon: 'publish', prominent: true },
+  { to: '/company/jobs/create', label: 'Publicar', icon: 'publish', prominent: true },
   { to: '/company/notifications', label: 'Notificaciones', icon: 'bell', showBadge: true },
   { to: '/company/profile', label: 'Perfil', icon: 'user' },
 ];

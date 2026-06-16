@@ -19,15 +19,15 @@ export const storageService = {
       .from('candidate-documents')
       .upload(`${userId}/cover-letter.pdf`, file, { upsert: true }),
 
-  uploadApplicationCV: (userId, jobId, file) =>
+  uploadApplicationCV: (userId, jobId, file, path) =>
     supabase.storage
       .from('candidate-documents')
-      .upload(`${userId}/applications/${jobId}-cv.pdf`, file, { upsert: true }),
+      .upload(path || `${userId}/applications/cvs/${jobId}-${Date.now()}.pdf`, file, { upsert: true }),
 
   uploadPostImage: (userId, postId, file) =>
     supabase.storage
       .from('post-images')
-      .upload(`${userId}/${postId}.jpg`, file, { upsert: true }),
+      .upload(`${userId}/posts/${postId}.jpg`, file, { upsert: true }),
 
   uploadVerificationDoc: (userId, file) => {
     const safeName = `${Date.now()}-${file.name.replace(/[^\w.-]/g, '_')}`;

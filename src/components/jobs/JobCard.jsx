@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
+import ContentActionMenu from '../common/ContentActionMenu';
 import {
   Briefcase,
   Bookmark,
@@ -11,6 +12,8 @@ import {
   ICON_SIZES,
 } from '../../constants/icons';
 import CompanyNameWithBadge from '../company/CompanyNameWithBadge';
+import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
+import { generateJobUrl } from '../../utils/generateShareUrl';
 import { formatSalary } from '../../utils/formatSalary';
 import { formatRelativeTime } from '../../utils/formatDate';
 import { JOB_CARD_ACCENTS } from '../../constants/jobSort';
@@ -34,18 +37,26 @@ export default function JobCard({ job, accentIndex = 0, saved = false, onSaveTog
         >
           <AppIcon icon={Briefcase} size={ICON_SIZES.default} />
         </div>
-        <button
-          type="button"
-          onClick={onSaveToggle}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
-          aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}
-        >
-          <AppIcon
-            icon={Bookmark}
-            size={ICON_SIZES.default}
-            className={saved ? 'fill-current text-primary-600' : ''}
+        <div className="flex items-center gap-1">
+          <ContentActionMenu
+            shareUrl={generateJobUrl(job.id)}
+            shareTitle={job.title}
+            targetType={REPORT_TARGET_TYPES.JOB}
+            targetId={job.id}
           />
-        </button>
+          <button
+            type="button"
+            onClick={onSaveToggle}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+            aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}
+          >
+            <AppIcon
+              icon={Bookmark}
+              size={ICON_SIZES.default}
+              className={saved ? 'fill-current text-primary-600' : ''}
+            />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-1">
@@ -60,10 +71,10 @@ export default function JobCard({ job, accentIndex = 0, saved = false, onSaveTog
             <span>{job.city}</span>
           </div>
         )}
-        {job.salary != null && (
+        {(job.salary != null || job.salary_negotiable) && (
           <div className="flex items-center gap-1.5">
             <AppIcon icon={Briefcase} size={ICON_SIZES.default} className={ICON_COLORS.muted} />
-            <span>{formatSalary(job.salary)}</span>
+            <span>{formatSalary(job.salary, job.salary_negotiable)}</span>
           </div>
         )}
         {postedAt && (

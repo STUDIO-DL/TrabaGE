@@ -2,24 +2,22 @@ import { Link } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
 import {
   Building2,
-  FileText,
   Plus,
   Users,
   ICON_SIZES,
 } from '../../../constants/icons';
 
 const QUICK_LINKS = [
+  { to: '/company/publish-job', label: 'Crear oferta', icon: Plus, tone: 'text-violet-600 bg-violet-50' },
   { to: '/company/applicants', label: 'Ver candidatos', icon: Users, tone: 'text-blue-600 bg-blue-50' },
-  { to: '/company/applicants', label: 'CVs guardados', icon: FileText, tone: 'text-emerald-600 bg-emerald-50' },
-  { to: '/company/publish-job', label: 'Publicar oferta', icon: Plus, tone: 'text-violet-600 bg-violet-50' },
-  { to: '/company/profile', label: 'Perfil empresa', icon: Building2, tone: 'text-amber-600 bg-amber-50' },
+  { to: '/company/profile', label: 'Editar perfil', icon: Building2, tone: 'text-amber-600 bg-amber-50' },
 ];
 
 export default function DashboardQuickAccess() {
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 className="text-base font-semibold text-gray-900">Accesos rápidos</h2>
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <h2 className="text-base font-semibold text-gray-900">Acciones rápidas</h2>
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {QUICK_LINKS.map(({ to, label, icon, tone }) => (
           <Link
             key={label}

@@ -3,20 +3,21 @@ import UserAvatar from '../common/UserAvatar';
 import Badge from '../ui/Badge';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
+import Select from '../ui/Select';
 import AppIcon from '../common/AppIcon';
-import { Download, Eye, MessageCircle, ICON_SIZES } from '../../constants/icons';
+import { Download, Eye, Phone, ICON_SIZES } from '../../constants/icons';
+import { APPLICATION_STATUSES, getApplicationStatus } from '../../constants/applicationStatuses';
 
-const STATUS_LABELS = {
-  pending: { variant: 'pending', label: 'Pendiente' },
-  viewed: { variant: 'default', label: 'Visto' },
-  contacted: { variant: 'success', label: 'Contactado' },
-  rejected: { variant: 'error', label: 'Rechazado' },
-};
-
-export default function ApplicantCard({ application, onDownloadCv, onContact }) {
+export default function ApplicantCard({
+  application,
+  onDownloadCv,
+  onContact,
+  onStatusChange,
+  statusUpdating = false,
+}) {
   const candidate = application.candidate_profiles;
   const job = application.jobs;
-  const status = STATUS_LABELS[application.status] || STATUS_LABELS.pending;
+  const status = getApplicationStatus(application.status);
 
   return (
     <Card className="mb-3">
@@ -27,6 +28,16 @@ export default function ApplicantCard({ application, onDownloadCv, onContact }) 
           <p className="text-sm text-gray-500">{job?.title}</p>
           <Badge variant={status.variant} label={status.label} className="mt-2" />
         </div>
+      </div>
+
+      <div className="mb-3">
+        <Select
+          label="Estado"
+          value={application.status}
+          onChange={(e) => onStatusChange?.(application.id, e.target.value)}
+          disabled={statusUpdating}
+          options={APPLICATION_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+        />
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -51,7 +62,7 @@ export default function ApplicantCard({ application, onDownloadCv, onContact }) 
           className="inline-flex items-center gap-1.5"
           onClick={() => onContact?.(application)}
         >
-          <AppIcon icon={MessageCircle} size={ICON_SIZES.default} />
+          <AppIcon icon={Phone} size={ICON_SIZES.default} />
           Contactar
         </Button>
       </div>

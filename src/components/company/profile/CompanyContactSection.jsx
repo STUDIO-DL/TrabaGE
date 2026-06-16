@@ -5,7 +5,7 @@ import Button from '../../ui/Button';
 import {
   Headphones,
   Mail,
-  MessageCircle,
+  Phone,
   Save,
   User,
   ICON_SIZES,
@@ -132,7 +132,7 @@ export default function CompanyContactSection({
             )}
             {profile.contact_whatsapp && (
               <ContactChannel
-                icon={MessageCircle}
+                icon={Phone}
                 label="WhatsApp"
                 value={profile.contact_whatsapp}
                 href={whatsappDigits ? `https://wa.me/${whatsappDigits}` : undefined}
@@ -140,7 +140,7 @@ export default function CompanyContactSection({
             )}
             {profile.contact_phone && (
               <ContactChannel
-                icon={User}
+                icon={Phone}
                 label="Teléfono"
                 value={profile.contact_phone}
                 href={`tel:${profile.contact_phone.replace(/\s/g, '')}`}

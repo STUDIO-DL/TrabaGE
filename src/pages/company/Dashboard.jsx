@@ -5,13 +5,12 @@ import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import CompanyDashboardShell from '../../components/company/dashboard/CompanyDashboardShell';
 import DashboardStatCard from '../../components/company/dashboard/DashboardStatCard';
-import DashboardJobsList from '../../components/company/dashboard/DashboardJobsList';
 import DashboardRecentCandidates from '../../components/company/dashboard/DashboardRecentCandidates';
 import DashboardQuickAccess from '../../components/company/dashboard/DashboardQuickAccess';
+import CompanyVerificationStatus from '../../components/company/profile/CompanyVerificationStatus';
 import { getCompanyLogoUrl } from '../../constants/images';
 import {
   Bell,
-  Bookmark,
   Briefcase,
   ChevronDown,
   FileText,
@@ -22,21 +21,8 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { useApplications } from '../../hooks/useApplications';
-import { usePosts } from '../../hooks/usePosts';
 import { useNotifications } from '../../hooks/useNotifications';
 import { jobsService } from '../../services/jobs.service';
-
-function mapJobForDashboard(job, applications) {
-  const candidateCount = applications.filter((app) => app.job_id === job.id).length;
-  return {
-    id: job.id,
-    title: job.title,
-    city: job.city,
-    job_type: job.job_type,
-    status: job.status === 'paused' ? 'paused' : job.status === 'closed' ? 'closed' : 'active',
-    candidates_count: candidateCount,
-  };
-}
 
 function mapCandidateForDashboard(application) {
   return {
@@ -51,7 +37,6 @@ export default function Dashboard() {
   const { user, isPreviewMode } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { applications } = useApplications();
-  const { posts } = usePosts(user?.id);
   const { unreadCount } = useNotifications();
   const [jobs, setJobs] = useState([]);
 
@@ -69,15 +54,9 @@ export default function Dashboard() {
   const stats = useMemo(
     () => ({
       activeJobs: jobs.filter((job) => job.status === 'active').length,
-      candidates: applications.length,
-      savedCvs: 0,
-      posts: posts.length,
+      applications: applications.length,
+      pendingReviews: applications.filter((app) => app.status === 'pending').length,
     }),
-    [applications.length, jobs, posts.length],
-  );
-
-  const dashboardJobs = useMemo(
-    () => jobs.map((job) => mapJobForDashboard(job, applications)),
     [applications, jobs],
   );
 
@@ -105,7 +84,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">Resumen</h1>
-            <p className="mt-1 text-sm text-gray-500">Bienvenido de nuevo 👋</p>
+            <p className="mt-1 text-sm text-gray-500">Bienvenido de nuevo</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -134,7 +113,7 @@ export default function Dashboard() {
             <Link to="/company/publish-job" className="hidden sm:block">
               <Button className="inline-flex items-center gap-2 rounded-xl px-4">
                 <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
-                Publicar oferta
+                Crear oferta
               </Button>
             </Link>
           </div>
@@ -152,35 +131,38 @@ export default function Dashboard() {
           <DashboardStatCard
             icon={Users}
             tone="green"
-            value={stats.candidates}
-            label="Candidatos"
+            value={stats.applications}
+            label="Postulaciones recibidas"
             linkLabel="Ver candidatos"
             to="/company/applicants"
           />
           <DashboardStatCard
             icon={FileText}
             tone="purple"
-            value={stats.savedCvs}
-            label="CVs guardados"
-            linkLabel="Ver CVs"
+            value={stats.pendingReviews}
+            label="Revisiones pendientes"
+            linkLabel="Revisar"
             to="/company/applicants"
           />
-          <DashboardStatCard
-            icon={Bookmark}
-            tone="amber"
-            value={stats.posts}
-            label="Publicaciones"
-            linkLabel="Ver publicaciones"
-            to="/company/feed"
-          />
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p className="text-sm font-medium text-gray-500">Estado de verificación</p>
+            <div className="mt-4">
+              <CompanyVerificationStatus company={profile} profile />
+            </div>
+            <Link
+              to="/company/verification"
+              className="mt-4 inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
+            >
+              Gestionar verificación
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-5">
           <div className="xl:col-span-3">
-            <DashboardJobsList jobs={dashboardJobs} />
-          </div>
-          <div className="space-y-6 xl:col-span-2">
             <DashboardRecentCandidates candidates={recentCandidates} />
+          </div>
+          <div className="xl:col-span-2">
             <DashboardQuickAccess />
           </div>
         </div>
@@ -189,7 +171,7 @@ export default function Dashboard() {
           <Link to="/company/publish-job">
             <Button fullWidth className="inline-flex items-center justify-center gap-2 rounded-xl">
               <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
-              Publicar oferta
+              Crear oferta
             </Button>
           </Link>
         </div>

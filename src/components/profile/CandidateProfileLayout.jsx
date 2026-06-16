@@ -13,12 +13,15 @@ export default function CandidateProfileLayout({
   onAvatarChange,
   avatarLoading,
   onShare,
+  shareUrl,
+  shareTitle,
+  reportTargetId,
   onSettings,
   onLogout,
   onDeleteAccount,
   onSaveField,
   savingField,
-  onMessage,
+  onContact,
   sidebar,
   children,
 }) {
@@ -27,6 +30,9 @@ export default function CandidateProfileLayout({
       title={title}
       backButton={backButton}
       onShare={onShare}
+      shareUrl={shareUrl}
+      shareTitle={shareTitle}
+      reportTargetId={reportTargetId}
       isOwn={isOwn}
       onSettings={onSettings}
       onLogout={onLogout}
@@ -42,8 +48,7 @@ export default function CandidateProfileLayout({
       />
       <ProfileActionBar
         isOwn={isOwn}
-        profile={profile}
-        onMessage={onMessage}
+        onContact={onContact}
         disabled={!hasCandidateContact(profile)}
       />
       <div className="mx-auto max-w-5xl px-4 py-6">

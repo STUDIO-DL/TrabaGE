@@ -7,3 +7,4 @@ export const generateShareUrl = (path) => {
 
 export const generateProfileUrl = (userId) => generateShareUrl(`/profile/${userId}`);
 export const generateCompanyUrl = (companyId) => generateShareUrl(`/companies/${companyId}`);
+export const generateJobUrl = (jobId) => generateShareUrl(`/candidate/jobs/${jobId}`);

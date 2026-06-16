@@ -18,16 +18,7 @@ export default function PublicProfile() {
   const { profile, loading } = useProfile(userId);
   const { showToast } = useNotificationContext();
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(generateProfileUrl(userId));
-      showToast('Enlace copiado', 'success');
-    } catch {
-      showToast('No se pudo copiar el enlace', 'error');
-    }
-  };
-
-  const handleMessage = () => {
+  const handleContact = () => {
     const { ok, error } = openCandidateContact(profile);
     if (!ok) showToast(error, 'error');
   };
@@ -53,8 +44,10 @@ export default function PublicProfile() {
       <CandidateProfileLayout
         title="Perfil del candidato"
         profile={profile}
-        onShare={handleShare}
-        onMessage={handleMessage}
+        shareUrl={generateProfileUrl(userId)}
+        shareTitle={profile.full_name || 'Perfil en TrabaGE'}
+        reportTargetId={userId}
+        onContact={handleContact}
       >
         <AboutSection about={profile.about} publicView />
         <EducationSection items={profile.education} />

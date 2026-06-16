@@ -1,6 +1,6 @@
 import { generateShareUrl } from '../../utils/generateShareUrl';
 import AppIcon from '../common/AppIcon';
-import { Copy, Mail, MessageCircle, ICON_SIZES } from '../../constants/icons';
+import { Copy, Mail, Phone, ICON_SIZES } from '../../constants/icons';
 
 export default function ShareMenu({ url, title }) {
   const shareUrl = url.startsWith('http') ? url : generateShareUrl(url);
@@ -19,7 +19,7 @@ export default function ShareMenu({ url, title }) {
         rel="noreferrer"
         className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-medium text-white"
       >
-        <AppIcon icon={MessageCircle} size={ICON_SIZES.default} className="text-white" />
+        <AppIcon icon={Phone} size={ICON_SIZES.default} className="text-white" />
         WhatsApp
       </a>
       <a

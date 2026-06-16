@@ -193,29 +193,32 @@ export default function CompanyProfileLayout({
     onUploadComplete?.();
   };
 
+  const readOnly = isPreviewMode;
+
   return (
     <ProfilePageShell
       title="Perfil de empresa"
       backButton
       compactBack
       onShare={handleShare}
-      isOwn
-      onSettings={() => handlePreviewAction('settings')}
-      onLogout={onLogout}
-      onDeleteAccount={() => handlePreviewAction('delete-account')}
+      isOwn={!readOnly}
+      onSettings={readOnly ? undefined : () => handlePreviewAction('settings')}
+      onLogout={readOnly ? undefined : onLogout}
+      onDeleteAccount={readOnly ? undefined : () => handlePreviewAction('delete-account')}
     >
       <CompanyProfileView
         profile={displayProfile}
         companyId={userId}
         jobs={jobs}
-        onEditName={() => handlePreviewAction('edit-name')}
-        onEditAbout={() => handlePreviewAction('edit-about')}
-        onBookmark={() => handlePreviewAction('bookmark')}
-        onUploadLogo={(file) => uploadImage(file, 'logo')}
-        onUploadCover={(file) => uploadImage(file, 'cover')}
-        onAddService={handleAddService}
-        onDeleteService={handleDeleteService}
-        onSaveContact={handleSaveContact}
+        readOnly={readOnly}
+        onEditName={readOnly ? undefined : () => handlePreviewAction('edit-name')}
+        onEditAbout={readOnly ? undefined : () => handlePreviewAction('edit-about')}
+        onBookmark={readOnly ? undefined : () => handlePreviewAction('bookmark')}
+        onUploadLogo={readOnly ? undefined : (file) => uploadImage(file, 'logo')}
+        onUploadCover={readOnly ? undefined : (file) => uploadImage(file, 'cover')}
+        onAddService={readOnly ? undefined : handleAddService}
+        onDeleteService={readOnly ? undefined : handleDeleteService}
+        onSaveContact={readOnly ? undefined : handleSaveContact}
         contactSaving={contactSaving}
         logoLoading={logoLoading}
         coverLoading={coverLoading}

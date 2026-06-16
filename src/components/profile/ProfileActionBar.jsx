@@ -1,11 +1,11 @@
 import AppIcon from '../common/AppIcon';
-import { Mail, ICON_SIZES } from '../../constants/icons';
+import { Phone, ICON_SIZES } from '../../constants/icons';
 
 export default function ProfileActionBar({
   isOwn = false,
-  onMessage,
+  onContact,
   disabled,
-  label = 'Enviar mensaje',
+  label = 'Contactar',
 }) {
   if (isOwn) return null;
 
@@ -14,11 +14,11 @@ export default function ProfileActionBar({
       <div className="mx-auto max-w-5xl">
         <button
           type="button"
-          onClick={onMessage}
+          onClick={onContact}
           disabled={disabled}
           className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:cursor-not-allowed disabled:bg-gray-300 sm:w-auto"
         >
-          <AppIcon icon={Mail} size={ICON_SIZES.default} className="text-white" />
+          <AppIcon icon={Phone} size={ICON_SIZES.default} className="text-white" />
           {label}
         </button>
         {disabled && (

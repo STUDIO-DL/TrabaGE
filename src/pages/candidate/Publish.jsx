@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import PostComposer from '../../components/feed/PostComposer';
 import { useAuth } from '../../hooks/useAuth';
+import { useCreatePost } from '../../hooks/useCreatePost';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function Publish() {
   const { isPreviewMode } = useAuth();
+  const { createPost, loading } = useCreatePost();
 
   return (
     <PageContainer title="Publicar">
@@ -21,7 +23,7 @@ export default function Publish() {
             </Link>
           </div>
         ) : (
-          <PostComposer onSubmit={async () => {}} />
+          <PostComposer onSubmit={createPost} loading={loading} />
         )}
       </div>
     </PageContainer>

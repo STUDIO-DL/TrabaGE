@@ -17,5 +17,7 @@ export const postsService = {
 
   create: (data) => supabase.from('posts').insert(data).select().single(),
 
+  update: (id, data) => supabase.from('posts').update(data).eq('id', id).select().single(),
+
   delete: (id) => supabase.from('posts').delete().eq('id', id),
 };

@@ -2,12 +2,17 @@ import { useNavigate } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import { Share2, ICON_SIZES } from '../../constants/icons';
 import ProfileMenu from './ProfileMenu';
+import ContentActionMenu from '../common/ContentActionMenu';
+import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 
 export default function ProfilePageShell({
   title = 'Perfil del candidato',
   backButton = true,
   compactBack = false,
   onShare,
+  shareUrl,
+  shareTitle,
+  reportTargetId,
   isOwn = false,
   onSettings,
   onLogout,
@@ -15,6 +20,7 @@ export default function ProfilePageShell({
   children,
 }) {
   const navigate = useNavigate();
+  const showReportMenu = !isOwn && shareUrl && reportTargetId;
 
   return (
     <div className="profile-page min-h-full bg-gray-50">
@@ -47,14 +53,25 @@ export default function ProfilePageShell({
           <h1 className="flex-1 truncate text-center text-base font-semibold text-gray-900">{title}</h1>
 
           <div className={`flex items-center justify-end gap-1 ${compactBack ? 'w-[72px]' : 'w-20'}`}>
-            <button
-              type="button"
-              onClick={onShare}
-              className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
-              aria-label="Compartir"
-            >
-              <AppIcon icon={Share2} size={ICON_SIZES.default} />
-            </button>
+            {showReportMenu ? (
+              <ContentActionMenu
+                shareUrl={shareUrl}
+                shareTitle={shareTitle}
+                targetType={REPORT_TARGET_TYPES.PROFILE}
+                targetId={reportTargetId}
+              />
+            ) : (
+              onShare && (
+                <button
+                  type="button"
+                  onClick={onShare}
+                  className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
+                  aria-label="Compartir"
+                >
+                  <AppIcon icon={Share2} size={ICON_SIZES.default} />
+                </button>
+              )
+            )}
             {isOwn && (
               <ProfileMenu
                 onSettings={onSettings}

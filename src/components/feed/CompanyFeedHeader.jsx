@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
-import { Bell, Search, SlidersHorizontal, ICON_COLORS, ICON_SIZES } from '../../constants/icons';
+import { Bell, Filter, Search, ICON_COLORS, ICON_SIZES } from '../../constants/icons';
 import { useNotifications } from '../../hooks/useNotifications';
 
 export default function CompanyFeedHeader({ query = '', onQueryChange }) {
@@ -45,7 +45,7 @@ export default function CompanyFeedHeader({ query = '', onQueryChange }) {
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
             aria-label="Filtros"
           >
-            <AppIcon icon={SlidersHorizontal} size={ICON_SIZES.default} />
+            <AppIcon icon={Filter} size={ICON_SIZES.default} />
           </button>
         </div>
         <div className="px-4 pb-3">
