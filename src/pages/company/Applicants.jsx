@@ -10,6 +10,7 @@ import { useProfile } from '../../hooks/useProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { applicationsService } from '../../services/applications.service';
 import { storageService } from '../../services/storage.service';
+import { resolveCvBucket } from '../../utils/storagePaths';
 import { profileService } from '../../services/profile.service';
 import { openCandidateContact } from '../../utils/contact';
 import { isCompanyVerified } from '../../utils/companyVerification';
@@ -28,12 +29,13 @@ export default function Applicants() {
       return;
     }
 
-    const { data: cvPath } = await applicationsService.getCvPath(applicationId);
-    if (!cvPath) {
+    const { data: cvPathValue } = await applicationsService.getCvPath(applicationId);
+    if (!cvPathValue) {
       showToast('No se encontró el CV', 'error');
       return;
     }
-    const { data } = await storageService.getSignedUrl('candidate-documents', cvPath, 900);
+    const bucket = resolveCvBucket(cvPathValue);
+    const { data } = await storageService.getSignedUrl(bucket, cvPathValue, 900);
     if (data?.signedUrl) window.open(data.signedUrl, '_blank');
     else showToast('No se pudo descargar el CV', 'error');
   };

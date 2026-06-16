@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import FileUpload from '../ui/FileUpload';
 import AppIcon from '../common/AppIcon';
 import { X, ICON_SIZES } from '../../constants/icons';
+import { FILE_HINTS } from '../../utils/validateFile';
 
 export default function PostComposer({ onSubmit, loading = false }) {
   const [content, setContent] = useState('');
@@ -64,7 +65,8 @@ export default function PostComposer({ onSubmit, loading = false }) {
         <FileUpload
           label={imageFile ? 'Cambiar imagen' : 'Imagen'}
           accept="image/jpeg,image/png,image/webp"
-          fileType="image"
+          fileType="postImage"
+          hint={FILE_HINTS.postImage}
           onUpload={handleImageSelect}
         />
         <Button type="submit" loading={loading} disabled={!content.trim()}>

@@ -77,9 +77,9 @@ export default function CompanyProfileHeader({
   const logoInputRef = useRef(null);
   const coverInputId = 'company-cover-input';
   const name = getCompanyDisplayName(profile);
-  const logoSrc = getCompanyLogoUrl(profile?.logo_url);
+  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
   const coverSrc = getCompanyCoverUrl(profile?.cover_url);
-  const hasCustomLogo = Boolean(profile?.logo_url);
+  const hasCustomLogo = Boolean(profile?.logo_path);
 
   const handleLogoChange = (event) => {
     const file = event.target.files?.[0];
@@ -164,6 +164,10 @@ export default function CompanyProfileHeader({
                 </>
               )}
             </div>
+
+            {!readOnly && (
+              <p className="mt-2 text-[11px] text-gray-500">Max 2 MB</p>
+            )}
 
             {!readOnly && !hasCustomLogo && (
               <span className="mb-1 rounded-full bg-primary-50 px-2.5 py-1 text-[11px] font-medium text-primary-700">

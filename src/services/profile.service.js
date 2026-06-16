@@ -55,7 +55,7 @@ export const profileService = {
 
     return supabase
       .from('candidate_profiles')
-      .select('user_id, full_name, headline, city, avatar_url, skills(name)')
+      .select('user_id, full_name, headline, city, avatar_path, skills(name)')
       .or(`full_name.ilike.%${term}%,headline.ilike.%${term}%,city.ilike.%${term}%`)
       .limit(limit);
   },

@@ -311,7 +311,7 @@ export default function ProfileHero({
       <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-5 sm:flex-row sm:items-end">
         <div className="relative shrink-0">
           <UserAvatar
-            src={profile?.avatar_url}
+            src={profile?.avatar_path}
             alt={profile?.full_name}
             size="xl"
             className="border-white/30 ring-4 ring-white/20"
@@ -342,6 +342,9 @@ export default function ProfileHero({
                   <AppIcon icon={Camera} size={ICON_SIZES.default} />
                 )}
               </button>
+              <p className="absolute -bottom-6 left-0 whitespace-nowrap text-[10px] text-white/75">
+                Max 2 MB
+              </p>
             </>
           )}
         </div>

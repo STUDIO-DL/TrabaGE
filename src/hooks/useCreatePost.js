@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { postsService } from '../services/posts.service';
 import { storageService } from '../services/storage.service';
+import { postImagePath } from '../constants/storage';
 import { ROLES } from '../constants/roles';
 import { useAuth } from './useAuth';
 import { useNotificationContext } from '../context/NotificationContext';
 import { GUEST_MODE_MESSAGE } from '../utils/guestMode';
+import { compressPostImage } from '../utils/imageCompression';
+import { validateFile } from '../utils/validateFile';
 
 export function useCreatePost() {
   const { user, isPreviewMode, role } = useAuth();
@@ -15,6 +18,14 @@ export function useCreatePost() {
     if (isPreviewMode) {
       showToast(GUEST_MODE_MESSAGE, 'info');
       return { ok: false };
+    }
+
+    if (imageFile) {
+      const validation = validateFile(imageFile, 'postImage');
+      if (!validation.valid) {
+        showToast(validation.error, 'error');
+        return { ok: false };
+      }
     }
 
     setLoading(true);
@@ -32,10 +43,19 @@ export function useCreatePost() {
     }
 
     if (imageFile && post?.id) {
+      let compressed;
+      try {
+        compressed = await compressPostImage(imageFile);
+      } catch (compressError) {
+        showToast(compressError.message, 'error');
+        setLoading(false);
+        return { ok: true, post };
+      }
+
       const { error: uploadError } = await storageService.uploadPostImage(
         user.id,
         post.id,
-        imageFile,
+        compressed,
       );
 
       if (uploadError) {
@@ -44,11 +64,8 @@ export function useCreatePost() {
         return { ok: true, post };
       }
 
-      const { data: urlData } = storageService.getPublicUrl(
-        'post-images',
-        `${user.id}/posts/${post.id}.jpg`,
-      );
-      await postsService.update(post.id, { image_url: urlData.publicUrl });
+      const path = postImagePath(user.id, post.id);
+      await postsService.update(post.id, { post_image_path: path });
     }
 
     showToast('Publicación creada', 'success');

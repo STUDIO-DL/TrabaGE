@@ -55,9 +55,9 @@ export const verificationService = {
       .eq('user_id', companyId)
       .single(),
 
-  submitRequest: async (documentUrl, documentName) => {
+  submitRequest: async (documentPath, documentName) => {
     const { data, error } = await supabase.rpc('submit_verification_request', {
-      p_document_url: documentUrl,
+      p_document_path: documentPath,
       p_document_name: documentName,
     });
 
@@ -108,7 +108,7 @@ export const verificationService = {
   getPendingRequests: () =>
     supabase
       .from('verification_requests')
-      .select('*, company_profiles(company_name, logo_url, is_verified, verification_status)')
+      .select('*, company_profiles(company_name, logo_path, is_verified, verification_status)')
       .eq('status', 'pending')
       .order('created_at', { ascending: false }),
 

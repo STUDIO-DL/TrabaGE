@@ -13,6 +13,9 @@ export default function RoleRoute({ role: requiredRole }) {
     setupComplete || (previewActive && Boolean(getPreviewRole()));
 
   if (effectiveRole !== requiredRole) {
+    if (requiredRole === 'admin') {
+      return <Navigate to="/login" replace />;
+    }
     const fallback = previewActive ? '/account-type' : '/login';
     return <Navigate to={ROLE_HOME[effectiveRole] || fallback} replace />;
   }

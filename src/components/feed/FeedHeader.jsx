@@ -23,13 +23,13 @@ export default function FeedHeader({ query = '', onQueryChange }) {
         <Link to={profilePath} className="shrink-0" aria-label="Ir a mi perfil">
           {isCompany ? (
             <Avatar
-              src={getCompanyLogoUrl(profile?.logo_url)}
+              src={getCompanyLogoUrl(profile?.logo_path)}
               name={profile?.company_name}
               size="sm"
               className="!h-8 !w-8 !rounded-xl"
             />
           ) : (
-            <UserAvatar src={profile?.avatar_url} alt={profile?.full_name} size="sm" />
+            <UserAvatar src={profile?.avatar_path} alt={profile?.full_name} size="sm" />
           )}
         </Link>
 

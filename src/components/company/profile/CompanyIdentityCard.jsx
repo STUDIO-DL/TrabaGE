@@ -34,8 +34,8 @@ function DetailRow({ icon, label, value }) {
 }
 
 export default function CompanyIdentityCard({ profile, onUploadLogo, onEditName }) {
-  const logoSrc = getCompanyLogoUrl(profile?.logo_url);
-  const hasCustomLogo = Boolean(profile?.logo_url);
+  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
+  const hasCustomLogo = Boolean(profile?.logo_path);
   const name = getCompanyDisplayName(profile);
 
   return (

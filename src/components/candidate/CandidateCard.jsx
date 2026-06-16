@@ -11,7 +11,7 @@ export default function CandidateCard({
 
   const content = (
     <>
-      <UserAvatar src={candidate.avatar_url} alt={candidate.full_name} size="md" />
+      <UserAvatar src={candidate.avatar_path} alt={candidate.full_name} size="md" />
       <div className="min-w-0 flex-1 text-left">
         <p className="truncate font-semibold text-gray-900">{candidate.full_name}</p>
         {subtitle && <p className="truncate text-sm text-gray-500">{subtitle}</p>}

@@ -26,7 +26,7 @@ export const PREVIEW_CANDIDATE_PROFILE = {
   city: 'Malabo',
   years_experience: 3,
   setup_complete: true,
-  avatar_url: null,
+  avatar_path: null,
   experience: [],
   education: [],
   certifications: [],
@@ -49,7 +49,7 @@ export const PREVIEW_APPLICANT_PROFILES = {
     about: 'Especialista en React y diseño de interfaces. Busco oportunidades en Malabo.',
     city: 'Malabo',
     years_experience: 4,
-    avatar_url: null,
+    avatar_path: null,
     experience: [
       {
         id: 'preview-exp-1',
@@ -73,7 +73,7 @@ export const PREVIEW_APPLICANT_PROFILES = {
     about: 'Experiencia en redes, soporte y administración de sistemas.',
     city: 'Bata',
     years_experience: 6,
-    avatar_url: null,
+    avatar_path: null,
     experience: [],
     education: [],
     certifications: [],
@@ -90,7 +90,7 @@ export const PREVIEW_COMPANY_PROFILE = {
   city: null,
   description: null,
   setup_complete: true,
-  logo_url: null,
+  logo_path: null,
   cover_url: null,
   verified_status: 'unverified',
   is_verified: false,
@@ -146,7 +146,7 @@ export function clearPreviewMode() {
 export function getPreviewMediaUrls() {
   return {
     cover_url: sessionStorage.getItem(PREVIEW_COVER_KEY),
-    logo_url: sessionStorage.getItem(PREVIEW_LOGO_KEY),
+    logo_path: sessionStorage.getItem(PREVIEW_LOGO_KEY),
   };
 }
 

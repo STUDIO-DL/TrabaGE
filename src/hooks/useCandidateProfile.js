@@ -3,6 +3,9 @@ import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { profileService } from '../services/profile.service';
 import { storageService } from '../services/storage.service';
+import { cvPath, avatarPath } from '../constants/storage';
+import { compressProfileImage } from '../utils/imageCompression';
+import { validateFile } from '../utils/validateFile';
 
 export function useCandidateProfile() {
   const { user } = useAuth();
@@ -21,39 +24,53 @@ export function useCandidateProfile() {
 
   const uploadAvatar = useCallback(
     async (file) => {
-      const { error: uploadError } = await storageService.uploadAvatar(userId, file);
+      const validation = validateFile(file, 'avatar');
+      if (!validation.valid) return { error: { message: validation.error } };
+
+      let compressed;
+      try {
+        compressed = await compressProfileImage(file);
+      } catch (compressError) {
+        return { error: { message: compressError.message } };
+      }
+
+      const { error: uploadError } = await storageService.uploadAvatar(
+        userId,
+        compressed,
+        profile?.avatar_path,
+      );
       if (uploadError) return { error: uploadError };
 
-      const { data: urlData } = storageService.getPublicUrl('avatars', `${userId}/avatar.jpg`);
-      return updateBasicInfo({ avatar_url: urlData.publicUrl });
+      return updateBasicInfo({ avatar_path: avatarPath(userId) });
     },
-    [userId, updateBasicInfo],
+    [userId, profile?.avatar_path, updateBasicInfo],
   );
 
   const uploadCV = useCallback(
     async (file) => {
-      const { error: uploadError } = await storageService.uploadCV(userId, file);
+      const validation = validateFile(file, 'cv');
+      if (!validation.valid) return { error: { message: validation.error } };
+
+      const { error: uploadError } = await storageService.uploadCV(
+        userId,
+        file,
+        profile?.cv_path,
+      );
       if (uploadError) return { error: uploadError };
 
       return updateBasicInfo({
-        cv_url: `${userId}/cv.pdf`,
+        cv_path: cvPath(userId),
         cv_name: file.name,
       });
     },
-    [userId, updateBasicInfo],
+    [userId, profile?.cv_path, updateBasicInfo],
   );
 
-  const uploadCoverLetter = useCallback(
-    async (file) => {
-      const { error: uploadError } = await storageService.uploadCoverLetter(userId, file);
-      if (uploadError) return { error: uploadError };
-
-      return updateBasicInfo({
-        cover_letter_url: `${userId}/cover-letter.pdf`,
-        cover_letter_name: file.name,
-      });
+  const saveCoverLetter = useCallback(
+    async (text) => {
+      return updateBasicInfo({ cover_letter: text?.trim() || null });
     },
-    [userId, updateBasicInfo],
+    [updateBasicInfo],
   );
 
   const addExperience = useCallback(
@@ -208,7 +225,7 @@ export function useCandidateProfile() {
     updateBasicInfo,
     uploadAvatar,
     uploadCV,
-    uploadCoverLetter,
+    saveCoverLetter,
     addExperience,
     updateExperience,
     deleteExperience,

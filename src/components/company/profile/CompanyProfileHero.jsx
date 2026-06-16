@@ -3,7 +3,7 @@ import { getCompanyDisplayName } from '../../../utils/companyProfile';
 import CompanyVerificationStatus from './CompanyVerificationStatus';
 
 export default function CompanyProfileHero({ profile }) {
-  const logoSrc = getCompanyLogoUrl(profile?.logo_url);
+  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
   const name = getCompanyDisplayName(profile);
 
   return (

@@ -46,7 +46,7 @@ export default function ContentActionMenu({
   };
 
   return (
-    <>
+    <div className={shareMode === 'panel' ? 'space-y-2' : undefined}>
       <ActionMenu
         onShare={handleShare}
         onReport={handleReport}
@@ -62,6 +62,6 @@ export default function ContentActionMenu({
         targetType={targetType}
         targetId={targetId}
       />
-    </>
+    </div>
   );
 }

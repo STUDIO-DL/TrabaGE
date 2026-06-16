@@ -1,155 +1,185 @@
+import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import PageContainer from '../../components/layout/PageContainer';
-import Card from '../../components/ui/Card';
-import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
+import AdminStatCard from '../../components/admin/AdminStatCard';
+import AdminSectionCard from '../../components/admin/AdminSectionCard';
+import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Spinner from '../../components/ui/Spinner';
-import Modal from '../../components/ui/Modal';
-import { useAuth } from '../../hooks/useAuth';
-import { useNotificationContext } from '../../context/NotificationContext';
+import {
+  Briefcase,
+  Building2,
+  Newspaper,
+  ShieldCheck,
+  Users,
+} from '../../constants/icons';
 import { adminService } from '../../services/admin.service';
-import { formatRelativeTime } from '../../utils/formatDate';
+import { formatDate, formatRelativeTime } from '../../utils/formatDate';
 
 export default function AdminDashboard() {
-  const { logout } = useAuth();
-  const { showToast } = useNotificationContext();
-  const [verifications, setVerifications] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [recentUsers, setRecentUsers] = useState([]);
+  const [recentCompanies, setRecentCompanies] = useState([]);
+  const [recentVerifications, setRecentVerifications] = useState([]);
+  const [recentReports, setRecentReports] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [reviewingId, setReviewingId] = useState(null);
-  const [rejectModal, setRejectModal] = useState({ open: false, id: null });
-  const [rejectNotes, setRejectNotes] = useState('');
-
-  const loadVerifications = async () => {
-    setLoading(true);
-    const { data, error } = await adminService.getPendingVerifications();
-    if (error) showToast(error.message, 'error');
-    setVerifications(data ?? []);
-    setLoading(false);
-  };
 
   useEffect(() => {
-    loadVerifications();
+    const load = async () => {
+      setLoading(true);
+      const [statsRes, usersRes, companiesRes, verificationsRes, reportsRes, activityRes] =
+        await Promise.all([
+          adminService.getDashboardStats(),
+          adminService.getRecentUsers(),
+          adminService.getRecentCompanies(),
+          adminService.getRecentVerifications(),
+          adminService.getRecentReports(),
+          adminService.getRecentActivity(),
+        ]);
+
+      if (!statsRes.error) setStats(statsRes.data);
+      setRecentUsers(usersRes.data ?? []);
+      setRecentCompanies(companiesRes.data ?? []);
+      setRecentVerifications(verificationsRes.data ?? []);
+      setRecentReports(reportsRes.data ?? []);
+      setRecentActivity(activityRes.data ?? []);
+      setLoading(false);
+    };
+
+    load();
   }, []);
 
-  const handleApprove = async (id) => {
-    setReviewingId(id);
-    const { error } = await adminService.reviewVerification(id, 'approved', null);
-    setReviewingId(null);
-    if (error) {
-      showToast(error.message, 'error');
-      return;
-    }
-    showToast('Empresa verificada', 'success');
-    await loadVerifications();
-  };
-
-  const handleReject = async () => {
-    if (!rejectModal.id) return;
-    setReviewingId(rejectModal.id);
-    const { error } = await adminService.reviewVerification(
-      rejectModal.id,
-      'rejected',
-      rejectNotes.trim() || null,
+  if (loading) {
+    return (
+      <div className="flex min-h-[320px] items-center justify-center">
+        <Spinner size="lg" />
+      </div>
     );
-    setReviewingId(null);
-    setRejectModal({ open: false, id: null });
-    setRejectNotes('');
-    if (error) {
-      showToast(error.message, 'error');
-      return;
-    }
-    showToast('Solicitud rechazada', 'success');
-    await loadVerifications();
-  };
-
-  const handlePreview = async (documentPath) => {
-    const { data, error } = await adminService.getVerificationDocumentUrl(documentPath);
-    if (error || !data?.signedUrl) {
-      showToast(error?.message || 'No se pudo abrir el documento', 'error');
-      return;
-    }
-    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
-  };
+  }
 
   return (
-    <PageContainer title="Admin" bottomNav={false}>
-      <div className="space-y-4 p-4">
-        <section>
-          <h2 className="mb-3 text-lg font-semibold text-gray-900">Verificaciones</h2>
-          {loading ? (
-            <Spinner fullscreen />
-          ) : verifications.length === 0 ? (
-            <p className="text-sm text-gray-500">No hay verificaciones pendientes.</p>
-          ) : (
-            verifications.map((item) => (
-              <Card key={item.id} className="mb-3">
-                <p className="font-semibold text-gray-900">
-                  {item.company_profiles?.company_name ?? 'Empresa'}
-                </p>
-                <p className="mt-1 text-xs text-gray-500">
-                  Enviada {formatRelativeTime(item.created_at ?? item.submitted_at)}
-                </p>
-                {item.document_name && (
-                  <p className="mt-1 text-sm text-gray-600">{item.document_name}</p>
-                )}
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => handlePreview(item.document_url)}
-                  >
-                    Ver documento
-                  </Button>
-                  <Button
-                    size="sm"
-                    loading={reviewingId === item.id}
-                    onClick={() => handleApprove(item.id)}
-                  >
-                    Aprobar
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="danger"
-                    onClick={() => setRejectModal({ open: true, id: item.id })}
-                  >
-                    Rechazar
-                  </Button>
-                </div>
-              </Card>
-            ))
-          )}
-        </section>
-
-        <Button variant="danger" fullWidth onClick={logout}>
-          Cerrar sesión
-        </Button>
+    <div className="space-y-8">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <AdminStatCard icon={Users} tone="blue" value={stats?.totalUsers ?? 0} label="Total usuarios" />
+        <AdminStatCard icon={Building2} tone="green" value={stats?.totalCompanies ?? 0} label="Total empresas" />
+        <AdminStatCard
+          icon={ShieldCheck}
+          tone="amber"
+          value={stats?.pendingVerifications ?? 0}
+          label="Verificaciones pendientes"
+        />
+        <AdminStatCard icon={Briefcase} tone="purple" value={stats?.activeJobs ?? 0} label="Ofertas activas" />
+        <AdminStatCard icon={Newspaper} tone="slate" value={stats?.totalPosts ?? 0} label="Publicaciones" />
       </div>
 
-      <Modal
-        isOpen={rejectModal.open}
-        onClose={() => {
-          setRejectModal({ open: false, id: null });
-          setRejectNotes('');
-        }}
-        title="Rechazar verificación"
-      >
-        <div className="space-y-4">
-          <Input
-            label="Notas para la empresa"
-            value={rejectNotes}
-            onChange={(e) => setRejectNotes(e.target.value)}
-            placeholder="Indica qué debe corregir la empresa"
-          />
-          <Button
-            fullWidth
-            variant="danger"
-            loading={reviewingId === rejectModal.id}
-            onClick={handleReject}
-          >
-            Confirmar rechazo
-          </Button>
-        </div>
-      </Modal>
-    </PageContainer>
+      <div className="grid gap-6 xl:grid-cols-2">
+        <AdminSectionCard title="Usuarios recientes">
+          <ul className="space-y-3">
+            {recentUsers.length === 0 ? (
+              <li className="text-sm text-gray-500">Sin registros recientes.</li>
+            ) : (
+              recentUsers.map((user) => (
+                <li key={user.user_id} className="flex items-center justify-between gap-3 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {user.full_name || user.company_name || user.email}
+                    </p>
+                    <p className="text-gray-500">{user.email}</p>
+                  </div>
+                  <span className="text-xs text-gray-400">{formatRelativeTime(user.created_at)}</span>
+                </li>
+              ))
+            )}
+          </ul>
+        </AdminSectionCard>
+
+        <AdminSectionCard title="Empresas recientes">
+          <ul className="space-y-3">
+            {recentCompanies.length === 0 ? (
+              <li className="text-sm text-gray-500">Sin empresas recientes.</li>
+            ) : (
+              recentCompanies.map((company) => (
+                <li key={company.user_id} className="flex items-center justify-between gap-3 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-900">{company.company_name}</p>
+                    <p className="text-gray-500">{company.city || 'Sin ciudad'}</p>
+                  </div>
+                  <AdminStatusBadge
+                    status={company.is_verified ? 'verified' : 'unverified'}
+                    label={company.is_verified ? 'Verificada' : 'Sin verificar'}
+                  />
+                </li>
+              ))
+            )}
+          </ul>
+        </AdminSectionCard>
+
+        <AdminSectionCard
+          title="Solicitudes de verificación"
+          action={
+            <Link to="/admin/verifications" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              Ver todas
+            </Link>
+          }
+        >
+          <ul className="space-y-3">
+            {recentVerifications.length === 0 ? (
+              <li className="text-sm text-gray-500">Sin solicitudes.</li>
+            ) : (
+              recentVerifications.map((item) => (
+                <li key={item.id} className="flex items-center justify-between gap-3 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-900">
+                      {item.company_profiles?.company_name ?? 'Empresa'}
+                    </p>
+                    <p className="text-gray-500">{formatDate(item.created_at)}</p>
+                  </div>
+                  <AdminStatusBadge status={item.status} />
+                </li>
+              ))
+            )}
+          </ul>
+        </AdminSectionCard>
+
+        <AdminSectionCard
+          title="Reportes recientes"
+          action={
+            <Link to="/admin/reports" className="text-sm font-medium text-primary-600 hover:text-primary-700">
+              Ver todos
+            </Link>
+          }
+        >
+          <ul className="space-y-3">
+            {recentReports.length === 0 ? (
+              <li className="text-sm text-gray-500">Sin reportes.</li>
+            ) : (
+              recentReports.map((report) => (
+                <li key={report.id} className="flex items-center justify-between gap-3 text-sm">
+                  <div>
+                    <p className="font-medium text-gray-900 capitalize">{report.target_type}</p>
+                    <p className="text-gray-500">{report.reason_code}</p>
+                  </div>
+                  <AdminStatusBadge status={report.status} />
+                </li>
+              ))
+            )}
+          </ul>
+        </AdminSectionCard>
+      </div>
+
+      <AdminSectionCard title="Actividad reciente">
+        <ul className="space-y-3">
+          {recentActivity.length === 0 ? (
+            <li className="text-sm text-gray-500">Sin actividad reciente.</li>
+          ) : (
+            recentActivity.map((item) => (
+              <li key={item.id} className="flex items-center justify-between gap-3 text-sm">
+                <p className="text-gray-800">{item.label}</p>
+                <span className="text-xs text-gray-400">{formatRelativeTime(item.created_at)}</span>
+              </li>
+            ))
+          )}
+        </ul>
+      </AdminSectionCard>
+    </div>
   );
 }

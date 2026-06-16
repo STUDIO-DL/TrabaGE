@@ -13,7 +13,7 @@ export const applicationsService = {
   getJobApplicants: (companyId) =>
     supabase
       .from('applications')
-      .select('*, jobs!inner(company_id, title), candidate_profiles(full_name, avatar_url)')
+      .select('*, jobs!inner(company_id, title), candidate_profiles(full_name, avatar_path)')
       .eq('jobs.company_id', companyId)
       .order('applied_at', { ascending: false }),
 
@@ -29,5 +29,5 @@ export const applicationsService = {
       .maybeSingle(),
 
   getCvPath: (applicationId) =>
-    supabase.rpc('get_application_cv_url', { app_id: applicationId }),
+    supabase.rpc('get_application_cv_path', { app_id: applicationId }),
 };

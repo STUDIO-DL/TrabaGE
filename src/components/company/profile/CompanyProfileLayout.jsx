@@ -7,6 +7,8 @@ import { storageService } from '../../../services/storage.service';
 import { jobsService } from '../../../services/jobs.service';
 import { getPreviewMediaUrls } from '../../../constants/preview';
 import { validateFile } from '../../../utils/validateFile';
+import { compressProfileImage } from '../../../utils/imageCompression';
+import { logoPath, companyCoverPath } from '../../../constants/storage';
 import CompanyProfileView from './CompanyProfileView';
 
 export default function CompanyProfileLayout({
@@ -31,7 +33,7 @@ export default function CompanyProfileLayout({
     const stored = getPreviewMediaUrls();
     setPreviewMedia({
       cover: stored.cover_url,
-      logo: stored.logo_url,
+      logo: stored.logo_path,
     });
   }, [isPreviewMode]);
 
@@ -40,7 +42,7 @@ export default function CompanyProfileLayout({
     return {
       ...profile,
       cover_url: previewMedia.cover ?? profile.cover_url,
-      logo_url: previewMedia.logo ?? profile.logo_url,
+      logo_path: previewMedia.logo ?? profile.logo_path,
       company_services: previewServices ?? profile.company_services ?? [],
       ...(previewContact ?? {}),
     };
@@ -75,7 +77,7 @@ export default function CompanyProfileLayout({
   };
 
   const uploadImage = async (file, type) => {
-    const validation = validateFile(file, 'image');
+    const validation = validateFile(file, type === 'logo' ? 'logo' : 'image');
     if (!validation.valid) {
       showToast(validation.error, 'error');
       return;
@@ -92,10 +94,21 @@ export default function CompanyProfileLayout({
     if (!userId) return;
 
     setLoading(true);
+
+    let compressed;
+    try {
+      compressed = await compressProfileImage(file);
+    } catch (compressError) {
+      setLoading(false);
+      showToast(compressError.message, 'error');
+      return;
+    }
+
+    const oldPath = type === 'logo' ? profile?.logo_path : profile?.cover_url;
     const upload =
       type === 'logo'
-        ? storageService.uploadCompanyLogo(userId, file)
-        : storageService.uploadCompanyCover(userId, file);
+        ? storageService.uploadCompanyLogo(userId, compressed, oldPath)
+        : storageService.uploadCompanyCover(userId, compressed, oldPath);
 
     const { error: uploadError } = await upload;
 
@@ -105,14 +118,13 @@ export default function CompanyProfileLayout({
       return;
     }
 
-    const path = type === 'logo' ? `${userId}/logo.png` : `${userId}/cover.jpg`;
-    const { data: urlData } = storageService.getPublicUrl('company-logos', path);
-    const field = type === 'logo' ? 'logo_url' : 'cover_url';
+    const path = type === 'logo' ? logoPath(userId) : companyCoverPath(userId);
+    const field = type === 'logo' ? 'logo_path' : 'cover_url';
 
     const { error: saveError } = await companyService.upsertCompanyProfile({
       user_id: userId,
       company_name: profile?.company_name?.trim() || 'Mi empresa',
-      [field]: `${urlData.publicUrl}?t=${Date.now()}`,
+      [field]: path,
     });
     setLoading(false);
 
@@ -123,7 +135,7 @@ export default function CompanyProfileLayout({
 
     setPreviewMedia((prev) => ({
       ...prev,
-      [mediaKey]: `${urlData.publicUrl}?t=${Date.now()}`,
+      [mediaKey]: path,
     }));
     showToast(type === 'logo' ? 'Logo actualizado' : 'Portada actualizada', 'success');
     onUploadComplete?.();

@@ -4,7 +4,7 @@ export const jobsService = {
   getActiveJobs: (filters = {}) => {
     let query = supabase
       .from('jobs')
-      .select('*, company_profiles(company_name, logo_url, verified_status, is_verified, verification_status, sector)')
+      .select('*, company_profiles(company_name, logo_path, verified_status, is_verified, verification_status, sector)')
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 

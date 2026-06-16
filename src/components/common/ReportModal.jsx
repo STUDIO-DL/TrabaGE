@@ -48,6 +48,7 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId }) {
 
     if (submitError) {
       setError('No se pudo enviar el reporte. Inténtalo de nuevo.');
+      showToast('No se pudo enviar el reporte. Inténtalo de nuevo.', 'error');
       return;
     }
 

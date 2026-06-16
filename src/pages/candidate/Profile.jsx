@@ -37,7 +37,7 @@ export default function Profile() {
     updateBasicInfo,
     uploadAvatar,
     uploadCV,
-    uploadCoverLetter,
+    saveCoverLetter,
     addExperience,
     updateExperience,
     deleteExperience,
@@ -153,12 +153,11 @@ export default function Profile() {
     showToast(error ? error.message : 'CV subido', error ? 'error' : 'success');
   };
 
-  const handleUploadCover = async (file, errorMsg) => {
-    if (errorMsg) return showToast(errorMsg, 'error');
+  const handleSaveCoverLetter = async (text) => {
     setCoverLoading(true);
-    const { error } = await uploadCoverLetter(file);
+    const { error } = await saveCoverLetter(text);
     setCoverLoading(false);
-    showToast(error ? error.message : 'Carta subida', error ? 'error' : 'success');
+    showToast(error ? error.message : 'Carta guardada', error ? 'error' : 'success');
   };
 
   const saveExperience = async (data, id) => {
@@ -345,12 +344,12 @@ export default function Profile() {
 
         <DocumentsSection
           cvName={profile?.cv_name}
-          coverLetterName={profile?.cover_letter_name}
+          coverLetter={profile?.cover_letter}
           isOwn={canEdit}
           cvLoading={cvLoading}
-          coverLoading={coverLoading}
+          coverSaving={coverLoading}
           onUploadCV={handleUploadCV}
-          onUploadCoverLetter={handleUploadCover}
+          onSaveCoverLetter={handleSaveCoverLetter}
         />
 
         <Link to={`/profile/${user?.id}`}>

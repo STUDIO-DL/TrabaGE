@@ -28,7 +28,7 @@ export default function CompanyPublicProfile() {
       setProfile({
         ...getPreviewProfile(ROLES.COMPANY),
         cover_url: media.cover_url,
-        logo_url: media.logo_url,
+        logo_path: media.logo_path,
       });
       setJobs([]);
       setLoading(false);

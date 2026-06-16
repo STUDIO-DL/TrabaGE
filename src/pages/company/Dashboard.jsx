@@ -49,7 +49,7 @@ export default function Dashboard() {
     jobsService.getCompanyJobs(user.id).then(({ data }) => setJobs(data ?? []));
   }, [user?.id, isPreviewMode]);
 
-  const logoSrc = getCompanyLogoUrl(profile?.logo_url);
+  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
 
   const stats = useMemo(
     () => ({

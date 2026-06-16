@@ -23,7 +23,7 @@ export const VERIFICATION_BUCKET = 'company-verifications';
 
 export const VERIFICATION_ACCEPT = '.pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg';
 
-export const VERIFICATION_MAX_BYTES = 10 * 1024 * 1024;
+export const VERIFICATION_MAX_BYTES = 5 * 1024 * 1024;
 
 export function validateVerificationFile(file) {
   if (!file) return { valid: false, error: 'Selecciona un archivo.' };
@@ -37,7 +37,7 @@ export function validateVerificationFile(file) {
   }
 
   if (file.size > VERIFICATION_MAX_BYTES) {
-    return { valid: false, error: 'El archivo supera el límite de 10 MB.' };
+    return { valid: false, error: 'El archivo supera el límite de 5 MB.' };
   }
 
   return { valid: true };

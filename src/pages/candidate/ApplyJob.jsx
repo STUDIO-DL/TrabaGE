@@ -12,7 +12,10 @@ import { useProfile } from '../../hooks/useProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { applicationsService } from '../../services/applications.service';
 import { storageService } from '../../services/storage.service';
+import { profileService } from '../../services/profile.service';
+import { cvPath } from '../../constants/storage';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
+import { FILE_HINTS, validateFile } from '../../utils/validateFile';
 
 function parseCustomQuestions(raw) {
   if (!raw) return [];
@@ -24,7 +27,6 @@ function parseCustomQuestions(raw) {
     return [];
   }
 }
-
 export default function ApplyJob() {
   const { id: jobId } = useParams();
   const navigate = useNavigate();
@@ -41,7 +43,7 @@ export default function ApplyJob() {
   const [error, setError] = useState('');
 
   const customQuestions = parseCustomQuestions(job?.custom_questions);
-  const hasSavedCv = Boolean(profile?.cv_url);
+  const hasSavedCv = Boolean(profile?.cv_path);
 
   useEffect(() => {
     if (isPreviewMode) {
@@ -59,6 +61,12 @@ export default function ApplyJob() {
     }
   }, [profile?.full_name, answers.full_name]);
 
+  useEffect(() => {
+    if (profile?.cover_letter && !coverLetter) {
+      setCoverLetter(profile.cover_letter);
+    }
+  }, [profile?.cover_letter, coverLetter]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -73,20 +81,36 @@ export default function ApplyJob() {
       return;
     }
 
-    let cvUrl = null;
+    let applicationCvPath = null;
     let cvName = null;
 
     if (cvMode === 'saved' && hasSavedCv) {
-      cvUrl = profile.cv_url;
+      applicationCvPath = profile.cv_path;
       cvName = profile.cv_name || 'cv.pdf';
     } else if (cvFile) {
-      const path = `${user.id}/applications/cvs/${jobId}-${Date.now()}.pdf`;
-      const { error: uploadError } = await storageService.uploadApplicationCV(user.id, jobId, cvFile, path);
+      const validation = validateFile(cvFile, 'cv');
+      if (!validation.valid) {
+        setError(validation.error);
+        return;
+      }
+
+      const path = cvPath(user.id);
+      const { error: uploadError } = await storageService.uploadCV(
+        user.id,
+        cvFile,
+        profile?.cv_path,
+      );
       if (uploadError) {
         setError(uploadError.message);
         return;
       }
-      cvUrl = path;
+
+      await profileService.updateCandidateProfile(user.id, {
+        cv_path: path,
+        cv_name: cvFile.name,
+      });
+
+      applicationCvPath = path;
       cvName = cvFile.name;
     } else {
       setError('Debes seleccionar o subir un CV en PDF.');
@@ -108,13 +132,17 @@ export default function ApplyJob() {
       return acc;
     }, {});
 
+    const notes = [coverLetter.trim(), profile?.cover_letter?.trim()]
+      .filter(Boolean)
+      .join('\n\n');
+
     const { error: applyError } = await applicationsService.apply({
       candidate_id: user.id,
       job_id: jobId,
-      cv_url: cvUrl,
+      cv_path: applicationCvPath,
       cv_name: cvName,
       full_name: fullName,
-      additional_notes: coverLetter.trim() || null,
+      additional_notes: notes || null,
       custom_answers: Object.keys(customAnswers).length ? customAnswers : null,
     });
 
@@ -176,8 +204,8 @@ export default function ApplyJob() {
                   <FileUpload
                     label={cvFile ? cvFile.name : 'Seleccionar PDF'}
                     accept="application/pdf"
-                    fileType="document"
-                    maxSize="5 MB"
+                    fileType="cv"
+                    hint={FILE_HINTS.cv}
                     onUpload={(file, uploadError) => {
                       if (uploadError) setError(uploadError);
                       else {

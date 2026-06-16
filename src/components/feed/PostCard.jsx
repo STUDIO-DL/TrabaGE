@@ -1,13 +1,12 @@
-import { useState } from 'react';
 import UserAvatar from '../common/UserAvatar';
 import Avatar from '../ui/Avatar';
 import Card from '../ui/Card';
-import AppIcon from '../common/AppIcon';
-import { ChevronDown, Share2, ICON_SIZES } from '../../constants/icons';
-import { DEFAULT_COMPANY_LOGO } from '../../constants/images';
+import ContentActionMenu from '../common/ContentActionMenu';
 import VerifiedBadge from '../company/VerifiedBadge';
+import { DEFAULT_COMPANY_LOGO } from '../../constants/images';
 import { isCompanyVerified } from '../../utils/companyVerification';
-import ShareMenu from './ShareMenu';
+import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
+import { resolvePostImageUrl } from '../../utils/storagePaths';
 import { formatRelativeTime } from '../../utils/formatDate';
 
 export default function PostCard({
@@ -18,7 +17,7 @@ export default function PostCard({
   authorType = 'candidate',
   authorCompany = null,
 }) {
-  const [shareOpen, setShareOpen] = useState(false);
+  const postImageSrc = resolvePostImageUrl(post.post_image_path);
 
   return (
     <Card className="mb-3">
@@ -43,31 +42,23 @@ export default function PostCard({
           </div>
           {authorHeadline && <p className="text-sm text-gray-500">{authorHeadline}</p>}
         </div>
-        <span className="text-xs text-gray-400">{formatRelativeTime(post.created_at)}</span>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span className="text-xs text-gray-400">{formatRelativeTime(post.created_at)}</span>
+          <ContentActionMenu
+            shareUrl={`/feed/post/${post.id}`}
+            shareTitle={(post.content || '').slice(0, 50)}
+            targetType={REPORT_TARGET_TYPES.POST}
+            targetId={post.id}
+            shareMode="panel"
+          />
+        </div>
       </div>
 
       <p className="whitespace-pre-wrap text-sm text-gray-800">{post.content}</p>
 
-      {post.image_url && (
-        <img src={post.image_url} alt="" className="mt-3 w-full rounded-xl object-cover" />
+      {postImageSrc && (
+        <img src={postImageSrc} alt="" className="mt-3 w-full rounded-xl object-cover" />
       )}
-
-      <div className="mt-3">
-        <button
-          type="button"
-          onClick={() => setShareOpen(!shareOpen)}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600"
-        >
-          <AppIcon icon={Share2} size={ICON_SIZES.default} className="text-primary-600" />
-          Compartir
-          <AppIcon
-            icon={ChevronDown}
-            size={ICON_SIZES.default}
-            className={`text-primary-600 transition-transform ${shareOpen ? 'rotate-180' : ''}`}
-          />
-        </button>
-        {shareOpen && <ShareMenu url={`/feed/post/${post.id}`} title={post.content.slice(0, 50)} />}
-      </div>
     </Card>
   );
 }

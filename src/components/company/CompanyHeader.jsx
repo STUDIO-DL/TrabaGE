@@ -4,7 +4,7 @@ import Button from '../ui/Button';
 import { getCompanyLogoUrl } from '../../constants/images';
 
 export default function CompanyHeader({ profile, isOwn = false, onEdit }) {
-  const logoSrc = getCompanyLogoUrl(profile?.logo_url);
+  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
 
   return (
     <div className="mb-6 text-center">

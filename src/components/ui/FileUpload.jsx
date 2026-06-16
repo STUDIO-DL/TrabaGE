@@ -2,17 +2,19 @@ import { useRef } from 'react';
 import Button from './Button';
 import AppIcon from '../common/AppIcon';
 import { Upload, ICON_SIZES } from '../../constants/icons';
-import { validateFile } from '../../utils/validateFile';
+import { FILE_HINTS, validateFile } from '../../utils/validateFile';
 
 export default function FileUpload({
   accept,
   maxSize,
+  hint,
   onUpload,
   label = 'Seleccionar archivo',
   fileType = 'document',
   loading = false,
 }) {
   const inputRef = useRef(null);
+  const sizeHint = hint || maxSize || FILE_HINTS[fileType];
 
   const handleChange = async (e) => {
     const file = e.target.files?.[0];
@@ -47,9 +49,7 @@ export default function FileUpload({
         <AppIcon icon={Upload} size={ICON_SIZES.default} />
         {label}
       </Button>
-      {maxSize && (
-        <p className="mt-1 text-xs text-gray-500">Tamaño máximo: {maxSize}</p>
-      )}
+      {sizeHint && <p className="mt-1 text-xs text-gray-500">{sizeHint}</p>}
     </div>
   );
 }

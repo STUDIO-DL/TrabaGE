@@ -34,7 +34,7 @@ function getSidebarCompanyLabel(profile) {
 
 export default function CompanyDashboardSidebar({ profile }) {
   const companyLabel = getSidebarCompanyLabel(profile);
-  const logoSrc = getCompanyLogoUrl(profile?.logo_url);
+  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
   const verified = isCompanyVerified(profile);
 
   return (

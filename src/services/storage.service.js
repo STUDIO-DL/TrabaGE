@@ -1,45 +1,129 @@
 import { supabase } from '../config/supabase';
-import { VERIFICATION_BUCKET } from '../utils/companyVerification';
+import {
+  STORAGE_BUCKETS,
+  avatarPath,
+  companyCoverPath,
+  cvPath,
+  logoPath,
+  postImagePath,
+  verificationDocPath,
+} from '../constants/storage';
+
+const WEBP_CONTENT_TYPE = 'image/webp';
+const PDF_CONTENT_TYPE = 'application/pdf';
+
+async function removeIfExists(bucket, path) {
+  if (!path) return;
+  await supabase.storage.from(bucket).remove([path]);
+}
+
+async function uploadReplace(bucket, path, file, contentType) {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { upsert: true, contentType });
+
+  return { data, error, path };
+}
 
 export const storageService = {
-  uploadAvatar: (userId, file) =>
-    supabase.storage.from('avatars').upload(`${userId}/avatar.jpg`, file, { upsert: true }),
+  deleteOldCV: async (userId, oldPath) => {
+    const paths = [oldPath, cvPath(userId)].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.CANDIDATE_CVS).remove(unique);
+    return { error };
+  },
 
-  uploadCompanyLogo: (userId, file) =>
-    supabase.storage.from('company-logos').upload(`${userId}/logo.png`, file, { upsert: true }),
+  deleteOldVerificationDocument: async (companyId, oldPath) => {
+    const paths = [oldPath, verificationDocPath(companyId)].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKETS.COMPANY_VERIFICATIONS)
+      .remove(unique);
+    return { error };
+  },
 
-  uploadCompanyCover: (userId, file) =>
-    supabase.storage.from('company-logos').upload(`${userId}/cover.jpg`, file, { upsert: true }),
+  deleteOldAvatar: async (userId, oldPath) => {
+    const paths = [oldPath, avatarPath(userId), `${userId}/avatar.jpg`, `${userId}/avatar.png`].filter(
+      Boolean,
+    );
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.CANDIDATE_AVATARS).remove(unique);
+    return { error };
+  },
 
-  uploadCV: (userId, file) =>
-    supabase.storage.from('candidate-documents').upload(`${userId}/cv.pdf`, file, { upsert: true }),
+  deleteOldLogo: async (companyId, oldPath) => {
+    const paths = [
+      oldPath,
+      logoPath(companyId),
+      `${companyId}/logo.png`,
+      `${companyId}/logo.jpg`,
+    ].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.COMPANY_LOGOS).remove(unique);
+    return { error };
+  },
 
-  uploadCoverLetter: (userId, file) =>
-    supabase.storage
-      .from('candidate-documents')
-      .upload(`${userId}/cover-letter.pdf`, file, { upsert: true }),
+  deleteOldPostImage: async (userId, postId, oldPath) => {
+    const paths = [
+      oldPath,
+      postImagePath(userId, postId),
+      `${userId}/${postId}.jpg`,
+      `${userId}/posts/${postId}.jpg`,
+    ].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.POST_IMAGES).remove(unique);
+    return { error };
+  },
 
-  uploadApplicationCV: (userId, jobId, file, path) =>
-    supabase.storage
-      .from('candidate-documents')
-      .upload(path || `${userId}/applications/cvs/${jobId}-${Date.now()}.pdf`, file, { upsert: true }),
+  uploadAvatar: async (userId, file, oldPath) => {
+    await storageService.deleteOldAvatar(userId, oldPath);
+    const path = avatarPath(userId);
+    return uploadReplace(STORAGE_BUCKETS.CANDIDATE_AVATARS, path, file, WEBP_CONTENT_TYPE);
+  },
 
-  uploadPostImage: (userId, postId, file) =>
-    supabase.storage
-      .from('post-images')
-      .upload(`${userId}/posts/${postId}.jpg`, file, { upsert: true }),
+  uploadCompanyLogo: async (companyId, file, oldPath) => {
+    await storageService.deleteOldLogo(companyId, oldPath);
+    const path = logoPath(companyId);
+    return uploadReplace(STORAGE_BUCKETS.COMPANY_LOGOS, path, file, WEBP_CONTENT_TYPE);
+  },
 
-  uploadVerificationDoc: (userId, file) => {
-    const safeName = `${Date.now()}-${file.name.replace(/[^\w.-]/g, '_')}`;
-    const path = `${userId}/${safeName}`;
+  uploadCompanyCover: async (companyId, file, oldPath) => {
+    if (oldPath) await removeIfExists(STORAGE_BUCKETS.COMPANY_LOGOS, oldPath);
+    const path = companyCoverPath(companyId);
+    return uploadReplace(STORAGE_BUCKETS.COMPANY_LOGOS, path, file, WEBP_CONTENT_TYPE);
+  },
 
-    return supabase.storage
-      .from(VERIFICATION_BUCKET)
-      .upload(path, file, { upsert: false })
-      .then((result) => ({
-        ...result,
-        data: result.data ? { ...result.data, path } : result.data,
-      }));
+  uploadCV: async (userId, file, oldPath) => {
+    await storageService.deleteOldCV(userId, oldPath);
+    const path = cvPath(userId);
+    return uploadReplace(STORAGE_BUCKETS.CANDIDATE_CVS, path, file, PDF_CONTENT_TYPE);
+  },
+
+  uploadPostImage: async (userId, postId, file, oldPath) => {
+    await storageService.deleteOldPostImage(userId, postId, oldPath);
+    const path = postImagePath(userId, postId);
+    return uploadReplace(STORAGE_BUCKETS.POST_IMAGES, path, file, WEBP_CONTENT_TYPE);
+  },
+
+  uploadVerificationDoc: async (companyId, file, oldPath) => {
+    await storageService.deleteOldVerificationDocument(companyId, oldPath);
+    const path = verificationDocPath(companyId);
+    const contentType = file.type || PDF_CONTENT_TYPE;
+    const result = await uploadReplace(
+      STORAGE_BUCKETS.COMPANY_VERIFICATIONS,
+      path,
+      file,
+      contentType,
+    );
+    return {
+      ...result,
+      data: result.data ? { ...result.data, path } : result.data,
+    };
   },
 
   getSignedUrl: (bucket, path, expiresIn = 3600) =>

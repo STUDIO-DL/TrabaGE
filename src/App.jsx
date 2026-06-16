@@ -37,6 +37,15 @@ import CompanyProfile from './pages/company/Profile';
 import Verification from './pages/company/Verification';
 
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminUsers from './pages/admin/AdminUsers';
+import AdminCompanies from './pages/admin/AdminCompanies';
+import AdminVerifications from './pages/admin/AdminVerifications';
+import AdminJobs from './pages/admin/AdminJobs';
+import AdminPosts from './pages/admin/AdminPosts';
+import AdminReports from './pages/admin/AdminReports';
+import AdminNotifications from './pages/admin/AdminNotifications';
+import AdminSettings from './pages/admin/AdminSettings';
+import AdminLayout from './components/admin/AdminLayout';
 import CompanyPublicProfile from './pages/shared/CompanyPublicProfile';
 import DemoCompanyEntry from './pages/demo/DemoCompanyEntry';
 import HelpCenter from './pages/HelpCenter';
@@ -93,7 +102,17 @@ function AppRoutes() {
               </Route>
 
               <Route element={<RoleRoute role="admin" />}>
-                <Route path="/admin" element={<AdminDashboard />} />
+                <Route element={<AdminLayout />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/companies" element={<AdminCompanies />} />
+                  <Route path="/admin/verifications" element={<AdminVerifications />} />
+                  <Route path="/admin/jobs" element={<AdminJobs />} />
+                  <Route path="/admin/posts" element={<AdminPosts />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/notifications" element={<AdminNotifications />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
+                </Route>
                 <Route path="/admin/help" element={<HelpCenter />} />
               </Route>
             </Route>

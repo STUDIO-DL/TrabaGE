@@ -11,12 +11,14 @@ import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { verificationService } from '../../services/verification.service';
 import { storageService } from '../../services/storage.service';
+import { verificationDocPath } from '../../constants/storage';
 import {
   getVerificationStatus,
   isCompanyVerified,
   validateVerificationFile,
   VERIFICATION_ACCEPT,
 } from '../../utils/companyVerification';
+import { FILE_HINTS } from '../../utils/validateFile';
 import { formatRelativeTime } from '../../utils/formatDate';
 import { PREVIEW_COMPANY_PROFILE, PREVIEW_COMPANY_VERIFICATION } from '../../constants/preview';
 
@@ -82,6 +84,7 @@ export default function Verification() {
     const { data: uploadData, error: storageError } = await storageService.uploadVerificationDoc(
       user.id,
       file,
+      request?.verification_document_path,
     );
 
     if (storageError) {
@@ -90,7 +93,7 @@ export default function Verification() {
       return;
     }
 
-    const documentPath = uploadData?.path ?? `${user.id}/${file.name}`;
+    const documentPath = uploadData?.path ?? verificationDocPath(user.id);
     const { error } = await verificationService.submitRequest(documentPath, file.name);
 
     setUploading(false);
@@ -158,7 +161,7 @@ export default function Verification() {
             accept={VERIFICATION_ACCEPT}
             fileType="verification"
             loading={uploading}
-            maxSize="10 MB"
+            maxSize={FILE_HINTS.verification}
             onUpload={handleUpload}
           />
         </Card>
@@ -168,7 +171,7 @@ export default function Verification() {
     return (
       <Card padding="lg" className="space-y-4">
         <p className="text-sm text-gray-600">
-          Sube un documento legal (PDF, PNG, JPG o JPEG, máx. 10 MB) para verificar tu empresa.
+          Sube un documento legal ({FILE_HINTS.verification}) para verificar tu empresa.
         </p>
         <FileUpload
           label="Subir Documento"

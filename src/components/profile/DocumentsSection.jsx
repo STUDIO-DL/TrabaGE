@@ -1,17 +1,47 @@
+import { useEffect, useState } from 'react';
 import ProfileSectionCard from './ProfileSectionCard';
 import FileUpload from '../ui/FileUpload';
+import Textarea from '../ui/Textarea';
+import Button from '../ui/Button';
+import { FILE_HINTS } from '../../utils/validateFile';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 
-const MAX_FILE_SIZE_LABEL = '2 MB';
+function CoverLetterEditor({ initialValue, saving, onSave }) {
+  const [value, setValue] = useState(initialValue ?? '');
+
+  useEffect(() => {
+    setValue(initialValue ?? '');
+  }, [initialValue]);
+
+  return (
+    <div className="space-y-3">
+      <Textarea
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        rows={5}
+        placeholder="Escribe tu carta de presentación..."
+      />
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        loading={saving}
+        onClick={() => onSave?.(value)}
+      >
+        Guardar carta
+      </Button>
+    </div>
+  );
+}
 
 export default function DocumentsSection({
   cvName,
-  coverLetterName,
+  coverLetter,
   isOwn,
   onUploadCV,
-  onUploadCoverLetter,
+  onSaveCoverLetter,
   cvLoading = false,
-  coverLoading = false,
+  coverSaving = false,
 }) {
   if (!isOwn) return null;
 
@@ -26,34 +56,30 @@ export default function DocumentsSection({
         </p>
       </div>
 
-      <p className="mb-4 text-xs text-gray-500">
-        Sube archivos PDF. Tamaño máximo: {MAX_FILE_SIZE_LABEL} por archivo.
-      </p>
-
       <div className="space-y-5">
         <div>
           <p className="mb-1 text-sm font-medium text-gray-700">Currículum (PDF)</p>
+          <p className="mb-1 text-xs text-gray-500">{FILE_HINTS.cv}</p>
           <p className="mb-3 text-sm text-gray-500">{cvName || 'No especificado'}</p>
           <FileUpload
             label={cvName ? 'Reemplazar CV' : 'Subir CV'}
             accept="application/pdf"
-            fileType="document"
-            maxSize={MAX_FILE_SIZE_LABEL}
+            fileType="cv"
+            hint={FILE_HINTS.cv}
             loading={cvLoading}
             onUpload={(file, error) => onUploadCV?.(file, error)}
           />
         </div>
 
         <div className="border-t border-gray-100 pt-5">
-          <p className="mb-1 text-sm font-medium text-gray-700">Carta de presentación (PDF)</p>
-          <p className="mb-3 text-sm text-gray-500">{coverLetterName || 'No especificado'}</p>
-          <FileUpload
-            label={coverLetterName ? 'Reemplazar carta' : 'Subir carta'}
-            accept="application/pdf"
-            fileType="document"
-            maxSize={MAX_FILE_SIZE_LABEL}
-            loading={coverLoading}
-            onUpload={(file, error) => onUploadCoverLetter?.(file, error)}
+          <p className="mb-1 text-sm font-medium text-gray-700">Carta de presentación (texto)</p>
+          <p className="mb-3 text-xs text-gray-500">
+            Se guarda en tu perfil como texto, sin ocupar almacenamiento extra.
+          </p>
+          <CoverLetterEditor
+            initialValue={coverLetter}
+            saving={coverSaving}
+            onSave={onSaveCoverLetter}
           />
         </div>
       </div>
