@@ -37,53 +37,12 @@ export function GoogleIcon({ className = 'h-5 w-5' }) {
   );
 }
 
-export function AppleIcon({ className = 'h-5 w-5' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
-      <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-    </svg>
-  );
-}
-
-export function LinkedInIcon({ className = 'h-5 w-5' }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <path
-        fill="#0A66C2"
-        d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 114.126 0 2.063 2.063 0 01-2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
-      />
-    </svg>
-  );
-}
-
 export function GoogleAuthButton({ onClick }) {
   return (
     <SocialAuthButton
       icon={<GoogleIcon />}
       label="Continuar con Google"
       onClick={onClick}
-    />
-  );
-}
-
-export function AppleAuthButton({ onClick }) {
-  return (
-    <SocialAuthButton
-      icon={<AppleIcon className="h-5 w-5 text-gray-900" />}
-      label="Continuar con Apple"
-      onClick={onClick}
-      comingSoon
-    />
-  );
-}
-
-export function LinkedInAuthButton({ onClick }) {
-  return (
-    <SocialAuthButton
-      icon={<LinkedInIcon />}
-      label="Continuar con LinkedIn"
-      onClick={onClick}
-      comingSoon
     />
   );
 }

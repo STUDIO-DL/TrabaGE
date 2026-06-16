@@ -15,11 +15,7 @@ import {
 } from 'lucide-react';
 import logoImg from '../../assets/branding/logo.png';
 import Button from '../../components/ui/Button';
-import {
-  AppleAuthButton,
-  GoogleAuthButton,
-  LinkedInAuthButton,
-} from '../../components/auth/SocialAuthButtons';
+import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import LoginCandidateIllustration from '../../components/auth/LoginCandidateIllustration';
 import { clearPreviewMode } from '../../constants/preview';
 import { ROLES } from '../../constants/roles';
@@ -260,8 +256,6 @@ function LoginCard({
 
         <div className="space-y-3">
           <GoogleAuthButton onClick={() => authService.loginWithGoogle()} />
-          <AppleAuthButton />
-          <LinkedInAuthButton />
         </div>
 
         <p className="mt-6 text-center text-sm text-[#64748B] md:mt-7">
