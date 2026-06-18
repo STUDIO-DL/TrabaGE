@@ -7,7 +7,7 @@ import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 
 const PREVIEW_LENGTH = 180;
 
-export default function AboutSection({ about, isOwn, onSave, saving = false, publicView = false }) {
+export default function AboutSection({ about, isOwn, onSave, saving = false }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(about || '');
@@ -15,25 +15,6 @@ export default function AboutSection({ about, isOwn, onSave, saving = false, pub
   const hasContent = Boolean(about?.trim());
   const needsExpand = hasContent && about.length > PREVIEW_LENGTH;
   const displayText = hasContent && !expanded && needsExpand ? `${about.slice(0, PREVIEW_LENGTH)}…` : about;
-
-  if (publicView) {
-    if (!hasContent) return null;
-
-    return (
-      <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-        <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{displayText}</p>
-        {needsExpand && (
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="mt-3 text-sm font-medium text-primary-600 hover:text-primary-700"
-          >
-            {expanded ? 'Ver menos' : 'Ver más'}
-          </button>
-        )}
-      </section>
-    );
-  }
 
   const startEdit = () => {
     setDraft(about || '');

@@ -49,7 +49,7 @@ export default function PublicProfile() {
         reportTargetId={userId}
         onContact={handleContact}
       >
-        <AboutSection about={profile.about} publicView />
+        <AboutSection about={profile.about} />
         <EducationSection items={profile.education} />
         <CertificationsSection items={profile.certifications} />
         <SkillsSection items={profile.skills} />

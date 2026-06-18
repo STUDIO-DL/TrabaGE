@@ -155,7 +155,7 @@ export default function CompanyContactSection({
           {!hasContact && (
             <p className="text-sm text-gray-500">
               Añade un contacto de referencia. Los visitantes podrán pulsar &quot;Contactar&quot; en tu
-              perfil público para escribirte por WhatsApp, correo o teléfono.
+              perfil para escribirte por WhatsApp, correo o teléfono.
             </p>
           )}
 

@@ -7,7 +7,6 @@ import {
   Building2,
   Calendar,
   Camera,
-  Eye,
   Globe,
   MapPin,
   Pencil,
@@ -18,7 +17,6 @@ import {
 } from '../../../constants/icons';
 import CompanyVerificationStatus from './CompanyVerificationStatus';
 import VerifiedBadge from '../VerifiedBadge';
-import Button from '../../ui/Button';
 import { getCompanyCoverUrl, getCompanyLogoUrl } from '../../../constants/images';
 import {
   displayCompanyValue,
@@ -229,19 +227,6 @@ export default function CompanyProfileHeader({
               <AppIcon icon={Bookmark} size={ICON_SIZES.default} />
             </button>
           </div>
-
-          {!readOnly && companyId && (
-            <Link to={`/companies/${companyId}`} className="mt-4 block">
-              <Button
-                variant="secondary"
-                fullWidth
-                className="inline-flex items-center justify-center gap-2 border-primary-200 bg-primary-50 text-primary-700 hover:bg-primary-100"
-              >
-                <AppIcon icon={Eye} size={ICON_SIZES.default} className="text-primary-600" />
-                Ver perfil público
-              </Button>
-            </Link>
-          )}
         </div>
       </div>
     </section>

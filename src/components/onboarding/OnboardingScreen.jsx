@@ -23,15 +23,19 @@ export default function OnboardingScreen({
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
       }}
     >
-      <header className="flex shrink-0 justify-end px-6 pt-5">
-        <button
-          type="button"
-          onClick={onSkip}
-          className="text-base font-medium text-[#64748B] transition-colors hover:text-[#0F172A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
-        >
-          Saltar
-        </button>
-      </header>
+      {onSkip ? (
+        <header className="flex shrink-0 justify-end px-6 pt-5">
+          <button
+            type="button"
+            onClick={onSkip}
+            className="text-base font-medium text-[#64748B] transition-colors hover:text-[#0F172A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
+          >
+            Saltar
+          </button>
+        </header>
+      ) : (
+        <div className="shrink-0 pt-5" aria-hidden />
+      )}
 
       <main className="flex flex-1 flex-col items-center px-6 pb-6 pt-2">
         <img
@@ -55,24 +59,22 @@ export default function OnboardingScreen({
 
       <footer className="shrink-0 px-6 pb-8">
         <OnboardingDots currentStep={currentStep} />
-        {onBack ? (
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-3">
+          {onBack ? (
             <button
               type="button"
               onClick={onBack}
-              className="shrink-0 py-3 pl-0 pr-2 text-sm font-medium text-[#64748B] transition-colors hover:text-[#0F172A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
+              className="shrink-0 py-2 pl-0 pr-2 text-sm font-medium text-[#64748B] transition-colors hover:text-[#0F172A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2"
             >
               Atrás
             </button>
-            <PrimaryButton onClick={onNext} showArrow={showArrow} className="!mx-0 min-w-0 flex-1 !w-auto">
-              {nextLabel}
-            </PrimaryButton>
-          </div>
-        ) : (
+          ) : (
+            <span aria-hidden />
+          )}
           <PrimaryButton onClick={onNext} showArrow={showArrow}>
             {nextLabel}
           </PrimaryButton>
-        )}
+        </div>
         {secondaryAction ? <div className="mt-3">{secondaryAction}</div> : null}
       </footer>
     </div>

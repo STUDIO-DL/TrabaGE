@@ -58,7 +58,7 @@ export default function CompanyServicesSection({
         </span>
         <div>
           <h3 className="text-base font-semibold text-gray-900">Servicios que ofrecemos</h3>
-          <p className="text-xs text-gray-500">Opcional · visible en tu perfil público</p>
+          <p className="text-xs text-gray-500">Opcional · visible para quienes visiten tu perfil</p>
         </div>
       </div>
 

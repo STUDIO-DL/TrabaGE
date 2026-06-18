@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CandidateProfileLayout from '../../components/profile/CandidateProfileLayout';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
@@ -20,7 +19,6 @@ import LanguageModal from '../../components/profile/modals/LanguageModal';
 import SettingsModal from '../../components/profile/modals/SettingsModal';
 import DeleteAccountModal from '../../components/profile/modals/DeleteAccountModal';
 import Spinner from '../../components/ui/Spinner';
-import Button from '../../components/ui/Button';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -352,11 +350,6 @@ export default function Profile() {
           onSaveCoverLetter={handleSaveCoverLetter}
         />
 
-        <Link to={`/profile/${user?.id}`}>
-          <Button variant="secondary" fullWidth>
-            Ver perfil público
-          </Button>
-        </Link>
       </CandidateProfileLayout>
 
       <SettingsModal

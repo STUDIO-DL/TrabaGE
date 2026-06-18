@@ -39,7 +39,7 @@ export default function OnboardingFlow() {
     <OnboardingScreenThree
       currentStep={2}
       onNext={finish}
-      onSkip={finish}
+      onBack={() => setStep(1)}
     />
   );
 }

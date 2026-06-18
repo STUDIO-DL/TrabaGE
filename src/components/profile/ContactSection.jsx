@@ -44,7 +44,7 @@ export default function ContactSection({
       {isOwn ? (
         <div className="space-y-4">
           <p className="text-sm text-gray-500">
-            Estos datos se usan cuando alguien pulsa &quot;Contactar&quot; en tu perfil público.
+            Estos datos se usan cuando alguien pulsa &quot;Contactar&quot; en tu perfil.
           </p>
           <Input
             label="Correo de contacto (Gmail u otro)"

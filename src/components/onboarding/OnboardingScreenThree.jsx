@@ -4,7 +4,7 @@ import onboardingIllustration from '../../assets/illustrations/onboarding-opport
 export default function OnboardingScreenThree({
   currentStep = 2,
   onNext,
-  onSkip,
+  onBack,
 }) {
   return (
     <OnboardingScreen
@@ -13,7 +13,7 @@ export default function OnboardingScreenThree({
       imageClassName="h-[clamp(260px,58vw,300px)]"
       currentStep={currentStep}
       onNext={onNext}
-      onSkip={onSkip}
+      onBack={onBack}
       nextLabel="Comenzar"
       showArrow
       title={
