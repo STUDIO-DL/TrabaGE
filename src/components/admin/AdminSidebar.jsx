@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
-import { Briefcase, ICON_SIZES } from '../../constants/icons';
+import { ICON_SIZES } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { ADMIN_LOGOUT_ITEM, ADMIN_NAV_ITEMS } from './adminNav';
 
@@ -44,14 +44,9 @@ export default function AdminSidebar({ onNavigate, className = '' }) {
       ].join(' ')}
     >
       <div className="border-b border-slate-800 px-5 py-6">
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-600">
-            <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="text-white" />
-          </span>
-          <div>
-            <p className="text-lg font-bold tracking-tight">TrabaGE</p>
-            <p className="text-xs text-slate-400">Panel de administración</p>
-          </div>
+        <div>
+          <p className="text-lg font-bold tracking-tight">TrabaGE</p>
+          <p className="text-xs text-slate-400">Panel de administración</p>
         </div>
       </div>
 
