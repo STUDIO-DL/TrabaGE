@@ -25,6 +25,9 @@ export default function CandidateProfileLayout({
   sidebar,
   children,
 }) {
+  const sidebarContent =
+    sidebar ?? <ProfileSidebar profile={profile} email={email} isOwn={isOwn} />;
+
   return (
     <ProfilePageShell
       title={title}
@@ -52,11 +55,15 @@ export default function CandidateProfileLayout({
         disabled={!hasCandidateContact(profile)}
       />
       <div className="mx-auto max-w-5xl px-4 py-6">
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div
+          className={
+            sidebarContent
+              ? 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]'
+              : 'mx-auto max-w-3xl'
+          }
+        >
           <main className="space-y-4">{children}</main>
-          <div className="space-y-4 lg:order-none">
-            {sidebar || <ProfileSidebar profile={profile} email={email} />}
-          </div>
+          {sidebarContent ? <div className="space-y-4 lg:order-none">{sidebarContent}</div> : null}
         </div>
       </div>
     </ProfilePageShell>

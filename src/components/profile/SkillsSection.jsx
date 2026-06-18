@@ -48,7 +48,7 @@ export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
       iconTone="skills"
       title="Habilidades principales"
       isOwn={isOwn}
-      isEmpty={!items.length && !isOwn}
+      isEmpty={!items.length}
       emptyText="Sin habilidades registradas."
       footerLabel={footerLabel}
     >

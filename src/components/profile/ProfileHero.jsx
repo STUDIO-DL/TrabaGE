@@ -21,6 +21,10 @@ function formatYearsLabel(years) {
   return `${n} ${n === 1 ? 'año' : 'años'} de experiencia`;
 }
 
+function hasYearsExperience(years) {
+  return years != null && years !== '';
+}
+
 function EditableHeroField({
   value,
   placeholder,
@@ -58,7 +62,8 @@ function EditableHeroField({
   const Tag = as;
 
   if (!isOwn) {
-    return <Tag className={displayClassName}>{value || placeholder}</Tag>;
+    if (!value?.trim()) return null;
+    return <Tag className={displayClassName}>{value}</Tag>;
   }
 
   if (editing) {
@@ -134,6 +139,7 @@ function EditableHeroSelect({
   const display = formatDisplay(value);
 
   if (!isOwn) {
+    if (!value) return null;
     return (
       <p className={`flex items-center gap-1.5 text-sm text-blue-100 ${className}`}>
         {Icon && <AppIcon icon={Icon} size={ICON_SIZES.default} className="shrink-0" />}
@@ -218,6 +224,7 @@ function EditableHeroYearsBadge({ value, isOwn, onSave, saving }) {
   }, [value, editing]);
 
   if (!isOwn) {
+    if (!hasYearsExperience(value)) return null;
     return (
       <li className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs backdrop-blur-sm">
         <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0" />
@@ -303,8 +310,7 @@ export default function ProfileHero({
 
   const cityOptions = CITIES.map((city) => ({ value: city, label: city }));
 
-  const showYearsBadge =
-    profile?.years_experience != null && profile?.years_experience !== '' || isOwn;
+  const showYearsBadge = hasYearsExperience(profile?.years_experience) || isOwn;
 
   return (
     <section className="profile-hero relative overflow-hidden px-4 pb-8 pt-6 text-white">

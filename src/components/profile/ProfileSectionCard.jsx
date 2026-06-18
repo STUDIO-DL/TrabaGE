@@ -44,6 +44,8 @@ export default function ProfileSectionCard({
   const toneClass = SECTION_ICON_TONES[iconTone] ?? SECTION_ICON_TONES.about;
   const isEditAction = addLabel === 'Editar';
 
+  if (isEmpty && !isOwn) return null;
+
   return (
     <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between gap-3">
