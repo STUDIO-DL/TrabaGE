@@ -2,7 +2,11 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
+import { clearPreviewMode } from '../../constants/preview';
+import { ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
+import { authService } from '../../services/auth.service';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -17,6 +21,16 @@ export default function Register() {
   const handlePreview = () => {
     enterPreviewMode();
     navigate('/account-type', { replace: true });
+  };
+
+  const handleGoogleRegister = async () => {
+    setError('');
+    clearPreviewMode();
+
+    const { error: googleError } = await authService.loginWithGoogle(ROLES.CANDIDATE);
+    if (googleError) {
+      setError(googleError.message || 'No se pudo registrarse con Google');
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -69,6 +83,17 @@ export default function Register() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-white px-3 text-gray-400">o regístrate</span>
+        </div>
+      </div>
+
+      <GoogleAuthButton onClick={handleGoogleRegister} />
+
+      <div className="relative my-8">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-gray-200" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-white px-3 text-gray-400">con email</span>
         </div>
       </div>
 

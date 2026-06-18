@@ -13,6 +13,7 @@ import {
   setPreviewModeActive,
   setPreviewRoleStorage,
 } from '../constants/preview';
+import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
 
@@ -43,7 +44,7 @@ export function AuthProvider({ children }) {
     } else if (userRole === ROLES.COMPANY) {
       const { data } = await companyService.getCompanyProfile(userId);
       setSetupComplete(Boolean(data?.setup_complete));
-    } else {
+    } else if (userRole === ROLES.ADMIN) {
       setSetupComplete(true);
     }
   }, []);
@@ -166,18 +167,7 @@ export function AuthProvider({ children }) {
 
     await hydrateUser(session);
 
-    const { data: roleData } = await authService.getUserRole(session.user.id);
-    const userRole = roleData?.role ?? ROLES.CANDIDATE;
-
-    let redirectTo = ROLE_HOME[userRole] || '/account-type';
-
-    if (userRole === ROLES.CANDIDATE) {
-      const { data: profile } = await profileService.getCandidateProfile(session.user.id);
-      if (!profile?.setup_complete) redirectTo = ROLE_SETUP[ROLES.CANDIDATE];
-    } else if (userRole === ROLES.COMPANY) {
-      const { data: profile } = await companyService.getCompanyProfile(session.user.id);
-      if (!profile?.setup_complete) redirectTo = ROLE_SETUP[ROLES.COMPANY];
-    }
+    const redirectTo = await resolvePostAuthRedirect(session.user.id);
 
     return { data, error: null, redirectTo };
   }, [hydrateUser]);

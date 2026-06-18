@@ -37,8 +37,25 @@ export const authService = {
       options: { data: { role } },
     }),
 
-  loginWithGoogle: () =>
-    supabase.auth.signInWithOAuth({ provider: 'google' }),
+  loginWithGoogle: async (role = 'candidate') => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    const appUrl = import.meta.env.VITE_APP_URL?.trim() || window.location.origin;
+
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${appUrl}/auth/callback`,
+        data: { role },
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'select_account',
+        },
+      },
+    });
+  },
 
   loginWithApple: () =>
     supabase.auth.signInWithOAuth({ provider: 'apple' }),

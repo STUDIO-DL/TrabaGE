@@ -143,6 +143,7 @@ function LoginCard({
   loading,
   onSubmit,
   onExplore,
+  onGoogleLogin,
 }) {
   return (
     <div className="login-card login-fade-in-delayed">
@@ -255,7 +256,7 @@ function LoginCard({
         </div>
 
         <div className="space-y-3">
-          <GoogleAuthButton onClick={() => authService.loginWithGoogle()} />
+          <GoogleAuthButton onClick={onGoogleLogin} />
         </div>
 
         <p className="mt-6 text-center text-sm text-[#64748B] md:mt-7">
@@ -364,6 +365,16 @@ export default function Login() {
     return true;
   };
 
+  const handleGoogleLogin = async () => {
+    setError('');
+    clearPreviewMode();
+
+    const { error: googleError } = await authService.loginWithGoogle(accountType);
+    if (googleError) {
+      setError(googleError.message || 'No se pudo iniciar sesión con Google');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     await submitLogin(email, password);
@@ -390,6 +401,7 @@ export default function Login() {
             loading={loading}
             onSubmit={handleSubmit}
             onExplore={handleExplore}
+            onGoogleLogin={handleGoogleLogin}
           />
         </section>
       </div>
