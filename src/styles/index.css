@@ -94,6 +94,34 @@
     font-size: clamp(1.65rem, 2.4vw + 0.75rem, 2.65rem);
     line-height: 1.15;
   }
+
+  .onboarding-illustration-in {
+    animation: onboardingFadeUp 0.5s ease-out both;
+  }
+
+  .onboarding-title-in {
+    animation: onboardingFadeUp 0.5s ease-out 0.1s both;
+  }
+
+  .onboarding-body-in {
+    animation: onboardingFadeUp 0.5s ease-out 0.2s both;
+  }
+
+  .onboarding-btn-in {
+    animation: onboardingFadeUp 0.5s ease-out 0.3s both;
+  }
+}
+
+@keyframes onboardingFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes loginFadeIn {

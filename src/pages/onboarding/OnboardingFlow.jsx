@@ -1,21 +1,35 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import OnboardingScreenOne from '../../components/onboarding/OnboardingScreenOne';
+import OnboardingSlide from '../../components/onboarding/OnboardingSlide';
 import Button from '../../components/ui/Button';
 import { setOnboardingComplete } from '../../context/AuthContext';
 import { useAuth } from '../../hooks/useAuth';
 
 const SLIDES = [
   {
-    title: 'Encuentra tu próximo empleo',
-    description: 'Explora oportunidades en Guinea Ecuatorial adaptadas a tu perfil.',
+    title: (
+      <>
+        <span className="block text-[#111827]">Conecta con empresas</span>
+        <span className="block text-[#2563EB]">verificadas.</span>
+      </>
+    ),
+    description: (
+      <p>
+        Sigue empresas de confianza y mantente al día con el feed profesional de Guinea Ecuatorial.
+      </p>
+    ),
   },
   {
-    title: 'Conecta con empresas',
-    description: 'Sigue empresas verificadas y mantente al día con el feed profesional.',
-  },
-  {
-    title: 'Aplica en minutos',
-    description: 'Sube tu CV una vez y postula a múltiples empleos fácilmente.',
+    title: (
+      <>
+        <span className="block text-[#111827]">Aplica en minutos.</span>
+        <span className="block text-[#2563EB]">Empieza hoy.</span>
+      </>
+    ),
+    description: (
+      <p>Sube tu CV una vez y postula a múltiples empleos de forma sencilla y rápida.</p>
+    ),
   },
 ];
 
@@ -23,8 +37,7 @@ export default function OnboardingFlow() {
   const navigate = useNavigate();
   const { enterPreviewMode } = useAuth();
   const [step, setStep] = useState(0);
-  const slide = SLIDES[step];
-  const isLast = step === SLIDES.length - 1;
+  const isLast = step === SLIDES.length;
 
   const finish = () => {
     setOnboardingComplete();
@@ -37,45 +50,43 @@ export default function OnboardingFlow() {
     navigate('/account-type', { replace: true });
   };
 
-  return (
-    <div className="flex min-h-dvh flex-col bg-white px-6 py-10">
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <div className="mb-8 flex h-48 w-48 items-center justify-center rounded-3xl bg-primary-50 text-4xl font-bold text-primary-600">
-          {step + 1}
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900">{slide.title}</h1>
-        <p className="mt-3 max-w-sm text-gray-500">{slide.description}</p>
-      </div>
+  const handleNext = () => {
+    if (isLast) {
+      finish();
+      return;
+    }
+    setStep((s) => s + 1);
+  };
 
-      <div className="space-y-3">
-        <div className="flex justify-center gap-2">
-          {SLIDES.map((_, i) => (
-            <span
-              key={i}
-              className={`h-2 w-2 rounded-full ${i === step ? 'bg-primary-600' : 'bg-gray-200'}`}
-            />
-          ))}
-        </div>
-        {isLast ? (
-          <>
-            <Button fullWidth onClick={finish}>
-              Comenzar
-            </Button>
-            <Button variant="secondary" fullWidth onClick={handlePreview}>
-              Explorar sin cuenta
-            </Button>
-          </>
-        ) : (
-          <Button fullWidth onClick={() => setStep((s) => s + 1)}>
-            Siguiente
+  if (step === 0) {
+    return (
+      <OnboardingScreenOne
+        currentStep={0}
+        onNext={() => setStep(1)}
+        onSkip={finish}
+      />
+    );
+  }
+
+  const slide = SLIDES[step - 1];
+
+  return (
+    <OnboardingSlide
+      key={step}
+      title={slide.title}
+      description={slide.description}
+      currentStep={step}
+      totalSteps={SLIDES.length + 1}
+      onNext={handleNext}
+      onSkip={finish}
+      nextLabel={isLast ? 'Comenzar' : 'Siguiente'}
+      secondaryAction={
+        isLast ? (
+          <Button variant="secondary" fullWidth onClick={handlePreview} className="!h-14 !rounded-2xl">
+            Explorar sin cuenta
           </Button>
-        )}
-        {!isLast && (
-          <Button variant="ghost" fullWidth onClick={finish}>
-            Saltar
-          </Button>
-        )}
-      </div>
-    </div>
+        ) : null
+      }
+    />
   );
 }
