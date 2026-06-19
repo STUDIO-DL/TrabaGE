@@ -1,72 +1,74 @@
 import { hasJobPreferences, normalizeJobPreferences } from '../constants/jobPreferences';
+import { MATCH_THRESHOLD } from '../constants/recommendationPreferences';
+import { calculateJobMatch } from './calculateJobMatch';
 
-function buildJobHaystack(job) {
-  return [
-    job.title,
-    job.description,
-    job.requirements,
-    job.company_profiles?.company_name,
-    job.company_profiles?.sector,
-  ]
-    .filter(Boolean)
-    .join(' ')
-    .toLowerCase();
+export { calculateJobMatch, MATCH_THRESHOLD };
+
+export function scoreJobMatch(job, rawPreferences, skillNames = [], userProfile = null) {
+  const user = userProfile ?? {
+    job_preferences: rawPreferences,
+    skills: skillNames.map((name) => ({ name })),
+  };
+
+  return calculateJobMatch(user, job);
 }
 
-export function scoreJobMatch(job, rawPreferences, skillNames = []) {
-  const prefs = normalizeJobPreferences(rawPreferences);
-  let score = 0;
-
-  if (prefs.preferred_cities.length && job.city && prefs.preferred_cities.includes(job.city)) {
-    score += 3;
-  }
-
-  if (
-    prefs.preferred_job_types.length &&
-    job.job_type &&
-    prefs.preferred_job_types.includes(job.job_type)
-  ) {
-    score += 3;
-  }
-
-  const sector = job.company_profiles?.sector;
-  if (prefs.preferred_sectors.length && sector && prefs.preferred_sectors.includes(sector)) {
-    score += 2;
-  }
-
-  const haystack = buildJobHaystack(job);
-
-  for (const keyword of prefs.keywords) {
-    if (haystack.includes(keyword.toLowerCase())) score += 2;
-  }
-
-  for (const skill of skillNames) {
-    if (haystack.includes(skill.toLowerCase())) score += 1;
-  }
-
-  return score;
-}
-
-export function rankJobsByPreferences(jobs, rawPreferences, skillNames = []) {
+export function rankJobsByMatchScore(jobs, userProfile) {
   return [...jobs]
-    .map((job) => ({ job, score: scoreJobMatch(job, rawPreferences, skillNames) }))
+    .map((job) => ({ job, score: calculateJobMatch(userProfile, job) }))
     .filter(({ score }) => score > 0)
-    .sort((a, b) => b.score - a.score || new Date(b.job.created_at) - new Date(a.job.created_at))
-    .map(({ job }) => job);
+    .sort((a, b) => b.score - a.score || new Date(b.job.created_at) - new Date(a.job.created_at));
 }
 
-export function applyJobRecommendations(jobs, rawPreferences, skillNames = [], { query = '', filters = {} } = {}) {
+export function getRecommendedJobs(jobs, userProfile, { minScore = 1 } = {}) {
+  return rankJobsByMatchScore(jobs, userProfile)
+    .filter(({ score }) => score >= minScore)
+    .map(({ job, score }) => ({ job, score }));
+}
+
+export function applyJobRecommendations(
+  jobs,
+  rawPreferences,
+  skillNames = [],
+  { query = '', filters = {}, userProfile = null } = {},
+) {
   const hasManualSearch =
     Boolean(query?.trim()) || Boolean(filters?.city) || Boolean(filters?.jobType);
 
-  if (hasManualSearch || !hasJobPreferences(rawPreferences)) {
-    return { jobs, mode: hasManualSearch ? 'search' : 'all' };
+  const profile = userProfile ?? {
+    job_preferences: rawPreferences,
+    skills: skillNames.map((name) => ({ name })),
+  };
+
+  if (hasManualSearch) {
+    return { jobs, mode: 'search', scoredJobs: [] };
   }
 
-  const ranked = rankJobsByPreferences(jobs, rawPreferences, skillNames);
-  if (ranked.length > 0) {
-    return { jobs: ranked, mode: 'recommended' };
+  if (!hasJobPreferences(rawPreferences) && !profile?.headline && !profile?.skills?.length) {
+    return { jobs, mode: 'all', scoredJobs: [] };
   }
 
-  return { jobs, mode: 'fallback' };
+  const scoredJobs = getRecommendedJobs(jobs, profile);
+  if (scoredJobs.length > 0) {
+    return {
+      jobs: scoredJobs.map(({ job }) => job),
+      scoredJobs,
+      mode: 'recommended',
+    };
+  }
+
+  return { jobs, mode: 'fallback', scoredJobs: [] };
+}
+
+export function meetsNotificationThreshold(score) {
+  return score >= MATCH_THRESHOLD;
+}
+
+// Legacy export for existing imports
+export function rankJobsByPreferences(jobs, rawPreferences, skillNames = []) {
+  const profile = {
+    job_preferences: normalizeJobPreferences(rawPreferences),
+    skills: skillNames.map((name) => ({ name })),
+  };
+  return getRecommendedJobs(jobs, profile).map(({ job }) => job);
 }

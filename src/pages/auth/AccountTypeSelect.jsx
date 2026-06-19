@@ -52,7 +52,7 @@ export default function AccountTypeSelect() {
           Cuenta de Candidato
         </Button>
         <Button variant="secondary" fullWidth onClick={() => selectRole(ROLES.COMPANY)}>
-          Cuenta de Empresa
+          Cuenta de empresa / institución
         </Button>
       </div>
     </div>

@@ -13,6 +13,7 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { applicationsService } from '../../services/applications.service';
 import { storageService } from '../../services/storage.service';
 import { profileService } from '../../services/profile.service';
+import { analyticsService } from '../../services/analytics.service';
 import { cvPath } from '../../constants/storage';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { FILE_HINTS, validateFile } from '../../utils/validateFile';
@@ -151,6 +152,8 @@ export default function ApplyJob() {
       setLoading(false);
       return;
     }
+
+    analyticsService.trackApplicationSubmitted(user.id, jobId, { source: 'apply_form' });
 
     showToast('Aplicación enviada', 'success');
     navigate('/candidate/applications', { replace: true });

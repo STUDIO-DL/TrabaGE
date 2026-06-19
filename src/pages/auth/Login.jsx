@@ -48,7 +48,7 @@ const FEATURES = [
 function AccountTypeTabs({ value, onChange }) {
   const tabs = [
     { id: ACCOUNT_TYPES.candidate, label: 'Soy candidato', icon: User },
-    { id: ACCOUNT_TYPES.company, label: 'Soy empresa', icon: Building2 },
+    { id: ACCOUNT_TYPES.company, label: 'Soy empresa / institución', icon: Building2 },
   ];
 
   return (

@@ -17,6 +17,7 @@ import {
 } from '../../../constants/icons';
 import CompanyVerificationStatus from './CompanyVerificationStatus';
 import VerifiedBadge from '../VerifiedBadge';
+import FollowButton from '../../follow/FollowButton';
 import { getCompanyCoverUrl, getCompanyLogoUrl } from '../../../constants/images';
 import {
   displayCompanyValue,
@@ -71,6 +72,11 @@ export default function CompanyProfileHeader({
   onUploadCover,
   logoLoading = false,
   coverLoading = false,
+  showFollowButton = false,
+  isFollowing = false,
+  followLoading = false,
+  canFollow = true,
+  onToggleFollow,
 }) {
   const logoInputRef = useRef(null);
   const coverInputId = 'company-cover-input';
@@ -176,16 +182,27 @@ export default function CompanyProfileHeader({
 
           <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-dashed border-primary-200 bg-primary-50/40 px-4 py-3">
             <p className="truncate text-base font-semibold text-gray-900">{name}</p>
-            {!readOnly && (
-              <button
-                type="button"
-                onClick={onEditName}
-                className="shrink-0 rounded-lg p-1.5 text-primary-600 hover:bg-primary-100"
-                aria-label="Editar nombre"
-              >
-                <AppIcon icon={Pencil} size={ICON_SIZES.default} />
-              </button>
-            )}
+            <div className="flex shrink-0 items-center gap-2">
+              {showFollowButton && (
+                <FollowButton
+                  isFollowing={isFollowing}
+                  loading={followLoading}
+                  canFollow={canFollow}
+                  onToggle={onToggleFollow}
+                  className="!px-4 !py-2 text-sm"
+                />
+              )}
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={onEditName}
+                  className="rounded-lg p-1.5 text-primary-600 hover:bg-primary-100"
+                  aria-label="Editar nombre"
+                >
+                  <AppIcon icon={Pencil} size={ICON_SIZES.default} />
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="mt-3">
@@ -233,7 +250,14 @@ export default function CompanyProfileHeader({
   );
 }
 
-export function CompanyAboutSection({ profile, readOnly = false, onEditAbout, expanded, onToggleExpand }) {
+export function CompanyAboutSection({
+  profile,
+  readOnly = false,
+  onEditAbout,
+  expanded,
+  onToggleExpand,
+  followerCountText = '',
+}) {
   const description = profile?.description?.trim();
   const hasDescription = hasCompanyDescription(profile);
   const emptyText = 'No hay información disponible sobre esta empresa.';
@@ -248,6 +272,9 @@ export function CompanyAboutSection({ profile, readOnly = false, onEditAbout, ex
       <p className="mt-3 text-sm leading-relaxed text-gray-600">
         {hasDescription ? previewText : emptyText}
       </p>
+      {followerCountText ? (
+        <p className="mt-3 text-sm font-medium text-gray-700">{followerCountText}</p>
+      ) : null}
       {hasDescription && description.length > 120 && (
         <button
           type="button"

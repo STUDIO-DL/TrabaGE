@@ -13,14 +13,33 @@ import { useAuth } from '../../hooks/useAuth';
 import { generateCompanyUrl } from '../../utils/generateShareUrl';
 import { hasCompanyActionableContact, openCompanyContact } from '../../utils/contact';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { useFollow } from '../../hooks/useFollow';
+import { FOLLOWS_TARGET } from '../../services/follows.service';
 
 export default function CompanyPublicProfile() {
   const { companyId } = useParams();
-  const { isPreviewMode } = useAuth();
+  const { isPreviewMode, user, role, isAuthenticated } = useAuth();
   const { showToast } = useNotificationContext();
   const [profile, setProfile] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const {
+    isFollowing,
+    followerCount,
+    actionLoading: followLoading,
+    toggleFollow,
+    canFollow,
+  } = useFollow({
+    targetType: FOLLOWS_TARGET.COMPANY,
+    targetId: companyId,
+    enabled: Boolean(companyId) && !isPreviewMode,
+  });
+
+  const showFollowButton =
+    !isPreviewMode && user?.id !== companyId && role !== ROLES.COMPANY;
+
+  const showFollowersTab = role === ROLES.ADMIN;
 
   useEffect(() => {
     if (isPreviewMode && companyId === PREVIEW_USER.id) {
@@ -48,6 +67,17 @@ export default function CompanyPublicProfile() {
   const handleContact = () => {
     const { ok, error } = openCompanyContact(profile);
     if (!ok) showToast(error, 'error');
+  };
+
+  const handleToggleFollow = async () => {
+    const result = await toggleFollow();
+    if (result?.needsAuth) {
+      showToast('Inicia sesión para seguir empresas', 'info');
+      return;
+    }
+    if (result?.error) {
+      showToast(result.error.message || 'No se pudo actualizar el seguimiento', 'error');
+    }
   };
 
   if (loading) {
@@ -79,6 +109,13 @@ export default function CompanyPublicProfile() {
           readOnly
           companyId={companyId}
           jobs={jobs}
+          showFollowButton={showFollowButton || !isAuthenticated}
+          isFollowing={isFollowing}
+          followLoading={followLoading}
+          canFollow={canFollow || !isAuthenticated}
+          onToggleFollow={handleToggleFollow}
+          followerCount={followerCount}
+          showFollowersTab={showFollowersTab}
         />
       </ProfilePageShell>
     </PageContainer>

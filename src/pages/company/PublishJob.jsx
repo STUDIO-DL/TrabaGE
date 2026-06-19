@@ -13,6 +13,10 @@ import { WORK_MODES } from '../../constants/workModes';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
+import { notificationsService } from '../../services/notifications.service';
+import { jobRecommendationsService } from '../../services/jobRecommendations.service';
+import { FOLLOWS_TARGET } from '../../services/follows.service';
+import { companyService } from '../../services/company.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 const DESCRIPTION_MAX = 5000;
@@ -87,12 +91,31 @@ export default function PublishJob() {
     setError('');
 
     const payload = buildJobPayload(form, user.id, status);
-    const { error: saveError } = await jobsService.createJob(payload);
+    const { data: job, error: saveError } = await jobsService.createJob(payload);
 
     if (saveError) {
       setError(saveError.message);
       setLoading(false);
       return;
+    }
+
+    if (status === 'active' && job?.id) {
+      const { data: companyProfile } = await companyService.getCompanyProfile(user.id);
+      const companyName = companyProfile?.company_name?.trim() || 'Empresa';
+      const citySuffix = form.city ? ` - ${form.city}` : '';
+
+      await notificationsService.notifyFollowers({
+        targetType: FOLLOWS_TARGET.COMPANY,
+        targetId: user.id,
+        type: 'new_job',
+        title: `Nueva oferta de ${companyName}`,
+        message: `${form.title.trim()}${citySuffix}`,
+        link: `/candidate/jobs/${job.id}`,
+      });
+
+      jobRecommendationsService.processNewJob(job).catch((error) => {
+        console.warn('[TrabaGE] Job recommendations failed:', error?.message || error);
+      });
     }
 
     showToast(status === 'draft' ? 'Borrador guardado' : 'Empleo publicado', 'success');

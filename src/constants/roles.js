@@ -6,7 +6,7 @@ export const ROLES = {
 
 export const ROLE_LABELS = {
   [ROLES.CANDIDATE]: 'Candidato',
-  [ROLES.COMPANY]: 'Empresa',
+  [ROLES.COMPANY]: 'Empresa / institución',
   [ROLES.ADMIN]: 'Administrador',
 };
 

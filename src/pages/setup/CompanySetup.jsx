@@ -39,9 +39,9 @@ export default function CompanySetup() {
   };
 
   return (
-    <PageContainer title="Configura tu empresa" bottomNav={false}>
+    <PageContainer title="Configura tu empresa / institución" bottomNav={false}>
       <form onSubmit={handleSubmit} className="space-y-4 p-4">
-        <Input label="Nombre de la empresa" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} required />
+        <Input label="Nombre de la empresa / institución" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} required />
         <Select label="Sector" value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} options={[{ value: '', label: 'Seleccionar' }, ...SECTORS.map((s) => ({ value: s, label: s }))]} />
         <Textarea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         <Select label="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]} />

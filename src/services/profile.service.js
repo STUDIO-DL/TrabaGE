@@ -20,6 +20,12 @@ export const profileService = {
   updateCandidateProfile: (userId, data) =>
     supabase.from('candidate_profiles').update(data).eq('user_id', userId).select().single(),
 
+  updateOneSignalPlayerId: (userId, playerId) =>
+    supabase
+      .from('candidate_profiles')
+      .update({ onesignal_player_id: playerId })
+      .eq('user_id', userId),
+
   getCandidateFullProfile: (userId) =>
     supabase
       .from('candidate_profiles')

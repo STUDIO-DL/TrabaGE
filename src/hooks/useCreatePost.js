@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { postsService } from '../services/posts.service';
+import { notificationsService } from '../services/notifications.service';
+import { companyService } from '../services/company.service';
+import { FOLLOWS_TARGET } from '../services/follows.service';
 import { storageService } from '../services/storage.service';
 import { postImagePath } from '../constants/storage';
 import { ROLES } from '../constants/roles';
@@ -66,6 +69,21 @@ export function useCreatePost() {
 
       const path = postImagePath(user.id, post.id);
       await postsService.update(post.id, { post_image_path: path });
+    }
+
+    if (role === ROLES.COMPANY) {
+      const { data: companyProfile } = await companyService.getCompanyProfile(user.id);
+      const companyName = companyProfile?.company_name?.trim() || 'Empresa';
+      const preview = content.trim().slice(0, 120);
+
+      await notificationsService.notifyFollowers({
+        targetType: FOLLOWS_TARGET.COMPANY,
+        targetId: user.id,
+        type: 'new_post',
+        title: `Nueva publicación de ${companyName}`,
+        message: preview || 'Nueva actualización',
+        link: `/companies/${user.id}`,
+      });
     }
 
     showToast('Publicación creada', 'success');

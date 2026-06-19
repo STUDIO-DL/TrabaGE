@@ -72,12 +72,12 @@ export function AuthProvider({ children }) {
       setRole(null);
       setSetupComplete(false);
       clearSentryUser();
-      clearOneSignalUserId();
+      void clearOneSignalUserId();
       return;
     }
 
     setSentryUser(currentUser);
-    setOneSignalUserId(currentUser.id);
+    void setOneSignalUserId(currentUser.id);
 
     const { data: roleData } = await authService.getUserRole(currentUser.id);
     const userRole = roleData?.role ?? ROLES.CANDIDATE;

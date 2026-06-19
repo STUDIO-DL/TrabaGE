@@ -4,7 +4,7 @@ import CandidateProfileLayout from '../../components/profile/CandidateProfileLay
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import AboutSection from '../../components/profile/AboutSection';
 import ContactSection from '../../components/profile/ContactSection';
-import EmploymentPreferencesSection from '../../components/profile/EmploymentPreferencesSection';
+import NotificationPreferencesSection from '../../components/profile/NotificationPreferencesSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
@@ -109,6 +109,14 @@ export default function Profile() {
       error ? error.message : 'Preferencias guardadas',
       error ? 'error' : 'success',
     );
+  };
+
+  const handleSaveNotificationSettings = async (settings) => {
+    const { error } = await updateBasicInfo(settings);
+    if (error) {
+      showToast(error.message, 'error');
+    }
+    return { error };
   };
 
   const handleSaveSettings = async (data) => {
@@ -274,10 +282,11 @@ export default function Profile() {
           loading={contactSaving}
         />
 
-        <EmploymentPreferencesSection
-          jobPreferences={profile?.job_preferences}
+        <NotificationPreferencesSection
+          profile={profile}
           isOwn={canEdit}
-          onSave={handleSavePreferences}
+          onSavePreferences={handleSavePreferences}
+          onSaveNotificationSettings={handleSaveNotificationSettings}
           loading={preferencesSaving}
         />
 

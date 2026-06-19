@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import ApplicationsCounter from '../../components/jobs/ApplicationsCounter';
@@ -14,6 +15,7 @@ import { generateJobUrl } from '../../utils/generateShareUrl';
 import { useJob } from '../../hooks/useJobs';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { analyticsService } from '../../services/analytics.service';
 import { formatSalary } from '../../utils/formatSalary';
 import { getWorkModeLabel } from '../../constants/workModes';
 import { parseBenefits, parseRequirements } from '../../utils/jobParsing';
@@ -22,10 +24,15 @@ import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isPreviewMode } = useAuth();
+  const { isPreviewMode, user } = useAuth();
   const { showToast } = useNotificationContext();
   const { job, loading } = useJob(id);
   const company = job?.company_profiles;
+
+  useEffect(() => {
+    if (!user?.id || !id || loading || !job) return;
+    analyticsService.trackJobViewed(user.id, id, { source: 'job_detail' });
+  }, [user?.id, id, loading, job]);
 
   const handleApply = () => {
     if (isPreviewMode) {

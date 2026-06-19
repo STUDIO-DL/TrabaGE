@@ -4,12 +4,16 @@ import CompanyServicesSection from './CompanyServicesSection';
 import CompanyContactSection from './CompanyContactSection';
 import CompanyJobsSection from './CompanyJobsSection';
 import CompanyActivitySection from './CompanyActivitySection';
+import CompanyFollowersSection from './CompanyFollowersSection';
+import { formatFollowerCount } from '../../../utils/formatFollowerCount';
+import { FOLLOWS_TARGET } from '../../../services/follows.service';
 
 export default function CompanyProfileView({
   profile,
   readOnly = false,
   jobs = [],
   companyId,
+  targetType = FOLLOWS_TARGET.COMPANY,
   onEditName,
   onEditAbout,
   onBookmark,
@@ -21,6 +25,13 @@ export default function CompanyProfileView({
   contactSaving = false,
   logoLoading = false,
   coverLoading = false,
+  showFollowButton = false,
+  isFollowing = false,
+  followLoading = false,
+  canFollow = true,
+  onToggleFollow,
+  followerCount = 0,
+  showFollowersTab = false,
 }) {
   const [aboutExpanded, setAboutExpanded] = useState(false);
 
@@ -36,6 +47,11 @@ export default function CompanyProfileView({
         onUploadCover={onUploadCover}
         logoLoading={logoLoading}
         coverLoading={coverLoading}
+        showFollowButton={showFollowButton}
+        isFollowing={isFollowing}
+        followLoading={followLoading}
+        canFollow={canFollow}
+        onToggleFollow={onToggleFollow}
       />
       <CompanyAboutSection
         profile={profile}
@@ -43,6 +59,7 @@ export default function CompanyProfileView({
         onEditAbout={onEditAbout}
         expanded={aboutExpanded}
         onToggleExpand={() => setAboutExpanded((value) => !value)}
+        followerCountText={formatFollowerCount(followerCount)}
       />
       <CompanyServicesSection
         items={profile?.company_services}
@@ -57,6 +74,11 @@ export default function CompanyProfileView({
         saving={contactSaving}
       />
       <CompanyJobsSection jobs={jobs} readOnly={readOnly} />
+      <CompanyFollowersSection
+        targetType={targetType}
+        targetId={companyId}
+        visible={showFollowersTab}
+      />
       <CompanyActivitySection />
     </div>
   );

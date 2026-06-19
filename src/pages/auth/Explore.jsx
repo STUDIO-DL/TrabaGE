@@ -15,8 +15,8 @@ const ROLE_OPTIONS = [
   },
   {
     id: ROLES.COMPANY,
-    label: 'Soy empresa',
-    description: 'Explora el panel de empresa, publicaciones y candidatos.',
+    label: 'Soy empresa / institución',
+    description: 'Explora el panel de organización, publicaciones y candidatos.',
     icon: Building2,
   },
 ];

@@ -10,6 +10,8 @@ import { validateFile } from '../../../utils/validateFile';
 import { compressProfileImage } from '../../../utils/imageCompression';
 import { logoPath, companyCoverPath } from '../../../constants/storage';
 import CompanyProfileView from './CompanyProfileView';
+import { useFollow } from '../../../hooks/useFollow';
+import { FOLLOWS_TARGET } from '../../../services/follows.service';
 
 export default function CompanyProfileLayout({
   profile,
@@ -207,6 +209,12 @@ export default function CompanyProfileLayout({
 
   const readOnly = isPreviewMode;
 
+  const { followerCount } = useFollow({
+    targetType: FOLLOWS_TARGET.COMPANY,
+    targetId: userId,
+    enabled: Boolean(userId) && !isPreviewMode,
+  });
+
   return (
     <ProfilePageShell
       title="Perfil de empresa"
@@ -234,6 +242,8 @@ export default function CompanyProfileLayout({
         contactSaving={contactSaving}
         logoLoading={logoLoading}
         coverLoading={coverLoading}
+        followerCount={followerCount}
+        showFollowersTab={!readOnly}
       />
     </ProfilePageShell>
   );

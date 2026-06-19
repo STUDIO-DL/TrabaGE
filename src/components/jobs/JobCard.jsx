@@ -22,7 +22,7 @@ function getAccent(index = 0) {
   return JOB_CARD_ACCENTS[index % JOB_CARD_ACCENTS.length];
 }
 
-export default function JobCard({ job, accentIndex = 0, saved = false, onSaveToggle }) {
+export default function JobCard({ job, accentIndex = 0, saved = false, onSaveToggle, matchScore }) {
   if (!job) return null;
 
   const company = job.company_profiles;
@@ -60,7 +60,14 @@ export default function JobCard({ job, accentIndex = 0, saved = false, onSaveTog
       </div>
 
       <div className="space-y-1">
-        <h3 className="text-base font-bold text-gray-900">{job.title}</h3>
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-base font-bold text-gray-900">{job.title}</h3>
+          {typeof matchScore === 'number' && matchScore > 0 && (
+            <span className="shrink-0 rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
+              {matchScore}% compatible
+            </span>
+          )}
+        </div>
         <CompanyNameWithBadge company={company} showUnverifiedLabel />
       </div>
 

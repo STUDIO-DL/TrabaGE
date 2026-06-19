@@ -4,8 +4,10 @@ import EmptyState from '../../components/common/EmptyState';
 import { NotificationListSkeleton } from '../../components/common/Skeleton';
 import { NoNotifications } from '../../assets/empty-states';
 import { useNotifications } from '../../hooks/useNotifications';
+import { usePushPermission } from '../../hooks/usePushPermission';
 
 export default function Notifications() {
+  usePushPermission();
   const { notifications, loading, markAsRead } = useNotifications();
 
   return (
