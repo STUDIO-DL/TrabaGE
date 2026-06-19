@@ -79,10 +79,26 @@ export function AuthProvider({ children }) {
     setSentryUser(currentUser);
     void setOneSignalUserId(currentUser.id);
 
-    const { data: roleData } = await authService.getUserRole(currentUser.id);
-    const userRole = roleData?.role ?? ROLES.CANDIDATE;
-    await fetchRoleAndSetup(currentUser.id, userRole);
-  }, [fetchRoleAndSetup]);
+    // Resolve role and both profiles in parallel instead of fetching the role
+    // first and then the matching profile in series. This halves the blocking
+    // network latency before the UI can render the authenticated state.
+    const [roleResult, candidateResult, companyResult] = await Promise.all([
+      authService.getUserRole(currentUser.id),
+      profileService.getCandidateProfile(currentUser.id),
+      companyService.getCompanyProfile(currentUser.id),
+    ]);
+
+    const userRole = roleResult?.data?.role ?? ROLES.CANDIDATE;
+    setRole(userRole);
+
+    if (userRole === ROLES.CANDIDATE) {
+      setSetupComplete(Boolean(candidateResult?.data?.setup_complete));
+    } else if (userRole === ROLES.COMPANY) {
+      setSetupComplete(Boolean(companyResult?.data?.setup_complete));
+    } else if (userRole === ROLES.ADMIN) {
+      setSetupComplete(true);
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;

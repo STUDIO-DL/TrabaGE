@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
@@ -10,6 +10,7 @@ import { formatDate } from '../../utils/formatDate';
 
 export default function AdminUsers() {
   const { showToast } = useNotificationContext();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
@@ -87,7 +88,7 @@ export default function AdminUsers() {
                   row.role === 'company'
                     ? `/companies/${row.user_id}`
                     : `/profile/${row.user_id}`;
-                window.open(path, '_blank', 'noopener,noreferrer');
+                navigate(path);
               }}
             >
               Ver

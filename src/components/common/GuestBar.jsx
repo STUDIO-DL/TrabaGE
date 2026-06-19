@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { ROLES } from '../../constants/roles';
 
-const HIDDEN_PREFIXES = ['/login', '/register', '/forgot-password', '/explore', '/onboarding'];
+const HIDDEN_PREFIXES = ['/login', '/register', '/register-method', '/forgot-password', '/explore', '/onboarding'];
 
 function shouldHideGuestBar(pathname) {
   if (pathname === '/') return true;

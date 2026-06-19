@@ -15,6 +15,7 @@ export default function AuthCallback() {
 
   useEffect(() => {
     let cancelled = false;
+    let resolved = false;
 
     const finish = async () => {
       clearPreviewMode();
@@ -28,8 +29,12 @@ export default function AuthCallback() {
       }
 
       const redirectFromSession = async (session) => {
-        if (!session?.user?.id || cancelled) return false;
+        if (!session?.user?.id || cancelled || resolved) return false;
+        // Claim the resolution up front so the onAuthStateChange handler and
+        // the polling loop can't both run resolvePostAuthRedirect / navigate.
+        resolved = true;
         const redirectTo = await resolvePostAuthRedirect(session.user.id);
+        if (cancelled) return true;
         navigate(redirectTo, { replace: true });
         return true;
       };

@@ -14,6 +14,7 @@ import AuthCallback from './pages/auth/AuthCallback';
 import Login from './pages/auth/Login';
 import Explore from './pages/auth/Explore';
 import Register from './pages/auth/Register';
+import RegisterMethod from './pages/auth/RegisterMethod';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import AccountTypeSelect from './pages/auth/AccountTypeSelect';
 import CandidateSetup from './pages/setup/CandidateSetup';
@@ -70,12 +71,13 @@ function AppRoutes() {
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/explore" element={<Explore />} />
+            <Route path="/account-type" element={<AccountTypeSelect />} />
+            <Route path="/register-method" element={<RegisterMethod />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/demo/company" element={<DemoCompanyEntry />} />
 
             <Route element={<ProtectedRoute />}>
-              <Route path="/account-type" element={<AccountTypeSelect />} />
 
               <Route element={<RoleRoute role="candidate" />}>
                 <Route path="/setup/candidate" element={<CandidateSetup />} />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
@@ -11,7 +11,9 @@ import { authService } from '../../services/auth.service';
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register, enterPreviewMode } = useAuth();
+  const accountType = location.state?.accountType ?? ROLES.CANDIDATE;
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,7 +31,7 @@ export default function Register() {
     setError('');
     clearPreviewMode();
 
-    const { error: googleError } = await authService.loginWithGoogle(ROLES.CANDIDATE);
+    const { error: googleError } = await authService.loginWithGoogle(accountType);
     if (googleError) {
       setError(googleError.message || 'No se pudo registrarse con Google');
     }
@@ -55,7 +57,7 @@ export default function Register() {
     setLoading(true);
     setError('');
 
-    const { error: registerError } = await register(email, password, 'candidate');
+    const { error: registerError } = await register(email, password, accountType);
     if (registerError) {
       setError(registerError.message);
       setLoading(false);

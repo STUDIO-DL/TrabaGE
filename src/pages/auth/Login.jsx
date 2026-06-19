@@ -1,1158 +1,339 @@
 import { useState } from 'react';
-
 import { Link, useNavigate } from 'react-router-dom';
-
-import {
-
-  Building2,
-
-  ChevronRight,
-
-  Eye,
-
-  EyeOff,
-
-  Globe,
-
-  Lock,
-
-  Mail,
-
-  Search,
-
-  ShieldCheck,
-
-  User,
-
-  Users,
-
-} from 'lucide-react';
-
-import logoImg from '../../assets/branding/logo.png';
+import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
-
-import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
-
+import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
-
-import LoginCandidateIllustration from '../../components/auth/LoginCandidateIllustration';
-
 import { clearPreviewMode } from '../../constants/preview';
-
 import { ROLES } from '../../constants/roles';
-
 import { useAuth } from '../../hooks/useAuth';
-
 import { authService } from '../../services/auth.service';
 
-
-
 const ACCOUNT_TYPES = {
-
   candidate: ROLES.CANDIDATE,
-
   company: ROLES.COMPANY,
-
 };
 
-
-
-const FEATURES = [
-
-  {
-
-    icon: Search,
-
-    title: 'Miles de ofertas',
-
-    description: 'Nuevas oportunidades cada día',
-
-  },
-
-  {
-
-    icon: Users,
-
-    title: 'Conecta con empresas',
-
-    description: 'Encuentra el lugar ideal para ti',
-
-  },
-
-  {
-
-    icon: ShieldCheck,
-
-    title: 'Seguro y confiable',
-
-    description: 'Tu información siempre protegida',
-
-  },
-
-];
-
-
-
-function AccountTypeTabs({ value, onChange, compact = false }) {
-
-  const tabs = [
-
-    { id: ACCOUNT_TYPES.candidate, label: 'Soy candidato', icon: User },
-
-    { id: ACCOUNT_TYPES.company, label: 'Soy empresa / institución', icon: Building2 },
-
-  ];
-
-
-
+function LoginDecorations() {
   return (
-
-    <div
-
-      role="tablist"
-
-      aria-label="Tipo de cuenta"
-
-      className={compact ? 'flex border-b border-slate-200' : 'mb-6 flex border-b border-slate-200 md:mb-7'}
-
-    >
-
-      {tabs.map(({ id, label, icon: Icon }) => {
-
-        const isActive = value === id;
-
-
-
-        return (
-
-          <button
-
-            key={id}
-
-            type="button"
-
-            role="tab"
-
-            aria-selected={isActive}
-
-            onClick={() => onChange(id)}
-
-            className={[
-
-              'flex min-w-0 flex-1 items-center justify-center gap-1 border-b-[3px] px-1 pb-2 pt-0 text-caption font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 sm:gap-2 sm:px-3 sm:text-small',
-
-              isActive
-
-                ? 'border-primary-600 text-primary-600'
-
-                : 'border-transparent text-[#64748B] hover:text-[#0F172A]',
-
-            ].join(' ')}
-
-          >
-
-            <Icon className="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4" aria-hidden />
-
-            <span className="truncate">{label}</span>
-
-          </button>
-
-        );
-
-      })}
-
-    </div>
-
-  );
-
-}
-
-
-
-function LoginMarketing() {
-
-  return (
-
-    <div className="login-fade-in flex w-full min-w-0 flex-col justify-between px-4 py-6 sm:px-6 sm:py-8 md:min-h-[calc(100dvh-4.75rem)] md:px-10 md:py-10 lg:px-12 xl:px-14 xl:py-12">
-
-      <div className="min-w-0">
-
-        <img
-
-          src={logoImg}
-
-          alt="TrabaGE"
-
-          width={140}
-
-          height={34}
-
-          className="h-8 w-auto max-h-logo"
-
-          decoding="async"
-
+    <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+      {/* Soft blue wavy shapes — top */}
+      <svg
+        className="absolute -left-24 -top-28 h-80 w-80 text-primary-100/70"
+        viewBox="0 0 200 200"
+        fill="none"
+      >
+        <path
+          fill="currentColor"
+          d="M44.6 -64.8C57.1 -55.7 66 -41.6 70.9 -26.3C75.8 -11 76.7 5.4 71.3 19.3C65.9 33.2 54.2 44.6 40.8 53.7C27.4 62.8 12.3 69.6 -3.6 74.6C-19.5 79.6 -36.2 82.8 -49.3 76.3C-62.4 69.8 -71.9 53.6 -76.6 37C-81.3 20.4 -81.2 3.4 -77 -12.1C-72.8 -27.6 -64.5 -41.6 -52.6 -50.9C-40.7 -60.2 -25.2 -64.8 -9.4 -68.3C6.4 -71.8 32.1 -73.9 44.6 -64.8Z"
+          transform="translate(100 100)"
         />
+      </svg>
+      <svg
+        className="absolute -right-20 -top-16 h-64 w-64 text-primary-50"
+        viewBox="0 0 200 200"
+        fill="none"
+      >
+        <path
+          fill="currentColor"
+          d="M38.5 -57.1C50.6 -49.1 61.3 -38.5 66.8 -25.4C72.3 -12.3 72.6 3.3 68.1 17.4C63.6 31.5 54.3 44.1 42.1 52.9C29.9 61.7 14.9 66.7 -0.7 67.7C-16.3 68.7 -32.7 65.7 -45.6 56.7C-58.5 47.7 -68 32.7 -71.4 16.5C-74.8 0.3 -72.1 -17.1 -64.2 -31.4C-56.3 -45.7 -43.2 -56.9 -29 -64C-14.8 -71.1 0.5 -74.1 13.8 -70.4C27.1 -66.7 26.4 -65.1 38.5 -57.1Z"
+          transform="translate(100 100)"
+        />
+      </svg>
+      {/* Faint dotted pattern — top right */}
+      <svg className="absolute right-6 top-24 h-24 w-24 text-primary-200/60" viewBox="0 0 80 80">
+        <defs>
+          <pattern id="login-dots" x="0" y="0" width="16" height="16" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="2" fill="currentColor" />
+          </pattern>
+        </defs>
+        <rect width="80" height="80" fill="url(#login-dots)" />
+      </svg>
 
-
-
-        <div className="mt-6 max-w-lg md:mt-10 lg:mt-12">
-
-          <h1 className="login-headline font-bold tracking-tight text-[#0F172A]">
-
-            Encuentra el trabajo que
-
-            <br />
-
-            impulsa <span className="text-primary-600">tu futuro</span>
-
-          </h1>
-
-
-
-          <p className="mt-3 max-w-md text-sm leading-relaxed text-[#64748B] md:mt-5 md:text-base">
-
-            Conecta talento con oportunidades. Empresas y candidatos creciendo juntos.
-
-          </p>
-
-
-
-          <ul className="mt-5 space-y-4 md:mt-8 md:space-y-5 lg:space-y-6">
-
-            {FEATURES.map(({ icon: Icon, title, description }) => (
-
-              <li key={title} className="flex min-w-0 items-start gap-3 md:gap-4">
-
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-
-                  <Icon className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-
-                </span>
-
-                <div className="min-w-0">
-
-                  <p className="font-semibold text-[#0F172A]">{title}</p>
-
-                  <p className="mt-0.5 text-sm leading-relaxed text-[#64748B]">{description}</p>
-
-                </div>
-
-              </li>
-
-            ))}
-
-          </ul>
-
-        </div>
-
-      </div>
-
-
-
-      <div className="mt-6 flex w-full justify-center pt-2 md:mt-8 md:justify-start md:pt-6 lg:pt-10">
-
-        <LoginCandidateIllustration />
-
-      </div>
-
+      {/* Bottom waves + city skyline */}
+      <svg
+        className="absolute bottom-0 left-0 w-full text-primary-100/60"
+        viewBox="0 0 500 200"
+        preserveAspectRatio="none"
+        fill="none"
+      >
+        <path
+          fill="currentColor"
+          d="M0 140C60 110 120 110 180 130C250 153 320 150 390 130C430 119 470 119 500 128V200H0V140Z"
+          opacity="0.5"
+        />
+        {/* City skyline silhouette */}
+        <g fill="currentColor" opacity="0.55">
+          <rect x="20" y="150" width="26" height="50" />
+          <rect x="52" y="135" width="20" height="65" />
+          <rect x="78" y="158" width="22" height="42" />
+          <rect x="106" y="142" width="18" height="58" />
+          <rect x="130" y="125" width="24" height="75" />
+          <rect x="160" y="150" width="20" height="50" />
+          <rect x="186" y="138" width="22" height="62" />
+          <rect x="214" y="118" width="16" height="82" />
+          <rect x="236" y="150" width="24" height="50" />
+          <rect x="266" y="132" width="20" height="68" />
+          <rect x="292" y="148" width="26" height="52" />
+          <rect x="324" y="138" width="18" height="62" />
+          <rect x="348" y="155" width="22" height="45" />
+          <rect x="376" y="128" width="22" height="72" />
+          <rect x="404" y="148" width="20" height="52" />
+          <rect x="430" y="140" width="24" height="60" />
+          <rect x="462" y="152" width="22" height="48" />
+        </g>
+        {/* Palm tree hint */}
+        <g fill="currentColor" opacity="0.6">
+          <rect x="446" y="120" width="4" height="40" rx="2" />
+          <path d="M448 120C440 112 432 112 426 118C434 116 442 118 448 124C454 118 462 116 470 118C464 112 456 112 448 120Z" />
+        </g>
+      </svg>
     </div>
-
   );
-
 }
 
-
-
-function MobileLoginScreen({
-
-  accountType,
-
-  setAccountType,
-
+function LoginScreen({
   email,
-
   setEmail,
-
   password,
-
   setPassword,
-
   showPassword,
-
   setShowPassword,
-
+  accountType,
   error,
-
   loading,
-
   onSubmit,
-
   onExplore,
-
   onGoogleLogin,
-
 }) {
-
   return (
+    <div className="relative min-h-dvh w-full overflow-hidden bg-gradient-to-b from-[#EFF6FF] via-white to-[#EFF6FF]">
+      <LoginDecorations />
 
-    <MobileScreenLayout
-
-      bg="bg-[#F8FAFC]"
-
-      maxWidth="max-w-lg"
-
-      header={
-
-        <div className="px-md pt-sm">
-
-          <img
-
-            src={logoImg}
-
-            alt="TrabaGE"
-
-            width={140}
-
-            height={34}
-
-            className="mx-auto h-8 w-auto max-h-logo sm:mx-0"
-
-            decoding="async"
-
-          />
-
-          <div className="mt-sm text-center sm:text-left">
-
-            <h1 className="text-heading-m font-bold text-[#0F172A]">Iniciar sesión</h1>
-
-            <p className="mt-xs text-small text-[#64748B]">Bienvenido de nuevo. ¡Nos alegra verte!</p>
-
+      <div
+        className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-10 sm:px-6"
+        style={{
+          paddingTop: 'max(2.5rem, env(safe-area-inset-top))',
+          paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
+        }}
+      >
+        <div className="login-fade-in flex flex-1 flex-col justify-center">
+          {/* Wordmark */}
+          <div className="flex justify-center">
+            <TrabaGEWordmark className="h-10 w-auto" />
           </div>
 
-          <div className="mt-sm">
-
-            <AccountTypeTabs value={accountType} onChange={setAccountType} compact />
-
-          </div>
-
-        </div>
-
-      }
-
-      contentClassName="px-md pb-sm"
-
-      footer={
-
-        <div className="space-y-sm">
-
-          {error ? (
-
-            <p
-
-              role="alert"
-
-              className="rounded-btn-secondary border border-red-200 bg-red-50 px-sm py-xs text-small text-red-700"
-
-            >
-
-              {error}
-
+          {/* Heading + subtitle */}
+          <div className="mt-6 text-center">
+            <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">Bienvenido</h1>
+            <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-[#64748B]">
+              Conecta con oportunidades, empresas y clientes desde un solo lugar.
             </p>
+          </div>
 
-          ) : null}
+          {/* Card */}
+          <div className="login-fade-in-delayed mt-7 rounded-3xl bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.10)] sm:p-7">
+            <form onSubmit={onSubmit} className="space-y-4" autoComplete="off">
+              <div>
+                <label
+                  htmlFor="login-email"
+                  className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0F172A]"
+                >
+                  <Mail className="h-4 w-4 text-primary-600" aria-hidden />
+                  Correo electrónico
+                </label>
+                <input
+                  id="login-email"
+                  type="email"
+                  name="trabage-email"
+                  autoComplete="email"
+                  required
+                  placeholder="ejemplo@correo.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
+                />
+              </div>
 
+              <div>
+                <label
+                  htmlFor="login-password"
+                  className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0F172A]"
+                >
+                  <Lock className="h-4 w-4 text-primary-600" aria-hidden />
+                  Contraseña
+                </label>
+                <div className="relative">
+                  <input
+                    id="login-password"
+                    type={showPassword ? 'text' : 'password'}
+                    name="trabage-password"
+                    autoComplete="current-password"
+                    required
+                    placeholder="Ingresa tu contraseña"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 text-base text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-[#94A3B8] transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+                    ) : (
+                      <Eye className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+                    )}
+                  </button>
+                </div>
+              </div>
 
+              <div className="flex justify-end">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-medium text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
 
-          <Button type="submit" form="mobile-login-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+              {error && (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                >
+                  {error}
+                </p>
+              )}
 
-            Iniciar sesión
+              <Button
+                type="submit"
+                fullWidth
+                loading={loading}
+                className="relative !rounded-xl py-3.5 text-base font-semibold"
+              >
+                Iniciar sesión
+                {!loading && (
+                  <ArrowRight className="absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2" aria-hidden />
+                )}
+              </Button>
+            </form>
 
-          </Button>
-
-
-
-          <div className="relative py-xs">
-
-            <div className="absolute inset-0 flex items-center">
-
-              <div className="w-full border-t border-slate-200" />
-
+            {/* Divider */}
+            <div className="relative my-5">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200" />
+              </div>
+              <div className="relative flex justify-center text-xs font-medium text-[#64748B]">
+                <span className="bg-white px-3">o</span>
+              </div>
             </div>
 
-            <div className="relative flex justify-center text-caption font-medium text-[#64748B]">
-
-              <span className="bg-white px-sm">o continúa con</span>
-
-            </div>
-
-          </div>
-
-
-
-          <GoogleAuthButton onClick={onGoogleLogin} />
-
-
-
-          <button
-
-            type="button"
-
-            onClick={onExplore}
-
-            className="btn-secondary-mobile group flex items-center gap-sm px-md text-left"
-
-          >
-
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-btn-secondary bg-primary-50 text-primary-600">
-
-              <Globe className="h-4 w-4" aria-hidden />
-
-            </span>
-
-            <span className="min-w-0 flex-1">
-
-              <span className="block font-semibold text-[#0F172A]">Explorar sin cuenta</span>
-
-              <span className="block text-caption text-[#64748B]">Descubre ofertas sin registrarte</span>
-
-            </span>
-
-            <ChevronRight className="h-4 w-4 shrink-0 text-primary-600" aria-hidden />
-
-          </button>
-
-
-
-          <p className="pt-xs text-center text-small text-[#64748B]">
-
-            ¿No tienes una cuenta?{' '}
-
-            <Link
-
-              to="/register"
-
-              state={{ accountType }}
-
-              className="font-bold text-primary-600 transition hover:text-primary-700"
-
-            >
-
-              Regístrate
-
-            </Link>
-
-          </p>
-
-        </div>
-
-      }
-
-      footerClassName="border-t border-slate-200 bg-white px-md pb-md pt-sm"
-
-    >
-
-      <form id="mobile-login-form" onSubmit={onSubmit} className="space-y-sm" autoComplete="off">
-
-        <div>
-
-          <label htmlFor="login-email-mobile" className="mb-xs block text-small font-semibold text-[#0F172A]">
-
-            Correo electrónico
-
-          </label>
-
-          <div className="relative">
-
-            <Mail
-
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]"
-
-              aria-hidden
-
-            />
-
-            <input
-
-              id="login-email-mobile"
-
-              type="email"
-
-              name="trabage-email"
-
-              autoComplete="email"
-
-              required
-
-              placeholder="tuemail@ejemplo.com"
-
-              value={email}
-
-              onChange={(e) => setEmail(e.target.value)}
-
-              className="w-full rounded-btn-secondary border border-slate-200 bg-white py-2.5 pl-9 pr-sm text-body text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-
-            />
-
-          </div>
-
-        </div>
-
-
-
-        <div>
-
-          <label htmlFor="login-password-mobile" className="mb-xs block text-small font-semibold text-[#0F172A]">
-
-            Contraseña
-
-          </label>
-
-          <div className="relative">
-
-            <Lock
-
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#94A3B8]"
-
-              aria-hidden
-
-            />
-
-            <input
-
-              id="login-password-mobile"
-
-              type={showPassword ? 'text' : 'password'}
-
-              name="trabage-password"
-
-              autoComplete="current-password"
-
-              required
-
-              value={password}
-
-              onChange={(e) => setPassword(e.target.value)}
-
-              className="w-full rounded-btn-secondary border border-slate-200 bg-white py-2.5 pl-9 pr-10 text-body text-[#0F172A] outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-
-            />
-
-            <button
-
-              type="button"
-
-              onClick={() => setShowPassword((prev) => !prev)}
-
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-[#94A3B8] transition hover:text-primary-600"
-
-              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-
-            >
-
-              {showPassword ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
-
-            </button>
-
-          </div>
-
-        </div>
-
-
-
-        <div className="flex justify-end">
-
-          <Link to="/forgot-password" className="text-small font-medium text-primary-600 hover:text-primary-700">
-
-            ¿Olvidaste tu contraseña?
-
-          </Link>
-
-        </div>
-
-      </form>
-
-    </MobileScreenLayout>
-
-  );
-
-}
-
-
-
-function LoginCard({
-
-  accountType,
-
-  setAccountType,
-
-  email,
-
-  setEmail,
-
-  password,
-
-  setPassword,
-
-  showPassword,
-
-  setShowPassword,
-
-  error,
-
-  loading,
-
-  onSubmit,
-
-  onExplore,
-
-  onGoogleLogin,
-
-}) {
-
-  return (
-
-    <div className="login-card login-fade-in-delayed">
-
-      <div className="px-5 py-6 sm:px-7 sm:py-8 md:px-8 md:py-9">
-
-        <header>
-
-          <h2 className="text-[1.4rem] font-bold leading-tight text-[#0F172A] sm:text-[1.65rem]">
-
-            Iniciar sesión
-
-          </h2>
-
-          <p className="mt-1.5 text-sm text-[#64748B]">
-
-            Bienvenido de nuevo. ¡Nos alegra verte!
-
-          </p>
-
-        </header>
-
-
-
-        <AccountTypeTabs value={accountType} onChange={setAccountType} />
-
-
-
-        <form onSubmit={onSubmit} className="space-y-4 md:space-y-5" autoComplete="off">
-
-          <div>
-
-            <label
-
-              htmlFor="login-email"
-
-              className="mb-2 block text-sm font-semibold text-[#0F172A]"
-
-            >
-
-              Correo electrónico
-
-            </label>
-
-            <div className="relative">
-
-              <Mail
-
-                className="pointer-events-none absolute left-3.5 top-1/2 h-[1.15rem] w-[1.15rem] -translate-y-1/2 text-[#94A3B8]"
-
-                aria-hidden
-
-              />
-
-              <input
-
-                id="login-email"
-
-                type="email"
-
-                name="trabage-email"
-
-                autoComplete="email"
-
-                required
-
-                placeholder="tuemail@ejemplo.com"
-
-                value={email}
-
-                onChange={(e) => setEmail(e.target.value)}
-
-                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-base text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:py-3.5 md:text-sm"
-
-              />
-
-            </div>
-
-          </div>
-
-
-
-          <div>
-
-            <label
-
-              htmlFor="login-password"
-
-              className="mb-2 block text-sm font-semibold text-[#0F172A]"
-
-            >
-
-              Contraseña
-
-            </label>
-
-            <div className="relative">
-
-              <Lock
-
-                className="pointer-events-none absolute left-3.5 top-1/2 h-[1.15rem] w-[1.15rem] -translate-y-1/2 text-[#94A3B8]"
-
-                aria-hidden
-
-              />
-
-              <input
-
-                id="login-password"
-
-                type={showPassword ? 'text' : 'password'}
-
-                name="trabage-password"
-
-                autoComplete="current-password"
-
-                required
-
-                value={password}
-
-                onChange={(e) => setPassword(e.target.value)}
-
-                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white py-3 pl-10 pr-12 text-base text-[#0F172A] outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:py-3.5 md:text-sm"
-
-              />
+            <div className="space-y-3">
+              <GoogleAuthButton onClick={onGoogleLogin} />
 
               <button
-
                 type="button"
-
-                onClick={() => setShowPassword((prev) => !prev)}
-
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-[#94A3B8] transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-
+                onClick={onExplore}
+                className="flex h-btn-secondary w-full items-center justify-center gap-3 rounded-xl bg-primary-50 px-md text-small font-semibold text-primary-700 transition hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
               >
-
-                {showPassword ? (
-
-                  <EyeOff className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-
-                ) : (
-
-                  <Eye className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-
-                )}
-
+                <User className="h-5 w-5" aria-hidden />
+                <span>Explorar como invitado</span>
               </button>
-
             </div>
-
           </div>
 
-
-
-          <div className="-mt-1 flex justify-end">
-
+          {/* Crear cuenta */}
+          <p className="mt-6 text-center text-sm text-[#64748B]">
+            ¿No tienes cuenta?{' '}
             <Link
-
-              to="/forgot-password"
-
-              className="text-sm font-medium text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-
+              to="/account-type"
+              state={{ accountType }}
+              className="font-bold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             >
-
-              ¿Olvidaste tu contraseña?
-
+              Crear cuenta
             </Link>
-
-          </div>
-
-
-
-          {error && (
-
-            <p
-
-              role="alert"
-
-              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-
-            >
-
-              {error}
-
-            </p>
-
-          )}
-
-
-
-          <Button type="submit" fullWidth loading={loading} className="py-3.5 text-base font-semibold">
-
-            Iniciar sesión
-
-          </Button>
-
-        </form>
-
-
-
-        <div className="relative my-6 md:my-7">
-
-          <div className="absolute inset-0 flex items-center">
-
-            <div className="w-full border-t border-slate-200" />
-
-          </div>
-
-          <div className="relative flex justify-center text-xs font-medium text-[#64748B]">
-
-            <span className="bg-white px-3">o continúa con</span>
-
-          </div>
-
+          </p>
         </div>
 
-
-
-        <div className="space-y-3">
-
-          <GoogleAuthButton onClick={onGoogleLogin} />
-
+        {/* Footer */}
+        <div className="mt-8 flex items-start justify-center gap-2 text-center">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary-600" aria-hidden />
+          <p className="text-xs leading-relaxed text-[#64748B]">
+            Seguro, confiable y hecho para ti.
+            <br />
+            TrabaGE es tu plataforma de oportunidades.
+          </p>
         </div>
-
-
-
-        <p className="mt-6 text-center text-sm text-[#64748B] md:mt-7">
-
-          ¿No tienes una cuenta?{' '}
-
-          <Link
-
-            to="/register"
-
-            state={{ accountType }}
-
-            className="font-bold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-
-          >
-
-            Regístrate
-
-          </Link>
-
-        </p>
-
       </div>
-
-
-
-      <button
-
-        type="button"
-
-        onClick={onExplore}
-
-        className="group flex w-full min-w-0 items-center gap-3 border-t border-primary-100 bg-[#EFF6FF] px-5 py-4 text-left transition hover:bg-[#DBEAFE]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-500 sm:gap-4 sm:px-7 sm:py-5 md:px-8"
-
-      >
-
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-primary-600 shadow-sm ring-1 ring-primary-100 sm:h-11 sm:w-11">
-
-          <Globe className="h-5 w-5" aria-hidden />
-
-        </span>
-
-        <span className="min-w-0 flex-1">
-
-          <span className="block font-bold text-primary-700">Explorar sin cuenta</span>
-
-          <span className="mt-0.5 block text-sm text-[#64748B]">
-
-            Descubre ofertas y empresas sin registrarte
-
-          </span>
-
-        </span>
-
-        <ChevronRight
-
-          className="h-5 w-5 shrink-0 text-primary-600 transition group-hover:translate-x-0.5"
-
-          aria-hidden
-
-        />
-
-      </button>
-
     </div>
-
   );
-
 }
-
-
-
-function LoginFooter() {
-
-  return (
-
-    <footer className="hidden shrink-0 border-t border-slate-200/80 bg-[#F8FAFC] px-4 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-6 sm:py-5 md:block">
-
-      <div className="mx-auto flex w-full max-w-[90rem] flex-col items-center justify-between gap-3 text-center text-xs text-[#64748B] sm:text-sm md:flex-row md:text-left">
-
-        <p>© 2026 TrabaGE. Todos los derechos reservados.</p>
-
-        <nav
-
-          aria-label="Enlaces legales"
-
-          className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 sm:gap-x-3"
-
-        >
-
-          <Link
-
-            to="/legal/terms"
-
-            className="transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-
-          >
-
-            Términos y condiciones
-
-          </Link>
-
-          <span className="text-slate-300" aria-hidden>
-
-            |
-
-          </span>
-
-          <Link
-
-            to="/legal/privacy"
-
-            className="transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-
-          >
-
-            Política de privacidad
-
-          </Link>
-
-          <span className="text-slate-300" aria-hidden>
-
-            |
-
-          </span>
-
-          <Link
-
-            to="/legal/help"
-
-            className="transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-
-          >
-
-            Centro de ayuda
-
-          </Link>
-
-        </nav>
-
-      </div>
-
-    </footer>
-
-  );
-
-}
-
-
 
 export default function Login() {
-
   const navigate = useNavigate();
-
   const { login, enterPreviewMode } = useAuth();
-
-  const [accountType, setAccountType] = useState(ACCOUNT_TYPES.candidate);
-
+  const [accountType] = useState(ACCOUNT_TYPES.candidate);
   const [email, setEmail] = useState('');
-
   const [password, setPassword] = useState('');
-
   const [showPassword, setShowPassword] = useState(false);
-
   const [error, setError] = useState('');
-
   const [loading, setLoading] = useState(false);
 
-
-
   const handleExplore = () => {
-
     enterPreviewMode();
-
     navigate('/explore', { replace: true });
-
   };
-
-
 
   const submitLogin = async (loginEmail, loginPassword) => {
-
     setLoading(true);
-
     setError('');
-
     clearPreviewMode();
-
-
 
     const { error: loginError, redirectTo } = await login(loginEmail, loginPassword);
-
     if (loginError) {
-
       setError(loginError.message || 'No se pudo iniciar sesión');
-
       setLoading(false);
-
       return false;
-
     }
-
-
 
     navigate(redirectTo || '/', { replace: true });
-
     setLoading(false);
-
     return true;
-
   };
-
-
 
   const handleGoogleLogin = async () => {
-
     setError('');
-
     clearPreviewMode();
 
-
-
     const { error: googleError } = await authService.loginWithGoogle(accountType);
-
     if (googleError) {
-
       setError(googleError.message || 'No se pudo iniciar sesión con Google');
-
     }
-
   };
-
-
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
-
     await submitLogin(email, password);
-
   };
-
-
-
-  const sharedProps = {
-
-    accountType,
-
-    setAccountType,
-
-    email,
-
-    setEmail,
-
-    password,
-
-    setPassword,
-
-    showPassword,
-
-    setShowPassword,
-
-    error,
-
-    loading,
-
-    onSubmit: handleSubmit,
-
-    onExplore: handleExplore,
-
-    onGoogleLogin: handleGoogleLogin,
-
-  };
-
-
 
   return (
-
-    <>
-
-      <div className="md:hidden">
-
-        <MobileLoginScreen {...sharedProps} />
-
-      </div>
-
-
-
-      <div className="login-shell hidden md:flex">
-
-        <div className="login-layout">
-
-          <section className="login-marketing-panel" aria-label="Información sobre TrabaGE">
-
-            <LoginMarketing />
-
-          </section>
-
-
-
-          <section className="login-auth-panel" aria-label="Iniciar sesión">
-
-            <LoginCard {...sharedProps} />
-
-          </section>
-
-        </div>
-
-
-
-        <LoginFooter />
-
-      </div>
-
-    </>
-
+    <LoginScreen
+      email={email}
+      setEmail={setEmail}
+      password={password}
+      setPassword={setPassword}
+      showPassword={showPassword}
+      setShowPassword={setShowPassword}
+      accountType={accountType}
+      error={error}
+      loading={loading}
+      onSubmit={handleSubmit}
+      onExplore={handleExplore}
+      onGoogleLogin={handleGoogleLogin}
+    />
   );
-
 }
-
