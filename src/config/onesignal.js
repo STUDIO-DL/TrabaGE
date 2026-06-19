@@ -37,6 +37,26 @@ export const initOneSignal = async () => {
         safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID?.trim() || undefined,
         notifyButton: { enable: false },
         allowLocalhostAsSecureOrigin: import.meta.env.DEV,
+        promptOptions: {
+          slidedown: {
+            prompts: [
+              {
+                type: 'push',
+                autoPrompt: false,
+                text: {
+                  actionMessage:
+                    '¿Quieres recibir avisos de TrabaGE? Te notificamos cuando aparezcan ofertas para ti, recibas mensajes o haya novedades en tus postulaciones.',
+                  acceptButton: 'Sí, activar',
+                  cancelButton: 'Ahora no',
+                },
+              },
+            ],
+          },
+        },
+        welcomeNotification: {
+          title: 'TrabaGE',
+          message: '¡Listo! Te avisaremos cuando surjan nuevas oportunidades para ti.',
+        },
       });
       initialized = true;
     } catch (error) {
@@ -52,11 +72,30 @@ export const requestNotificationPermission = async () => {
   if (!initialized) return false;
 
   try {
-    const granted = await OneSignal.Notifications.requestPermission();
-    const userId = OneSignal.User?.externalId;
-    if (granted && userId) {
-      await persistOneSignalPlayerId(userId);
+    if (OneSignal.Notifications?.permission) {
+      const userId = OneSignal.User?.externalId;
+      if (userId) await persistOneSignalPlayerId(userId);
+      return true;
     }
+
+    const syncOnGrant = async () => {
+      const userId = OneSignal.User?.externalId;
+      if (userId) await persistOneSignalPlayerId(userId);
+    };
+    OneSignal.Notifications?.addEventListener?.('permissionChange', (granted) => {
+      if (granted) void syncOnGrant();
+    });
+
+    // Show the customizable Spanish slidedown (its copy is set in promptOptions
+    // above). The native browser prompt that follows is controlled by the
+    // browser and cannot be translated from code.
+    if (OneSignal.Slidedown?.promptPush) {
+      await OneSignal.Slidedown.promptPush({ force: true });
+      return Boolean(OneSignal.Notifications?.permission);
+    }
+
+    const granted = await OneSignal.Notifications.requestPermission();
+    if (granted) await syncOnGrant();
     return granted;
   } catch (error) {
     console.warn('[TrabaGE] Notification permission failed:', error?.message || error);

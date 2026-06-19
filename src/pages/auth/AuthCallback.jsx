@@ -19,8 +19,9 @@ export default function AuthCallback() {
     const finish = async () => {
       clearPreviewMode();
 
-      const params = new URLSearchParams(window.location.search);
-      const oauthError = params.get('error_description');
+      const queryParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const oauthError = queryParams.get('error_description') || hashParams.get('error_description');
       if (oauthError) {
         setError(decodeURIComponent(oauthError.replace(/\+/g, ' ')));
         return;
