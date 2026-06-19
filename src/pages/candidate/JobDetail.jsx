@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
+import FormPageLayout from '../../components/layout/FormPageLayout';
 import ApplicationsCounter from '../../components/jobs/ApplicationsCounter';
 import CompanyNameWithBadge from '../../components/company/CompanyNameWithBadge';
 import ContentActionMenu from '../../components/common/ContentActionMenu';
@@ -60,10 +61,9 @@ export default function JobDetail() {
   }
 
   return (
-    <PageContainer
+    <FormPageLayout
       title="Detalle del empleo"
       backButton
-      bottomNav={false}
       actions={
         <ContentActionMenu
           shareUrl={generateJobUrl(id)}
@@ -72,8 +72,14 @@ export default function JobDetail() {
           targetId={id}
         />
       }
+      footer={
+        <Button fullWidth className="btn-primary-mobile !inline-flex !rounded-btn-primary !py-0" onClick={handleApply}>
+          <AppIcon icon={FileText} size={ICON_SIZES.default} className="text-white" />
+          Aplicar
+        </Button>
+      }
     >
-      <div className="space-y-4 p-4">
+      <div className="space-y-md p-md pb-lg">
         <div>
           <h2 className="text-xl font-bold text-gray-900">{job.title}</h2>
           <CompanyNameWithBadge
@@ -133,11 +139,7 @@ export default function JobDetail() {
           </section>
         )}
 
-        <Button fullWidth className="inline-flex items-center justify-center gap-2" onClick={handleApply}>
-          <AppIcon icon={FileText} size={ICON_SIZES.default} className="text-white" />
-          Aplicar
-        </Button>
       </div>
-    </PageContainer>
+    </FormPageLayout>
   );
 }

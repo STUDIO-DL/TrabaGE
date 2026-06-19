@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Button from '../../components/ui/Button';
+import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { ROLE_HOME, ROLE_SETUP, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { isPreviewActive } from '../../constants/preview';
@@ -18,43 +19,54 @@ export default function AccountTypeSelect() {
     }
   }, [previewActive, role, navigate]);
 
-  const selectRole = async (role) => {
+  const selectRole = async (selectedRole) => {
     if (previewActive) {
-      enterPreviewModeAsRole(role);
-      navigate(ROLE_HOME[role], { replace: true });
+      enterPreviewModeAsRole(selectedRole);
+      navigate(ROLE_HOME[selectedRole], { replace: true });
       return;
     }
 
     if (!user?.id) return;
 
-    await supabase.from('user_roles').upsert({ user_id: user.id, role });
+    await supabase.from('user_roles').upsert({ user_id: user.id, role: selectedRole });
     await refreshSetupStatus();
-    navigate(ROLE_SETUP[role], { replace: true });
+    navigate(ROLE_SETUP[selectedRole], { replace: true });
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-6 py-10">
-      <h1 className="text-2xl font-bold text-gray-900">¿Qué tipo de cuenta quieres?</h1>
-      <p className="mt-2 text-sm text-gray-500">
-        {previewActive
-          ? 'Elige un rol para explorar la app en modo vista previa'
-          : 'Elige cómo usarás TrabaGE'}
-      </p>
-
-      {previewActive && (
-        <p className="mt-4 rounded-xl bg-primary-50 px-4 py-3 text-sm text-primary-800">
-          Modo vista previa activo. Los datos no se guardarán en el servidor.
-        </p>
-      )}
-
-      <div className="mt-8 space-y-4">
-        <Button fullWidth onClick={() => selectRole(ROLES.CANDIDATE)}>
-          Cuenta de Candidato
-        </Button>
-        <Button variant="secondary" fullWidth onClick={() => selectRole(ROLES.COMPANY)}>
-          Cuenta de empresa / institución
-        </Button>
-      </div>
-    </div>
+    <MobileScreenLayout
+      header={
+        <div className="px-md pt-sm">
+          <h1 className="text-heading-m font-bold text-gray-900">¿Qué tipo de cuenta quieres?</h1>
+          <p className="mt-xs text-small text-gray-500">
+            {previewActive
+              ? 'Elige un rol para explorar la app en modo vista previa'
+              : 'Elige cómo usarás TrabaGE'}
+          </p>
+        </div>
+      }
+      contentClassName="px-md pb-sm"
+      footer={
+        <div className="space-y-sm">
+          {previewActive ? (
+            <p className="rounded-btn-secondary bg-primary-50 px-md py-sm text-small text-primary-800">
+              Modo vista previa activo. Los datos no se guardarán en el servidor.
+            </p>
+          ) : null}
+          <Button fullWidth onClick={() => selectRole(ROLES.CANDIDATE)} className="btn-primary-mobile !rounded-btn-primary !py-0">
+            Cuenta de Candidato
+          </Button>
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => selectRole(ROLES.COMPANY)}
+            className="btn-secondary-mobile !rounded-btn-secondary !py-0"
+          >
+            Cuenta de empresa / institución
+          </Button>
+        </div>
+      }
+      footerClassName="border-t border-gray-100 px-md pb-md pt-sm"
+    />
   );
 }

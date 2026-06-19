@@ -21,8 +21,8 @@ export default function OnboardingScreenOne({ currentStep = 0, onNext, onSkip })
             Personas con talento, experiencia y ganas de trabajar existen en cada ciudad, cada barrio
             y cada comunidad.
           </p>
-          <p className="mt-4">Lo difícil muchas veces no es tener capacidad.</p>
-          <p className="mt-4 font-bold text-[#2563EB]">Es ser visto.</p>
+          <p className="mt-2">Lo difícil muchas veces no es tener capacidad.</p>
+          <p className="mt-2 font-bold text-[#2563EB]">Es ser visto.</p>
         </>
       }
     />

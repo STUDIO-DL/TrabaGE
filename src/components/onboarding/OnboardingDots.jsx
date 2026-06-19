@@ -1,6 +1,6 @@
 export default function OnboardingDots({ currentStep, totalSteps = 3 }) {
   return (
-    <div className="mb-8 flex justify-center gap-2" role="tablist" aria-label="Progreso del onboarding">
+    <div className="mb-sm flex justify-center gap-2" role="tablist" aria-label="Progreso del onboarding">
       {Array.from({ length: totalSteps }, (_, i) => (
         <span
           key={i}

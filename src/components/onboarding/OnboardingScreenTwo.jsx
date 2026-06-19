@@ -21,7 +21,7 @@ export default function OnboardingScreenTwo({ currentStep = 1, onNext, onSkip, o
           <p>
             No importa si buscas empleo, ofreces servicios o quieres hacer crecer tu negocio.
           </p>
-          <p className="mt-4">
+          <p className="mt-2">
             TrabaGE te ayuda a conectar con empresas, clientes y personas que necesitan lo que sabes
             hacer.
           </p>

@@ -10,7 +10,7 @@ export default function OnboardingScreenThree({
     <OnboardingScreen
       image={onboardingIllustration}
       imageAlt="Flecha de crecimiento con perfil verificado y oportunidades llegando"
-      imageClassName="h-[clamp(260px,58vw,300px)]"
+      imageClassName="onboarding-illustration-max"
       currentStep={currentStep}
       onNext={onNext}
       onBack={onBack}
@@ -27,7 +27,7 @@ export default function OnboardingScreenThree({
           <p>
             Crea tu perfil, muestra tus habilidades y abre la puerta a nuevas posibilidades.
           </p>
-          <p className="mt-4">
+          <p className="mt-2">
             Porque detrás de cada habilidad hay una historia, y detrás de cada oportunidad puede
             haber un futuro mejor.
           </p>

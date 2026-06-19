@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
+import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
@@ -168,8 +169,19 @@ export default function ApplyJob() {
   }
 
   return (
-    <PageContainer title="Aplicar al empleo" backButton bottomNav={false}>
-      <form onSubmit={handleSubmit} className="space-y-4 p-4">
+    <FormPageLayout
+      title="Aplicar al empleo"
+      backButton
+      footer={
+        <>
+          {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
+          <Button type="submit" form="apply-job-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+            Enviar aplicación
+          </Button>
+        </>
+      }
+    >
+      <form id="apply-job-form" onSubmit={handleSubmit} className="space-y-md p-md pb-lg">
         {job && (
           <Card padding="md">
             <p className="font-semibold text-gray-900">{job.title}</p>
@@ -247,11 +259,7 @@ export default function ApplyJob() {
           </Card>
         )}
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" fullWidth loading={loading}>
-          Enviar aplicación
-        </Button>
       </form>
-    </PageContainer>
+    </FormPageLayout>
   );
 }

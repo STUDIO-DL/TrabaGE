@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageContainer from '../../components/layout/PageContainer';
+import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
@@ -39,17 +39,23 @@ export default function CompanySetup() {
   };
 
   return (
-    <PageContainer title="Configura tu empresa / institución" bottomNav={false}>
-      <form onSubmit={handleSubmit} className="space-y-4 p-4">
+    <FormPageLayout
+      title="Configura tu empresa / institución"
+      footer={
+        <>
+          {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
+          <Button type="submit" form="company-setup-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+            Continuar
+          </Button>
+        </>
+      }
+    >
+      <form id="company-setup-form" onSubmit={handleSubmit} className="space-y-md p-md">
         <Input label="Nombre de la empresa / institución" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} required />
         <Select label="Sector" value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} options={[{ value: '', label: 'Seleccionar' }, ...SECTORS.map((s) => ({ value: s, label: s }))]} />
         <Textarea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         <Select label="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]} />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" fullWidth loading={loading}>
-          Continuar
-        </Button>
       </form>
-    </PageContainer>
+    </FormPageLayout>
   );
 }

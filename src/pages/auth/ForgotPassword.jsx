@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { authService } from '../../services/auth.service';
 
 export default function ForgotPassword() {
@@ -26,19 +27,31 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-6 py-10">
-      <h1 className="text-2xl font-bold text-gray-900">Recuperar contraseña</h1>
-      <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+    <MobileScreenLayout
+      header={
+        <div className="px-md pt-sm">
+          <h1 className="text-heading-m font-bold text-gray-900">Recuperar contraseña</h1>
+          <p className="mt-xs text-small text-gray-500">Te enviaremos un enlace a tu correo</p>
+        </div>
+      }
+      contentClassName="px-md pb-sm"
+      footer={
+        <div className="space-y-sm">
+          {error ? <p className="text-small text-red-600">{error}</p> : null}
+          {message ? <p className="text-small text-green-600">{message}</p> : null}
+          <Button type="submit" form="forgot-password-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+            Enviar enlace
+          </Button>
+          <Link to="/login" className="block text-center text-small text-primary-600">
+            Volver al login
+          </Link>
+        </div>
+      }
+      footerClassName="border-t border-gray-100 px-md pb-md pt-sm"
+    >
+      <form id="forgot-password-form" onSubmit={handleSubmit} className="mt-sm">
         <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        {message && <p className="text-sm text-green-600">{message}</p>}
-        <Button type="submit" fullWidth loading={loading}>
-          Enviar enlace
-        </Button>
       </form>
-      <Link to="/login" className="mt-6 text-center text-sm text-primary-600">
-        Volver al login
-      </Link>
-    </div>
+    </MobileScreenLayout>
   );
 }

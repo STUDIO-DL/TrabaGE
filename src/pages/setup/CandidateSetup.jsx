@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PageContainer from '../../components/layout/PageContainer';
+import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
@@ -38,17 +38,23 @@ export default function CandidateSetup() {
   };
 
   return (
-    <PageContainer title="Completa tu perfil" bottomNav={false}>
-      <form onSubmit={handleSubmit} className="space-y-4 p-4">
+    <FormPageLayout
+      title="Completa tu perfil"
+      footer={
+        <>
+          {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
+          <Button type="submit" form="candidate-setup-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+            Continuar
+          </Button>
+        </>
+      }
+    >
+      <form id="candidate-setup-form" onSubmit={handleSubmit} className="space-y-md p-md">
         <Input label="Nombre completo" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
         <Input label="Titular profesional" value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
         <Textarea label="Sobre mí" value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })} />
         <Select label="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]} />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" fullWidth loading={loading}>
-          Continuar
-        </Button>
       </form>
-    </PageContainer>
+    </FormPageLayout>
   );
 }

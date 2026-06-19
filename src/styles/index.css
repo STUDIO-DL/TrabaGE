@@ -110,6 +110,32 @@
   .onboarding-btn-in {
     animation: onboardingFadeUp 0.5s ease-out 0.3s both;
   }
+
+  .btn-primary-mobile {
+    @apply inline-flex h-btn-primary w-full items-center justify-center rounded-btn-primary bg-primary-600 text-body font-semibold text-white transition hover:bg-primary-700 disabled:bg-primary-300;
+  }
+
+  .btn-secondary-mobile {
+    @apply inline-flex h-btn-secondary w-full items-center justify-center rounded-btn-secondary border border-slate-200 bg-white text-small font-semibold text-[#0F172A] transition hover:bg-slate-50;
+  }
+
+  .mobile-hero-image {
+    max-height: 35dvh;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .onboarding-illustration-max {
+    height: clamp(180px, 32dvh, 260px);
+    max-height: 260px;
+    width: auto;
+    object-fit: contain;
+  }
+
+  .mobile-form-shell {
+    @apply flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
 }
 
 @keyframes onboardingFadeUp {

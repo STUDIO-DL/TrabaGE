@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
+import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
@@ -128,8 +129,31 @@ export default function PublishJob() {
   };
 
   return (
-    <PageContainer title="Publicar empleo" backButton bottomNav={false}>
-      <form onSubmit={handleSubmit} className="space-y-6 p-4 pb-8">
+    <FormPageLayout
+      title="Publicar empleo"
+      backButton
+      footer={
+        <>
+          {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
+          <div className="flex flex-col gap-sm sm:flex-row">
+            <Button
+              type="button"
+              variant="secondary"
+              fullWidth
+              loading={loading}
+              onClick={() => saveJob('draft')}
+              className="btn-secondary-mobile !rounded-btn-secondary !py-0"
+            >
+              Guardar borrador
+            </Button>
+            <Button type="submit" form="publish-job-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+              Publicar empleo
+            </Button>
+          </div>
+        </>
+      }
+    >
+      <form id="publish-job-form" onSubmit={handleSubmit} className="space-y-md p-md pb-lg">
         <Card padding="md" className="space-y-4">
           <h2 className="text-base font-semibold text-gray-900">Información básica</h2>
           <Input
@@ -232,24 +256,8 @@ export default function PublishJob() {
           />
         </Card>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button
-            type="button"
-            variant="secondary"
-            fullWidth
-            loading={loading}
-            onClick={() => saveJob('draft')}
-          >
-            Guardar borrador
-          </Button>
-          <Button type="submit" fullWidth loading={loading}>
-            Publicar empleo
-          </Button>
-        </div>
       </form>
-    </PageContainer>
+    </FormPageLayout>
   );
 }
 
