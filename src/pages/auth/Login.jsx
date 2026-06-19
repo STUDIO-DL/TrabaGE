@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
@@ -275,7 +275,7 @@ function LoginScreen({
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, enterPreviewMode } = useAuth();
+  const { login, enterPreviewMode, isAuthenticated, isPreviewMode, role, getHomePath } = useAuth();
   const [accountType] = useState(ACCOUNT_TYPES.candidate);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -319,6 +319,12 @@ export default function Login() {
     e.preventDefault();
     await submitLogin(email, password);
   };
+
+  // Un usuario con sesión real (no invitado/preview) que llega a /login se
+  // redirige directamente a su inicio en lugar de mostrarle el formulario.
+  if (isAuthenticated && !isPreviewMode) {
+    return <Navigate to={role ? getHomePath() : '/account-type'} replace />;
+  }
 
   return (
     <LoginScreen

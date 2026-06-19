@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase';
 import { authService } from '../services/auth.service';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
 import { clearOneSignalUserId, setOneSignalUserId } from '../config/onesignal';
-import { ROLE_HOME, ROLE_SETUP, ROLES } from '../constants/roles';
+import { ROLE_HOME, ROLES } from '../constants/roles';
 import {
   clearPreviewMode,
   getPreviewMode,
@@ -189,9 +189,26 @@ export function AuthProvider({ children }) {
   }, [hydrateUser]);
 
   const register = useCallback(async (email, password, userRole) => {
+    clearPreviewMode();
+    setIsPreviewMode(false);
+
     const { data, error } = await authService.register(email, password, userRole);
-    return { data, error };
-  }, []);
+    if (error) return { data, error, redirectTo: null };
+
+    // When email confirmation is disabled, sign-up returns an active session and
+    // we can route the user straight to their role-based home. When confirmation
+    // is required there is no session yet, so the caller shows the "revisa tu
+    // email" screen and the user lands on home after confirming via AuthCallback.
+    const session = data?.session;
+    if (!session?.user?.id) {
+      return { data, error: null, redirectTo: null };
+    }
+
+    await hydrateUser(session);
+    const redirectTo = await resolvePostAuthRedirect(session.user.id);
+
+    return { data, error: null, redirectTo };
+  }, [hydrateUser]);
 
   const logout = useCallback(async () => {
     if (isPreviewMode || getPreviewMode()) {
@@ -221,13 +238,13 @@ export function AuthProvider({ children }) {
   }, [user, role, fetchRoleAndSetup, isPreviewMode]);
 
   const getHomePath = useCallback(() => {
+    // Profile setup is optional: we always resolve to the role-based home and no
+    // longer redirect setup-incomplete users into the setup flow. The
+    // `setupComplete` flag remains available for showing an optional prompt.
     const activeRole = role ?? (getPreviewMode() ? getPreviewRole() : null);
     if (!activeRole) return '/account-type';
-    if (!setupComplete && ROLE_SETUP[activeRole] && !isPreviewActive(isPreviewMode)) {
-      return ROLE_SETUP[activeRole];
-    }
     return ROLE_HOME[activeRole] || '/login';
-  }, [role, setupComplete, isPreviewMode]);
+  }, [role]);
 
   const value = useMemo(
     () => ({

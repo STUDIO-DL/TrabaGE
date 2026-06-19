@@ -1,5 +1,7 @@
 import { supabase } from '../config/supabase';
 import { verificationService } from './verification.service';
+import { profileService } from './profile.service';
+import { companyService } from './company.service';
 
 export const adminService = {
   getDashboardStats: async () => {
@@ -116,6 +118,22 @@ export const adminService = {
   },
 
   getUsers: () => supabase.rpc('admin_list_users'),
+
+  // Fetches the extended profile for a single user so the admin can inspect it.
+  // A missing profile row (user never completed setup) is NOT treated as an error:
+  // we return { data: null, exists: false } so the UI can still show core data.
+  getUserDetail: async (userId, role) => {
+    const { data, error } =
+      role === 'company'
+        ? await companyService.getCompanyProfile(userId)
+        : await profileService.getCandidateFullProfile(userId);
+
+    if (error?.code === 'PGRST116') {
+      return { data: null, error: null, exists: false };
+    }
+
+    return { data: data ?? null, error: error ?? null, exists: Boolean(data) };
+  },
 
   setUserActive: async (userId, role, isActive) => {
     const table = role === 'company' ? 'company_profiles' : 'candidate_profiles';

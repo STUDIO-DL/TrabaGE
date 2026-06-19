@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
+import AdminUserDetailModal from '../../components/admin/AdminUserDetailModal';
 import Button from '../../components/ui/Button';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
@@ -10,10 +11,10 @@ import { formatDate } from '../../utils/formatDate';
 
 export default function AdminUsers() {
   const { showToast } = useNotificationContext();
-  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -47,7 +48,7 @@ export default function AdminUsers() {
         label: 'Avatar',
         render: (row) => (
           <img
-            src={resolveUserAvatar(row.avatar_path)}
+            src={resolveUserAvatar(row.avatar_url || row.logo_url)}
             alt=""
             className="h-9 w-9 rounded-full object-cover"
           />
@@ -80,17 +81,7 @@ export default function AdminUsers() {
         label: 'Acciones',
         render: (row) => (
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                const path =
-                  row.role === 'company'
-                    ? `/companies/${row.user_id}`
-                    : `/profile/${row.user_id}`;
-                navigate(path);
-              }}
-            >
+            <Button size="sm" variant="secondary" onClick={() => setSelectedUser(row)}>
               Ver
             </Button>
             <Button
@@ -125,6 +116,11 @@ export default function AdminUsers() {
           ir a empresas
         </Link>
       </p>
+      <AdminUserDetailModal
+        user={selectedUser}
+        isOpen={Boolean(selectedUser)}
+        onClose={() => setSelectedUser(null)}
+      />
     </div>
   );
 }

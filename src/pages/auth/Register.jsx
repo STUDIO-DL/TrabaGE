@@ -57,10 +57,18 @@ export default function Register() {
     setLoading(true);
     setError('');
 
-    const { error: registerError } = await register(email, password, accountType);
+    const { error: registerError, redirectTo } = await register(email, password, accountType);
     if (registerError) {
       setError(registerError.message);
       setLoading(false);
+      return;
+    }
+
+    // If sign-up returned an active session (email confirmation disabled), go
+    // straight to the role-based home. Otherwise show the "revisa tu email"
+    // screen; the user lands on home after confirming via the email link.
+    if (redirectTo) {
+      navigate(redirectTo, { replace: true });
       return;
     }
 

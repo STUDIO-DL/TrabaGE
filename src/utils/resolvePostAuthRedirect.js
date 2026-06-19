@@ -1,32 +1,13 @@
-import { ROLE_HOME, ROLE_SETUP, ROLES } from '../constants/roles';
+import { ROLE_HOME, ROLES } from '../constants/roles';
 import { authService } from '../services/auth.service';
-import { companyService } from '../services/company.service';
-import { profileService } from '../services/profile.service';
 
+// After authentication (login, signup confirmation, or Google OAuth) we always
+// send users to their role-based home. Profile setup is optional and can be
+// completed later from inside the app, so we no longer gate the redirect on
+// whether a profile row exists / setup_complete is true.
 export async function resolvePostAuthRedirect(userId) {
-  // Fetch the role and both profiles in parallel. We don't know the role up
-  // front, so resolving everything concurrently turns two serial round-trips
-  // (role -> profile) into a single round-trip of latency. The unused profile
-  // result is simply ignored.
-  const [roleResult, candidateResult, companyResult] = await Promise.all([
-    authService.getUserRole(userId),
-    profileService.getCandidateProfile(userId),
-    companyService.getCompanyProfile(userId),
-  ]);
-
-  const userRole = roleResult?.data?.role ?? ROLES.CANDIDATE;
-
-  if (userRole === ROLES.CANDIDATE) {
-    return candidateResult?.data?.setup_complete
-      ? ROLE_HOME[ROLES.CANDIDATE]
-      : ROLE_SETUP[ROLES.CANDIDATE];
-  }
-
-  if (userRole === ROLES.COMPANY) {
-    return companyResult?.data?.setup_complete
-      ? ROLE_HOME[ROLES.COMPANY]
-      : ROLE_SETUP[ROLES.COMPANY];
-  }
+  const { data } = await authService.getUserRole(userId);
+  const userRole = data?.role ?? ROLES.CANDIDATE;
 
   return ROLE_HOME[userRole] || '/account-type';
 }

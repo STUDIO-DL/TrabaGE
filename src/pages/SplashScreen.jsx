@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import EquatorialGuineaMap from '../components/splash/EquatorialGuineaMap';
@@ -6,22 +6,34 @@ import TrabaGEWordmark from '../components/splash/TrabaGEWordmark';
 import { getOnboardingComplete } from '../context/AuthContext';
 import { useAuth } from '../hooks/useAuth';
 
+// Tiempo mínimo que se muestra el splash por marca/UX. La navegación real
+// espera además a que termine la restauración de la sesión (loading === false),
+// de modo que un usuario con sesión válida vaya directo a su inicio.
+const MIN_SPLASH_MS = 1800;
+
 export default function SplashScreen() {
   const navigate = useNavigate();
-  const { isAuthenticated, role, getHomePath } = useAuth();
+  const { isAuthenticated, role, getHomePath, loading } = useAuth();
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (isAuthenticated) {
-        navigate(role ? getHomePath() : '/account-type', { replace: true });
-        return;
-      }
-
-      navigate(getOnboardingComplete() ? '/login' : '/onboarding', { replace: true });
-    }, 2500);
-
+    const timer = setTimeout(() => setMinTimeElapsed(true), MIN_SPLASH_MS);
     return () => clearTimeout(timer);
-  }, [isAuthenticated, role, getHomePath, navigate]);
+  }, []);
+
+  useEffect(() => {
+    // No decidimos el destino hasta que la sesión de Supabase haya terminado de
+    // restaurarse (loading) y haya pasado el tiempo mínimo de splash. Así se
+    // evita mandar a /login a un usuario que en realidad sí tiene sesión.
+    if (loading || !minTimeElapsed) return;
+
+    if (isAuthenticated) {
+      navigate(role ? getHomePath() : '/account-type', { replace: true });
+      return;
+    }
+
+    navigate(getOnboardingComplete() ? '/login' : '/onboarding', { replace: true });
+  }, [loading, minTimeElapsed, isAuthenticated, role, getHomePath, navigate]);
 
   return (
     <MobileScreenLayout

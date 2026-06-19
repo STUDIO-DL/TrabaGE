@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Building2, ChevronRight, ShieldCheck, User } from 'lucide-react';
 
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
-import { ROLE_HOME, ROLE_SETUP, ROLES } from '../../constants/roles';
+import { ROLE_HOME, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { isPreviewActive } from '../../constants/preview';
 import { supabase } from '../../config/supabase';
@@ -115,10 +115,11 @@ export default function AccountTypeSelect() {
       return;
     }
 
-    // Already authenticated (e.g. assigning a role after Google sign-in): persist and continue to setup.
+    // Already authenticated (e.g. assigning a role after Google sign-in): persist
+    // the role and go straight to home. Profile setup is optional from there.
     await supabase.from('user_roles').upsert({ user_id: user.id, role: selectedRole });
     await refreshSetupStatus();
-    navigate(ROLE_SETUP[selectedRole], { replace: true });
+    navigate(ROLE_HOME[selectedRole], { replace: true });
   };
 
   return (
