@@ -136,6 +136,22 @@
     @apply flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden;
     padding-top: env(safe-area-inset-top, 0px);
   }
+
+  .splash-logo-in {
+    animation: splashFadeUp 0.75s ease-out both;
+  }
+
+  .splash-map-in {
+    animation: splashFadeUp 0.85s ease-out 0.45s both;
+  }
+
+  .splash-tagline-in {
+    animation: splashFadeUp 0.7s ease-out 1.05s both;
+  }
+
+  .splash-map-glow {
+    filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.22));
+  }
 }
 
 @keyframes onboardingFadeUp {
@@ -154,6 +170,18 @@
   from {
     opacity: 0;
     transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes splashFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
 
   to {
