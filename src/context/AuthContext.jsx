@@ -131,7 +131,11 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, newSession) => {
       if (getPreviewMode()) return;
-      hydrateUser(newSession);
+      // Defer Supabase API calls: awaiting them inside this callback deadlocks
+      // the auth client during OAuth (SIGNED_IN on /auth/callback).
+      setTimeout(() => {
+        void hydrateUser(newSession);
+      }, 0);
     });
 
     return () => {

@@ -41,9 +41,12 @@ export default function AuthCallback() {
 
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange(async (event, session) => {
+      } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-          await redirectFromSession(session);
+          // Defer Supabase calls to avoid auth client deadlock with AuthContext.
+          setTimeout(() => {
+            void redirectFromSession(session);
+          }, 0);
         }
       });
 
