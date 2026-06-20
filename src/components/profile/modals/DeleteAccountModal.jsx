@@ -4,9 +4,14 @@ import Button from '../../ui/Button';
 import AppIcon from '../../common/AppIcon';
 import { Save, Trash2, X, ICON_SIZES } from '../../../constants/icons';
 
-export default function DeleteAccountModal({ isOpen, onClose, onConfirm, loading }) {
+export default function DeleteAccountModal({ isOpen, onClose, onConfirm, loading, email }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Eliminar cuenta">
+      {email && (
+        <p className="mb-3 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
+          Cuenta: <span className="font-medium text-gray-900">{email}</span>
+        </p>
+      )}
       <p className="text-sm text-gray-600">
         Esta acción es permanente. Se eliminarán tu perfil, aplicaciones y todos los datos
         asociados. ¿Estás seguro?

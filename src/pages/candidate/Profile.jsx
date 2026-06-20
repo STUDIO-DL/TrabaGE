@@ -373,6 +373,7 @@ export default function Profile() {
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDeleteAccount}
         loading={deleteLoading}
+        email={user?.email}
       />
       <ExperienceModal
         isOpen={experienceOpen}

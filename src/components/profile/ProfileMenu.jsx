@@ -6,7 +6,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getHelpPath } from '../../data/help-center';
 
 export default function ProfileMenu({ onSettings, onLogout, onDeleteAccount }) {
-  const { role } = useAuth();
+  const { role, user } = useAuth();
   const helpPath = getHelpPath(role);
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -55,6 +55,15 @@ export default function ProfileMenu({ onSettings, onLogout, onDeleteAccount }) {
 
       {open && (
         <div className="absolute right-0 top-full z-50 mt-1 min-w-[220px] overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg">
+          {user?.email && (
+            <>
+              <div className="px-4 py-2.5">
+                <p className="text-xs text-gray-400">Sesión activa</p>
+                <p className="truncate text-sm font-medium text-gray-900">{user.email}</p>
+              </div>
+              <hr className="my-1 border-gray-100" />
+            </>
+          )}
           {items.map((item, i) => {
             if (item.type === 'divider') {
               return <hr key={i} className="my-1 border-gray-100" />;

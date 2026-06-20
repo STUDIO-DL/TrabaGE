@@ -84,6 +84,7 @@ export default function JobDetail() {
           <h2 className="text-xl font-bold text-gray-900">{job.title}</h2>
           <CompanyNameWithBadge
             company={company}
+            userId={job.company_id}
             nameClassName="mt-1 text-sm text-gray-600"
             showUnverifiedLabel
           />

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
+import UserProfileLink from '../../common/UserProfileLink';
 import { ChevronRight, Users, ICON_SIZES } from '../../../constants/icons';
 import DashboardSectionEmpty from './DashboardSectionEmpty';
 
@@ -54,9 +55,12 @@ export default function DashboardRecentCandidates({ candidates }) {
         <ul className="divide-y divide-gray-100">
           {candidates.map((candidate, index) => (
             <li key={candidate.id}>
-              <Link
-                to="/company/applicants"
-                className="flex items-center gap-3 px-5 py-4 transition hover:bg-gray-50"
+              <UserProfileLink
+                userId={candidate.user_id}
+                name={candidate.full_name}
+                layout="row"
+                className="px-5 py-4 transition hover:bg-gray-50"
+                nameClassName="truncate text-sm font-medium text-gray-900 hover:text-primary-700 transition-colors"
               >
                 <span
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${AVATAR_COLORS[index % AVATAR_COLORS.length]}`}
@@ -71,7 +75,7 @@ export default function DashboardRecentCandidates({ candidates }) {
                   {formatAppliedAt(candidate.applied_at)}
                 </span>
                 <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} className="shrink-0 text-gray-300" />
-              </Link>
+              </UserProfileLink>
             </li>
           ))}
         </ul>

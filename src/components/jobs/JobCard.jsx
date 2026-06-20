@@ -68,7 +68,7 @@ export default function JobCard({ job, accentIndex = 0, saved = false, onSaveTog
             </span>
           )}
         </div>
-        <CompanyNameWithBadge company={company} showUnverifiedLabel />
+        <CompanyNameWithBadge company={company} userId={job.company_id} showUnverifiedLabel />
       </div>
 
       <div className="mt-3 space-y-1.5 text-sm text-gray-600">

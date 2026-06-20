@@ -27,6 +27,7 @@ import { jobsService } from '../../services/jobs.service';
 function mapCandidateForDashboard(application) {
   return {
     id: application.id,
+    user_id: application.candidate_id,
     full_name: application.candidate_profiles?.full_name || application.full_name || '',
     job_title: application.jobs?.title || '',
     applied_at: application.applied_at,

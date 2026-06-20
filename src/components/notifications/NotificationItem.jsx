@@ -1,4 +1,4 @@
-import UserAvatar from '../common/UserAvatar';
+import UserProfileLink from '../common/UserProfileLink';
 import Badge from '../ui/Badge';
 import Card from '../ui/Card';
 import { formatRelativeTime } from '../../utils/formatDate';
@@ -6,6 +6,8 @@ import { formatRelativeTime } from '../../utils/formatDate';
 export default function NotificationItem({ notification, onClick, actorAvatar, actorName }) {
   const avatarSrc = actorAvatar ?? notification.metadata?.avatar_url;
   const avatarAlt = actorName ?? notification.metadata?.actor_name ?? notification.title;
+  const actorId = notification.metadata?.actor_id;
+  const actorType = notification.metadata?.actor_type ?? 'candidate';
 
   return (
     <Card
@@ -14,7 +16,15 @@ export default function NotificationItem({ notification, onClick, actorAvatar, a
       onClick={() => onClick?.(notification)}
     >
       <div className="flex items-start gap-3">
-        <UserAvatar src={avatarSrc} alt={avatarAlt} size="sm" />
+        <UserProfileLink
+          userId={actorId}
+          userType={actorType}
+          name={avatarAlt}
+          avatar={avatarSrc}
+          size="sm"
+          layout="avatar"
+          stopPropagation
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <div>

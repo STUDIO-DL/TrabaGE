@@ -1,9 +1,7 @@
-import UserAvatar from '../common/UserAvatar';
-import Avatar from '../ui/Avatar';
+import UserProfileLink from '../common/UserProfileLink';
 import Card from '../ui/Card';
 import ContentActionMenu from '../common/ContentActionMenu';
 import VerifiedBadge from '../company/VerifiedBadge';
-import { DEFAULT_COMPANY_LOGO } from '../../constants/images';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { resolvePostImageUrl } from '../../utils/storagePaths';
@@ -11,6 +9,7 @@ import { formatRelativeTime } from '../../utils/formatDate';
 
 export default function PostCard({
   post,
+  authorId,
   authorName,
   authorHeadline,
   authorAvatar,
@@ -22,20 +21,22 @@ export default function PostCard({
   return (
     <Card className="mb-3">
       <div className="mb-3 flex items-start gap-3">
-        {authorType === 'company' ? (
-          <Avatar
-            src={authorAvatar}
-            name={authorName}
-            size="md"
-            fallback={DEFAULT_COMPANY_LOGO}
-            className="!h-12 !w-12"
-          />
-        ) : (
-          <UserAvatar src={authorAvatar} alt={authorName} size="md" />
-        )}
+        <UserProfileLink
+          userId={authorId}
+          userType={authorType}
+          name={authorName}
+          avatar={authorAvatar}
+          size="md"
+          layout="avatar"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-1.5">
-            <p className="font-semibold text-gray-900">{authorName}</p>
+            <UserProfileLink
+              userId={authorId}
+              userType={authorType}
+              name={authorName}
+              layout="name"
+            />
             {authorType === 'company' && isCompanyVerified(authorCompany) && (
               <VerifiedBadge size="sm" />
             )}

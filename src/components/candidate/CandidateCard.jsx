@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom';
 import UserAvatar from '../common/UserAvatar';
+import { getUserProfilePath } from '../../utils/profileRoutes';
 
 export default function CandidateCard({
   candidate,
@@ -29,6 +31,19 @@ export default function CandidateCard({
       >
         {content}
       </button>
+    );
+  }
+
+  const profilePath = candidate.user_id ? getUserProfilePath(candidate.user_id) : null;
+
+  if (profilePath) {
+    return (
+      <Link
+        to={profilePath}
+        className={`flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-colors hover:bg-gray-50 ${className}`}
+      >
+        {content}
+      </Link>
     );
   }
 

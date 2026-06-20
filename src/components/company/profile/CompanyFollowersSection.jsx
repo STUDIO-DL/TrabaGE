@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import Avatar from '../../ui/Avatar';
+import UserProfileLink from '../../common/UserProfileLink';
 import Button from '../../ui/Button';
 import Spinner from '../../ui/Spinner';
 import { followsService } from '../../../services/follows.service';
@@ -71,18 +71,16 @@ export default function CompanyFollowersSection({ targetType, targetId, visible 
       ) : (
         <ul className="mt-4 divide-y divide-gray-100">
           {followers.map((follower) => (
-            <li key={follower.user_id} className="flex items-center gap-3 py-3">
-              <Avatar
-                src={resolveUserAvatar(follower.avatar_path)}
+            <li key={follower.user_id}>
+              <UserProfileLink
+                userId={follower.user_id}
                 name={follower.full_name}
-                size="md"
+                avatar={resolveUserAvatar(follower.avatar_path)}
+                headline={follower.headline?.trim() || 'Candidato'}
+                layout="row"
+                className="py-3"
+                nameClassName="truncate font-medium text-gray-900 hover:text-primary-700 transition-colors"
               />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-gray-900">{follower.full_name}</p>
-                <p className="truncate text-sm text-gray-500">
-                  {follower.headline?.trim() || 'Candidato'}
-                </p>
-              </div>
             </li>
           ))}
         </ul>
