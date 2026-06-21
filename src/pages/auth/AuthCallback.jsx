@@ -3,14 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import Spinner from '../../components/ui/Spinner';
 import { clearPreviewMode } from '../../constants/preview';
+import { ROLE_HOME } from '../../constants/roles';
 import { authService } from '../../services/auth.service';
 import { resolvePostAuthRedirect } from '../../utils/resolvePostAuthRedirect';
+import { useAuth } from '../../hooks/useAuth';
 
 const MAX_ATTEMPTS = 15;
 const RETRY_MS = 300;
 
 export default function AuthCallback() {
   const navigate = useNavigate();
+  const { refreshAuthState } = useAuth();
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -33,9 +36,28 @@ export default function AuthCallback() {
         // Claim the resolution up front so the onAuthStateChange handler and
         // the polling loop can't both run resolvePostAuthRedirect / navigate.
         resolved = true;
-        const redirectTo = await resolvePostAuthRedirect(session.user.id);
+        const { data: accountTypeResult, error: accountTypeError } = 
+          await authService.applyPendingAccountType(session.user);
+
+        if (accountTypeError) {
+          setError(accountTypeError.message || 'No se pudo determinar tu tipo de cuenta');
+          return true;
+        }
+
+        const roleHome = ROLE_HOME[accountTypeResult?.role] || (await resolvePostAuthRedirect(session.user.id));
+        const redirectTo = accountTypeResult?.needsAccountTypeSelection
+          ? '/account-type'
+          : roleHome;
+
+        if (redirectTo !== '/account-type') {
+          await refreshAuthState();
+        }
+
         if (cancelled) return true;
-        navigate(redirectTo, { replace: true });
+        navigate(redirectTo, {
+          replace: true,
+          state: redirectTo === '/account-type' ? { fromOAuth: true } : undefined,
+        });
         return true;
       };
 
@@ -85,7 +107,7 @@ export default function AuthCallback() {
     return () => {
       cancelled = true;
     };
-  }, [navigate]);
+  }, [navigate, refreshAuthState]);
 
   if (error) {
     return (

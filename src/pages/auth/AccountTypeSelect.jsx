@@ -1,6 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { Building2, ChevronRight, ShieldCheck, User } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';import { Building2, ChevronRight, ShieldCheck, User } from 'lucide-react';
 
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { ROLE_HOME, ROLES } from '../../constants/roles';
@@ -91,8 +90,12 @@ function AccountCard({ icon: Icon, title, description, onClick, disabled }) {
 
 export default function AccountTypeSelect() {
   const navigate = useNavigate();
-  const { user, role, isPreviewMode, enterPreviewModeAsRole, refreshSetupStatus } = useAuth();
+  const location = useLocation();
+  const { user, role, isPreviewMode, enterPreviewModeAsRole, refreshAuthState } = useAuth();
   const previewActive = isPreviewActive(isPreviewMode);
+  const fromOAuth = location.state?.fromOAuth === true;
+  const showMissingRoleMessage = fromOAuth;
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (previewActive || !role) return;
@@ -116,12 +119,21 @@ export default function AccountTypeSelect() {
     }
 
     // Already authenticated (e.g. assigning a role after Google sign-in): persist
-    // the role and go straight to home. Profile setup is optional from there.
-    await supabase.from('user_roles').upsert({ user_id: user.id, role: selectedRole });
-    await refreshSetupStatus();
+    // the role, refresh auth context, and go straight to home.
+    setSaving(true);
+    const { error: upsertError } = await supabase
+      .from('user_roles')
+      .upsert({ user_id: user.id, role: selectedRole }, { onConflict: 'user_id' });
+
+    if (upsertError) {
+      setSaving(false);
+      return;
+    }
+
+    await refreshAuthState();
+    setSaving(false);
     navigate(ROLE_HOME[selectedRole], { replace: true });
   };
-
   return (
     <div className="relative min-h-dvh w-full overflow-hidden bg-gradient-to-b from-[#EFF6FF] via-white to-[#EFF6FF]">
       <AccountTypeDecorations />
@@ -148,6 +160,11 @@ export default function AccountTypeSelect() {
                 : 'Selecciona la opción que mejor se adapte a tus necesidades.'}
             </p>
           </div>
+          {showMissingRoleMessage ? (
+            <div className="mt-4 rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+              No se pudo determinar tu tipo de cuenta. Elige cómo quieres crear tu cuenta para continuar.
+            </div>
+          ) : null}
 
           {previewActive ? (
             <p className="mt-6 rounded-xl bg-primary-50 px-4 py-3 text-center text-sm text-primary-800">
@@ -162,14 +179,15 @@ export default function AccountTypeSelect() {
               title="Cuenta personal"
               description="Para buscar empleo, aplicar a ofertas y gestionar tu perfil."
               onClick={() => selectRole(ROLES.CANDIDATE)}
+              disabled={saving}
             />
             <AccountCard
               icon={Building2}
               title="Cuenta de organización"
               description="Para publicar ofertas, encontrar talento y gestionar tu equipo."
               onClick={() => selectRole(ROLES.COMPANY)}
-            />
-          </div>
+              disabled={saving}
+            />          </div>
         </div>
 
         {/* Footer */}

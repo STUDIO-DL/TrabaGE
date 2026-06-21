@@ -4,7 +4,7 @@ import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
-import { DEFAULT_COMPANY_LOGO } from '../../constants/images';
+import { getCompanyLogoUrl } from '../../constants/images';
 import { formatDate } from '../../utils/formatDate';
 
 export default function AdminCompanies() {

@@ -17,6 +17,7 @@ import Register from './pages/auth/Register';
 import RegisterMethod from './pages/auth/RegisterMethod';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import AccountTypeSelect from './pages/auth/AccountTypeSelect';
+import SetPassword from './pages/auth/SetPassword';
 import CandidateSetup from './pages/setup/CandidateSetup';
 import CompanySetup from './pages/setup/CompanySetup';
 
@@ -78,6 +79,7 @@ function AppRoutes() {
             <Route path="/demo/company" element={<DemoCompanyEntry />} />
 
             <Route element={<ProtectedRoute />}>
+              <Route path="/auth/set-password" element={<SetPassword />} />
 
               <Route element={<RoleRoute role="candidate" />}>
                 <Route path="/setup/candidate" element={<CandidateSetup />} />

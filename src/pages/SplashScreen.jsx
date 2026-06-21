@@ -28,11 +28,13 @@ export default function SplashScreen() {
     if (loading || !minTimeElapsed) return;
 
     if (isAuthenticated) {
-      navigate(role ? getHomePath() : '/account-type', { replace: true });
+      const destination = role ? getHomePath() : '/account-type';
+      navigate(destination, { replace: true });
       return;
     }
 
-    navigate(getOnboardingComplete() ? '/login' : '/onboarding', { replace: true });
+    const destination = getOnboardingComplete() ? '/login' : '/onboarding';
+    navigate(destination, { replace: true });
   }, [loading, minTimeElapsed, isAuthenticated, role, getHomePath, navigate]);
 
   return (

@@ -31,7 +31,7 @@ export default function Register() {
     setError('');
     clearPreviewMode();
 
-    const { error: googleError } = await authService.loginWithGoogle(accountType);
+    const { error: googleError } = await authService.signupWithGoogle(accountType);
     if (googleError) {
       setError(googleError.message || 'No se pudo registrarse con Google');
     }

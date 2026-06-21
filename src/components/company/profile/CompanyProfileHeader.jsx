@@ -235,14 +235,16 @@ export default function CompanyProfileHeader({
             <QuickStat icon={Calendar} label="Fundada en" value={profile?.founded_year} />
             <div className="h-12 w-px shrink-0 bg-primary-100" aria-hidden />
             <QuickStat icon={Globe} label="Sitio web" value={profile?.website} />
-            <button
-              type="button"
-              onClick={onBookmark}
-              className="ml-1 shrink-0 rounded-xl p-2 text-primary-600 hover:bg-primary-100"
-              aria-label="Guardar empresa"
-            >
-              <AppIcon icon={Bookmark} size={ICON_SIZES.default} />
-            </button>
+            {onBookmark && (
+              <button
+                type="button"
+                onClick={onBookmark}
+                className="ml-1 shrink-0 rounded-xl p-2 text-primary-600 hover:bg-primary-100"
+                aria-label="Guardar empresa"
+              >
+                <AppIcon icon={Bookmark} size={ICON_SIZES.default} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -254,6 +256,7 @@ export function CompanyAboutSection({
   profile,
   readOnly = false,
   onEditAbout,
+  onEditDetails,
   expanded,
   onToggleExpand,
   followerCountText = '',
@@ -265,10 +268,21 @@ export function CompanyAboutSection({
 
   return (
     <section className="border-b border-gray-200 bg-white px-4 py-5">
-      <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
-        <span className="h-5 w-1 rounded-full bg-primary-600" aria-hidden />
-        Sobre nosotros
-      </h3>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+          <span className="h-5 w-1 rounded-full bg-primary-600" aria-hidden />
+          Sobre nosotros
+        </h3>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={onEditAbout}
+            className="shrink-0 rounded-lg px-2.5 py-1 text-sm font-medium text-primary-600 hover:bg-primary-50 hover:text-primary-700"
+          >
+            Editar
+          </button>
+        )}
+      </div>
       <p className="mt-3 text-sm leading-relaxed text-gray-600">
         {hasDescription ? previewText : emptyText}
       </p>
@@ -284,17 +298,19 @@ export function CompanyAboutSection({
           {expanded ? 'Mostrar menos' : 'Mostrar más'}
         </button>
       )}
-      {!readOnly && !hasDescription && (
-        <button
-          type="button"
-          onClick={onEditAbout}
-          className="mt-2 text-sm font-medium text-primary-600 hover:text-primary-700"
-        >
-          Mostrar más
-        </button>
-      )}
-
       <div className="mt-4 overflow-hidden rounded-xl border border-primary-100 bg-gradient-to-b from-primary-50/60 to-white">
+        {!readOnly && (
+          <div className="flex items-center justify-between border-b border-primary-100 bg-white/70 px-3 py-2">
+            <p className="text-xs font-medium text-gray-500">Informacion de la empresa</p>
+            <button
+              type="button"
+              onClick={onEditDetails}
+              className="rounded-lg px-2.5 py-1 text-xs font-semibold text-primary-600 hover:bg-primary-50 hover:text-primary-700"
+            >
+              Editar
+            </button>
+          </div>
+        )}
         <div className="flex">
           <InfoTile icon={Building2} label="Tipo de empresa" value={profile?.company_type} />
           <InfoTile icon={ShieldCheck} label="Sector" value={profile?.sector} />

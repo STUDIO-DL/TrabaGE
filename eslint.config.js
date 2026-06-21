@@ -9,6 +9,9 @@ export default [
     files: ['**/*.{js,jsx}'],
     languageOptions: {
       ecmaVersion: 2022,
+      parserOptions: {
+        ecmaFeatures: { jsx: true },
+      },
       globals: globals.browser,
     },
     plugins: {

@@ -1,19 +1,13 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import { clearPreviewMode } from '../../constants/preview';
-import { ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
-
-const ACCOUNT_TYPES = {
-  candidate: ROLES.CANDIDATE,
-  company: ROLES.COMPANY,
-};
 
 function LoginDecorations() {
   return (
@@ -100,7 +94,6 @@ function LoginScreen({
   setPassword,
   showPassword,
   setShowPassword,
-  accountType,
   error,
   loading,
   onSubmit,
@@ -216,9 +209,7 @@ function LoginScreen({
                 className="relative !rounded-xl py-3.5 text-base font-semibold"
               >
                 Iniciar sesión
-                {!loading && (
-                  <ArrowRight className="absolute right-5 top-1/2 h-5 w-5 -translate-y-1/2" aria-hidden />
-                )}
+
               </Button>
             </form>
 
@@ -251,7 +242,6 @@ function LoginScreen({
             ¿No tienes cuenta?{' '}
             <Link
               to="/account-type"
-              state={{ accountType }}
               className="font-bold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             >
               Crear cuenta
@@ -276,7 +266,6 @@ function LoginScreen({
 export default function Login() {
   const navigate = useNavigate();
   const { login, enterPreviewMode, isAuthenticated, isPreviewMode, role, getHomePath } = useAuth();
-  const [accountType] = useState(ACCOUNT_TYPES.candidate);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -309,7 +298,7 @@ export default function Login() {
     setError('');
     clearPreviewMode();
 
-    const { error: googleError } = await authService.loginWithGoogle(accountType);
+    const { error: googleError } = await authService.loginWithGoogle();
     if (googleError) {
       setError(googleError.message || 'No se pudo iniciar sesión con Google');
     }
@@ -334,7 +323,6 @@ export default function Login() {
       setPassword={setPassword}
       showPassword={showPassword}
       setShowPassword={setShowPassword}
-      accountType={accountType}
       error={error}
       loading={loading}
       onSubmit={handleSubmit}

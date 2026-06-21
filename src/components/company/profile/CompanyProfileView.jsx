@@ -16,6 +16,7 @@ export default function CompanyProfileView({
   targetType = FOLLOWS_TARGET.COMPANY,
   onEditName,
   onEditAbout,
+  onEditDetails,
   onBookmark,
   onUploadLogo,
   onUploadCover,
@@ -57,6 +58,7 @@ export default function CompanyProfileView({
         profile={profile}
         readOnly={readOnly}
         onEditAbout={onEditAbout}
+        onEditDetails={onEditDetails}
         expanded={aboutExpanded}
         onToggleExpand={() => setAboutExpanded((value) => !value)}
         followerCountText={formatFollowerCount(followerCount)}

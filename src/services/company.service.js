@@ -15,14 +15,14 @@ async function fetchCompanyProfile(userId) {
     .from('company_profiles')
     .select(COMPANY_PROFILE_SELECT)
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
   if (result.error?.code === 'PGRST200') {
     const fallback = await supabase
       .from('company_profiles')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     return {
       ...fallback,
@@ -42,9 +42,9 @@ export const companyService = {
   upsertCompanyProfile: async (data) => {
     const result = await supabase
       .from('company_profiles')
-      .upsert(data)
-      .select(COMPANY_PROFILE_SELECT)
-      .single();
+      .upsert(data, { onConflict: 'user_id' })
+      .select('*')
+      .maybeSingle();
 
     return {
       ...result,
@@ -54,13 +54,13 @@ export const companyService = {
 
   getPublicProfile: (userId) => fetchCompanyProfile(userId),
   addCompanyService: (data) =>
-    supabase.from('company_services').insert(data).select().single(),
+    supabase.from('company_services').insert(data).select('*').maybeSingle(),
 
   deleteCompanyService: (id) =>
     supabase.from('company_services').delete().eq('id', id),
 
   submitVerification: (data) =>
-    supabase.from('verification_requests').insert(data).select().single(),
+    supabase.from('verification_requests').insert(data).select('*').maybeSingle(),
 
   getVerificationStatus: (companyId) =>
     supabase

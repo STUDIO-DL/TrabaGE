@@ -75,6 +75,11 @@ export default function PublishJob() {
       return;
     }
 
+    if (!user?.id) {
+      setError('No se pudo identificar al usuario autenticado.');
+      return;
+    }
+
     if (!form.title.trim()) {
       setError('El título es obligatorio.');
       return;
@@ -91,6 +96,13 @@ export default function PublishJob() {
     setLoading(true);
     setError('');
 
+    const { data: companyProfile, error: profileError } = await companyService.getCompanyProfile(user.id);
+    if (profileError || !companyProfile?.user_id) {
+      setError('Debes completar tu perfil de empresa antes de publicar un empleo.');
+      setLoading(false);
+      return;
+    }
+
     const payload = buildJobPayload(form, user.id, status);
     const { data: job, error: saveError } = await jobsService.createJob(payload);
 
@@ -101,7 +113,6 @@ export default function PublishJob() {
     }
 
     if (status === 'active' && job?.id) {
-      const { data: companyProfile } = await companyService.getCompanyProfile(user.id);
       const companyName = companyProfile?.company_name?.trim() || 'Empresa';
       const citySuffix = form.city ? ` - ${form.city}` : '';
 

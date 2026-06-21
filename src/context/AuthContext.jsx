@@ -88,7 +88,7 @@ export function AuthProvider({ children }) {
       companyService.getCompanyProfile(currentUser.id),
     ]);
 
-    const userRole = roleResult?.data?.role ?? ROLES.CANDIDATE;
+    const userRole = roleResult?.data?.role ?? null;
     setRole(userRole);
 
     if (userRole === ROLES.CANDIDATE) {
@@ -97,6 +97,8 @@ export function AuthProvider({ children }) {
       setSetupComplete(Boolean(companyResult?.data?.setup_complete));
     } else if (userRole === ROLES.ADMIN) {
       setSetupComplete(true);
+    } else {
+      setSetupComplete(false);
     }
   }, []);
 
@@ -241,6 +243,14 @@ export function AuthProvider({ children }) {
     await fetchRoleAndSetup(user.id, role);
   }, [user, role, fetchRoleAndSetup, isPreviewMode]);
 
+  const refreshAuthState = useCallback(async () => {
+    if (isPreviewMode || getPreviewMode()) return;
+    const { data } = await authService.getSession();
+    if (data?.session) {
+      await hydrateUser(data.session);
+    }
+  }, [hydrateUser, isPreviewMode]);
+
   const getHomePath = useCallback(() => {
     // Profile setup is optional: we always resolve to the role-based home and no
     // longer redirect setup-incomplete users into the setup flow. The
@@ -266,6 +276,7 @@ export function AuthProvider({ children }) {
       enterPreviewModeAsRole,
       setPreviewRole,
       refreshSetupStatus,
+      refreshAuthState,
       getHomePath,
       setSetupComplete,
     }),
@@ -283,6 +294,7 @@ export function AuthProvider({ children }) {
       enterPreviewModeAsRole,
       setPreviewRole,
       refreshSetupStatus,
+      refreshAuthState,
       getHomePath,
     ],
   );

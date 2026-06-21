@@ -12,7 +12,7 @@ export const ROLE_LABELS = {
 
 export const ROLE_HOME = {
   [ROLES.CANDIDATE]: '/candidate/feed',
-  [ROLES.COMPANY]: '/company/feed',
+  [ROLES.COMPANY]: '/company/dashboard',
   [ROLES.ADMIN]: '/admin',
 };
 

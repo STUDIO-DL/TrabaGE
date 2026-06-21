@@ -12,13 +12,21 @@ const FULL_PROFILE_SELECT = `
 
 export const profileService = {
   getCandidateProfile: (userId) =>
-    supabase.from('candidate_profiles').select('*').eq('user_id', userId).single(),
+    supabase.from('candidate_profiles').select('*').eq('user_id', userId).maybeSingle(),
 
   upsertCandidateProfile: (data) =>
-    supabase.from('candidate_profiles').upsert(data).select().single(),
+    supabase
+      .from('candidate_profiles')
+      .upsert(data, { onConflict: 'user_id' })
+      .select('*')
+      .maybeSingle(),
 
   updateCandidateProfile: (userId, data) =>
-    supabase.from('candidate_profiles').update(data).eq('user_id', userId).select().single(),
+    supabase
+      .from('candidate_profiles')
+      .upsert({ ...data, user_id: userId }, { onConflict: 'user_id' })
+      .select('*')
+      .maybeSingle(),
 
   updateOneSignalPlayerId: (userId, playerId) =>
     supabase
@@ -31,28 +39,28 @@ export const profileService = {
       .from('candidate_profiles')
       .select(FULL_PROFILE_SELECT)
       .eq('user_id', userId)
-      .single(),
+      .maybeSingle(),
 
-  addEducation: (data) => supabase.from('education').insert(data).select().single(),
-  updateEducation: (id, data) => supabase.from('education').update(data).eq('id', id).select().single(),
+  addEducation: (data) => supabase.from('education').insert(data).select('*').maybeSingle(),
+  updateEducation: (id, data) => supabase.from('education').update(data).eq('id', id).select('*').maybeSingle(),
   deleteEducation: (id) => supabase.from('education').delete().eq('id', id),
 
-  addExperience: (data) => supabase.from('experience').insert(data).select().single(),
-  updateExperience: (id, data) => supabase.from('experience').update(data).eq('id', id).select().single(),
+  addExperience: (data) => supabase.from('experience').insert(data).select('*').maybeSingle(),
+  updateExperience: (id, data) => supabase.from('experience').update(data).eq('id', id).select('*').maybeSingle(),
   deleteExperience: (id) => supabase.from('experience').delete().eq('id', id),
 
-  addCertification: (data) => supabase.from('certifications').insert(data).select().single(),
-  updateCertification: (id, data) => supabase.from('certifications').update(data).eq('id', id).select().single(),
+  addCertification: (data) => supabase.from('certifications').insert(data).select('*').maybeSingle(),
+  updateCertification: (id, data) => supabase.from('certifications').update(data).eq('id', id).select('*').maybeSingle(),
   deleteCertification: (id) => supabase.from('certifications').delete().eq('id', id),
 
-  addSkill: (data) => supabase.from('skills').insert(data).select().single(),
+  addSkill: (data) => supabase.from('skills').insert(data).select('*').maybeSingle(),
   deleteSkill: (id) => supabase.from('skills').delete().eq('id', id),
 
-  addService: (data) => supabase.from('services').insert(data).select().single(),
+  addService: (data) => supabase.from('services').insert(data).select('*').maybeSingle(),
   deleteService: (id) => supabase.from('services').delete().eq('id', id),
 
-  addLanguage: (data) => supabase.from('languages').insert(data).select().single(),
-  updateLanguage: (id, data) => supabase.from('languages').update(data).eq('id', id).select().single(),
+  addLanguage: (data) => supabase.from('languages').insert(data).select('*').maybeSingle(),
+  updateLanguage: (id, data) => supabase.from('languages').update(data).eq('id', id).select('*').maybeSingle(),
   deleteLanguage: (id) => supabase.from('languages').delete().eq('id', id),
 
   searchCandidates: (query, limit = 20) => {
