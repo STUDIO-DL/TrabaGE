@@ -1,11 +1,12 @@
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';import { Building2, ChevronRight, ShieldCheck, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Building2, ChevronRight, ShieldCheck, User } from 'lucide-react';
 
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { ROLE_HOME, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { isPreviewActive } from '../../constants/preview';
-import { supabase } from '../../config/supabase';
+import { authService } from '../../services/auth.service';
 
 function AccountTypeDecorations() {
   return (
@@ -98,10 +99,9 @@ export default function AccountTypeSelect() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (previewActive || !role) return;
-    if (role === ROLES.ADMIN) {
-      navigate(ROLE_HOME[ROLES.ADMIN], { replace: true });
-    }
+    if (previewActive) return;
+    if (!role) return;
+    navigate(ROLE_HOME[role] || '/login', { replace: true });
   }, [previewActive, role, navigate]);
 
   const selectRole = async (selectedRole) => {
@@ -119,11 +119,9 @@ export default function AccountTypeSelect() {
     }
 
     // Already authenticated (e.g. assigning a role after Google sign-in): persist
-    // the role, refresh auth context, and go straight to home.
+    // the selected role, refresh auth context, and go straight to home.
     setSaving(true);
-    const { error: upsertError } = await supabase
-      .from('user_roles')
-      .upsert({ user_id: user.id, role: selectedRole }, { onConflict: 'user_id' });
+    const { data: roleData, error: upsertError } = await authService.setUserRole(user.id, selectedRole);
 
     if (upsertError) {
       setSaving(false);
@@ -132,7 +130,7 @@ export default function AccountTypeSelect() {
 
     await refreshAuthState();
     setSaving(false);
-    navigate(ROLE_HOME[selectedRole], { replace: true });
+    navigate(ROLE_HOME[roleData?.role || selectedRole], { replace: true });
   };
   return (
     <div className="relative min-h-dvh w-full overflow-hidden bg-gradient-to-b from-[#EFF6FF] via-white to-[#EFF6FF]">

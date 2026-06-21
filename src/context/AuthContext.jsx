@@ -88,7 +88,20 @@ export function AuthProvider({ children }) {
       companyService.getCompanyProfile(currentUser.id),
     ]);
 
-    const userRole = roleResult?.data?.role ?? null;
+    let userRole = roleResult?.data?.role ?? null;
+
+    if (!userRole) {
+      if (companyResult?.data?.user_id) {
+        userRole = ROLES.COMPANY;
+      } else if (candidateResult?.data?.user_id) {
+        userRole = ROLES.CANDIDATE;
+      }
+    }
+
+    if (!roleResult?.data?.role && userRole && currentUser.id && userRole !== ROLES.ADMIN) {
+      await authService.setUserRole(currentUser.id, userRole);
+    }
+
     setRole(userRole);
 
     if (userRole === ROLES.CANDIDATE) {

@@ -15,15 +15,6 @@ function toPendingAccountType(role) {
   return role === ROLES.COMPANY ? 'organization' : role;
 }
 
-function isLikelyNewOAuthUser(user) {
-  const createdAt = Date.parse(user?.created_at ?? '');
-
-  if (!Number.isFinite(createdAt)) {
-    return false;
-  }
-
-  return Date.now() - createdAt <= NEW_OAUTH_USER_WINDOW_MS;
-}
 
 function normalizeEmail(email) {
   return email.trim().toLowerCase();
@@ -77,6 +68,20 @@ async function getExistingProfileRole(userId) {
   return null;
 }
 
+export async function setUserRole(userId, role) {
+  const normalizedRole = normalizeAccountType(role);
+
+  if (!normalizedRole) {
+    return { data: null, error: { message: 'Tipo de cuenta inválido' } };
+  }
+
+  return supabase
+    .from('user_roles')
+    .upsert({ user_id: userId, role: normalizedRole }, { onConflict: 'user_id' })
+    .select('role, created_at')
+    .maybeSingle();
+}
+
 export const authService = {
   login: async (email, password) => {
     if (!isSupabaseConfigured) {
@@ -89,12 +94,17 @@ export const authService = {
     });
   },
 
-  register: (email, password, role) =>
-    supabase.auth.signUp({
+  register: async (email, password, role) => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    return supabase.auth.signUp({
       email: normalizeEmail(email),
       password: normalizePassword(password),
       options: { data: { role } },
-    }),
+    });
+  },
 
   applyPendingAccountType: async (userOrId) => {
     const userId = typeof userOrId === 'string' ? userOrId : userOrId?.id;
@@ -112,17 +122,16 @@ export const authService = {
 
     const storedRole = normalizeAccountType(existingRole?.role);
     const profileRole = await getExistingProfileRole(userId);
-    const isNewOAuthUser = isLikelyNewOAuthUser(currentUser);
 
     if (storedRole === ROLES.ADMIN) {
       return { data: existingRole, error: null };
     }
 
-    if (profileRole) {
-      if (storedRole) {
-        return { data: { ...existingRole, role: storedRole }, error: null };
-      }
+    if (storedRole) {
+      return { data: { ...existingRole, role: storedRole }, error: null };
+    }
 
+    if (profileRole) {
       return supabase
         .from('user_roles')
         .upsert({ user_id: userId, role: profileRole }, { onConflict: 'user_id' })
@@ -131,18 +140,10 @@ export const authService = {
     }
 
     if (!pendingRole) {
-      if (storedRole && !isNewOAuthUser) {
-        return { data: { ...existingRole, role: storedRole }, error: null };
-      }
-
       return {
         data: { role: null, needsAccountTypeSelection: true },
         error: null,
       };
-    }
-
-    if (storedRole && !isNewOAuthUser) {
-      return { data: { ...existingRole, role: storedRole }, error: null };
     }
 
     return supabase
@@ -200,8 +201,13 @@ export const authService = {
     return result;
   },
 
-  loginWithApple: () =>
-    supabase.auth.signInWithOAuth({ provider: 'apple' }),
+  loginWithApple: () => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    return supabase.auth.signInWithOAuth({ provider: 'apple' });
+  },
 
   logout: () => supabase.auth.signOut(),
 
@@ -215,7 +221,13 @@ export const authService = {
   setPassword: (password) =>
     supabase.auth.updateUser({ password: normalizePassword(password) }),
 
-  getSession: () => supabase.auth.getSession(),
+  getSession: () => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    return supabase.auth.getSession();
+  },
 
   getUserRole: (userId) =>
     supabase.from('user_roles').select('role, created_at').eq('user_id', userId).maybeSingle(),
