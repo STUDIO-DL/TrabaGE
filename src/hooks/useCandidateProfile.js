@@ -75,7 +75,7 @@ export function useCandidateProfile() {
 
   const addExperience = useCallback(
     async (data) => {
-      const { error: saveError } = await profileService.addExperience({ ...data, candidate_id: userId });
+      const { error: saveError } = await profileService.addExperience({ ...data, user_id: userId });
       if (!saveError) await refetch();
       return { error: saveError };
     },
@@ -102,7 +102,7 @@ export function useCandidateProfile() {
 
   const addEducation = useCallback(
     async (data) => {
-      const { error: saveError } = await profileService.addEducation({ ...data, candidate_id: userId });
+      const { error: saveError } = await profileService.addEducation({ ...data, user_id: userId });
       if (!saveError) await refetch();
       return { error: saveError };
     },
@@ -129,7 +129,7 @@ export function useCandidateProfile() {
 
   const addCertification = useCallback(
     async (data) => {
-      const { error: saveError } = await profileService.addCertification({ ...data, candidate_id: userId });
+      const { error: saveError } = await profileService.addCertification({ ...data, user_id: userId });
       if (!saveError) await refetch();
       return { error: saveError };
     },
@@ -156,7 +156,7 @@ export function useCandidateProfile() {
 
   const addSkill = useCallback(
     async (name) => {
-      const { error: saveError } = await profileService.addSkill({ candidate_id: userId, name });
+      const { error: saveError } = await profileService.addSkill({ user_id: userId, name });
       if (!saveError) await refetch();
       return { error: saveError };
     },
@@ -174,7 +174,7 @@ export function useCandidateProfile() {
 
   const addService = useCallback(
     async (name) => {
-      const { error: saveError } = await profileService.addService({ candidate_id: userId, name });
+      const { error: saveError } = await profileService.addService({ user_id: userId, name });
       if (!saveError) await refetch();
       return { error: saveError };
     },
@@ -192,7 +192,7 @@ export function useCandidateProfile() {
 
   const addLanguage = useCallback(
     async (data) => {
-      const { error: saveError } = await profileService.addLanguage({ ...data, candidate_id: userId });
+      const { error: saveError } = await profileService.addLanguage({ ...data, user_id: userId });
       if (!saveError) await refetch();
       return { error: saveError };
     },

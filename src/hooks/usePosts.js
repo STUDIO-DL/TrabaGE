@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { postsService } from '../services/posts.service';
 import { supabase } from '../config/supabase';
 import { useAuth } from './useAuth';
+import { ROLES } from '../constants/roles';
 import { getPreviewPosts } from '../constants/preview';
 import { getCompanyLogoUrl } from '../constants/images';
 import { resolveUserAvatar } from '../utils/resolveUserAvatar';
 
-async function enrichPosts(posts) {
+async function enrichPosts(posts, user) {
   if (!posts?.length) return posts;
 
   const companyIds = [
@@ -37,28 +38,34 @@ async function enrichPosts(posts) {
   const candidates = new Map((candidatesResult.data ?? []).map((row) => [row.user_id, row]));
 
   return posts.map((post) => {
+    const isOwner = user?.id === post.author_id;
+
     if (post.author_type === 'company') {
       const company = companies.get(post.author_id);
+      const isCompanyOwner = isOwner && user?.role === ROLES.COMPANY;
       return {
         ...post,
         author_name: company?.company_name ?? post.author_name,
         author_avatar: getCompanyLogoUrl(company?.logo_path) ?? post.author_avatar,
         author_company: company ?? null,
+        author_path: isCompanyOwner ? '/company/profile' : `/companies/${post.author_id}`,
       };
     }
 
     const candidate = candidates.get(post.author_id);
+    const isCandidateOwner = isOwner && user?.role === ROLES.CANDIDATE;
     return {
       ...post,
       author_name: candidate?.full_name ?? post.author_name,
       author_headline: candidate?.headline ?? post.author_headline,
       author_avatar: resolveUserAvatar(candidate?.avatar_path) ?? post.author_avatar,
+      author_path: isCandidateOwner ? '/candidate/profile' : `/profiles/${post.author_id}`,
     };
   });
 }
 
 export function usePosts(authorId) {
-  const { isPreviewMode, role } = useAuth();
+  const { user, isPreviewMode, role } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -94,11 +101,11 @@ export function usePosts(authorId) {
       return;
     }
 
-    const enriched = await enrichPosts(data ?? []);
+    const enriched = await enrichPosts(data ?? [], user);
     setPosts(enriched);
     setError(null);
     setLoading(false);
-  }, [authorId, isPreviewMode, role]);
+  }, [authorId, isPreviewMode, role, user]);
 
   useEffect(() => {
     fetchPosts();

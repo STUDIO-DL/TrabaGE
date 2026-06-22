@@ -46,14 +46,14 @@ export const adminService = {
   getRecentCompanies: (limit = 5) =>
     supabase
       .from('company_profiles')
-      .select('user_id, company_name, city, is_verified, created_at, logo_path, is_active')
+      .select('user_id, company_name, city, is_verified, created_at, logo_path, is_active, company_size, company_type')
       .order('created_at', { ascending: false })
       .limit(limit),
 
   getRecentVerifications: (limit = 5) =>
     supabase
       .from('verification_requests')
-      .select('*, company_profiles(company_name)')
+      .select('*, company_profiles(company_name, company_size)')
       .order('created_at', { ascending: false })
       .limit(limit),
 
@@ -143,7 +143,7 @@ export const adminService = {
   getCompanies: () =>
     supabase
       .from('company_profiles')
-      .select('user_id, company_name, city, is_verified, created_at, logo_path, is_active, verification_status')
+      .select('user_id, company_name, city, is_verified, created_at, logo_path, is_active, verification_status, company_size, company_type')
       .order('created_at', { ascending: false }),
 
   setCompanyActive: (userId, isActive) =>

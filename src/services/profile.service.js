@@ -67,10 +67,6 @@ export const profileService = {
     const term = query?.trim();
     if (!term) return Promise.resolve({ data: [], error: null });
 
-    return supabase
-      .from('candidate_profiles')
-      .select('user_id, full_name, headline, city, avatar_path, skills(name)')
-      .or(`full_name.ilike.%${term}%,headline.ilike.%${term}%,city.ilike.%${term}%`)
-      .limit(limit);
+    return supabase.rpc('search_candidates', { keyword: term, p_limit: limit });
   },
 };
