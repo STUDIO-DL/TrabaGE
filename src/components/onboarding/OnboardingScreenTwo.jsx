@@ -1,32 +1,19 @@
+import { Briefcase } from 'lucide-react';
 import OnboardingScreen from './OnboardingScreen';
-import onboardingIllustration from '../../assets/illustrations/onboarding-visibility-network.png';
 
-export default function OnboardingScreenTwo({ currentStep = 1, onNext, onSkip, onBack }) {
+export default function OnboardingScreenTwo({ currentStep = 0, onNext, onSkip }) {
   return (
     <OnboardingScreen
-      image={onboardingIllustration}
-      imageAlt="Red de perfiles profesionales y empresas conectados con oportunidades"
+      icon={Briefcase}
+      iconLabel="Icono de un maletín de trabajo"
       currentStep={currentStep}
       onNext={onNext}
       onSkip={onSkip}
-      onBack={onBack}
       title={
-        <span className="text-[#0F172A]">
-          Tu trabajo merece más{' '}
-          <span className="text-[#2563EB]">visibilidad</span>.
-        </span>
+        <span className="text-slate-900">Tu trabajo merece más visibilidad.</span>
       }
-      description={
-        <>
-          <p>
-            No importa si buscas empleo, ofreces servicios o quieres hacer crecer tu negocio.
-          </p>
-          <p className="mt-2">
-            TrabaGE te ayuda a conectar con empresas, clientes y personas que necesitan lo que sabes
-            hacer.
-          </p>
-        </>
-      }
+      description="No importa si buscas empleo, ofreces servicios o quieres hacer crecer tu negocio. TrabaGE te ayuda a conectar con empresas, clientes y personas que necesitan lo que sabes hacer."
+      buttonText="Siguiente"
     />
   );
 }

@@ -33,7 +33,10 @@ export default function SplashScreen() {
       return;
     }
 
-    const destination = getOnboardingComplete() ? '/login' : '/onboarding';
+    // Para un usuario no autenticado, comprobamos si ya ha visto el onboarding.
+    // Si no lo ha visto, le llevamos a la nueva ruta `/onboarding`.
+    // Si ya lo vio, le llevamos directamente a la pantalla de login.
+    const destination = getOnboardingComplete() ? '/login' : '/onboarding'; 
     navigate(destination, { replace: true });
   }, [loading, minTimeElapsed, isAuthenticated, role, getHomePath, navigate]);
 
@@ -50,7 +53,7 @@ export default function SplashScreen() {
           className="splash-map-in splash-map-glow mt-lg h-8 w-auto text-primary-600 sm:h-9"
         />
 
-        <p className="splash-tagline-in mt-lg max-w-[16rem] text-small leading-snug text-[#64748B] sm:max-w-xs sm:text-body">
+        <p className="splash-tagline-in mt-lg max-w-[16rem] text-small leading-snug text-slate-500 sm:max-w-xs sm:text-body">
           La plataforma de empleo y oportunidades para Guinea Ecuatorial
         </p>
       </div>

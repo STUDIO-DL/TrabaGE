@@ -49,11 +49,13 @@ CREATE POLICY "Own company delete" ON company_profiles
   USING (user_id = auth.uid());
 
 -- user_roles: allow account-type selection upsert
+DROP POLICY IF EXISTS "Own role insert" ON user_roles;
 CREATE POLICY "Own role insert" ON user_roles
   FOR INSERT TO authenticated
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (user_id = auth.uid() AND role <> 'admin');
 
+DROP POLICY IF EXISTS "Own role update" ON user_roles;
 CREATE POLICY "Own role update" ON user_roles
   FOR UPDATE TO authenticated
   USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (user_id = auth.uid() AND role <> 'admin');

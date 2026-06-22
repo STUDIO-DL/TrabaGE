@@ -36,7 +36,7 @@ export default function GuestBar() {
             Iniciar sesión
           </Link>
           <Link
-            to="/register"
+            to="/account-type"
             className="rounded-lg border border-white/70 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:px-4 sm:text-sm"
           >
             Regístrate

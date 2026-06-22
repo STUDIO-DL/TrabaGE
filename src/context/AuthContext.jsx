@@ -214,10 +214,9 @@ export function AuthProvider({ children }) {
     const { data, error } = await authService.register(email, password, userRole);
     if (error) return { data, error, redirectTo: null };
 
-    // When email confirmation is disabled, sign-up returns an active session and
-    // we can route the user straight to their role-based home. When confirmation
-    // is required there is no session yet, so the caller shows the "revisa tu
-    // email" screen and the user lands on home after confirming via AuthCallback.
+    // Per the new flow, email sign-up always requires verification. `register`
+    // no longer returns a session. The UI is responsible for showing the
+    // "check your email" message. `redirectTo` will be null here.
     const session = data?.session;
     if (!session?.user?.id) {
       return { data, error: null, redirectTo: null };

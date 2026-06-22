@@ -70,7 +70,7 @@ function AccountCard({ icon: Icon, title, description, onClick, disabled }) {
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={onClick} // This will be `selectRole`
       disabled={disabled}
       className="group flex w-full items-center gap-4 rounded-2xl border border-slate-100 bg-white p-5 text-left shadow-[0_10px_30px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-[0_16px_40px_rgba(37,99,235,0.16)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
     >
@@ -78,8 +78,8 @@ function AccountCard({ icon: Icon, title, description, onClick, disabled }) {
         <Icon className="h-7 w-7" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-base font-bold text-[#0F172A]">{title}</span>
-        <span className="mt-1 block text-sm leading-relaxed text-[#64748B]">{description}</span>
+        <span className="block text-base font-bold text-slate-900">{title}</span>
+        <span className="mt-1 block text-sm leading-relaxed text-slate-500">{description}</span>
       </span>
       <ChevronRight
         className="h-5 w-5 shrink-0 text-primary-500 transition group-hover:translate-x-0.5"
@@ -111,8 +111,9 @@ export default function AccountTypeSelect() {
       return;
     }
 
-    // New sign-up flow: an unauthenticated user picks their account type first,
-    // then chooses how to create the account (email or Google). Carry the type forward.
+    // Per the new registration flow, an unauthenticated user selects their
+    // account type first. We then navigate them to choose the registration
+    // method, carrying the selected account type in the location state.
     if (!user?.id) {
       navigate('/register-method', { state: { accountType: selectedRole } });
       return;
@@ -151,8 +152,8 @@ export default function AccountTypeSelect() {
 
           {/* Heading + subtitle */}
           <div className="mt-8 text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">Elige el tipo de cuenta</h1>
-            <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-[#64748B]">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Elige el tipo de cuenta</h1>
+            <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-slate-500">
               {previewActive
                 ? 'Elige un rol para explorar la app en modo vista previa.'
                 : 'Selecciona la opción que mejor se adapte a tus necesidades.'}
@@ -174,25 +175,26 @@ export default function AccountTypeSelect() {
           <div className="mt-8 space-y-4">
             <AccountCard
               icon={User}
-              title="Cuenta personal"
-              description="Para buscar empleo, aplicar a ofertas y gestionar tu perfil."
+              title="Cuenta profesional"
+              description="Busca empleo, ofrece servicios y recibe oportunidades."
               onClick={() => selectRole(ROLES.CANDIDATE)}
               disabled={saving}
             />
             <AccountCard
               icon={Building2}
-              title="Cuenta de organización"
-              description="Para publicar ofertas, encontrar talento y gestionar tu equipo."
+              title="Cuenta de empresa o institución"
+              description="Publica ofertas, encuentra talento y gestiona tu organización."
               onClick={() => selectRole(ROLES.COMPANY)}
               disabled={saving}
-            />          </div>
+            />
+          </div>
         </div>
 
         {/* Footer */}
         <div className="mt-10 flex flex-col items-center gap-2 text-center">
           <ShieldCheck className="h-6 w-6 text-primary-600" aria-hidden />
-          <p className="text-sm font-bold text-[#0F172A]">Seguro y confiable</p>
-          <p className="mx-auto max-w-xs text-xs leading-relaxed text-[#64748B]">
+          <p className="text-sm font-bold text-slate-900">Seguro y confiable</p>
+          <p className="mx-auto max-w-xs text-xs leading-relaxed text-slate-500">
             Tu información está protegida y solo se usará para mejorar tu experiencia en TrabaGE.
           </p>
         </div>

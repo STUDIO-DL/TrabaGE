@@ -8,6 +8,7 @@ import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import { clearPreviewMode } from '../../constants/preview';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
+import { mapAuthError } from '../../utils/errors';
 
 function LoginDecorations() {
   return (
@@ -131,7 +132,7 @@ function LoginScreen({
               <div>
                 <label
                   htmlFor="login-email"
-                  className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0F172A]"
+                className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900"
                 >
                   <Mail className="h-4 w-4 text-primary-600" aria-hidden />
                   Correo electrónico
@@ -145,14 +146,14 @@ function LoginScreen({
                   placeholder="ejemplo@correo.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
+                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
                 />
               </div>
 
               <div>
                 <label
                   htmlFor="login-password"
-                  className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#0F172A]"
+                className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900"
                 >
                   <Lock className="h-4 w-4 text-primary-600" aria-hidden />
                   Contraseña
@@ -167,12 +168,12 @@ function LoginScreen({
                     placeholder="Ingresa tu contraseña"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 text-base text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
+                  className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-[#94A3B8] transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-slate-400 transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                     aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                   >
                     {showPassword ? (
@@ -218,7 +219,7 @@ function LoginScreen({
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200" />
               </div>
-              <div className="relative flex justify-center text-xs font-medium text-[#64748B]">
+              <div className="relative flex justify-center text-xs font-medium text-slate-500">
                 <span className="bg-white px-3">o</span>
               </div>
             </div>
@@ -238,10 +239,10 @@ function LoginScreen({
           </div>
 
           {/* Crear cuenta */}
-          <p className="mt-6 text-center text-sm text-[#64748B]">
+          <p className="mt-6 text-center text-sm text-slate-500">
             ¿No tienes cuenta?{' '}
             <Link
-              to="/account-type"
+              to="/account-type" // This is the correct starting point for the registration flow.
               className="font-bold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             >
               Crear cuenta
@@ -252,7 +253,7 @@ function LoginScreen({
         {/* Footer */}
         <div className="mt-8 flex items-start justify-center gap-2 text-center">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary-600" aria-hidden />
-          <p className="text-xs leading-relaxed text-[#64748B]">
+          <p className="text-xs leading-relaxed text-slate-500">
             Seguro, confiable y hecho para ti.
             <br />
             TrabaGE es tu plataforma de oportunidades.
@@ -284,7 +285,7 @@ export default function Login() {
 
     const { error: loginError, redirectTo } = await login(loginEmail, loginPassword);
     if (loginError) {
-      setError(loginError.message || 'No se pudo iniciar sesión');
+      setError(mapAuthError(loginError));
       setLoading(false);
       return false;
     }
@@ -300,7 +301,7 @@ export default function Login() {
 
     const { error: googleError } = await authService.loginWithGoogle();
     if (googleError) {
-      setError(googleError.message || 'No se pudo iniciar sesión con Google');
+      setError(mapAuthError(googleError));
     }
   };
 

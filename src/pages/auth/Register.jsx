@@ -8,6 +8,7 @@ import { clearPreviewMode } from '../../constants/preview';
 import { ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
+import { mapAuthError } from '../../utils/errors';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function Register() {
 
     const { error: googleError } = await authService.signupWithGoogle(accountType);
     if (googleError) {
-      setError(googleError.message || 'No se pudo registrarse con Google');
+      setError(mapAuthError(googleError));
     }
   };
 
@@ -59,16 +60,15 @@ export default function Register() {
 
     const { error: registerError, redirectTo } = await register(email, password, accountType);
     if (registerError) {
-      setError(registerError.message);
+      setError(mapAuthError(registerError));
       setLoading(false);
       return;
     }
 
-    // If sign-up returned an active session (email confirmation disabled), go
-    // straight to the role-based home. Otherwise show the "revisa tu email"
-    // screen; the user lands on home after confirming via the email link.
+    // Per the new flow, email registration requires verification. We do not
+    // get a session back immediately. Instead of checking for a redirectTo,
+    // we now always show the success/verification screen.
     if (redirectTo) {
-      navigate(redirectTo, { replace: true });
       return;
     }
 
@@ -80,15 +80,17 @@ export default function Register() {
     return (
       <MobileScreenLayout
         contentClassName="items-center justify-center px-md text-center"
-        footer={
-          <Link to="/account-type" className="btn-primary-mobile bg-primary-600 text-center text-white no-underline">
-            Continuar
-          </Link>
-        }
+        footer={(
+          <div className="px-md pb-md">
+            <Link to="/login" className="btn-primary-mobile bg-primary-600 text-center text-white no-underline">
+              He verificado mi correo
+            </Link>
+          </div>
+        )}
       >
-        <h1 className="text-heading-m font-bold text-gray-900">Revisa tu email</h1>
+        <h1 className="text-heading-m font-bold text-gray-900">Hemos enviado un enlace de verificación a tu correo electrónico.</h1>
         <p className="mt-sm text-small text-gray-500">
-          Te enviamos un enlace de confirmación. Luego elige tu tipo de cuenta.
+          Verifica tu correo para activar tu cuenta y acceder a TrabaGE.
         </p>
       </MobileScreenLayout>
     );

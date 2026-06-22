@@ -36,7 +36,7 @@ export default function AuthCallback() {
         // Claim the resolution up front so the onAuthStateChange handler and
         // the polling loop can't both run resolvePostAuthRedirect / navigate.
         resolved = true;
-        const { data: accountTypeResult, error: accountTypeError } = 
+        const { data: accountTypeResult, error: accountTypeError } =
           await authService.applyPendingAccountType(session.user);
 
         if (accountTypeError) {

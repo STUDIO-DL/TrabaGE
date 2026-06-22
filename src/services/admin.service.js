@@ -164,32 +164,20 @@ export const adminService = {
     verificationService.getSignedDocumentUrl(documentPath),
 
   getJobs: async () => {
+    // OPTIMIZATION: Switched from two separate queries (jobs then applications) to a single query
+    // that counts related applications directly in the database. This is more performant.
     const { data: jobs, error } = await supabase
       .from('jobs')
-      .select('*, company_profiles(company_name)')
+      .select('*, company_profiles(company_name), applications_count:applications(count)')
       .order('created_at', { ascending: false });
 
     if (error) return { data: null, error };
 
-    const jobIds = (jobs ?? []).map((job) => job.id);
-    if (!jobIds.length) return { data: [], error: null };
-
-    const { data: applications, error: appsError } = await supabase
-      .from('applications')
-      .select('job_id')
-      .in('job_id', jobIds);
-
-    if (appsError) return { data: null, error: appsError };
-
-    const counts = (applications ?? []).reduce((acc, app) => {
-      acc[app.job_id] = (acc[app.job_id] ?? 0) + 1;
-      return acc;
-    }, {});
-
     return {
       data: (jobs ?? []).map((job) => ({
         ...job,
-        applications_count: counts[job.id] ?? 0,
+        // The count from Supabase is an array with one object: { count: N }
+        applications_count: job.applications_count?.[0]?.count ?? 0,
       })),
       error: null,
     };

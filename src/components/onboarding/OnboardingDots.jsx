@@ -9,7 +9,7 @@ export default function OnboardingDots({ currentStep, totalSteps = 3 }) {
           aria-label={`Paso ${i + 1} de ${totalSteps}`}
           className={[
             'h-2 w-2 rounded-full transition-colors duration-300',
-            i === currentStep ? 'bg-[#2563EB]' : 'bg-[#CBD5E1]',
+            i === currentStep ? 'bg-primary-600' : 'bg-slate-300',
           ].join(' ')}
         />
       ))}
