@@ -5,6 +5,7 @@ import { Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
+import { LegalFooterLinks } from '../../components/legal/LegalLinks';
 import { clearPreviewMode } from '../../constants/preview';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
@@ -251,13 +252,16 @@ function LoginScreen({
         </div>
 
         {/* Footer */}
-        <div className="mt-8 flex items-start justify-center gap-2 text-center">
-          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary-600" aria-hidden />
-          <p className="text-xs leading-relaxed text-slate-500">
-            Seguro, confiable y hecho para ti.
-            <br />
-            TrabaGE es tu plataforma de oportunidades.
-          </p>
+        <div className="mt-8 space-y-4">
+          <LegalFooterLinks />
+          <div className="flex items-start justify-center gap-2 text-center">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary-600" aria-hidden />
+            <p className="text-xs leading-relaxed text-slate-500">
+              Seguro, confiable y hecho para ti.
+              <br />
+              TrabaGE es tu plataforma de oportunidades.
+            </p>
+          </div>
         </div>
       </div>
     </div>

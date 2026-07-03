@@ -233,15 +233,25 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server
+# Use a production-ready SMTP server (Supabase Dashboard → Authentication → SMTP)
+# Dev phase sender: TrabaGE <noreply.trabage@gmail.com>
+# Production: change admin_email to noreply@trabage.org (no code changes needed)
 # [auth.email.smtp]
 # enabled = true
-# host = "smtp.sendgrid.net"
+# host = "smtp.gmail.com"
 # port = 587
-# user = "apikey"
-# pass = "env(SENDGRID_API_KEY)"
-# admin_email = "admin@email.com"
-# sender_name = "Admin"
+# user = "env(SMTP_USER)"
+# pass = "env(SMTP_PASS)"
+# admin_email = "noreply.trabage@gmail.com"
+# sender_name = "TrabaGE"
+
+# [auth.email.template.confirmation]
+# subject = "Verifica tu correo en TrabaGE"
+# content_path = "./supabase/templates/confirmation.html"
+
+# [auth.email.template.recovery]
+# subject = "Restablece tu contraseña en TrabaGE"
+# content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize email template
 # [auth.email.template.invite]

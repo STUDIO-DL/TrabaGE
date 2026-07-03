@@ -68,6 +68,11 @@ async function getExistingProfileRole(userId) {
   return null;
 }
 
+function isRecentOAuthSignup(user) {
+  if (!user?.created_at) return false;
+  return Date.now() - new Date(user.created_at).getTime() < NEW_OAUTH_USER_WINDOW_MS;
+}
+
 export async function setUserRole(userId, role) {
   const normalizedRole = normalizeAccountType(role);
 
@@ -102,7 +107,10 @@ export const authService = {
     return supabase.auth.signUp({
       email: normalizeEmail(email),
       password: normalizePassword(password),
-      options: { data: { role } },
+      options: {
+        data: { role },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
   },
 
@@ -125,6 +133,22 @@ export const authService = {
 
     if (storedRole === ROLES.ADMIN) {
       return { data: existingRole, error: null };
+    }
+
+    // OAuth signup: pending role from account-type selection overrides the
+    // default "candidate" row inserted by handle_new_user for brand-new users.
+    if (
+      pendingRole &&
+      currentUser &&
+      isRecentOAuthSignup(currentUser) &&
+      storedRole &&
+      storedRole !== pendingRole
+    ) {
+      return supabase
+        .from('user_roles')
+        .upsert({ user_id: userId, role: pendingRole }, { onConflict: 'user_id' })
+        .select('role, created_at')
+        .maybeSingle();
     }
 
     if (storedRole) {
@@ -182,7 +206,8 @@ export const authService = {
       return configError();
     }
 
-    savePendingAccountType(role);
+    const normalizedRole = normalizeAccountType(role) ?? ROLES.CANDIDATE;
+    savePendingAccountType(normalizedRole);
 
     const result = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -191,6 +216,7 @@ export const authService = {
         queryParams: {
           prompt: 'select_account',
         },
+        data: { role: normalizedRole },
       },
     });
 
@@ -215,7 +241,7 @@ export const authService = {
 
   resetPassword: (email) =>
     supabase.auth.resetPasswordForEmail(normalizeEmail(email), {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${window.location.origin}/auth/callback`,
     }),
 
   setPassword: (password) =>

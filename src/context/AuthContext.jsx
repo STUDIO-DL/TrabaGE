@@ -16,6 +16,7 @@ import {
 import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
+import { welcomeEmailService } from '../services/welcomeEmail.service';
 
 const AuthContext = createContext(null);
 
@@ -26,6 +27,14 @@ export const getOnboardingComplete = () =>
 
 export const setOnboardingComplete = () =>
   localStorage.setItem(ONBOARDING_KEY, 'true');
+
+function shouldTriggerWelcomeEmail(user) {
+  if (!user?.id || !user?.email) return false;
+  if (user.email_confirmed_at || user.confirmed_at) return true;
+
+  const provider = user.app_metadata?.provider;
+  return Boolean(provider && provider !== 'email');
+}
 
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
@@ -112,6 +121,10 @@ export function AuthProvider({ children }) {
       setSetupComplete(true);
     } else {
       setSetupComplete(false);
+    }
+
+    if (shouldTriggerWelcomeEmail(currentUser)) {
+      welcomeEmailService.triggerIfNeeded(currentUser.id);
     }
   }, []);
 

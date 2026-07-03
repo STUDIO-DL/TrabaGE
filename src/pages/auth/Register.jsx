@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
+import { LegalAcceptanceText } from '../../components/legal/LegalLinks';
 import { clearPreviewMode } from '../../constants/preview';
 import { ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
@@ -108,6 +109,7 @@ export default function Register() {
         contentClassName="px-md pb-sm"
         footer={
           <div className="space-y-sm">
+            <LegalAcceptanceText className="pb-1" />
             {error ? <p className="text-small text-red-600">{error}</p> : null}
             <Button type="submit" form="register-email-form" fullWidth className="btn-primary-mobile !rounded-btn-primary !py-0">
               Continuar
@@ -168,6 +170,7 @@ export default function Register() {
       contentClassName="px-md pb-sm"
       footer={
         <div className="space-y-sm">
+          <LegalAcceptanceText className="pb-1" />
           {error ? <p className="text-small text-red-600">{error}</p> : null}
           <Button type="submit" form="register-password-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
             Crear cuenta

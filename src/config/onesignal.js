@@ -1,5 +1,6 @@
 import OneSignal from 'react-onesignal';
 import { profileService } from '../services/profile.service';
+import { readViteEnv } from './env';
 
 let initPromise = null;
 let initialized = false;
@@ -22,10 +23,10 @@ async function persistOneSignalPlayerId(userId) {
 }
 
 export const isOneSignalConfigured = () =>
-  Boolean(import.meta.env.VITE_ONESIGNAL_APP_ID?.trim());
+  Boolean(readViteEnv(import.meta.env.VITE_ONESIGNAL_APP_ID));
 
 export const initOneSignal = async () => {
-  const appId = import.meta.env.VITE_ONESIGNAL_APP_ID?.trim();
+  const appId = readViteEnv(import.meta.env.VITE_ONESIGNAL_APP_ID);
   if (!appId) return;
 
   if (initPromise) return initPromise;
@@ -34,7 +35,7 @@ export const initOneSignal = async () => {
     try {
       await OneSignal.init({
         appId,
-        safari_web_id: import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID?.trim() || undefined,
+        safari_web_id: readViteEnv(import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID) || undefined,
         notifyButton: { enable: false },
         allowLocalhostAsSecureOrigin: import.meta.env.DEV,
         promptOptions: {

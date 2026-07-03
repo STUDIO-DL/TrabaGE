@@ -125,8 +125,10 @@ function AppRoutes() {
 
             <Route path="/profile/:userId" element={<PublicProfile />} />
             <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
-            <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-            <Route path="/legal/terms" element={<TermsOfUse />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfUse />} />
+            <Route path="/legal/privacy" element={<Navigate to="/privacy" replace />} />
+            <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
             <Route path="/legal/help" element={<HelpCenter />} />
             <Route path="*" element={<NotFound />} />
       </Routes>

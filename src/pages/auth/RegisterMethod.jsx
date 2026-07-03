@@ -6,6 +6,7 @@ import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import { clearPreviewMode } from '../../constants/preview';
 import { ROLE_LABELS, ROLES } from '../../constants/roles';
 import { authService } from '../../services/auth.service';
+import { mapAuthError } from '../../utils/errors';
 
 export default function RegisterMethod() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function RegisterMethod() {
 
     const { error: googleError } = await authService.signupWithGoogle(accountType);
     if (googleError) {
-      setError(googleError.message || 'No se pudo continuar con Google');
+      setError(mapAuthError(googleError));
     }
   };
 

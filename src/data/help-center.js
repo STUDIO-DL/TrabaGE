@@ -1,4 +1,4 @@
-export const SUPPORT_EMAIL = 'soporte.trabage@gmail.com';
+export { SUPPORT_EMAIL } from '../constants/support';
 
 export const helpCategories = [
   {

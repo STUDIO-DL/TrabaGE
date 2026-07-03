@@ -1,9 +1,18 @@
-import LegalPage from './LegalPage';
+import LegalDocumentLayout from '../../components/legal/LegalDocumentLayout';
+import { LEGAL_ROUTES } from '../../constants/legalRoutes';
+import { TERMS_ARTICLES, TERMS_FINAL_ARTICLES, TERMS_INTRO } from '../../data/legal/termsSections';
+import { usePageTitle } from '../../hooks/usePageTitle';
 
 export default function TermsOfUse() {
+  usePageTitle('Términos de Uso | TrabaGE');
+
   return (
-    <LegalPage title="Términos de uso">
-      <p>Contenido de los términos de uso de TrabaGE. Actualiza este texto antes del lanzamiento.</p>
-    </LegalPage>
+    <LegalDocumentLayout
+      pageTitle="Términos y Condiciones de Uso"
+      intro={TERMS_INTRO}
+      articles={TERMS_ARTICLES}
+      finalArticles={TERMS_FINAL_ARTICLES}
+      relatedLink={{ to: LEGAL_ROUTES.privacy, label: 'Política de Privacidad' }}
+    />
   );
 }

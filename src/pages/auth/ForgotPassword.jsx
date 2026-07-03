@@ -4,6 +4,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { authService } from '../../services/auth.service';
+import { mapAuthError } from '../../utils/errors';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -19,7 +20,7 @@ export default function ForgotPassword() {
 
     const { error: resetError } = await authService.resetPassword(email.trim().toLowerCase());
     if (resetError) {
-      setError(resetError.message);
+      setError(mapAuthError(resetError));
     } else {
       setMessage('Revisa tu email para restablecer tu contraseña.');
     }

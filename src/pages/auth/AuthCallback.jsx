@@ -6,6 +6,7 @@ import { clearPreviewMode } from '../../constants/preview';
 import { ROLE_HOME } from '../../constants/roles';
 import { authService } from '../../services/auth.service';
 import { resolvePostAuthRedirect } from '../../utils/resolvePostAuthRedirect';
+import { mapAuthError } from '../../utils/errors';
 import { useAuth } from '../../hooks/useAuth';
 
 const MAX_ATTEMPTS = 15;
@@ -27,7 +28,7 @@ export default function AuthCallback() {
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
       const oauthError = queryParams.get('error_description') || hashParams.get('error_description');
       if (oauthError) {
-        setError(decodeURIComponent(oauthError.replace(/\+/g, ' ')));
+        setError(mapAuthError({ message: decodeURIComponent(oauthError.replace(/\+/g, ' ')) }));
         return;
       }
 
@@ -40,7 +41,7 @@ export default function AuthCallback() {
           await authService.applyPendingAccountType(session.user);
 
         if (accountTypeError) {
-          setError(accountTypeError.message || 'No se pudo determinar tu tipo de cuenta');
+          setError(mapAuthError(accountTypeError));
           return true;
         }
 
@@ -83,7 +84,7 @@ export default function AuthCallback() {
 
         if (sessionError) {
           subscription.unsubscribe();
-          setError(sessionError.message || 'No se pudo completar el inicio de sesión con Google');
+          setError(mapAuthError(sessionError));
           return;
         }
 

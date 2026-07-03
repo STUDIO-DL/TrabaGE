@@ -1,7 +1,8 @@
 import * as Sentry from '@sentry/react';
+import { readViteEnv } from './env';
 
 export const initSentry = () => {
-  const dsn = import.meta.env.VITE_SENTRY_DSN;
+  const dsn = readViteEnv(import.meta.env.VITE_SENTRY_DSN);
   if (!dsn) return;
 
   Sentry.init({

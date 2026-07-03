@@ -4,6 +4,7 @@ import AppIcon from '../common/AppIcon';
 import { LogOut, MoreVertical, Settings, Trash2, ICON_SIZES } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { getHelpPath } from '../../data/help-center';
+import { LEGAL_ROUTES } from '../../constants/legalRoutes';
 
 export default function ProfileMenu({ onSettings, onLogout, onDeleteAccount }) {
   const { role, user } = useAuth();
@@ -27,8 +28,8 @@ export default function ProfileMenu({ onSettings, onLogout, onDeleteAccount }) {
 
   const items = [
     { type: 'action', label: 'Configuración', icon: Settings, onClick: () => run(onSettings) },
-    { type: 'link', label: 'Política de privacidad', to: '/legal/privacy' },
-    { type: 'link', label: 'Términos de uso', to: '/legal/terms' },
+    { type: 'link', label: 'Política de privacidad', to: LEGAL_ROUTES.privacy },
+    { type: 'link', label: 'Términos de uso', to: LEGAL_ROUTES.terms },
     { type: 'link', label: 'Centro de ayuda', to: helpPath },
     { type: 'divider' },
     { type: 'action', label: 'Cerrar sesión', icon: LogOut, onClick: () => run(onLogout) },
