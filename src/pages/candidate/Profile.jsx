@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CandidateProfileLayout from '../../components/profile/CandidateProfileLayout';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
@@ -16,7 +17,6 @@ import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import CertificationModal from '../../components/profile/modals/CertificationModal';
 import LanguageModal from '../../components/profile/modals/LanguageModal';
-import SettingsModal from '../../components/profile/modals/SettingsModal';
 import DeleteAccountModal from '../../components/profile/modals/DeleteAccountModal';
 import Spinner from '../../components/ui/Spinner';
 import { useAuth } from '../../hooks/useAuth';
@@ -27,6 +27,7 @@ import { generateProfileUrl } from '../../utils/generateShareUrl';
 import { authService } from '../../services/auth.service';
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { user, logout, isPreviewMode } = useAuth();
   const { showToast } = useNotificationContext();
   const {
@@ -54,7 +55,6 @@ export default function Profile() {
     deleteLanguage,
   } = useCandidateProfile();
 
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
@@ -117,14 +117,6 @@ export default function Profile() {
       showToast(error.message, 'error');
     }
     return { error };
-  };
-
-  const handleSaveSettings = async (data) => {
-    setSaving(true);
-    const result = await updateBasicInfo(data);
-    setSaving(false);
-    if (!result.error) showToast('Configuración guardada', 'success');
-    return result;
   };
 
   const handleDeleteAccount = async () => {
@@ -246,7 +238,7 @@ export default function Profile() {
         onAvatarChange={canEdit ? handleAvatar : undefined}
         avatarLoading={avatarLoading}
         onShare={handleShare}
-        onSettings={canEdit ? () => setSettingsOpen(true) : undefined}
+        onSettings={canEdit ? () => navigate('/candidate/settings') : undefined}
         onLogout={canEdit ? logout : undefined}
         onDeleteAccount={canEdit ? () => setDeleteOpen(true) : undefined}
         onSaveField={canEdit ? handleSaveField : undefined}
@@ -361,13 +353,6 @@ export default function Profile() {
 
       </CandidateProfileLayout>
 
-      <SettingsModal
-        isOpen={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        profile={profile}
-        onSave={handleSaveSettings}
-        loading={saving}
-      />
       <DeleteAccountModal
         isOpen={deleteOpen}
         onClose={() => setDeleteOpen(false)}

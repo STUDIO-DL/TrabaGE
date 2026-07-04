@@ -1,10 +1,12 @@
 import * as Sentry from '@sentry/react';
 
-function Fallback({ error, resetError }) {
+function Fallback({ resetError }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
       <h1 className="text-xl font-semibold text-gray-900">Algo salió mal</h1>
-      <p className="mt-2 text-sm text-gray-500">{error?.message}</p>
+      <p className="mt-2 text-sm text-gray-500">
+        No pudimos cargar esta pantalla. Inténtalo de nuevo en unos segundos.
+      </p>
       <button
         type="button"
         onClick={resetError}

@@ -5,12 +5,40 @@ import { ApplicationListSkeleton } from '../../components/common/Skeleton';
 import { NoApplications } from '../../assets/empty-states';
 import CompanyNameWithBadge from '../../components/company/CompanyNameWithBadge';
 import Badge from '../../components/ui/Badge';
+import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { useApplications } from '../../hooks/useApplications';
+import { applicationsService } from '../../services/applications.service';
+import { useNotificationContext } from '../../context/NotificationContext';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+
+const APPLICATION_STATUS_LABELS = {
+  pending: 'En revisión',
+  viewed: 'Vista por la empresa',
+  contacted: 'Contactado',
+  accepted: 'Aceptada',
+  rejected: 'Rechazada',
+  withdrawn: 'Retirada',
+};
 
 export default function Applications() {
   const navigate = useNavigate();
-  const { applications, loading } = useApplications();
+  const { showToast } = useNotificationContext();
+  const { applications, loading, refetch } = useApplications();
+
+  const handleWithdraw = async (applicationId) => {
+    const confirmed = window.confirm('¿Quieres retirar esta aplicación?');
+    if (!confirmed) return;
+
+    const { error } = await applicationsService.withdraw(applicationId);
+    if (error) {
+      showToast(getSupabaseErrorMessage(error), 'error');
+      return;
+    }
+
+    showToast('Aplicación retirada', 'success');
+    refetch();
+  };
 
   return (
     <PageContainer title="Mis aplicaciones">
@@ -28,13 +56,27 @@ export default function Applications() {
         ) : (
           applications.map((app) => (
             <Card key={app.id} className="mb-3">
-              <p className="font-semibold text-gray-900">{app.jobs?.title}</p>
+              <button
+                type="button"
+                onClick={() => app.jobs?.id && navigate(`/candidate/jobs/${app.jobs.id}`)}
+                className="text-left font-semibold text-gray-900 hover:text-primary-700"
+              >
+                {app.jobs?.title || 'Oferta no disponible'}
+              </button>
               <CompanyNameWithBadge
                 company={app.jobs?.company_profiles}
                 showUnverifiedLabel
                 className="mt-0.5"
               />
-              <Badge label={app.status} className="mt-2" />
+              {app.jobs?.city && <p className="mt-1 text-sm text-gray-500">{app.jobs.city}</p>}
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <Badge label={APPLICATION_STATUS_LABELS[app.status] ?? 'Estado desconocido'} />
+                {!['withdrawn', 'rejected', 'accepted'].includes(app.status) && (
+                  <Button size="sm" variant="ghost" onClick={() => handleWithdraw(app.id)}>
+                    Retirar
+                  </Button>
+                )}
+              </div>
             </Card>
           ))
         )}

@@ -17,6 +17,7 @@ import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
 import { welcomeEmailService } from '../services/welcomeEmail.service';
+import { reportError } from '../utils/logger';
 
 const AuthContext = createContext(null);
 
@@ -148,7 +149,7 @@ export function AuthProvider({ children }) {
         return hydrateUser(data.session);
       })
       .catch((err) => {
-        console.warn('[TrabaGE] No se pudo conectar con Supabase:', err?.message || err);
+        reportError(err, { area: 'auth_initial_session' });
       })
       .finally(() => {
         clearTimeout(authTimeout);

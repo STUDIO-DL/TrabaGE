@@ -1,21 +1,26 @@
 import { useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
+import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
-import { DEFAULT_COMPANY_LOGO, DEFAULT_USER_AVATAR } from '../../constants/images';
+import { getCompanyLogoUrl } from '../../constants/images';
 import { formatDate } from '../../utils/formatDate';
+import { resolveUserAvatar } from '../../utils/resolveUserAvatar';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function AdminPosts() {
   const { showToast } = useNotificationContext();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
+  const [query, setQuery] = useState('');
 
   const loadPosts = async () => {
     setLoading(true);
     const { data, error } = await adminService.getPosts();
-    if (error) showToast(error.message, 'error');
+    if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setPosts(data ?? []);
     setLoading(false);
   };
@@ -30,12 +35,41 @@ export default function AdminPosts() {
     const { error } = await adminService.deletePost(post.id);
     setActionId(null);
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
     showToast('Publicación eliminada', 'success');
     await loadPosts();
   };
+
+  const handleToggleHidden = async (post) => {
+    setActionId(post.id);
+    const nextHidden = !post.is_hidden;
+    const { error } = await adminService.setPostHidden(post.id, nextHidden);
+    setActionId(null);
+    if (error) {
+      showToast(getSupabaseErrorMessage(error), 'error');
+      return;
+    }
+    showToast(nextHidden ? 'Publicación oculta' : 'Publicación restaurada', 'success');
+    await loadPosts();
+  };
+
+  const filteredPosts = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return posts;
+
+    return posts.filter((post) =>
+      [
+        post.content,
+        post.author?.name,
+        post.author_type,
+        post.is_hidden ? 'oculta' : 'visible',
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalized)),
+    );
+  }, [posts, query]);
 
   const columns = useMemo(
     () => [
@@ -47,8 +81,8 @@ export default function AdminPosts() {
             <img
               src={
                 row.author?.type === 'company'
-                  ? row.author.avatar || DEFAULT_COMPANY_LOGO
-                  : row.author?.avatar || DEFAULT_USER_AVATAR
+                  ? getCompanyLogoUrl(row.author.avatar)
+                  : resolveUserAvatar(row.author?.avatar)
               }
               alt=""
               className="h-8 w-8 rounded-full object-cover"
@@ -58,9 +92,28 @@ export default function AdminPosts() {
         ),
       },
       {
+        key: 'content',
+        label: 'Contenido',
+        render: (row) => (
+          <span className="block max-w-xs truncate text-gray-700">
+            {row.content || 'Sin texto'}
+          </span>
+        ),
+      },
+      {
         key: 'type',
         label: 'Tipo',
         render: (row) => (row.author_type === 'company' ? 'Empresa' : 'Candidato'),
+      },
+      {
+        key: 'status',
+        label: 'Estado',
+        render: (row) => (
+          <AdminStatusBadge
+            status={row.is_hidden ? 'hidden' : 'active'}
+            label={row.is_hidden ? 'Oculta' : 'Visible'}
+          />
+        ),
       },
       {
         key: 'created_at',
@@ -80,13 +133,17 @@ export default function AdminPosts() {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => {
-                const feedPath =
-                  row.author_type === 'company' ? '/company/feed' : '/candidate/feed';
-                window.open(feedPath, '_blank', 'noopener,noreferrer');
-              }}
+              onClick={() => window.open(`/feed/post/${row.id}`, '_blank', 'noopener,noreferrer')}
             >
               Ver
+            </Button>
+            <Button
+              size="sm"
+              variant={row.is_hidden ? 'primary' : 'secondary'}
+              loading={actionId === row.id}
+              onClick={() => handleToggleHidden(row)}
+            >
+              {row.is_hidden ? 'Restaurar' : 'Ocultar'}
             </Button>
             <Button
               size="sm"
@@ -104,11 +161,19 @@ export default function AdminPosts() {
   );
 
   return (
-    <AdminTable
-      columns={columns}
-      rows={posts.map((post) => ({ ...post, id: post.id }))}
-      loading={loading}
-      emptyMessage="No hay publicaciones."
-    />
+    <div className="space-y-4">
+      <Input
+        label="Buscar publicaciones"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Buscar por autor, contenido o estado"
+      />
+      <AdminTable
+        columns={columns}
+        rows={filteredPosts.map((post) => ({ ...post, id: post.id }))}
+        loading={loading}
+        emptyMessage="No hay publicaciones."
+      />
+    </div>
   );
 }

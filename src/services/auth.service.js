@@ -4,11 +4,17 @@ import { ROLES } from '../constants/roles';
 const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
 const VALID_ACCOUNT_TYPES = [ROLES.CANDIDATE, ROLES.COMPANY];
+const VALID_STORED_ROLES = [ROLES.CANDIDATE, ROLES.COMPANY, ROLES.ADMIN];
 const NEW_OAUTH_USER_WINDOW_MS = 10 * 60 * 1000;
 
 function normalizeAccountType(accountType) {
   if (accountType === 'organization') return ROLES.COMPANY;
   return VALID_ACCOUNT_TYPES.includes(accountType) ? accountType : null;
+}
+
+function normalizeStoredRole(role) {
+  if (role === 'organization') return ROLES.COMPANY;
+  return VALID_STORED_ROLES.includes(role) ? role : null;
 }
 
 function toPendingAccountType(role) {
@@ -73,18 +79,14 @@ function isRecentOAuthSignup(user) {
   return Date.now() - new Date(user.created_at).getTime() < NEW_OAUTH_USER_WINDOW_MS;
 }
 
-export async function setUserRole(userId, role) {
+export async function setUserRole(_userId, role) {
   const normalizedRole = normalizeAccountType(role);
 
   if (!normalizedRole) {
     return { data: null, error: { message: 'Tipo de cuenta inválido' } };
   }
 
-  return supabase
-    .from('user_roles')
-    .upsert({ user_id: userId, role: normalizedRole }, { onConflict: 'user_id' })
-    .select('role, created_at')
-    .maybeSingle();
+  return supabase.rpc('set_initial_user_role', { p_role: normalizedRole });
 }
 
 export const authService = {
@@ -128,7 +130,7 @@ export const authService = {
       return { data: null, error: roleError };
     }
 
-    const storedRole = normalizeAccountType(existingRole?.role);
+    const storedRole = normalizeStoredRole(existingRole?.role);
     const profileRole = await getExistingProfileRole(userId);
 
     if (storedRole === ROLES.ADMIN) {
@@ -144,11 +146,7 @@ export const authService = {
       storedRole &&
       storedRole !== pendingRole
     ) {
-      return supabase
-        .from('user_roles')
-        .upsert({ user_id: userId, role: pendingRole }, { onConflict: 'user_id' })
-        .select('role, created_at')
-        .maybeSingle();
+      return setUserRole(userId, pendingRole);
     }
 
     if (storedRole) {
@@ -156,11 +154,7 @@ export const authService = {
     }
 
     if (profileRole) {
-      return supabase
-        .from('user_roles')
-        .upsert({ user_id: userId, role: profileRole }, { onConflict: 'user_id' })
-        .select('role, created_at')
-        .maybeSingle();
+      return setUserRole(userId, profileRole);
     }
 
     if (!pendingRole) {
@@ -170,11 +164,7 @@ export const authService = {
       };
     }
 
-    return supabase
-      .from('user_roles')
-      .upsert({ user_id: userId, role: pendingRole }, { onConflict: 'user_id' })
-      .select('role, created_at')
-      .maybeSingle();
+    return setUserRole(userId, pendingRole);
   },
 
   loginWithGoogle: async () => {

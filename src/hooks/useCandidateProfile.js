@@ -3,9 +3,28 @@ import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { profileService } from '../services/profile.service';
 import { storageService } from '../services/storage.service';
+import { jobMatchesService } from '../services/jobMatches.service';
 import { cvPath, avatarPath } from '../constants/storage';
 import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
+import { reportError } from '../utils/logger';
+
+function friendlyProfileError(error) {
+  if (!error) return null;
+  const message = error.message?.toLowerCase?.() || '';
+
+  if (message.includes('violates row-level security')) {
+    return { ...error, message: 'No tienes permisos para modificar este dato.' };
+  }
+  if (message.includes('duplicate key')) {
+    return { ...error, message: 'Ese dato ya existe en tu perfil.' };
+  }
+  if (message.includes('storage') || message.includes('bucket')) {
+    return { ...error, message: 'No se pudo subir el archivo. Inténtalo de nuevo.' };
+  }
+
+  return { ...error, message: 'No se pudo guardar el cambio. Inténtalo de nuevo.' };
+}
 
 export function useCandidateProfile() {
   const { user } = useAuth();
@@ -13,13 +32,22 @@ export function useCandidateProfile() {
 
   const userId = user?.id;
 
+  const afterCandidateProfileChanged = useCallback(async () => {
+    await refetch();
+    if (userId) {
+      jobMatchesService.recalculateForCandidate(userId).catch((recalcError) => {
+        reportError(recalcError, { area: 'candidate_match_recalculation', userId });
+      });
+    }
+  }, [refetch, userId]);
+
   const updateBasicInfo = useCallback(
     async (data) => {
       const { error: saveError } = await profileService.updateCandidateProfile(userId, data);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [userId, refetch],
+    [afterCandidateProfileChanged, userId],
   );
 
   const uploadAvatar = useCallback(
@@ -39,7 +67,7 @@ export function useCandidateProfile() {
         compressed,
         profile?.avatar_path,
       );
-      if (uploadError) return { error: uploadError };
+      if (uploadError) return { error: friendlyProfileError(uploadError) };
 
       return updateBasicInfo({ avatar_path: avatarPath(userId) });
     },
@@ -56,7 +84,7 @@ export function useCandidateProfile() {
         file,
         profile?.cv_path,
       );
-      if (uploadError) return { error: uploadError };
+      if (uploadError) return { error: friendlyProfileError(uploadError) };
 
       return updateBasicInfo({
         cv_path: cvPath(userId),
@@ -76,145 +104,145 @@ export function useCandidateProfile() {
   const addExperience = useCallback(
     async (data) => {
       const { error: saveError } = await profileService.addExperience({ ...data, user_id: userId });
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [userId, refetch],
+    [afterCandidateProfileChanged, userId],
   );
 
   const updateExperience = useCallback(
     async (id, data) => {
       const { error: saveError } = await profileService.updateExperience(id, data);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const deleteExperience = useCallback(
     async (id) => {
       const { error: saveError } = await profileService.deleteExperience(id);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const addEducation = useCallback(
     async (data) => {
       const { error: saveError } = await profileService.addEducation({ ...data, user_id: userId });
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [userId, refetch],
+    [afterCandidateProfileChanged, userId],
   );
 
   const updateEducation = useCallback(
     async (id, data) => {
       const { error: saveError } = await profileService.updateEducation(id, data);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const deleteEducation = useCallback(
     async (id) => {
       const { error: saveError } = await profileService.deleteEducation(id);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const addCertification = useCallback(
     async (data) => {
       const { error: saveError } = await profileService.addCertification({ ...data, user_id: userId });
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [userId, refetch],
+    [afterCandidateProfileChanged, userId],
   );
 
   const updateCertification = useCallback(
     async (id, data) => {
       const { error: saveError } = await profileService.updateCertification(id, data);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const deleteCertification = useCallback(
     async (id) => {
       const { error: saveError } = await profileService.deleteCertification(id);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const addSkill = useCallback(
     async (name) => {
       const { error: saveError } = await profileService.addSkill({ user_id: userId, name });
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [userId, refetch],
+    [afterCandidateProfileChanged, userId],
   );
 
   const deleteSkill = useCallback(
     async (id) => {
       const { error: saveError } = await profileService.deleteSkill(id);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const addService = useCallback(
     async (name) => {
       const { error: saveError } = await profileService.addService({ user_id: userId, name });
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [userId, refetch],
+    [afterCandidateProfileChanged, userId],
   );
 
   const deleteService = useCallback(
     async (id) => {
       const { error: saveError } = await profileService.deleteService(id);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const addLanguage = useCallback(
     async (data) => {
       const { error: saveError } = await profileService.addLanguage({ ...data, user_id: userId });
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [userId, refetch],
+    [afterCandidateProfileChanged, userId],
   );
 
   const updateLanguage = useCallback(
     async (id, data) => {
       const { error: saveError } = await profileService.updateLanguage(id, data);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   const deleteLanguage = useCallback(
     async (id) => {
       const { error: saveError } = await profileService.deleteLanguage(id);
-      if (!saveError) await refetch();
-      return { error: saveError };
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
     },
-    [refetch],
+    [afterCandidateProfileChanged],
   );
 
   return {

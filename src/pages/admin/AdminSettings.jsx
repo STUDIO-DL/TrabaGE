@@ -5,6 +5,7 @@ import Input from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 const DEFAULTS = {
   platform_name: 'TrabaGE',
@@ -22,7 +23,7 @@ export default function AdminSettings() {
     const load = async () => {
       setLoading(true);
       const { data, error } = await adminService.getPlatformSettings();
-      if (error) showToast(error.message, 'error');
+      if (error) showToast(getSupabaseErrorMessage(error), 'error');
       if (data) {
         setSettings({
           platform_name: data.platform_name ?? DEFAULTS.platform_name,
@@ -41,7 +42,7 @@ export default function AdminSettings() {
     const { error } = await adminService.updatePlatformSettings(settings);
     setSaving(false);
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
     showToast('Configuración guardada', 'success');

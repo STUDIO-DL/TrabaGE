@@ -18,6 +18,9 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public
 
 -- candidate_profiles: explicit write policies with WITH CHECK for INSERT/upsert
 DROP POLICY IF EXISTS "Own candidate write" ON candidate_profiles;
+DROP POLICY IF EXISTS "Own candidate insert" ON candidate_profiles;
+DROP POLICY IF EXISTS "Own candidate update" ON candidate_profiles;
+DROP POLICY IF EXISTS "Own candidate delete" ON candidate_profiles;
 
 CREATE POLICY "Own candidate insert" ON candidate_profiles
   FOR INSERT TO authenticated
@@ -34,6 +37,9 @@ CREATE POLICY "Own candidate delete" ON candidate_profiles
 
 -- company_profiles
 DROP POLICY IF EXISTS "Own company write" ON company_profiles;
+DROP POLICY IF EXISTS "Own company insert" ON company_profiles;
+DROP POLICY IF EXISTS "Own company update" ON company_profiles;
+DROP POLICY IF EXISTS "Own company delete" ON company_profiles;
 
 CREATE POLICY "Own company insert" ON company_profiles
   FOR INSERT TO authenticated

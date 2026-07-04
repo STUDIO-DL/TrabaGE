@@ -35,39 +35,26 @@ BEGIN
   NEW.fts :=
     setweight(to_tsvector('spanish', coalesce(NEW.title, '')), 'A') ||
     setweight(to_tsvector('spanish', coalesce(NEW.description, '')), 'B') ||
-    setweight(to_tsvector('spanish', coalesce(NEW.tags, '')), 'A');
+    setweight(to_tsvector('spanish', coalesce(NEW.requirements, '')), 'B') ||
+    setweight(to_tsvector('spanish', coalesce(NEW.city, '')), 'C') ||
+    setweight(to_tsvector('spanish', coalesce(NEW.job_type, '')), 'C');
   RETURN NEW;
 END;
 $$;
 
--- For candidate_profiles (includes related tables)
+-- For candidate_profiles.
+-- Related subtables are added to the final version after migration 036 standardizes
+-- their FK column from candidate_id to user_id.
 CREATE OR REPLACE FUNCTION public.update_candidate_profiles_fts()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
-DECLARE
-  skills_text TEXT;
-  experience_text TEXT;
 BEGIN
-  -- Aggregate skills
-  SELECT string_agg(s.name, ' ')
-  INTO skills_text
-  FROM public.skills s
-  WHERE s.user_id = NEW.user_id;
-
-  -- Aggregate experience
-  SELECT string_agg(e.position || ' ' || e.description, ' ')
-  INTO experience_text
-  FROM public.experience e
-  WHERE e.user_id = NEW.user_id;
-
   NEW.fts :=
     setweight(to_tsvector('spanish', coalesce(NEW.full_name, '')), 'A') ||
     setweight(to_tsvector('spanish', coalesce(NEW.headline, '')), 'B') ||
     setweight(to_tsvector('spanish', coalesce(NEW.about, '')), 'C') ||
-    setweight(to_tsvector('spanish', coalesce(NEW.city, '')), 'B') ||
-    setweight(to_tsvector('spanish', coalesce(skills_text, '')), 'A') ||
-    setweight(to_tsvector('spanish', coalesce(experience_text, '')), 'B');
+    setweight(to_tsvector('spanish', coalesce(NEW.city, '')), 'B');
   RETURN NEW;
 END;
 $$;

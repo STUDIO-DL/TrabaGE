@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
@@ -8,15 +8,13 @@ import Textarea from '../../components/ui/Textarea';
 import Select from '../../components/ui/Select';
 import DynamicListInput from '../../components/ui/DynamicListInput';
 import Card from '../../components/ui/Card';
+import Spinner from '../../components/ui/Spinner';
 import { CITIES } from '../../constants/cities';
 import { JOB_TYPES } from '../../constants/jobTypes';
 import { WORK_MODES } from '../../constants/workModes';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
-import { notificationsService } from '../../services/notifications.service';
-import { jobRecommendationsService } from '../../services/jobRecommendations.service';
-import { FOLLOWS_TARGET } from '../../services/follows.service';
 import { companyService } from '../../services/company.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
@@ -47,8 +45,29 @@ function buildJobPayload(form, companyId, status) {
   };
 }
 
+function parseList(value) {
+  if (Array.isArray(value)) return value.length ? value : [''];
+  if (!value) return [''];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) && parsed.length ? parsed : [''];
+  } catch {
+    return String(value)
+      .split('\n')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+}
+
+function parseCustomQuestions(value) {
+  if (!value) return [''];
+  const list = Array.isArray(value) ? value : [];
+  return list.map((item) => item.question || item).filter(Boolean);
+}
+
 export default function PublishJob() {
   const navigate = useNavigate();
+  const { jobId } = useParams();
   const { user, isPreviewMode } = useAuth();
   const { showToast } = useNotificationContext();
   const [form, setForm] = useState({
@@ -65,9 +84,49 @@ export default function PublishJob() {
     customQuestions: [''],
   });
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(Boolean(jobId));
   const [error, setError] = useState('');
+  const [originalStatus, setOriginalStatus] = useState(null);
 
   const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  useEffect(() => {
+    if (!jobId) {
+      setInitialLoading(false);
+      return;
+    }
+
+    let mounted = true;
+    setInitialLoading(true);
+    jobsService.getJobById(jobId).then(({ data, error: loadError }) => {
+      if (!mounted) return;
+      if (loadError || !data || data.company_id !== user?.id) {
+        setError('No se pudo cargar esta oferta.');
+        setInitialLoading(false);
+        return;
+      }
+
+      setForm({
+        title: data.title || '',
+        description: data.description || '',
+        requirements: parseList(data.requirements),
+        benefits: parseList(data.benefits),
+        salary: data.salary || '',
+        salaryNegotiable: Boolean(data.salary_negotiable),
+        city: data.city || '',
+        job_type: data.job_type || '',
+        work_mode: data.work_mode || '',
+        application_deadline: data.application_deadline || '',
+        customQuestions: parseCustomQuestions(data.custom_questions),
+      });
+      setOriginalStatus(data.status);
+      setInitialLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [jobId, user?.id]);
 
   const saveJob = async (status) => {
     if (isPreviewMode) {
@@ -104,7 +163,9 @@ export default function PublishJob() {
     }
 
     const payload = buildJobPayload(form, user.id, status);
-    const { data: job, error: saveError } = await jobsService.createJob(payload);
+    const { data: job, error: saveError } = jobId
+      ? await jobsService.updateJob(jobId, payload)
+      : await jobsService.createJob(payload);
 
     if (saveError) {
       setError(saveError.message);
@@ -112,26 +173,19 @@ export default function PublishJob() {
       return;
     }
 
-    if (status === 'active' && job?.id) {
-      const companyName = companyProfile?.company_name?.trim() || 'Empresa';
-      const citySuffix = form.city ? ` - ${form.city}` : '';
-
-      await notificationsService.notifyFollowers({
-        targetType: FOLLOWS_TARGET.COMPANY,
-        targetId: user.id,
-        type: 'new_job',
-        title: `Nueva oferta de ${companyName}`,
-        message: `${form.title.trim()}${citySuffix}`,
-        link: `/candidate/jobs/${job.id}`,
-      });
-
-      jobRecommendationsService.processNewJob(job).catch((error) => {
-        console.warn('[TrabaGE] Job recommendations failed:', error?.message || error);
-      });
+    if (status === 'active' && job?.id && originalStatus !== 'active') {
+      await jobsService.notifyJobPublished(job);
     }
 
-    showToast(status === 'draft' ? 'Borrador guardado' : 'Empleo publicado', 'success');
-    navigate('/company/dashboard', { replace: true });
+    showToast(
+      jobId
+        ? 'Oferta actualizada'
+        : status === 'draft'
+          ? 'Borrador guardado'
+          : 'Empleo publicado',
+      'success',
+    );
+    navigate('/company/jobs', { replace: true });
   };
 
   const handleSubmit = (e) => {
@@ -139,9 +193,17 @@ export default function PublishJob() {
     saveJob('active');
   };
 
+  if (initialLoading) {
+    return (
+      <PageContainer title="Editar empleo" backButton bottomNav={false}>
+        <Spinner fullscreen />
+      </PageContainer>
+    );
+  }
+
   return (
     <FormPageLayout
-      title="Publicar empleo"
+      title={jobId ? 'Editar empleo' : 'Publicar empleo'}
       backButton
       footer={
         <>
@@ -155,10 +217,10 @@ export default function PublishJob() {
               onClick={() => saveJob('draft')}
               className="btn-secondary-mobile !rounded-btn-secondary !py-0"
             >
-              Guardar borrador
+            {jobId ? 'Guardar como borrador' : 'Guardar borrador'}
             </Button>
             <Button type="submit" form="publish-job-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
-              Publicar empleo
+              {jobId ? 'Guardar y publicar' : 'Publicar empleo'}
             </Button>
           </div>
         </>

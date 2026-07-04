@@ -115,7 +115,7 @@ export default function AccountTypeSelect() {
     // account type first. We then navigate them to choose the registration
     // method, carrying the selected account type in the location state.
     if (!user?.id) {
-      navigate('/register-method', { state: { accountType: selectedRole } });
+      navigate(`/register-method?type=${selectedRole}`, { state: { accountType: selectedRole } });
       return;
     }
 

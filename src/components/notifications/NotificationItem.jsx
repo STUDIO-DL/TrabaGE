@@ -1,9 +1,17 @@
 import UserProfileLink from '../common/UserProfileLink';
 import Badge from '../ui/Badge';
 import Card from '../ui/Card';
+import AppIcon from '../common/AppIcon';
+import { Trash2, ICON_SIZES } from '../../constants/icons';
 import { formatRelativeTime } from '../../utils/formatDate';
 
-export default function NotificationItem({ notification, onClick, actorAvatar, actorName }) {
+export default function NotificationItem({
+  notification,
+  onClick,
+  onDelete,
+  actorAvatar,
+  actorName,
+}) {
   const avatarSrc = actorAvatar ?? notification.metadata?.avatar_url;
   const avatarAlt = actorName ?? notification.metadata?.actor_name ?? notification.title;
   const actorId = notification.metadata?.actor_id;
@@ -34,6 +42,19 @@ export default function NotificationItem({ notification, onClick, actorAvatar, a
             <div className="flex shrink-0 flex-col items-end gap-1">
               <span className="text-xs text-gray-400">{formatRelativeTime(notification.created_at)}</span>
               {!notification.read && <Badge variant="pending" label="Nuevo" />}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDelete(notification);
+                  }}
+                  className="rounded-md p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                  aria-label="Eliminar notificación"
+                >
+                  <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
+                </button>
+              )}
             </div>
           </div>
         </div>

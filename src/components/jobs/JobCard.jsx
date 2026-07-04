@@ -22,7 +22,14 @@ function getAccent(index = 0) {
   return JOB_CARD_ACCENTS[index % JOB_CARD_ACCENTS.length];
 }
 
-export default function JobCard({ job, accentIndex = 0, saved = false, onSaveToggle, matchScore }) {
+export default function JobCard({
+  job,
+  accentIndex = 0,
+  saved = false,
+  onSaveToggle,
+  saving = false,
+  matchScore,
+}) {
   if (!job) return null;
 
   const company = job.company_profiles;
@@ -47,8 +54,10 @@ export default function JobCard({ job, accentIndex = 0, saved = false, onSaveTog
           <button
             type="button"
             onClick={onSaveToggle}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600"
+            disabled={!onSaveToggle || saving}
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}
+            aria-pressed={saved}
           >
             <AppIcon
               icon={Bookmark}

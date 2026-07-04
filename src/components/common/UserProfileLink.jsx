@@ -20,9 +20,10 @@ export default function UserProfileLink({
   className = '',
   nameClassName = 'font-semibold text-gray-900 hover:text-primary-700 transition-colors',
   stopPropagation = false,
+  path: explicitPath,
   children,
 }) {
-  const path = getUserProfilePath(userId, userType);
+  const path = explicitPath || getUserProfilePath(userId, userType);
 
   const handleClick = (event) => {
     if (stopPropagation) event.stopPropagation();

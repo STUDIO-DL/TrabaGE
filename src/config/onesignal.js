@@ -1,6 +1,7 @@
 import OneSignal from 'react-onesignal';
 import { profileService } from '../services/profile.service';
 import { readViteEnv } from './env';
+import { reportError } from '../utils/logger';
 
 let initPromise = null;
 let initialized = false;
@@ -18,7 +19,7 @@ async function persistOneSignalPlayerId(userId) {
 
     await profileService.updateOneSignalPlayerId(userId, String(subscriptionId));
   } catch (error) {
-    console.warn('[TrabaGE] OneSignal player id sync failed:', error?.message || error);
+    reportError(error, { area: 'onesignal_player_sync', userId });
   }
 }
 
@@ -36,6 +37,9 @@ export const initOneSignal = async () => {
       await OneSignal.init({
         appId,
         safari_web_id: readViteEnv(import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID) || undefined,
+        serviceWorkerPath: '/OneSignalSDKWorker.js',
+        serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
+        serviceWorkerParam: { scope: '/' },
         notifyButton: { enable: false },
         allowLocalhostAsSecureOrigin: import.meta.env.DEV,
         promptOptions: {
@@ -61,7 +65,7 @@ export const initOneSignal = async () => {
       });
       initialized = true;
     } catch (error) {
-      console.warn('[TrabaGE] OneSignal init failed:', error?.message || error);
+      reportError(error, { area: 'onesignal_init' });
     }
   })();
 
@@ -99,7 +103,7 @@ export const requestNotificationPermission = async () => {
     if (granted) await syncOnGrant();
     return granted;
   } catch (error) {
-    console.warn('[TrabaGE] Notification permission failed:', error?.message || error);
+    reportError(error, { area: 'onesignal_permission' });
     return false;
   }
 };
@@ -112,7 +116,7 @@ export const setOneSignalUserId = async (userId) => {
     await OneSignal.login(userId);
     await persistOneSignalPlayerId(userId);
   } catch (error) {
-    console.warn('[TrabaGE] OneSignal login failed:', error?.message || error);
+    reportError(error, { area: 'onesignal_login', userId });
   }
 };
 
@@ -123,6 +127,6 @@ export const clearOneSignalUserId = async () => {
   try {
     await OneSignal.logout();
   } catch (error) {
-    console.warn('[TrabaGE] OneSignal logout failed:', error?.message || error);
+    reportError(error, { area: 'onesignal_logout' });
   }
 };

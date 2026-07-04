@@ -6,14 +6,37 @@
 -- =============================================
 
 -- Rename `candidate_id` to `user_id` in all relevant tables.
--- This is an atomic operation and preserves data and constraints.
-
-ALTER TABLE public.education RENAME COLUMN candidate_id TO user_id;
-ALTER TABLE public.experience RENAME COLUMN candidate_id TO user_id;
-ALTER TABLE public.certifications RENAME COLUMN candidate_id TO user_id;
-ALTER TABLE public.skills RENAME COLUMN candidate_id TO user_id;
-ALTER TABLE public.services RENAME COLUMN candidate_id TO user_id;
-ALTER TABLE public.languages RENAME COLUMN candidate_id TO user_id;
+-- Guard each rename so repaired/partially migrated databases can replay safely.
+DO $$
+DECLARE
+  v_table_name TEXT;
+BEGIN
+  FOREACH v_table_name IN ARRAY ARRAY[
+    'education',
+    'experience',
+    'certifications',
+    'skills',
+    'services',
+    'languages'
+  ]
+  LOOP
+    IF EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = v_table_name
+        AND column_name = 'candidate_id'
+    ) AND NOT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = v_table_name
+        AND column_name = 'user_id'
+    ) THEN
+      EXECUTE format('ALTER TABLE public.%I RENAME COLUMN candidate_id TO user_id', v_table_name);
+    END IF;
+  END LOOP;
+END $$;
 
 -- Now that the column is renamed to `user_id`, update the RLS policies
 -- that were created in migration 031 to use the new, correct column name.

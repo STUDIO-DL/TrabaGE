@@ -1,10 +1,8 @@
 import { ErrorBoundary } from 'react-error-boundary';
 import { AlertTriangle, RotateCw, Home } from 'lucide-react';
+import { reportError } from '../../utils/logger';
 
-function ErrorFallback({ error, resetErrorBoundary }) {
-  // En un entorno de producción, registraríamos este error en un servicio como Sentry.
-  console.error(error);
-
+function ErrorFallback({ resetErrorBoundary }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-slate-50 p-4 text-center">
       <AlertTriangle className="h-12 w-12 text-red-500" />
@@ -34,5 +32,12 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 }
 
 export default function GlobalErrorBoundary({ children }) {
-  return <ErrorBoundary FallbackComponent={ErrorFallback}>{children}</ErrorBoundary>;
+  return (
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onError={(error) => reportError(error, { area: 'global_error_boundary' })}
+    >
+      {children}
+    </ErrorBoundary>
+  );
 }

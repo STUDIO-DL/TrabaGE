@@ -11,6 +11,7 @@ import { useNotificationContext } from '../context/NotificationContext';
 import { GUEST_MODE_MESSAGE } from '../utils/guestMode';
 import { compressPostImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
+import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 
 export function useCreatePost() {
   const { user, isPreviewMode, role } = useAuth();
@@ -40,7 +41,7 @@ export function useCreatePost() {
     });
 
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error, 'No se pudo crear la publicación.'), 'error');
       setLoading(false);
       return { ok: false };
     }

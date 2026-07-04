@@ -4,9 +4,13 @@ export const EMPTY_JOB_PREFERENCES = {
   preferred_job_types: [],
   preferred_sectors: [],
   preferred_categories: [],
+  preferred_work_modes: [],
   keywords: [],
   experience_level: null,
   availability: null,
+  expected_salary: null,
+  education_level: null,
+  languages: [],
 };
 
 export function normalizeJobPreferences(raw) {
@@ -32,11 +36,19 @@ export function normalizeJobPreferences(raw) {
     preferred_job_types: Array.isArray(raw.preferred_job_types)
       ? raw.preferred_job_types.filter(Boolean)
       : [],
+    preferred_work_modes: Array.isArray(raw.preferred_work_modes)
+      ? raw.preferred_work_modes.filter(Boolean)
+      : Array.isArray(raw.work_modes)
+        ? raw.work_modes.filter(Boolean)
+        : [],
     preferred_sectors: preferredCategories,
     preferred_categories: preferredCategories,
     keywords: Array.isArray(raw.keywords) ? raw.keywords.filter(Boolean) : [],
     experience_level: raw.experience_level || null,
     availability: raw.availability || null,
+    expected_salary: raw.expected_salary ?? raw.salary_expected ?? null,
+    education_level: raw.education_level || null,
+    languages: Array.isArray(raw.languages) ? raw.languages.filter(Boolean) : [],
   };
 }
 
@@ -45,10 +57,14 @@ export function hasJobPreferences(raw) {
   return (
     prefs.preferred_locations.length > 0 ||
     prefs.preferred_job_types.length > 0 ||
+    prefs.preferred_work_modes.length > 0 ||
     prefs.preferred_categories.length > 0 ||
     prefs.keywords.length > 0 ||
     Boolean(prefs.experience_level) ||
-    Boolean(prefs.availability)
+    Boolean(prefs.availability) ||
+    Boolean(prefs.expected_salary) ||
+    Boolean(prefs.education_level) ||
+    prefs.languages.length > 0
   );
 }
 
@@ -60,8 +76,12 @@ export function serializeJobPreferences(prefs) {
     preferred_categories: normalized.preferred_categories,
     preferred_sectors: normalized.preferred_categories,
     preferred_job_types: normalized.preferred_job_types,
+    preferred_work_modes: normalized.preferred_work_modes,
     keywords: normalized.keywords,
     experience_level: normalized.experience_level,
     availability: normalized.availability,
+    expected_salary: normalized.expected_salary,
+    education_level: normalized.education_level,
+    languages: normalized.languages,
   };
 }

@@ -21,19 +21,19 @@ function mapLegacyStatus(verifiedStatus) {
 
 export const VERIFICATION_BUCKET = 'company-verifications';
 
-export const VERIFICATION_ACCEPT = '.pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg';
+export const VERIFICATION_ACCEPT = '.pdf,application/pdf';
 
 export const VERIFICATION_MAX_BYTES = 5 * 1024 * 1024;
 
 export function validateVerificationFile(file) {
   if (!file) return { valid: false, error: 'Selecciona un archivo.' };
 
-  const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg'];
-  const allowedExtensions = ['.pdf', '.png', '.jpg', '.jpeg'];
+  const allowedTypes = ['application/pdf'];
+  const allowedExtensions = ['.pdf'];
   const extension = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
 
   if (!allowedTypes.includes(file.type) && !allowedExtensions.includes(extension)) {
-    return { valid: false, error: 'Formato no válido. Usa PDF, PNG, JPG o JPEG.' };
+    return { valid: false, error: 'Solo se permiten documentos PDF.' };
   }
 
   if (file.size > VERIFICATION_MAX_BYTES) {

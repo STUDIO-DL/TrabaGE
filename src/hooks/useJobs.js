@@ -13,7 +13,7 @@ export function useJobs(filters = {}) {
     setJobs(data ?? []);
     setError(fetchError?.message ?? null);
     setLoading(false);
-  }, [filters.city, filters.jobType]);
+  }, [filters]);
 
   useEffect(() => {
     fetchJobs();

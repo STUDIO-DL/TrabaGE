@@ -7,6 +7,7 @@ import Input from '../../components/ui/Input';
 import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
+import { mapAuthError } from '../../utils/errors';
 
 export default function SetPassword() {
   const navigate = useNavigate();
@@ -26,8 +27,13 @@ export default function SetPassword() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (password.length < 6) {
-      setError('La contrasena debe tener al menos 6 caracteres.');
+    if (password.length < 10) {
+      setError('La contrasena debe tener al menos 10 caracteres.');
+      return;
+    }
+
+    if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/\d/.test(password)) {
+      setError('Usa mayusculas, minusculas y numeros para una contrasena mas segura.');
       return;
     }
 
@@ -41,7 +47,7 @@ export default function SetPassword() {
 
     const { error: passwordError } = await authService.setPassword(password);
     if (passwordError) {
-      setError(passwordError.message || 'No se pudo guardar la contrasena.');
+      setError(mapAuthError(passwordError) || 'No se pudo guardar la contrasena.');
       setLoading(false);
       return;
     }
@@ -56,9 +62,9 @@ export default function SetPassword() {
           <div className="mb-sm flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-600">
             <Lock className="h-6 w-6" aria-hidden />
           </div>
-          <h1 className="text-heading-m font-bold text-gray-900">Crea tu contrasena</h1>
+          <h1 className="text-heading-m font-bold text-gray-900">Actualiza tu contrasena</h1>
           <p className="mt-xs text-small text-gray-500">
-            Para completar el registro con Google, crea una contrasena para tu cuenta de TrabaGE.
+            Define una contrasena segura para proteger tu cuenta de TrabaGE.
           </p>
         </div>
       }

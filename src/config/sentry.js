@@ -20,7 +20,7 @@ export const initSentry = () => {
 
 export const setSentryUser = (user) => {
   if (!user) return;
-  Sentry.setUser({ id: user.id, email: user.email });
+  Sentry.setUser({ id: user.id });
 };
 
 export const clearSentryUser = () => {

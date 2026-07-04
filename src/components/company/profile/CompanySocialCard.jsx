@@ -3,8 +3,20 @@ import Button from '../../ui/Button';
 import { premiumCardClass } from './companyProfileStyles';
 import SectionTitle from './SectionTitle';
 
-function SocialIcon({ children, label, active = false }) {
-  return (
+function safeSocialHref(href) {
+  if (!href) return null;
+  try {
+    const url = new URL(String(href).trim());
+    return url.protocol === 'https:' ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function SocialIcon({ children, label, href }) {
+  const safeHref = safeSocialHref(href);
+  const active = Boolean(safeHref);
+  const content = (
     <span
       className={[
         'flex h-10 w-10 items-center justify-center rounded-xl transition-colors',
@@ -16,6 +28,14 @@ function SocialIcon({ children, label, active = false }) {
     >
       {children}
     </span>
+  );
+
+  if (!safeHref) return content;
+
+  return (
+    <a href={safeHref} target="_blank" rel="noopener noreferrer" aria-label={label}>
+      {content}
+    </a>
   );
 }
 
@@ -59,7 +79,10 @@ function YoutubeIcon({ className }) {
   );
 }
 
-export default function CompanySocialCard({ readOnly = false, onAddSocial }) {
+export default function CompanySocialCard({ profile, readOnly = false, onAddSocial }) {
+  const links = profile?.social_links ?? {};
+  const hasLinks = Object.values(links).some(Boolean);
+
   return (
     <Card padding="lg" shadow={false} className={premiumCardClass}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -80,25 +103,25 @@ export default function CompanySocialCard({ readOnly = false, onAddSocial }) {
               + Agregar redes sociales
             </Button>
           )}
-          {readOnly && (
+          {readOnly && !hasLinks && (
             <p className="mt-3 text-sm text-gray-400">No hay redes sociales configuradas.</p>
           )}
         </div>
 
         <div className="flex flex-wrap gap-2 sm:max-w-[220px] sm:justify-end">
-          <SocialIcon label="LinkedIn">
+          <SocialIcon label="LinkedIn" href={links.linkedin}>
             <LinkedinIcon className="h-5 w-5" />
           </SocialIcon>
-          <SocialIcon label="Facebook">
+          <SocialIcon label="Facebook" href={links.facebook}>
             <FacebookIcon className="h-5 w-5" />
           </SocialIcon>
-          <SocialIcon label="Instagram">
+          <SocialIcon label="Instagram" href={links.instagram}>
             <InstagramIcon className="h-5 w-5" />
           </SocialIcon>
-          <SocialIcon label="X">
+          <SocialIcon label="X" href={links.x}>
             <XIcon className="h-5 w-5" />
           </SocialIcon>
-          <SocialIcon label="YouTube">
+          <SocialIcon label="YouTube" href={links.youtube}>
             <YoutubeIcon className="h-5 w-5" />
           </SocialIcon>
         </div>

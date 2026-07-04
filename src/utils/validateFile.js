@@ -15,7 +15,7 @@ const ALLOWED_TYPES = {
   logo: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
   postImage: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
   image: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
-  verification: ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'],
+  verification: ['application/pdf'],
 };
 
 export const FILE_HINTS = {
@@ -25,7 +25,7 @@ export const FILE_HINTS = {
   logo: 'Max 2 MB',
   postImage: 'Max 3 MB',
   image: 'Max 3 MB',
-  verification: 'PDF, PNG, JPG • Max 5 MB',
+  verification: 'PDF • Max 5 MB',
 };
 
 const TYPE_ALIASES = {
@@ -44,7 +44,7 @@ export const validateFile = (file, type = 'document') => {
       return { valid: false, error: 'Solo se permiten archivos PDF.' };
     }
     if (resolvedType === 'verification') {
-      return { valid: false, error: 'Formato no válido. Usa PDF, PNG, JPG o JPEG.' };
+      return { valid: false, error: 'Solo se permiten documentos PDF.' };
     }
     return { valid: false, error: 'Tipo de archivo no permitido.' };
   }

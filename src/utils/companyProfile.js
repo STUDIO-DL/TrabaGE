@@ -1,6 +1,8 @@
 export const COMPANY_INFO_ROWS = [
   { key: 'company_type', label: 'Tipo de empresa' },
   { key: 'sector', label: 'Sector' },
+  { key: 'address', label: 'Dirección' },
+  { key: 'country', label: 'País' },
   { key: 'company_size', label: 'Tamaño' },
   { key: 'founded_year', label: 'Fundación' },
   { key: 'website', label: 'Sitio web' },
@@ -9,6 +11,8 @@ export const COMPANY_INFO_ROWS = [
 export const COMPANY_DETAIL_ROWS = [
   { key: 'sector', label: 'Sector' },
   { key: 'city', label: 'Ubicación' },
+  { key: 'country', label: 'País' },
+  { key: 'address', label: 'Dirección' },
   { key: 'company_size', label: 'Tamaño' },
   { key: 'founded_year', label: 'Fundada en' },
   { key: 'website', label: 'Sitio web' },
@@ -33,7 +37,9 @@ export function getCompanySectorText(profile) {
 
 export function getCompanyLocationText(profile) {
   const city = profile?.city?.trim();
-  return city || 'Ubicación no especificada';
+  const country = profile?.country?.trim();
+  const parts = [city, country].filter(Boolean);
+  return parts.length ? parts.join(', ') : 'Ubicación no especificada';
 }
 
 export function hasCompanyDescription(profile) {

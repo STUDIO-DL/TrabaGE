@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import { applicationsService } from '../services/applications.service';
 import { ROLES } from '../constants/roles';
 import { getPreviewApplications } from '../constants/preview';
+import { supabase } from '../config/supabase';
 
 export function useApplications() {
   const { user, role, isPreviewMode } = useAuth();
@@ -35,6 +36,28 @@ export function useApplications() {
   useEffect(() => {
     fetchApplications();
   }, [fetchApplications]);
+
+  useEffect(() => {
+    if (!user?.id || isPreviewMode) return undefined;
+
+    const changesConfig = {
+      event: '*',
+      schema: 'public',
+      table: 'applications',
+      ...(role === ROLES.CANDIDATE ? { filter: `candidate_id=eq.${user.id}` } : {}),
+    };
+
+    const channel = supabase
+      .channel(`applications-${role}-${user.id}`)
+      .on('postgres_changes', changesConfig, () => {
+        fetchApplications();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchApplications, isPreviewMode, role, user?.id]);
 
   return { applications, loading, error, refetch: fetchApplications };
 }

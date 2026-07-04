@@ -27,16 +27,26 @@ export default function AuthCallback() {
       const queryParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
       const oauthError = queryParams.get('error_description') || hashParams.get('error_description');
+      const isPasswordRecovery =
+        queryParams.get('type') === 'recovery' || hashParams.get('type') === 'recovery';
       if (oauthError) {
         setError(mapAuthError({ message: decodeURIComponent(oauthError.replace(/\+/g, ' ')) }));
         return;
       }
 
-      const redirectFromSession = async (session) => {
+      const redirectFromSession = async (session, event = null) => {
         if (!session?.user?.id || cancelled || resolved) return false;
         // Claim the resolution up front so the onAuthStateChange handler and
         // the polling loop can't both run resolvePostAuthRedirect / navigate.
         resolved = true;
+
+        if (isPasswordRecovery || event === 'PASSWORD_RECOVERY') {
+          await refreshAuthState();
+          if (cancelled) return true;
+          navigate('/auth/set-password', { replace: true });
+          return true;
+        }
+
         const { data: accountTypeResult, error: accountTypeError } =
           await authService.applyPendingAccountType(session.user);
 
@@ -65,10 +75,10 @@ export default function AuthCallback() {
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'PASSWORD_RECOVERY') {
           // Defer Supabase calls to avoid auth client deadlock with AuthContext.
           setTimeout(() => {
-            void redirectFromSession(session);
+            void redirectFromSession(session, event);
           }, 0);
         }
       });

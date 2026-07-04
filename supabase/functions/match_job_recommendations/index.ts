@@ -1,12 +1,26 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ?? 'https://trabage.org',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Vary': 'Origin',
+};
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  });
+}
+
 const SCORE_WEIGHTS = {
-  category: 35,
-  location: 25,
-  jobType: 15,
-  experience: 15,
-  keywords: 10,
+  skills: 40,
+  experience: 20,
+  location: 15,
+  workMode: 10,
+  preferences: 10,
+  recentActivity: 5,
 };
 
 const MATCH_THRESHOLD = 70;
@@ -53,11 +67,58 @@ function normalizeJobPreferences(raw: Record<string, unknown> | null | undefined
 
   return {
     preferred_locations: preferredLocations as string[],
-    preferred_job_types: Array.isArray(raw?.preferred_job_types) ? raw!.preferred_job_types.filter(Boolean) : [],
+    preferred_job_types: Array.isArray(raw?.preferred_job_types) ? raw!.preferred_job_types.filter(Boolean) as string[] : [],
+    preferred_work_modes: Array.isArray(raw?.preferred_work_modes)
+      ? raw!.preferred_work_modes.filter(Boolean) as string[]
+      : Array.isArray(raw?.work_modes)
+        ? raw!.work_modes.filter(Boolean) as string[]
+        : [],
     preferred_categories: preferredCategories as string[],
-    keywords: Array.isArray(raw?.keywords) ? raw!.keywords.filter(Boolean) : [],
+    keywords: Array.isArray(raw?.keywords) ? raw!.keywords.filter(Boolean) as string[] : [],
     experience_level: (raw?.experience_level as string) || null,
+    availability: (raw?.availability as string) || null,
+    expected_salary: raw?.expected_salary ?? raw?.salary_expected ?? null,
+    education_level: (raw?.education_level as string) || null,
+    languages: Array.isArray(raw?.languages) ? raw!.languages.filter(Boolean) as string[] : [],
   };
+}
+
+function normalizeText(value: unknown) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function asList(value: unknown): string[] {
+  if (!value) return [];
+  return Array.isArray(value) ? value.filter(Boolean).map(String) : [String(value)];
+}
+
+function extractSalaryNumber(value: unknown) {
+  if (value == null) return null;
+  const numbers = String(value)
+    .match(/\d[\d.,]*/g)
+    ?.map((item) => Number(item.replace(/[.,](?=\d{3}\b)/g, '').replace(',', '.')))
+    .filter((item) => Number.isFinite(item));
+  return numbers?.length ? Math.max(...numbers) : null;
+}
+
+function inferEducationLevelFromText(value: unknown) {
+  const text = normalizeText(value);
+  if (!text) return null;
+  if (/(master|maestr|posgrado|postgrado|mba)/.test(text)) return 'master';
+  if (/(licenci|grado|universit|ingenier|bachelor)/.test(text)) return 'degree';
+  if (/(tecnico|técnico|fp|formacion profesional)/.test(text)) return 'technical';
+  if (/(bachiller|secundaria)/.test(text)) return 'secondary';
+  return null;
+}
+
+function educationMeetsRequirement(userLevel: string | null, requiredLevel: string | null) {
+  if (!userLevel || !requiredLevel) return false;
+  const order = ['secondary', 'technical', 'degree', 'master'];
+  return order.indexOf(userLevel) >= order.indexOf(requiredLevel);
 }
 
 function buildJobHaystack(job: Record<string, unknown>, company: Record<string, unknown> | null) {
@@ -101,96 +162,260 @@ function extractUserKeywords(candidate: Record<string, unknown>) {
   const prefs = normalizeJobPreferences(candidate.job_preferences as Record<string, unknown>);
   const skills = ((candidate.skills as Array<{ name: string }>) ?? []).map((item) => item.name);
   const experience = ((candidate.experience as Array<{ position: string }>) ?? []).map((item) => item.position);
-  return [...new Set(tokenize([candidate.headline, candidate.about, ...skills, ...experience, ...prefs.keywords].join(' ')))];
+  const education = ((candidate.education as Array<Record<string, string>>) ?? [])
+    .map((item) => [item.degree, item.field, item.program, item.grade, item.institution].filter(Boolean).join(' '));
+  const languages = ((candidate.languages as Array<{ language: string }>) ?? []).map((item) => item.language);
+  return [...new Set(tokenize([candidate.headline, candidate.about, ...skills, ...experience, ...education, ...languages, ...prefs.keywords].join(' ')))];
 }
 
 function extractJobKeywords(job: Record<string, unknown>, company: Record<string, unknown> | null) {
   const requirements = parseRequirements(job.requirements);
-  return [...new Set(tokenize([job.title, job.description, requirements.join(' '), company?.sector].join(' ')))];
+  return [...new Set(tokenize([
+    job.title,
+    job.description,
+    asList(job.required_skills).join(' '),
+    job.category,
+    job.sector,
+    job.education_level,
+    asList(job.required_languages).join(' '),
+    requirements.join(' '),
+    company?.sector,
+  ].join(' ')))];
 }
 
-function keywordOverlapScore(userKeywords: string[], jobKeywords: string[]) {
+function scoreRatio(matches: number, total: number, weight: number) {
+  if (!total) return 0;
+  return Math.round(Math.min(1, matches / total) * weight);
+}
+
+function skillScore(candidate: Record<string, unknown>, job: Record<string, unknown>, company: Record<string, unknown> | null) {
+  const userSkills = [...new Set(((candidate.skills as Array<{ name: string }>) ?? []).map((item) => item.name).flatMap(tokenize))];
+  const userKeywords = extractUserKeywords(candidate);
+  const requiredSkills = [...new Set([
+    ...asList(job.required_skills).flatMap(tokenize),
+    ...parseRequirements(job.requirements).flatMap(tokenize),
+    ...tokenize(String(job.title ?? '')),
+  ])];
+  const jobKeywords = requiredSkills.length ? requiredSkills : extractJobKeywords(job, company);
   if (!userKeywords.length || !jobKeywords.length) return 0;
+
   const jobSet = new Set(jobKeywords);
-  const matches = userKeywords.filter((keyword) => jobSet.has(keyword)).length;
-  const ratio = matches / Math.max(userKeywords.length, 1);
-  return Math.round(Math.min(1, ratio * 2) * SCORE_WEIGHTS.keywords);
+  const strongMatches = userSkills.filter((keyword) => jobSet.has(keyword)).length;
+  const keywordMatches = userKeywords.filter((keyword) => jobSet.has(keyword)).length;
+
+  if (requiredSkills.length) {
+    return scoreRatio(strongMatches * 1.5 + keywordMatches * 0.5, requiredSkills.length, SCORE_WEIGHTS.skills);
+  }
+  return scoreRatio(keywordMatches, Math.max(userKeywords.length, 1), SCORE_WEIGHTS.skills);
+}
+
+function experienceScore(candidate: Record<string, unknown>, job: Record<string, unknown>, company: Record<string, unknown> | null) {
+  const prefs = normalizeJobPreferences(candidate.job_preferences as Record<string, unknown>);
+  const userLevel = prefs.experience_level || inferExperienceLevelFromYears(candidate.years_experience as number | null);
+  const jobLevel = (job.experience_level as string) || inferJobExperienceLevel(job, company);
+  return experienceLevelsCompatible(userLevel, jobLevel) ? SCORE_WEIGHTS.experience : 0;
+}
+
+function locationScore(candidate: Record<string, unknown>, job: Record<string, unknown>, prefs: ReturnType<typeof normalizeJobPreferences>) {
+  const jobCity = normalizeText(job.city);
+  const jobCountry = normalizeText(job.country || (job.company_profiles as Record<string, unknown> | undefined)?.country);
+  const candidateCity = normalizeText(candidate.city);
+  const candidateCountry = normalizeText(candidate.country);
+  const preferredLocations = prefs.preferred_locations.map(normalizeText);
+
+  if (jobCity && (preferredLocations.includes(jobCity) || candidateCity === jobCity)) return SCORE_WEIGHTS.location;
+  if (jobCountry && candidateCountry && jobCountry === candidateCountry) return Math.round(SCORE_WEIGHTS.location * 0.6);
+  return 0;
+}
+
+function workModeScore(job: Record<string, unknown>, prefs: ReturnType<typeof normalizeJobPreferences>) {
+  let score = 0;
+  if (prefs.preferred_work_modes.includes(String(job.work_mode))) score += 6;
+  if (prefs.preferred_job_types.includes(String(job.job_type))) score += 4;
+  return Math.min(SCORE_WEIGHTS.workMode, score);
+}
+
+function preferenceScore(candidate: Record<string, unknown>, job: Record<string, unknown>, company: Record<string, unknown> | null, prefs: ReturnType<typeof normalizeJobPreferences>) {
+  let score = 0;
+  const sector = (job.sector || company?.sector) as string | undefined;
+  if (sector && prefs.preferred_categories.includes(sector)) score += 3;
+
+  const expectedSalary = extractSalaryNumber(prefs.expected_salary);
+  const jobSalary = extractSalaryNumber(job.salary);
+  if (job.salary_negotiable || (expectedSalary && jobSalary && jobSalary >= expectedSalary)) score += 2;
+
+  const candidateLanguages = new Set([
+    ...(((candidate.languages as Array<{ language: string }>) ?? []).map((item) => item.language)),
+    ...prefs.languages,
+  ].filter(Boolean).map(normalizeText));
+  const requiredLanguages = asList(job.required_languages).map(normalizeText);
+  if (requiredLanguages.length && requiredLanguages.some((language) => candidateLanguages.has(language))) score += 2;
+
+  const userEducationLevel = prefs.education_level || ((candidate.education as Array<Record<string, string>>) ?? [])
+    .map((item) => [item.degree, item.field, item.program, item.grade, item.institution].filter(Boolean).join(' '))
+    .map(inferEducationLevelFromText)
+    .find(Boolean) || null;
+  const requiredEducation = (job.education_level as string) || inferEducationLevelFromText(job.description);
+  if (educationMeetsRequirement(userEducationLevel, requiredEducation)) score += 2;
+  if (prefs.availability === 'immediate' && !job.application_deadline) score += 1;
+
+  return Math.min(SCORE_WEIGHTS.preferences, score);
+}
+
+function recentActivityScore(candidate: Record<string, unknown>, job: Record<string, unknown>, company: Record<string, unknown> | null) {
+  let score = 0;
+  const followed = (candidate.followed_company_ids as string[] | undefined) ?? [];
+  if (followed.includes(String(job.company_id))) score += 3;
+
+  const history = (candidate.application_history as Array<Record<string, unknown>> | undefined) ?? [];
+  const sector = (job.sector || company?.sector) as string | undefined;
+  const jobKeywords = extractJobKeywords(job, company);
+  const related = history.some((application) => {
+    const appliedSector = application.company_sector as string | undefined;
+    const appliedTitle = String(application.job_title ?? '');
+    return (sector && appliedSector === sector) || jobKeywords.some((keyword) => tokenize(appliedTitle).includes(keyword));
+  });
+  if (related) score += 2;
+
+  return Math.min(SCORE_WEIGHTS.recentActivity, score);
 }
 
 function calculateJobMatch(candidate: Record<string, unknown>, job: Record<string, unknown>, company: Record<string, unknown> | null) {
   const prefs = normalizeJobPreferences(candidate.job_preferences as Record<string, unknown>);
   let score = 0;
 
-  const sector = company?.sector as string | undefined;
-  if (prefs.preferred_categories.length && sector && prefs.preferred_categories.includes(sector)) {
-    score += SCORE_WEIGHTS.category;
-  }
-
-  if (prefs.preferred_locations.length && job.city && prefs.preferred_locations.includes(String(job.city))) {
-    score += SCORE_WEIGHTS.location;
-  }
-
-  if (prefs.preferred_job_types.length && job.job_type && prefs.preferred_job_types.includes(String(job.job_type))) {
-    score += SCORE_WEIGHTS.jobType;
-  }
-
-  const userLevel = prefs.experience_level || inferExperienceLevelFromYears(candidate.years_experience as number | null);
-  const jobLevel = inferJobExperienceLevel(job, company);
-  if (experienceLevelsCompatible(userLevel, jobLevel)) {
-    score += SCORE_WEIGHTS.experience;
-  }
-
-  score += keywordOverlapScore(extractUserKeywords(candidate), extractJobKeywords(job, company));
+  score += skillScore(candidate, job, company);
+  score += experienceScore(candidate, job, company);
+  score += locationScore(candidate, job, prefs);
+  score += workModeScore(job, prefs);
+  score += preferenceScore(candidate, job, company, prefs);
+  score += recentActivityScore(candidate, job, company);
   return Math.min(100, Math.max(0, score));
 }
 
 serve(async (req) => {
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+  const authHeader = req.headers.get('Authorization');
+
+  if (!supabaseUrl || !serviceKey || !anonKey) {
+    return jsonResponse({ error: 'Supabase no configurado' }, 500);
+  }
+
+  if (!authHeader) {
+    return jsonResponse({ error: 'No autorizado' }, 401);
+  }
+
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: authData, error: authError } = await userClient.auth.getUser();
+  const callerId = authData.user?.id;
+
+  if (authError || !callerId) {
+    return jsonResponse({ error: 'No autorizado' }, 403);
+  }
+
   const supabase = createClient(supabaseUrl, serviceKey);
 
   const { job_id: jobId } = await req.json();
   if (!jobId) {
-    return new Response(JSON.stringify({ error: 'job_id required' }), { status: 400 });
+    return jsonResponse({ error: 'job_id required' }, 400);
   }
 
   const { data: job, error: jobError } = await supabase
     .from('jobs')
-    .select('*, company_profiles(company_name, sector)')
+    .select('*, company_profiles(company_name, sector, country)')
     .eq('id', jobId)
     .single();
 
   if (jobError || !job) {
-    return new Response(JSON.stringify({ error: 'Job not found' }), { status: 404 });
+    return jsonResponse({ error: 'Job not found' }, 404);
+  }
+
+  if (job.company_id !== callerId) {
+    const { data: role } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', callerId)
+      .maybeSingle();
+
+    if (role?.role !== 'admin') {
+      return jsonResponse({ error: 'No autorizado' }, 403);
+    }
   }
 
   const { data: candidates, error: candidatesError } = await supabase
     .from('candidate_profiles')
-    .select('user_id, headline, about, years_experience, job_preferences, notification_frequency, onesignal_player_id, skills(name), experience(position)')
+    .select('user_id, headline, about, city, country, years_experience, job_preferences, notification_frequency, skills(name), experience(position), education(institution, program, grade), languages(language, level)')
     .eq('notifications_enabled', true)
     .eq('setup_complete', true);
 
   if (candidatesError) {
-    return new Response(JSON.stringify({ error: candidatesError.message }), { status: 500 });
+    return jsonResponse({ error: 'No se pudieron cargar candidatos elegibles' }, 500);
+  }
+
+  const candidateIds = (candidates ?? []).map((candidate) => candidate.user_id).filter(Boolean);
+  const [{ data: follows }, { data: applications }] = await Promise.all([
+    candidateIds.length
+      ? supabase
+          .from('follows')
+          .select('user_id, target_id')
+          .in('user_id', candidateIds)
+          .eq('target_type', 'company')
+      : Promise.resolve({ data: [] }),
+    candidateIds.length
+      ? supabase
+          .from('applications')
+          .select('candidate_id, jobs(title, company_profiles(sector))')
+          .in('candidate_id', candidateIds)
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  const followsByUser = new Map<string, string[]>();
+  for (const follow of follows ?? []) {
+    const current = followsByUser.get(follow.user_id) ?? [];
+    current.push(follow.target_id);
+    followsByUser.set(follow.user_id, current);
+  }
+
+  const applicationsByUser = new Map<string, Array<Record<string, unknown>>>();
+  for (const application of applications ?? []) {
+    const current = applicationsByUser.get(application.candidate_id) ?? [];
+    current.push({
+      job_title: application.jobs?.title,
+      company_sector: application.jobs?.company_profiles?.sector,
+    });
+    applicationsByUser.set(application.candidate_id, current);
   }
 
   const company = job.company_profiles as Record<string, unknown> | null;
   const matches = (candidates ?? [])
-    .map((candidate) => ({
-      user_id: candidate.user_id,
-      score: calculateJobMatch(candidate, job, company),
-      player_id: candidate.onesignal_player_id,
-    }))
+    .map((candidate) => {
+      const enrichedCandidate = {
+        ...candidate,
+        followed_company_ids: followsByUser.get(candidate.user_id) ?? [],
+        application_history: applicationsByUser.get(candidate.user_id) ?? [],
+      };
+
+      return {
+        user_id: candidate.user_id,
+        score: calculateJobMatch(enrichedCandidate, job, company),
+      };
+    })
     .filter((item) => item.score >= MATCH_THRESHOLD);
 
   if (!matches.length) {
-    return new Response(JSON.stringify({ in_app_count: 0, push_recipient_ids: [], player_ids_by_user: {} }), {
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ in_app_count: 0, push_recipient_ids: [] });
   }
 
   const { data: notifyResult, error: notifyError } = await supabase.rpc('notify_job_recommendations', {
@@ -199,22 +424,8 @@ serve(async (req) => {
   });
 
   if (notifyError) {
-    return new Response(JSON.stringify({ error: notifyError.message }), { status: 500 });
+    return jsonResponse({ error: 'No se pudieron crear recomendaciones' }, 500);
   }
 
-  const pushIds: string[] = notifyResult?.push_recipient_ids ?? [];
-  const playerIdsByUser: Record<string, string> = {};
-  for (const match of matches) {
-    if (pushIds.includes(match.user_id) && match.player_id) {
-      playerIdsByUser[match.user_id] = String(match.player_id);
-    }
-  }
-
-  return new Response(
-    JSON.stringify({
-      ...notifyResult,
-      player_ids_by_user: playerIdsByUser,
-    }),
-    { headers: { 'Content-Type': 'application/json' } },
-  );
+  return jsonResponse(notifyResult ?? { in_app_count: 0, push_recipient_ids: [] });
 });

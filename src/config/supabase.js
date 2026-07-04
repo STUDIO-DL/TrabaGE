@@ -11,7 +11,7 @@ export const isSupabaseConfigured = Boolean(
     !supabaseAnonKey.includes('placeholder'),
 );
 
-if (!isSupabaseConfigured) {
+if (!isSupabaseConfigured && import.meta.env.DEV) {
   console.warn('[TrabaGE] Missing Supabase env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
 }
 

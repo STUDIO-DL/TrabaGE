@@ -7,7 +7,7 @@ import Spinner from '../ui/Spinner';
 
 export default function RoleRoute({ role: requiredRole }) {
   const { role, isPreviewMode, loading, isAuthenticated, refreshAuthState } = useAuth();
-  const previewActive = isPreviewActive(isPreviewMode);
+  const previewActive = requiredRole === 'admin' ? false : isPreviewActive(isPreviewMode);
   const effectiveRole = role ?? (previewActive ? getPreviewRole() : null);
 
   useEffect(() => {

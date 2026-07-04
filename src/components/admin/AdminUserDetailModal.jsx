@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
+import Input from '../ui/Input';
 import Spinner from '../ui/Spinner';
 import AdminStatusBadge from './AdminStatusBadge';
 import { adminService } from '../../services/admin.service';
 import { resolveUserAvatar } from '../../utils/resolveUserAvatar';
 import { formatDate } from '../../utils/formatDate';
 import { ROLE_LABELS } from '../../constants/roles';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 function DetailRow({ label, value }) {
   return (
@@ -18,11 +20,19 @@ function DetailRow({ label, value }) {
   );
 }
 
-export default function AdminUserDetailModal({ user, isOpen, onClose }) {
+export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [detail, setDetail] = useState(null);
   const [exists, setExists] = useState(false);
+  const [form, setForm] = useState({
+    full_name: '',
+    company_name: '',
+    city: '',
+    contact_email: '',
+  });
 
   const isCompany = user?.role === 'company';
 
@@ -30,6 +40,7 @@ export default function AdminUserDetailModal({ user, isOpen, onClose }) {
     if (!isOpen || !user) return;
     let active = true;
     setLoading(true);
+    setSaveError('');
     setDetail(null);
     setExists(false);
 
@@ -37,6 +48,12 @@ export default function AdminUserDetailModal({ user, isOpen, onClose }) {
       if (!active) return;
       setDetail(result.data);
       setExists(result.exists);
+      setForm({
+        full_name: result.data?.full_name ?? '',
+        company_name: result.data?.company_name ?? '',
+        city: result.data?.city ?? '',
+        contact_email: result.data?.contact_email ?? '',
+      });
       setLoading(false);
     });
 
@@ -50,13 +67,35 @@ export default function AdminUserDetailModal({ user, isOpen, onClose }) {
   const displayName =
     detail?.full_name || detail?.company_name || user.full_name || user.company_name || 'Usuario';
   const avatarSrc = resolveUserAvatar(
-    detail?.avatar_url || detail?.logo_url || user.avatar_url || user.logo_url,
+    detail?.avatar_path ||
+      detail?.logo_path ||
+      detail?.avatar_url ||
+      detail?.logo_url ||
+      user.avatar_path ||
+      user.logo_path ||
+      user.avatar_url ||
+      user.logo_url,
   );
 
   const openFullProfile = () => {
     const path = isCompany ? `/companies/${user.user_id}` : `/profile/${user.user_id}`;
     onClose();
     navigate(path);
+  };
+
+  const saveProfile = async () => {
+    setSaving(true);
+    setSaveError('');
+    const { error } = await adminService.updateUserProfile(user.user_id, form);
+    setSaving(false);
+    if (error) {
+      setSaveError(getSupabaseErrorMessage(error, 'No se pudieron guardar los cambios.'));
+      return;
+    }
+    onUpdated?.();
+    const result = await adminService.getUserDetail(user.user_id, user.role);
+    setDetail(result.data);
+    setExists(result.exists);
   };
 
   const candidateSections = detail
@@ -106,13 +145,33 @@ export default function AdminUserDetailModal({ user, isOpen, onClose }) {
             de la cuenta.
           </div>
         ) : isCompany ? (
-          <div className="rounded-2xl border border-gray-100 bg-white px-4 py-2">
-            <DetailRow label="Empresa / institución" value={detail.company_name} />
-            <DetailRow label="Sector" value={detail.sector} />
-            <DetailRow label="Descripción" value={detail.description} />
-            <DetailRow label="Email de contacto" value={detail.contact_email} />
-            <DetailRow label="WhatsApp" value={detail.contact_whatsapp || detail.whatsapp} />
-            <DetailRow label="Sitio web" value={detail.website} />
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-gray-100 bg-white px-4 py-2">
+              <DetailRow label="Empresa / institución" value={detail.company_name} />
+              <DetailRow label="Sector" value={detail.sector} />
+              <DetailRow label="Descripción" value={detail.description} />
+              <DetailRow label="Email de contacto" value={detail.contact_email} />
+              <DetailRow label="WhatsApp" value={detail.contact_whatsapp || detail.whatsapp} />
+              <DetailRow label="Sitio web" value={detail.website} />
+            </div>
+            <div className="grid gap-3 rounded-2xl border border-gray-100 bg-gray-50/60 p-4 sm:grid-cols-2">
+              <Input
+                label="Nombre de empresa"
+                value={form.company_name}
+                onChange={(event) => setForm((prev) => ({ ...prev, company_name: event.target.value }))}
+              />
+              <Input
+                label="Ciudad"
+                value={form.city}
+                onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
+              />
+              <Input
+                label="Email de contacto"
+                type="email"
+                value={form.contact_email}
+                onChange={(event) => setForm((prev) => ({ ...prev, contact_email: event.target.value }))}
+              />
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
@@ -139,10 +198,34 @@ export default function AdminUserDetailModal({ user, isOpen, onClose }) {
                 </div>
               ))}
             </div>
+            <div className="grid gap-3 rounded-2xl border border-gray-100 bg-gray-50/60 p-4 sm:grid-cols-2">
+              <Input
+                label="Nombre"
+                value={form.full_name}
+                onChange={(event) => setForm((prev) => ({ ...prev, full_name: event.target.value }))}
+              />
+              <Input
+                label="Ciudad"
+                value={form.city}
+                onChange={(event) => setForm((prev) => ({ ...prev, city: event.target.value }))}
+              />
+              <Input
+                label="Email de contacto"
+                type="email"
+                value={form.contact_email}
+                onChange={(event) => setForm((prev) => ({ ...prev, contact_email: event.target.value }))}
+              />
+            </div>
           </div>
         )}
 
         <div className="flex flex-wrap justify-end gap-2 pt-1">
+          {saveError && <p className="w-full text-sm text-red-600">{saveError}</p>}
+          {exists && user.role !== 'admin' && (
+            <Button variant="secondary" loading={saving} onClick={saveProfile}>
+              Guardar cambios
+            </Button>
+          )}
           {exists && (
             <Button variant="secondary" onClick={openFullProfile}>
               Abrir perfil completo

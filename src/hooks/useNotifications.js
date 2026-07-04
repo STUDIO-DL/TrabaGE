@@ -48,6 +48,19 @@ export function useNotifications() {
     fetchNotifications();
   }, [user?.id, fetchNotifications]);
 
+  const deleteNotification = useCallback(
+    async (id) => {
+      const { error: deleteError } = await notificationsService.delete(id);
+      if (!deleteError) await fetchNotifications();
+      return {
+        error: deleteError
+          ? { ...deleteError, message: 'No se pudo eliminar la notificación.' }
+          : null,
+      };
+    },
+    [fetchNotifications],
+  );
+
   useEffect(() => {
     fetchNotifications();
   }, [fetchNotifications]);
@@ -59,6 +72,7 @@ export function useNotifications() {
     error,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
     refetch: fetchNotifications,
   };
 }

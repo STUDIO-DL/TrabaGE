@@ -4,6 +4,7 @@ import Button from '../../ui/Button';
 import Spinner from '../../ui/Spinner';
 import { followsService } from '../../../services/follows.service';
 import { resolveUserAvatar } from '../../../utils/resolveUserAvatar';
+import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
 
 const PAGE_SIZE = 20;
 
@@ -31,7 +32,7 @@ export default function CompanyFollowersSection({ targetType, targetId, visible 
       });
 
       if (fetchError) {
-        setError(fetchError.message);
+        setError(getSupabaseErrorMessage(fetchError, 'No se pudieron cargar los seguidores.'));
         setLoading(false);
         setLoadingMore(false);
         return;

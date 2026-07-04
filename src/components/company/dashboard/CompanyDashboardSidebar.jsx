@@ -19,12 +19,12 @@ import { isCompanyVerified } from '../../../utils/companyVerification';
 
 const NAV_ITEMS = [
   { to: '/company/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },
-  { to: '/company/publish-job', label: 'Ofertas de trabajo', icon: Briefcase },
+  { to: '/company/jobs', label: 'Ofertas de trabajo', icon: Briefcase },
   { to: '/company/applicants', label: 'Candidatos', icon: Users },
   { to: '/company/feed', label: 'Publicaciones', icon: Newspaper },
   { to: '/company/notifications', label: 'Notificaciones', icon: Bell },
   { to: '/company/profile', label: 'Perfil de empresa', icon: Building2 },
-  { to: '/company/help', label: 'Configuración', icon: Settings },
+  { to: '/company/settings', label: 'Configuración', icon: Settings },
 ];
 
 function getSidebarCompanyLabel(profile) {

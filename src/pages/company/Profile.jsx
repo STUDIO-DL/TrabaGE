@@ -1,4 +1,5 @@
 import PageContainer from '../../components/layout/PageContainer';
+import { useNavigate } from 'react-router-dom';
 import CompanyProfileLayout from '../../components/company/profile/CompanyProfileLayout';
 import Spinner from '../../components/ui/Spinner';
 import { useAuth } from '../../hooks/useAuth';
@@ -7,6 +8,7 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function Profile() {
+  const navigate = useNavigate();
   const { user, logout, isPreviewMode } = useAuth();
   const { profile, loading, refetch } = useProfile();
   const { showToast } = useNotificationContext();
@@ -32,6 +34,7 @@ export default function Profile() {
         onPreviewAction={handlePreviewAction}
         onLogout={logout}
         onUploadComplete={refetch}
+        onOpenSettings={() => navigate('/company/settings')}
       />
     </PageContainer>
   );

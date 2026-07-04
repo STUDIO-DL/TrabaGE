@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Building2, User } from 'lucide-react';
-import logoImg from '../../assets/branding/logo.png';
+import logoImg from '../../assets/branding/trabage-icon.png';
 import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { getPreviewMode } from '../../constants/preview';
 import { ROLE_HOME, ROLES } from '../../constants/roles';
@@ -43,9 +43,9 @@ export default function Explore() {
         <img
           src={logoImg}
           alt="TrabaGE"
-          width={140}
-          height={34}
-          className="mx-auto h-8 w-auto max-h-logo"
+          width={96}
+          height={96}
+          className="mx-auto h-24 w-24 object-contain"
           decoding="async"
         />
 

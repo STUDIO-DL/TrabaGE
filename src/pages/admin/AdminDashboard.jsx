@@ -7,8 +7,10 @@ import Spinner from '../../components/ui/Spinner';
 import {
   Briefcase,
   Building2,
+  Flag,
   Newspaper,
   ShieldCheck,
+  User,
   Users,
 } from '../../constants/icons';
 import { adminService } from '../../services/admin.service';
@@ -58,9 +60,11 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <AdminStatCard icon={Users} tone="blue" value={stats?.totalUsers ?? 0} label="Total usuarios" />
-        <AdminStatCard icon={Building2} tone="green" value={stats?.totalCompanies ?? 0} label="Total empresas" />
+        <AdminStatCard icon={User} tone="slate" value={stats?.totalCandidates ?? 0} label="Candidatos" />
+        <AdminStatCard icon={Building2} tone="green" value={stats?.totalCompanies ?? 0} label="Organizaciones" />
+        <AdminStatCard icon={ShieldCheck} tone="blue" value={stats?.totalAdmins ?? 0} label="Administradores" />
         <AdminStatCard
           icon={ShieldCheck}
           tone="amber"
@@ -69,6 +73,7 @@ export default function AdminDashboard() {
         />
         <AdminStatCard icon={Briefcase} tone="purple" value={stats?.activeJobs ?? 0} label="Ofertas activas" />
         <AdminStatCard icon={Newspaper} tone="slate" value={stats?.totalPosts ?? 0} label="Publicaciones" />
+        <AdminStatCard icon={Flag} tone="amber" value={stats?.pendingReports ?? 0} label="Reportes pendientes" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">

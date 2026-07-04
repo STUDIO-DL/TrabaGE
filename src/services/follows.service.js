@@ -9,7 +9,10 @@ export const followsService = {
   follow: async (userId, targetType, targetId) =>
     supabase
       .from('follows')
-      .insert({ user_id: userId, target_type: targetType, target_id: targetId })
+      .upsert(
+        { user_id: userId, target_type: targetType, target_id: targetId },
+        { onConflict: 'user_id,target_type,target_id' },
+      )
       .select('id')
       .single(),
 
@@ -29,6 +32,13 @@ export const followsService = {
       .eq('target_type', targetType)
       .eq('target_id', targetId)
       .maybeSingle(),
+
+  getFollowing: async (userId, targetType) =>
+    supabase
+      .from('follows')
+      .select('target_id')
+      .eq('user_id', userId)
+      .eq('target_type', targetType),
 
   getFollowerCount: (targetType, targetId) =>
     supabase.rpc('get_follower_count', {

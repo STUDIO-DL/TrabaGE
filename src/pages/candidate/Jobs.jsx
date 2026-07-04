@@ -31,12 +31,47 @@ import { applyJobRecommendations } from '../../utils/jobMatching';
 import { buildJobFilters, matchCityFromQuery } from '../../utils/jobFilters';
 
 import { jobMatchesService } from '../../services/jobMatches.service';
+import { applicationsService } from '../../services/applications.service';
+import { useSavedJobs } from '../../hooks/useSavedJobs';
+import { useNotificationContext } from '../../context/NotificationContext';
+import { FOLLOWS_TARGET, followsService } from '../../services/follows.service';
+
+function extractSalary(value) {
+  const numbers = String(value ?? '')
+    .match(/\d[\d.,]*/g)
+    ?.map((item) => Number(item.replace(/[.,](?=\d{3}\b)/g, '').replace(',', '.')))
+    .filter((item) => Number.isFinite(item));
+  return numbers?.length ? Math.max(...numbers) : 0;
+}
+
+function sortJobs(jobs, sort, scoreByJobId = {}) {
+  const list = [...jobs];
+  if (sort === 'salary_desc') {
+    return list.sort((a, b) => extractSalary(b.salary) - extractSalary(a.salary));
+  }
+  if (sort === 'salary_asc') {
+    return list.sort((a, b) => extractSalary(a.salary) - extractSalary(b.salary));
+  }
+  if (sort === 'match') {
+    return list.sort(
+      (a, b) =>
+        (scoreByJobId[b.id] ?? 0) - (scoreByJobId[a.id] ?? 0) ||
+        new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0),
+    );
+  }
+  if (sort === 'title') {
+    return list.sort((a, b) => String(a.title ?? '').localeCompare(String(b.title ?? '')));
+  }
+  return list.sort((a, b) => new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0));
+}
 
 export default function Jobs() {
   const [query, setQuery] = useState('');
-  const [sort, setSort] = useState('recent');
+  const [sort, setSort] = useState('match');
   const [filters, setFilters] = useState({});
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [followedCompanyIds, setFollowedCompanyIds] = useState([]);
+  const [applicationHistory, setApplicationHistory] = useState([]);
 
   const { user } = useAuth();
   const normalizedQuery = query.trim().toLowerCase();
@@ -48,6 +83,8 @@ export default function Jobs() {
 
   const { jobs, loading } = useJobs(effectiveFilters);
   const { profile } = useProfile();
+  const { showToast } = useNotificationContext();
+  const { isSaved, toggleSavedJob, actionLoadingId } = useSavedJobs();
 
   const queryFilteredJobs = normalizedQuery
     ? jobs.filter((job) => {
@@ -68,14 +105,18 @@ export default function Jobs() {
       job_preferences: profile?.job_preferences,
       skills: profile?.skills ?? [],
       experience: profile?.experience ?? [],
+      education: profile?.education ?? [],
+      languages: profile?.languages ?? [],
+      followed_company_ids: followedCompanyIds,
+      application_history: applicationHistory,
       years_experience: profile?.years_experience,
       headline: profile?.headline,
       about: profile?.about,
     }),
-    [profile],
+    [applicationHistory, followedCompanyIds, profile],
   );
 
-  const { jobs: displayJobs, mode: recommendationMode, scoredJobs } = useMemo(
+  const { jobs: recommendedDisplayJobs, mode: recommendationMode, scoredJobs } = useMemo(
     () =>
       applyJobRecommendations(queryFilteredJobs, profile?.job_preferences, [], {
         query: normalizedQuery,
@@ -90,6 +131,11 @@ export default function Jobs() {
     [scoredJobs],
   );
 
+  const displayJobs = useMemo(
+    () => sortJobs(recommendedDisplayJobs, sort, scoreByJobId),
+    [recommendedDisplayJobs, scoreByJobId, sort],
+  );
+
   const recommendedJobs = useMemo(
     () => scoredJobs.filter(({ score }) => score > 0),
     [scoredJobs],
@@ -98,8 +144,25 @@ export default function Jobs() {
   const otherJobs = useMemo(() => {
     if (recommendationMode !== 'recommended') return displayJobs;
     const recommendedIds = new Set(recommendedJobs.map(({ job }) => job.id));
-    return displayJobs.filter((job) => !recommendedIds.has(job.id));
-  }, [displayJobs, recommendationMode, recommendedJobs]);
+    return sortJobs(displayJobs.filter((job) => !recommendedIds.has(job.id)), sort, scoreByJobId);
+  }, [displayJobs, recommendationMode, recommendedJobs, scoreByJobId, sort]);
+
+  const handleSaveToggle = async (jobId) => {
+    const result = await toggleSavedJob(jobId);
+    showToast(result.message, result.ok ? 'success' : 'error');
+  };
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    followsService.getFollowing(user.id, FOLLOWS_TARGET.COMPANY).then(({ data }) => {
+      setFollowedCompanyIds((data ?? []).map((row) => row.target_id));
+    });
+
+    applicationsService.getCandidateApplications(user.id).then(({ data }) => {
+      setApplicationHistory(data ?? []);
+    });
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user?.id || !profile || loading || !scoredJobs.length) return;
@@ -135,6 +198,9 @@ export default function Jobs() {
                 job={job}
                 accentIndex={index}
                 matchScore={score}
+                saved={isSaved(job.id)}
+                saving={actionLoadingId === job.id}
+                onSaveToggle={() => handleSaveToggle(job.id)}
               />
             ))}
           </section>
@@ -162,6 +228,9 @@ export default function Jobs() {
                 job={job}
                 accentIndex={index}
                 matchScore={scoreByJobId[job.id]}
+                saved={isSaved(job.id)}
+                saving={actionLoadingId === job.id}
+                onSaveToggle={() => handleSaveToggle(job.id)}
               />
             ))
           ) : (
@@ -171,6 +240,9 @@ export default function Jobs() {
                 job={job}
                 accentIndex={index}
                 matchScore={scoreByJobId[job.id]}
+                saved={isSaved(job.id)}
+                saving={actionLoadingId === job.id}
+                onSaveToggle={() => handleSaveToggle(job.id)}
               />
             ))
           )}

@@ -15,6 +15,7 @@ import { hasCompanyActionableContact, openCompanyContact } from '../../utils/con
 import { useNotificationContext } from '../../context/NotificationContext';
 import { useFollow } from '../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../services/follows.service';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function CompanyPublicProfile() {
   const { companyId } = useParams();
@@ -76,7 +77,7 @@ export default function CompanyPublicProfile() {
       return;
     }
     if (result?.error) {
-      showToast(result.error.message || 'No se pudo actualizar el seguimiento', 'error');
+      showToast(getSupabaseErrorMessage(result.error, 'No se pudo actualizar el seguimiento'), 'error');
     }
   };
 

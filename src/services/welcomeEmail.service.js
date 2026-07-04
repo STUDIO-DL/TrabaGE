@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { reportError } from '../utils/logger';
 
 /**
  * Idempotent welcome email trigger (fallback when Database Webhook is not configured).
@@ -13,7 +14,7 @@ export const welcomeEmailService = {
         body: { user_id: userId },
       })
       .catch((error) => {
-        console.warn('[TrabaGE] Welcome email trigger skipped:', error?.message || error);
+        reportError(error, { area: 'welcome_email_trigger', userId });
       });
   },
 };

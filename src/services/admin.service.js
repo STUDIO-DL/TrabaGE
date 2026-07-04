@@ -7,13 +7,18 @@ export const adminService = {
   getDashboardStats: async () => {
     const [
       usersRes,
+      candidatesRes,
       companiesRes,
+      adminsRes,
       verificationsRes,
       jobsRes,
       postsRes,
+      reportsRes,
     ] = await Promise.all([
-      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }).neq('role', 'admin'),
+      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }),
+      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }).eq('role', 'candidate'),
       supabase.from('company_profiles').select('user_id', { count: 'exact', head: true }),
+      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }).eq('role', 'admin'),
       supabase
         .from('verification_requests')
         .select('id', { count: 'exact', head: true })
@@ -24,17 +29,32 @@ export const adminService = {
         .eq('status', 'active')
         .eq('admin_hidden', false),
       supabase.from('posts').select('id', { count: 'exact', head: true }).eq('is_hidden', false),
+      supabase
+        .from('reports')
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'pending'),
     ]);
 
     return {
       data: {
         totalUsers: usersRes.count ?? 0,
+        totalCandidates: candidatesRes.count ?? 0,
         totalCompanies: companiesRes.count ?? 0,
+        totalAdmins: adminsRes.count ?? 0,
         pendingVerifications: verificationsRes.count ?? 0,
         activeJobs: jobsRes.count ?? 0,
         totalPosts: postsRes.count ?? 0,
+        pendingReports: reportsRes.count ?? 0,
       },
-      error: usersRes.error || companiesRes.error || verificationsRes.error || jobsRes.error || postsRes.error,
+      error:
+        usersRes.error ||
+        candidatesRes.error ||
+        companiesRes.error ||
+        adminsRes.error ||
+        verificationsRes.error ||
+        jobsRes.error ||
+        postsRes.error ||
+        reportsRes.error,
     };
   },
 
@@ -135,19 +155,43 @@ export const adminService = {
     return { data: data ?? null, error: error ?? null, exists: Boolean(data) };
   },
 
-  setUserActive: async (userId, role, isActive) => {
-    const table = role === 'company' ? 'company_profiles' : 'candidate_profiles';
-    return supabase.from(table).update({ is_active: isActive }).eq('user_id', userId);
-  },
+  setUserActive: (userId, role, isActive) =>
+    supabase.rpc('admin_set_user_active', {
+      p_user_id: userId,
+      p_is_active: isActive,
+    }),
+
+  setUserRole: (userId, role) =>
+    supabase.rpc('admin_set_user_role', {
+      p_user_id: userId,
+      p_role: role,
+    }),
+
+  updateUserProfile: (userId, values) =>
+    supabase.rpc('admin_update_user_profile', {
+      p_user_id: userId,
+      p_full_name: values.full_name ?? null,
+      p_company_name: values.company_name ?? null,
+      p_city: values.city ?? null,
+      p_contact_email: values.contact_email ?? null,
+    }),
+
+  deleteUser: (userId) =>
+    supabase.rpc('admin_delete_user', {
+      p_user_id: userId,
+    }),
 
   getCompanies: () =>
     supabase
       .from('company_profiles')
-      .select('user_id, company_name, city, is_verified, created_at, logo_path, is_active, verification_status, company_size, company_type')
+      .select('user_id, company_name, city, sector, is_verified, created_at, logo_path, is_active, verification_status, company_size, company_type')
       .order('created_at', { ascending: false }),
 
   setCompanyActive: (userId, isActive) =>
-    supabase.from('company_profiles').update({ is_active: isActive }).eq('user_id', userId),
+    supabase.rpc('admin_set_user_active', {
+      p_user_id: userId,
+      p_is_active: isActive,
+    }),
 
   getAllVerifications: () =>
     supabase
@@ -183,8 +227,18 @@ export const adminService = {
     };
   },
 
+  setJobModeration: (jobId, { hidden, status = null }) =>
+    supabase.rpc('admin_set_job_moderation', {
+      p_job_id: jobId,
+      p_admin_hidden: hidden,
+      p_status: status,
+    }),
+
   setJobHidden: (jobId, hidden) =>
-    supabase.from('jobs').update({ admin_hidden: hidden }).eq('id', jobId),
+    adminService.setJobModeration(jobId, { hidden }),
+
+  deleteJob: (jobId) =>
+    adminService.setJobModeration(jobId, { hidden: true, status: 'closed' }),
 
   getPosts: async () => {
     const { data: posts, error } = await supabase
@@ -233,9 +287,18 @@ export const adminService = {
     };
   },
 
-  deletePost: (postId) => supabase.from('posts').delete().eq('id', postId),
+  deletePost: (postId) =>
+    supabase.rpc('admin_delete_post', {
+      p_post_id: postId,
+    }),
 
-  hidePost: (postId) => supabase.from('posts').update({ is_hidden: true }).eq('id', postId),
+  setPostHidden: (postId, hidden) =>
+    supabase.rpc('admin_set_post_hidden', {
+      p_post_id: postId,
+      p_is_hidden: hidden,
+    }),
+
+  hidePost: (postId) => adminService.setPostHidden(postId, true),
 
   getReports: async () => {
     const { data: reports, error } = await supabase
@@ -288,6 +351,11 @@ export const adminService = {
 
   updateReportStatus: (reportId, status) =>
     supabase.from('reports').update({ status }).eq('id', reportId),
+
+  deleteReport: (reportId) =>
+    supabase.rpc('admin_delete_report', {
+      p_report_id: reportId,
+    }),
 
   getAdminNotifications: async () => {
     const [users, companies, verifications, reports] = await Promise.all([

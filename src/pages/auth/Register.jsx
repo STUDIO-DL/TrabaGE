@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
@@ -14,8 +14,10 @@ import { mapAuthError } from '../../utils/errors';
 export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { register, enterPreviewMode } = useAuth();
-  const accountType = location.state?.accountType ?? ROLES.CANDIDATE;
+  const requestedType = location.state?.accountType ?? searchParams.get('type');
+  const accountType = [ROLES.CANDIDATE, ROLES.COMPANY].includes(requestedType) ? requestedType : null;
   const [step, setStep] = useState(0);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +25,12 @@ export default function Register() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (!accountType) {
+      navigate('/account-type', { replace: true });
+    }
+  }, [accountType, navigate]);
 
   const handlePreview = () => {
     enterPreviewMode();
@@ -66,16 +74,17 @@ export default function Register() {
       return;
     }
 
-    // Per the new flow, email registration requires verification. We do not
-    // get a session back immediately. Instead of checking for a redirectTo,
-    // we now always show the success/verification screen.
     if (redirectTo) {
+      setLoading(false);
+      navigate(redirectTo, { replace: true });
       return;
     }
 
     setSuccess(true);
     setLoading(false);
   };
+
+  if (!accountType) return null;
 
   if (success) {
     return (

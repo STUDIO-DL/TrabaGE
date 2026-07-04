@@ -29,7 +29,7 @@ export default function DashboardJobsList({ jobs }) {
       <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
         <h2 className="text-base font-semibold text-gray-900">Ofertas de trabajo</h2>
         <Link
-          to="/company/jobs/create"
+          to="/company/jobs"
           className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
         >
           Ver todas
@@ -48,7 +48,7 @@ export default function DashboardJobsList({ jobs }) {
           {jobs.map((job) => (
             <li key={job.id}>
               <Link
-                to="/company/jobs/create"
+                to={`/company/jobs/${job.id}/edit`}
                 className="flex items-center gap-3 px-5 py-4 transition hover:bg-gray-50"
               >
                 <span
@@ -70,7 +70,7 @@ export default function DashboardJobsList({ jobs }) {
       )}
 
       <div className="mt-auto border-t border-gray-100 p-4">
-        <Link to="/company/jobs/create">
+        <Link to="/company/jobs">
           <Button variant="secondary" fullWidth>
             Ver todas las ofertas
           </Button>

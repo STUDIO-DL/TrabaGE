@@ -14,10 +14,12 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { applicationsService } from '../../services/applications.service';
 import { storageService } from '../../services/storage.service';
 import { profileService } from '../../services/profile.service';
+import { notificationsService } from '../../services/notifications.service';
 import { analyticsService } from '../../services/analytics.service';
 import { cvPath } from '../../constants/storage';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { FILE_HINTS, validateFile } from '../../utils/validateFile';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 function parseCustomQuestions(raw) {
   if (!raw) return [];
@@ -43,9 +45,11 @@ export default function ApplyJob() {
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [existingApplication, setExistingApplication] = useState(null);
 
   const customQuestions = parseCustomQuestions(job?.custom_questions);
-  const hasSavedCv = Boolean(profile?.cv_path);
+  const hasSavedCv = Boolean(profile?.cv_path && user?.id && profile.cv_path.startsWith(`${user.id}/`));
+  const hasActiveApplication = existingApplication?.status && existingApplication.status !== 'withdrawn';
 
   useEffect(() => {
     if (isPreviewMode) {
@@ -56,6 +60,17 @@ export default function ApplyJob() {
   useEffect(() => {
     if (!hasSavedCv) setCvMode('upload');
   }, [hasSavedCv]);
+
+  useEffect(() => {
+    if (!user?.id || !jobId || isPreviewMode) return;
+
+    applicationsService.hasApplied(user.id, jobId).then(({ data }) => {
+      setExistingApplication(data);
+      if (data?.status && data.status !== 'withdrawn') {
+        setError('Ya has aplicado a esta oferta. Puedes revisar el estado en Mis aplicaciones.');
+      }
+    });
+  }, [isPreviewMode, jobId, user?.id]);
 
   useEffect(() => {
     if (profile?.full_name && !answers.full_name) {
@@ -103,7 +118,7 @@ export default function ApplyJob() {
         profile?.cv_path,
       );
       if (uploadError) {
-        setError(uploadError.message);
+        setError(getSupabaseErrorMessage(uploadError, 'No se pudo subir el CV. Inténtalo de nuevo.'));
         return;
       }
 
@@ -129,16 +144,20 @@ export default function ApplyJob() {
     setLoading(true);
     setError('');
 
+    if (existingApplication?.status && existingApplication.status !== 'withdrawn') {
+      setError('Ya has aplicado a esta oferta. Puedes revisar el estado en Mis aplicaciones.');
+      setLoading(false);
+      return;
+    }
+
     const customAnswers = customQuestions.reduce((acc, q) => {
       if (answers[q.id]?.trim()) acc[q.id] = answers[q.id].trim();
       return acc;
     }, {});
 
-    const notes = [coverLetter.trim(), profile?.cover_letter?.trim()]
-      .filter(Boolean)
-      .join('\n\n');
+    const notes = coverLetter.trim();
 
-    const { error: applyError } = await applicationsService.apply({
+    const applicationPayload = {
       candidate_id: user.id,
       job_id: jobId,
       cv_path: applicationCvPath,
@@ -146,15 +165,47 @@ export default function ApplyJob() {
       full_name: fullName,
       additional_notes: notes || null,
       custom_answers: Object.keys(customAnswers).length ? customAnswers : null,
-    });
+    };
+
+    const { error: applyError } = existingApplication?.status === 'withdrawn'
+      ? await applicationsService.reapply(existingApplication.id, applicationPayload)
+      : await applicationsService.apply(applicationPayload);
 
     if (applyError) {
-      setError(applyError.message);
+      setError(getSupabaseErrorMessage(applyError));
       setLoading(false);
       return;
     }
 
     analyticsService.trackApplicationSubmitted(user.id, jobId, { source: 'apply_form' });
+
+    if (job?.company_id) {
+      const notificationTitle = 'Nueva candidatura recibida';
+      const notificationBody = `${fullName} aplicó a "${job.title}".`;
+      await notificationsService.create({
+        recipient_id: job.company_id,
+        type: 'new_application',
+        title: notificationTitle,
+        body: notificationBody,
+        metadata: {
+          job_id: jobId,
+          candidate_id: user.id,
+          link: '/company/applicants',
+        },
+      });
+
+      await notificationsService.sendPush({
+        recipientIds: [job.company_id],
+        title: notificationTitle,
+        body: notificationBody,
+        data: {
+          type: 'new_application',
+          link: '/company/applicants',
+          job_id: jobId,
+          candidate_id: user.id,
+        },
+      });
+    }
 
     showToast('Aplicación enviada', 'success');
     navigate('/candidate/applications', { replace: true });
@@ -168,6 +219,14 @@ export default function ApplyJob() {
     );
   }
 
+  if (!job) {
+    return (
+      <PageContainer title="Aplicar al empleo" backButton bottomNav={false}>
+        <p className="p-4 text-sm text-gray-500">Oferta no encontrada o no disponible.</p>
+      </PageContainer>
+    );
+  }
+
   return (
     <FormPageLayout
       title="Aplicar al empleo"
@@ -175,8 +234,8 @@ export default function ApplyJob() {
       footer={
         <>
           {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
-          <Button type="submit" form="apply-job-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
-            Enviar aplicación
+          <Button type="submit" form="apply-job-form" fullWidth loading={loading} disabled={hasActiveApplication} className="btn-primary-mobile !rounded-btn-primary !py-0">
+            {hasActiveApplication ? 'Ya aplicaste' : 'Enviar aplicación'}
           </Button>
         </>
       }

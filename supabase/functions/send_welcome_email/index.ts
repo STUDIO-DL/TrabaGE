@@ -10,8 +10,9 @@ import {
 } from './emailTemplate.ts';
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ?? 'https://trabage.org',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-welcome-webhook-secret',
+  'Vary': 'Origin',
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200) {

@@ -1,11 +1,12 @@
 export const MATCH_THRESHOLD = 70;
 
 export const SCORE_WEIGHTS = {
-  category: 35,
-  location: 25,
-  jobType: 15,
-  experience: 15,
-  keywords: 10,
+  skills: 40,
+  experience: 20,
+  location: 15,
+  workMode: 10,
+  preferences: 10,
+  recentActivity: 5,
 };
 
 export const JOB_CATEGORIES = [

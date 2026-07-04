@@ -8,7 +8,7 @@ import {
 } from '../../../constants/icons';
 
 const QUICK_LINKS = [
-  { to: '/company/publish-job', label: 'Crear oferta', icon: Plus, tone: 'text-violet-600 bg-violet-50' },
+  { to: '/company/jobs/create', label: 'Crear oferta', icon: Plus, tone: 'text-violet-600 bg-violet-50' },
   { to: '/company/applicants', label: 'Ver candidatos', icon: Users, tone: 'text-blue-600 bg-blue-50' },
   { to: '/company/profile', label: 'Editar perfil', icon: Building2, tone: 'text-amber-600 bg-amber-50' },
 ];

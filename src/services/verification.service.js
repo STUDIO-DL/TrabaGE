@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase';
 import { notificationsService } from './notifications.service';
 import { VERIFICATION_BUCKET } from '../utils/companyVerification';
+import { reportError } from '../utils/logger';
 
 const PUSH_FUNCTION = 'send_push';
 
@@ -15,7 +16,7 @@ async function sendPushNotification(recipientId, title, body, data = {}) {
       },
     });
   } catch (error) {
-    console.warn('[TrabaGE] Push notification failed:', error?.message || error);
+    reportError(error, { area: 'verification_push_notification', recipientId });
   }
 }
 
@@ -29,7 +30,7 @@ async function createVerificationNotification(recipientId, type, title, body, me
   });
 
   if (error) {
-    console.warn('[TrabaGE] Notification create failed:', error.message);
+    reportError(error, { area: 'verification_notification_create', recipientId, type });
     return;
   }
 

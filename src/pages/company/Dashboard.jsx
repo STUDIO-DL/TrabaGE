@@ -111,7 +111,7 @@ export default function Dashboard() {
               <AppIcon icon={ChevronDown} size={ICON_SIZES.sm} className="text-gray-400" />
             </Link>
 
-            <Link to="/company/publish-job" className="hidden sm:block">
+            <Link to="/company/jobs/create" className="hidden sm:block">
               <Button className="inline-flex items-center gap-2 rounded-xl px-4">
                 <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
                 Crear oferta
@@ -127,7 +127,7 @@ export default function Dashboard() {
             value={stats.activeJobs}
             label="Ofertas activas"
             linkLabel="Ver ofertas"
-            to="/company/publish-job"
+            to="/company/jobs"
           />
           <DashboardStatCard
             icon={Users}
@@ -169,7 +169,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-4 sm:hidden">
-          <Link to="/company/publish-job">
+          <Link to="/company/jobs/create">
             <Button fullWidth className="inline-flex items-center justify-center gap-2 rounded-xl">
               <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
               Crear oferta

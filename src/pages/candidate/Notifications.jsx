@@ -9,12 +9,15 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { usePushPermission } from '../../hooks/usePushPermission';
 import { useAuth } from '../../hooks/useAuth';
 import { analyticsService } from '../../services/analytics.service';
+import { useNotificationContext } from '../../context/NotificationContext';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function Notifications() {
   usePushPermission();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { notifications, loading, markAsRead, markAllAsRead } = useNotifications();
+  const { showToast } = useNotificationContext();
+  const { notifications, loading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
   const handleNotificationClick = async (notification) => {
     await markAsRead(notification.id);
@@ -30,6 +33,11 @@ export default function Notifications() {
     if (link) {
       navigate(link);
     }
+  };
+
+  const handleDeleteNotification = async (notification) => {
+    const { error } = await deleteNotification(notification.id);
+    showToast(error ? getSupabaseErrorMessage(error) : 'Notificación eliminada', error ? 'error' : 'success');
   };
 
   return (
@@ -58,6 +66,7 @@ export default function Notifications() {
               key={n.id}
               notification={n}
               onClick={handleNotificationClick}
+              onDelete={handleDeleteNotification}
             />
           ))
         )}

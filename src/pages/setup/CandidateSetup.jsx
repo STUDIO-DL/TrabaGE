@@ -8,6 +8,7 @@ import Select from '../../components/ui/Select';
 import { CITIES } from '../../constants/cities';
 import { useAuth } from '../../hooks/useAuth';
 import { profileService } from '../../services/profile.service';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function CandidateSetup() {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ export default function CandidateSetup() {
     });
 
     if (saveError) {
-      setError(saveError.message);
+      setError(getSupabaseErrorMessage(saveError));
       setLoading(false);
       return;
     }

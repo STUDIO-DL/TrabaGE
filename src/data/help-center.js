@@ -1,4 +1,6 @@
-export { SUPPORT_EMAIL } from '../constants/support';
+import { SUPPORT_EMAIL } from '../constants/support';
+
+export { SUPPORT_EMAIL };
 
 export const helpCategories = [
   {

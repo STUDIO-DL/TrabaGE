@@ -15,8 +15,12 @@ export default function PostCard({
   authorAvatar,
   authorType = 'candidate',
   authorCompany = null,
+  canManage = false,
+  onEdit,
+  onDelete,
 }) {
   const postImageSrc = resolvePostImageUrl(post.post_image_path);
+  const authorPath = post.author_path;
 
   return (
     <Card className="mb-3">
@@ -26,6 +30,7 @@ export default function PostCard({
           userType={authorType}
           name={authorName}
           avatar={authorAvatar}
+          path={authorPath}
           size="md"
           layout="avatar"
         />
@@ -35,6 +40,7 @@ export default function PostCard({
               userId={authorId}
               userType={authorType}
               name={authorName}
+              path={authorPath}
               layout="name"
             />
             {authorType === 'company' && isCompanyVerified(authorCompany) && (
@@ -52,6 +58,24 @@ export default function PostCard({
             targetId={post.id}
             shareMode="panel"
           />
+          {canManage && (
+            <div className="flex gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => onEdit?.(post)}
+                className="font-medium text-primary-600 hover:text-primary-700"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete?.(post)}
+                className="font-medium text-red-600 hover:text-red-700"
+              >
+                Eliminar
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

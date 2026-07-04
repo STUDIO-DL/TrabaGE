@@ -9,6 +9,7 @@ import { CITIES } from '../../constants/cities';
 import { SECTORS } from '../../constants/sectors';
 import { useAuth } from '../../hooks/useAuth';
 import { companyService } from '../../services/company.service';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function CompanySetup() {
   const navigate = useNavigate();
@@ -29,7 +30,7 @@ export default function CompanySetup() {
     });
 
     if (saveError) {
-      setError(saveError.message);
+      setError(getSupabaseErrorMessage(saveError));
       setLoading(false);
       return;
     }

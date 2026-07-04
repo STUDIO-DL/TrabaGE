@@ -2,24 +2,43 @@ import { useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import { getCompanyLogoUrl } from '../../constants/images';
 import { formatDate } from '../../utils/formatDate';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function AdminCompanies() {
   const { showToast } = useNotificationContext();
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
+  const [query, setQuery] = useState('');
 
   const loadCompanies = async () => {
     setLoading(true);
     const { data, error } = await adminService.getCompanies();
-    if (error) showToast(error.message, 'error');
+    if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setCompanies(data ?? []);
     setLoading(false);
   };
+
+  const filteredCompanies = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return companies;
+
+    return companies.filter((company) =>
+      [
+        company.company_name,
+        company.city,
+        company.sector,
+        company.company_type,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalized)),
+    );
+  }, [companies, query]);
 
   useEffect(() => {
     loadCompanies();
@@ -31,7 +50,7 @@ export default function AdminCompanies() {
     const { error } = await adminService.setCompanyActive(company.user_id, nextActive);
     setActionId(null);
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
     showToast(nextActive ? 'Empresa reactivada' : 'Empresa desactivada', 'success');
@@ -98,11 +117,19 @@ export default function AdminCompanies() {
   );
 
   return (
-    <AdminTable
-      columns={columns}
-      rows={companies.map((company) => ({ ...company, id: company.user_id }))}
-      loading={loading}
-      emptyMessage="No hay empresas registradas."
-    />
+    <div className="space-y-4">
+      <Input
+        label="Buscar empresas"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Buscar por nombre, ciudad, sector o tipo"
+      />
+      <AdminTable
+        columns={columns}
+        rows={filteredCompanies.map((company) => ({ ...company, id: company.user_id }))}
+        loading={loading}
+        emptyMessage="No hay empresas registradas."
+      />
+    </div>
   );
 }

@@ -48,6 +48,53 @@ function cleanText(value) {
   return trimmed || null;
 }
 
+function cleanInteger(value) {
+  const trimmed = value?.toString?.().trim?.() ?? '';
+  if (!trimmed) return null;
+  const parsed = Number.parseInt(trimmed, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+const SOCIAL_ALLOWED_HOSTS = {
+  linkedin: ['linkedin.com'],
+  facebook: ['facebook.com'],
+  instagram: ['instagram.com'],
+  x: ['x.com', 'twitter.com'],
+  youtube: ['youtube.com', 'youtu.be'],
+};
+
+function cleanHttpsUrl(value, allowedHosts = null) {
+  const trimmed = cleanText(value);
+  if (!trimmed) return null;
+
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== 'https:') return null;
+
+    if (allowedHosts?.length) {
+      const hostname = url.hostname.toLowerCase().replace(/^www\./, '');
+      const allowed = allowedHosts.some((host) => hostname === host || hostname.endsWith(`.${host}`));
+      if (!allowed) return null;
+    }
+
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+
+function cleanSocialLinks(form) {
+  const links = {
+    linkedin: cleanHttpsUrl(form.linkedin, SOCIAL_ALLOWED_HOSTS.linkedin),
+    facebook: cleanHttpsUrl(form.facebook, SOCIAL_ALLOWED_HOSTS.facebook),
+    instagram: cleanHttpsUrl(form.instagram, SOCIAL_ALLOWED_HOSTS.instagram),
+    x: cleanHttpsUrl(form.x, SOCIAL_ALLOWED_HOSTS.x),
+    youtube: cleanHttpsUrl(form.youtube, SOCIAL_ALLOWED_HOSTS.youtube),
+  };
+
+  return Object.fromEntries(Object.entries(links).filter(([, value]) => Boolean(value)));
+}
+
 function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
   const isOpen = Boolean(mode);
   const [form, setForm] = useState({});
@@ -59,11 +106,18 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
       company_name: profile?.company_name || '',
       description: profile?.description || '',
       city: profile?.city || '',
+      country: profile?.country || 'Guinea Ecuatorial',
+      address: profile?.address || '',
       sector: profile?.sector || '',
       company_type: profile?.company_type || '',
       company_size: profile?.company_size || '',
       founded_year: profile?.founded_year || '',
       website: profile?.website || '',
+      linkedin: profile?.social_links?.linkedin || '',
+      facebook: profile?.social_links?.facebook || '',
+      instagram: profile?.social_links?.instagram || '',
+      x: profile?.social_links?.x || '',
+      youtube: profile?.social_links?.youtube || '',
     });
   }, [isOpen, profile]);
 
@@ -95,11 +149,14 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
 
     await onSave({
       city: cleanText(form.city),
+      country: cleanText(form.country),
+      address: cleanText(form.address),
       sector: cleanText(form.sector),
       company_type: cleanText(form.company_type),
       company_size: cleanText(form.company_size),
-      founded_year: cleanText(form.founded_year),
-      website: cleanText(form.website),
+      founded_year: cleanInteger(form.founded_year),
+      website: cleanHttpsUrl(form.website),
+      social_links: cleanSocialLinks(form),
     });
   };
 
@@ -134,6 +191,18 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
                 { value: '', label: 'Seleccionar' },
                 ...CITIES.map((city) => ({ value: city, label: city })),
               ]}
+            />
+            <Input
+              label="País"
+              value={form.country || ''}
+              onChange={setField('country')}
+              placeholder="Guinea Ecuatorial"
+            />
+            <Input
+              label="Dirección"
+              value={form.address || ''}
+              onChange={setField('address')}
+              placeholder="Dirección física de la empresa"
             />
             <Select
               label="Sector"
@@ -177,6 +246,41 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
               value={form.website || ''}
               onChange={setField('website')}
             />
+            <Input
+              label="LinkedIn"
+              type="url"
+              value={form.linkedin || ''}
+              onChange={setField('linkedin')}
+              placeholder="https://linkedin.com/company/..."
+            />
+            <Input
+              label="Facebook"
+              type="url"
+              value={form.facebook || ''}
+              onChange={setField('facebook')}
+              placeholder="https://facebook.com/..."
+            />
+            <Input
+              label="Instagram"
+              type="url"
+              value={form.instagram || ''}
+              onChange={setField('instagram')}
+              placeholder="https://instagram.com/..."
+            />
+            <Input
+              label="X / Twitter"
+              type="url"
+              value={form.x || ''}
+              onChange={setField('x')}
+              placeholder="https://x.com/..."
+            />
+            <Input
+              label="YouTube"
+              type="url"
+              value={form.youtube || ''}
+              onChange={setField('youtube')}
+              placeholder="https://youtube.com/..."
+            />
           </>
         )}
 
@@ -196,6 +300,7 @@ export default function CompanyProfileLayout({
   onPreviewAction,
   onLogout,
   onUploadComplete,
+  onOpenSettings,
 }) {
   const { showToast } = useNotificationContext();
   const [jobs, setJobs] = useState([]);
@@ -382,7 +487,7 @@ export default function CompanyProfileLayout({
     setContactSaving(false);
 
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
 
@@ -444,7 +549,7 @@ export default function CompanyProfileLayout({
       compactBack
       onShare={handleShare}
       isOwn={!readOnly}
-      onSettings={readOnly ? undefined : () => openEdit('details')}
+      onSettings={readOnly ? undefined : onOpenSettings}
       onLogout={readOnly ? undefined : onLogout}
       onDeleteAccount={readOnly ? undefined : () => setDeleteOpen(true)}
     >

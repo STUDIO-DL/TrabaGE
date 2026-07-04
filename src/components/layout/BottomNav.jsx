@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useNotifications } from '../../hooks/useNotifications';
 import { ROLES } from '../../constants/roles';
 import { ICON_COLORS } from '../../constants/icons';
 import { NavIcon } from './NavIcons';
 import AppIcon from '../common/AppIcon';
 import { Plus, ICON_SIZES } from '../../constants/icons';
+import { notificationsService } from '../../services/notifications.service';
 
 const candidateNav = [
   { to: '/candidate/feed', label: 'Inicio', icon: 'home' },
@@ -24,10 +25,30 @@ const companyNav = [
 ];
 
 export default function BottomNav() {
-  const { role } = useAuth();
-  const { unreadCount } = useNotifications();
+  const { role, user, isPreviewMode } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const items = role === ROLES.COMPANY ? companyNav : candidateNav;
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadUnreadCount() {
+      if (!user?.id || isPreviewMode || role === ROLES.ADMIN) {
+        setUnreadCount(0);
+        return;
+      }
+
+      const { count } = await notificationsService.getUnreadCount(user.id);
+      if (!cancelled) setUnreadCount(count ?? 0);
+    }
+
+    loadUnreadCount();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isPreviewMode, role, user?.id]);
 
   if (role === ROLES.ADMIN) return null;
 

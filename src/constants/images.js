@@ -1,8 +1,9 @@
 import { resolveCompanyCoverUrl, resolveLogoUrl } from '../utils/storagePaths';
+import DefaultUserAvatar from '../assets/default-user-avatar.png';
+import DefaultCompanyLogo from '../assets/branding/trabage-icon.png';
 
-/** Static assets served from /public */
-export const DEFAULT_COMPANY_LOGO = '/images/default-company-logo.png';
-export const DEFAULT_USER_AVATAR = '/images/default-user-avatar.png';
+export const DEFAULT_COMPANY_LOGO = DefaultCompanyLogo;
+export const DEFAULT_USER_AVATAR = DefaultUserAvatar;
 
 export function getCompanyLogoUrl(logoPath) {
   if (typeof logoPath === 'string' && logoPath.trim().startsWith('http')) {

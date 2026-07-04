@@ -1,29 +1,25 @@
 import { supabase } from '../config/supabase';
+import { reportError } from '../utils/logger';
 
 const PUSH_FUNCTION = 'send_push';
 const PUSH_BATCH_SIZE = 2000;
 
-async function sendPushBatch(recipientIds, title, body, data = {}, playerIdsByUser = {}) {
+async function sendPushBatch(recipientIds, title, body, data = {}) {
   if (!recipientIds?.length) return;
 
   for (let i = 0; i < recipientIds.length; i += PUSH_BATCH_SIZE) {
     const batch = recipientIds.slice(i, i + PUSH_BATCH_SIZE);
-    const playerIds = batch
-      .map((id) => playerIdsByUser[id])
-      .filter(Boolean);
-
     try {
       await supabase.functions.invoke(PUSH_FUNCTION, {
         body: {
-          recipient_ids: playerIds.length ? undefined : batch,
-          player_ids: playerIds.length ? playerIds : undefined,
+          recipient_ids: batch,
           title,
           body,
           data,
         },
       });
     } catch (error) {
-      console.warn('[TrabaGE] Push notification batch failed:', error?.message || error);
+      reportError(error, { area: 'push_notification_batch', recipients: batch.length });
     }
   }
 }
@@ -53,6 +49,9 @@ export const notificationsService = {
       .eq('recipient_id', userId)
       .eq('read', false),
 
+  delete: (id) =>
+    supabase.from('notifications').delete().eq('id', id),
+
   create: (data) =>
     supabase.rpc('create_notification', {
       p_recipient_id: data.recipient_id,
@@ -61,6 +60,10 @@ export const notificationsService = {
       p_body: data.body ?? null,
       p_metadata: data.metadata ?? null,
     }),
+
+  sendPush: async ({ recipientIds, title, body, data = {} }) => {
+    await sendPushBatch(recipientIds ?? [], title, body, data);
+  },
 
   /**
    * Notify all followers of a company/institution (in-app + OneSignal-ready push).
@@ -100,7 +103,7 @@ export const notificationsService = {
     return { data: { notified: ids.length }, error: null };
   },
 
-  sendJobRecommendationPush: async ({ recipientIds, jobTitle, jobId, playerIdsByUser = {} }) => {
+  sendJobRecommendationPush: async ({ recipientIds, jobTitle, jobId }) => {
     if (!recipientIds?.length) return;
 
     const title = 'Nueva oferta para ti';
@@ -111,21 +114,6 @@ export const notificationsService = {
       job_id: jobId,
     };
 
-    for (const recipientId of recipientIds) {
-      const playerId = playerIdsByUser[recipientId];
-      try {
-        await supabase.functions.invoke(PUSH_FUNCTION, {
-          body: {
-            recipient_ids: playerId ? undefined : [recipientId],
-            player_ids: playerId ? [playerId] : undefined,
-            title,
-            body,
-            data,
-          },
-        });
-      } catch (error) {
-        console.warn('[TrabaGE] Job recommendation push failed:', error?.message || error);
-      }
-    }
+    await sendPushBatch(recipientIds, title, body, data);
   },
 };

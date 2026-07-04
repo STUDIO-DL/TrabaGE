@@ -6,7 +6,7 @@ import { formatSalary } from '../../../utils/formatSalary';
 function CompanyJobItem({ job }) {
   return (
     <Link
-      to={`/candidate/jobs/${job.id}`}
+      to={`/jobs/${job.id}`}
       className="flex items-center justify-between gap-3 rounded-xl border border-primary-100 bg-white px-4 py-3 transition hover:border-primary-200 hover:bg-primary-50/30"
     >
       <div className="min-w-0 flex-1">

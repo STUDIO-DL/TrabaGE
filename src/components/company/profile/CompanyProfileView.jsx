@@ -5,6 +5,7 @@ import CompanyContactSection from './CompanyContactSection';
 import CompanyJobsSection from './CompanyJobsSection';
 import CompanyActivitySection from './CompanyActivitySection';
 import CompanyFollowersSection from './CompanyFollowersSection';
+import CompanySocialCard from './CompanySocialCard';
 import { formatFollowerCount } from '../../../utils/formatFollowerCount';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
 
@@ -75,6 +76,13 @@ export default function CompanyProfileView({
         onSave={onSaveContact}
         saving={contactSaving}
       />
+      <div className="border-b border-gray-200 bg-white px-4 py-5">
+        <CompanySocialCard
+          profile={profile}
+          readOnly={readOnly}
+          onAddSocial={onEditDetails}
+        />
+      </div>
       <CompanyJobsSection jobs={jobs} readOnly={readOnly} />
       <CompanyFollowersSection
         targetType={targetType}

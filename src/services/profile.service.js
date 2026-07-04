@@ -28,11 +28,23 @@ export const profileService = {
       .select('*')
       .maybeSingle(),
 
-  updateOneSignalPlayerId: (userId, playerId) =>
-    supabase
+  updateOneSignalPlayerId: async (userId, playerId) => {
+    const candidateResult = await supabase
       .from('candidate_profiles')
       .update({ onesignal_player_id: playerId })
-      .eq('user_id', userId),
+      .eq('user_id', userId);
+
+    if (!candidateResult.error) {
+      const companyResult = await supabase
+        .from('company_profiles')
+        .update({ onesignal_player_id: playerId })
+        .eq('user_id', userId);
+
+      return companyResult.error ? candidateResult : companyResult;
+    }
+
+    return candidateResult;
+  },
 
   getCandidateFullProfile: (userId) =>
     supabase

@@ -8,25 +8,36 @@ export default defineConfig({
     strictPort: false,
     host: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          telemetry: ['@sentry/react', 'react-onesignal'],
+          icons: ['lucide-react'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: { enabled: false },
-      includeAssets: ['robots.txt', 'icons/*.png', 'manifest.json'],
+      includeAssets: ['robots.txt', 'sitemap.xml', 'favicon.ico', 'icons/*.png', 'manifest.json'],
       manifest: false,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'supabase-cache',
-              networkTimeoutSeconds: 10,
-            },
-          },
+        globPatterns: [
+          'index.html',
+          'manifest.json',
+          'robots.txt',
+          'sitemap.xml',
+          'favicon.ico',
+          'assets/**/*.{js,css,png,svg,ico}',
+          'icons/*.png',
         ],
+        globIgnores: ['**/OneSignalSDKWorker.js', '**/OneSignalSDKUpdaterWorker.js'],
       },
     }),
   ],

@@ -58,6 +58,69 @@ function buildJobHaystack(job) {
     .toLowerCase();
 }
 
+function normalizeText(value) {
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function asList(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.filter(Boolean);
+  return [value].filter(Boolean);
+}
+
+function extractSkillName(item) {
+  return item?.name || item?.skill || item;
+}
+
+function extractLanguageName(item) {
+  return item?.name || item?.language || item;
+}
+
+function extractEducationText(item) {
+  return [item?.degree, item?.field, item?.program, item?.grade, item?.institution]
+    .filter(Boolean)
+    .join(' ');
+}
+
+function inferEducationLevelFromText(value) {
+  const text = normalizeText(value);
+  if (!text) return null;
+  if (/(master|maestr|posgrado|postgrado|mba)/.test(text)) return 'master';
+  if (/(licenci|grado|universit|ingenier|bachelor)/.test(text)) return 'degree';
+  if (/(tecnico|técnico|fp|formacion profesional)/.test(text)) return 'technical';
+  if (/(bachiller|secundaria)/.test(text)) return 'secondary';
+  return null;
+}
+
+function educationMeetsRequirement(userLevel, requiredLevel) {
+  if (!requiredLevel) return false;
+  if (!userLevel) return false;
+  const order = ['secondary', 'technical', 'degree', 'master'];
+  const userIndex = order.indexOf(userLevel);
+  const requiredIndex = order.indexOf(requiredLevel);
+  return userIndex >= 0 && requiredIndex >= 0 && userIndex >= requiredIndex;
+}
+
+function extractSalaryNumber(value) {
+  if (value == null) return null;
+  const numbers = String(value)
+    .match(/\d[\d.,]*/g)
+    ?.map((item) => Number(item.replace(/[.,](?=\d{3}\b)/g, '').replace(',', '.')))
+    .filter((item) => Number.isFinite(item));
+
+  if (!numbers?.length) return null;
+  return Math.max(...numbers);
+}
+
+function scoreRatio(matches, total, weight) {
+  if (!total) return 0;
+  return Math.round(Math.min(1, matches / total) * weight);
+}
+
 export function inferExperienceLevelFromYears(years) {
   if (years == null || Number.isNaN(Number(years))) return null;
   const value = Number(years);
@@ -97,8 +160,12 @@ function experienceLevelsCompatible(userLevel, jobLevel) {
 
 export function extractUserKeywords(user) {
   const prefs = normalizeJobPreferences(user?.job_preferences);
-  const skillNames = (user?.skills ?? []).map((item) => item.name).filter(Boolean);
+  const skillNames = (user?.skills ?? []).map(extractSkillName).filter(Boolean);
   const experienceTitles = (user?.experience ?? []).map((item) => item.position).filter(Boolean);
+  const educationText = (user?.education ?? [])
+    .map(extractEducationText)
+    .filter(Boolean);
+  const languages = (user?.languages ?? []).map(extractLanguageName).filter(Boolean);
 
   return uniqueTokens(
     tokenize(
@@ -107,6 +174,8 @@ export function extractUserKeywords(user) {
         user?.about,
         ...skillNames,
         ...experienceTitles,
+        ...educationText,
+        ...languages,
         ...prefs.keywords,
       ].join(' '),
     ),
@@ -120,6 +189,11 @@ export function extractJobKeywords(job) {
       [
         job.title,
         job.description,
+        asList(job.required_skills).join(' '),
+        job.category,
+        job.sector,
+        job.education_level,
+        asList(job.required_languages).join(' '),
         Array.isArray(requirements) ? requirements.join(' ') : job.requirements,
         job.company_profiles?.sector,
       ].join(' '),
@@ -127,14 +201,121 @@ export function extractJobKeywords(job) {
   );
 }
 
-function keywordOverlapScore(userKeywords, jobKeywords) {
+function skillScore(user, job) {
+  const userSkills = uniqueTokens((user?.skills ?? []).map(extractSkillName).flatMap(tokenize));
+  const userKeywords = extractUserKeywords(user);
+  const requiredSkills = uniqueTokens([
+    ...asList(job.required_skills).flatMap(tokenize),
+    ...parseRequirements(job.requirements).flatMap(tokenize),
+    ...tokenize(job.title),
+  ]);
+
+  const jobKeywords = requiredSkills.length ? requiredSkills : extractJobKeywords(job);
   if (!userKeywords.length || !jobKeywords.length) return 0;
 
   const jobSet = new Set(jobKeywords);
-  const matches = userKeywords.filter((keyword) => jobSet.has(keyword)).length;
-  const ratio = matches / Math.max(userKeywords.length, 1);
+  const strongMatches = userSkills.filter((keyword) => jobSet.has(keyword)).length;
+  const keywordMatches = userKeywords.filter((keyword) => jobSet.has(keyword)).length;
 
-  return Math.round(Math.min(1, ratio * 2) * SCORE_WEIGHTS.keywords);
+  if (requiredSkills.length) {
+    return scoreRatio(strongMatches * 1.5 + keywordMatches * 0.5, requiredSkills.length, SCORE_WEIGHTS.skills);
+  }
+
+  return scoreRatio(keywordMatches, Math.max(userKeywords.length, 1), SCORE_WEIGHTS.skills);
+}
+
+function experienceScore(user, job) {
+  const userLevel = resolveUserExperienceLevel(user);
+  const jobLevel = job.experience_level || inferJobExperienceLevel(job);
+  if (!jobLevel) return 0;
+  return experienceLevelsCompatible(userLevel, jobLevel) ? SCORE_WEIGHTS.experience : 0;
+}
+
+function locationScore(user, job, prefs) {
+  const locations = prefs.preferred_locations.length
+    ? prefs.preferred_locations
+    : prefs.preferred_cities;
+  const preferred = locations.map(normalizeText);
+  const userCity = normalizeText(user?.city);
+  const userCountry = normalizeText(user?.country);
+  const jobCity = normalizeText(job.city);
+  const jobCountry = normalizeText(job.country || job.company_profiles?.country);
+
+  if (jobCity && (preferred.includes(jobCity) || userCity === jobCity)) {
+    return SCORE_WEIGHTS.location;
+  }
+  if (jobCountry && userCountry && jobCountry === userCountry) {
+    return Math.round(SCORE_WEIGHTS.location * 0.6);
+  }
+  return 0;
+}
+
+function workModeScore(job, prefs) {
+  let score = 0;
+  if (prefs.preferred_work_modes.length && job.work_mode && prefs.preferred_work_modes.includes(job.work_mode)) {
+    score += 6;
+  }
+  if (
+    prefs.preferred_job_types.length &&
+    job.job_type &&
+    prefs.preferred_job_types.includes(job.job_type)
+  ) {
+    score += 4;
+  }
+  return Math.min(SCORE_WEIGHTS.workMode, score);
+}
+
+function preferenceScore(user, job, prefs) {
+  let score = 0;
+  const categories = prefs.preferred_categories.length
+    ? prefs.preferred_categories
+    : prefs.preferred_sectors;
+  const sector = job.sector || job.company_profiles?.sector;
+  if (categories.length && sector && categories.includes(sector)) score += 3;
+
+  const expectedSalary = extractSalaryNumber(prefs.expected_salary || user?.expected_salary);
+  const jobSalary = extractSalaryNumber(job.salary);
+  if (job.salary_negotiable || (expectedSalary && jobSalary && jobSalary >= expectedSalary)) score += 2;
+
+  const userLanguages = new Set(
+    [...(user?.languages ?? []).map(extractLanguageName), ...prefs.languages]
+      .filter(Boolean)
+      .map(normalizeText),
+  );
+  const requiredLanguages = asList(job.required_languages).map(normalizeText);
+  if (requiredLanguages.length && requiredLanguages.some((language) => userLanguages.has(language))) score += 2;
+
+  const userEducationLevel =
+    prefs.education_level ||
+    (user?.education ?? [])
+      .map(extractEducationText)
+      .map(inferEducationLevelFromText)
+      .find(Boolean);
+  const requiredEducation = job.education_level || inferEducationLevelFromText(job.description);
+  if (educationMeetsRequirement(userEducationLevel, requiredEducation)) score += 2;
+
+  if (prefs.availability === 'immediate' && !job.application_deadline) score += 1;
+
+  return Math.min(SCORE_WEIGHTS.preferences, score);
+}
+
+function recentActivityScore(user, job) {
+  let score = 0;
+  if (user?.followed_company_ids?.includes(job.company_id)) score += 3;
+
+  const applicationHistory = user?.application_history ?? [];
+  const sector = job.sector || job.company_profiles?.sector;
+  const hasRelatedApplication = applicationHistory.some((application) => {
+    const appliedSector = application.jobs?.company_profiles?.sector || application.company_sector;
+    const appliedTitle = application.jobs?.title || application.job_title;
+    return (
+      (sector && appliedSector === sector) ||
+      extractJobKeywords(job).some((keyword) => tokenize(appliedTitle).includes(keyword))
+    );
+  });
+  if (hasRelatedApplication) score += 2;
+
+  return Math.min(SCORE_WEIGHTS.recentActivity, score);
 }
 
 /**
@@ -146,36 +327,12 @@ export function calculateJobMatch(user, job) {
   const prefs = normalizeJobPreferences(user.job_preferences);
   let score = 0;
 
-  const categories = prefs.preferred_categories.length
-    ? prefs.preferred_categories
-    : prefs.preferred_sectors;
-  const sector = job.company_profiles?.sector;
-  if (categories.length && sector && categories.includes(sector)) {
-    score += SCORE_WEIGHTS.category;
-  }
-
-  const locations = prefs.preferred_locations.length
-    ? prefs.preferred_locations
-    : prefs.preferred_cities;
-  if (locations.length && job.city && locations.includes(job.city)) {
-    score += SCORE_WEIGHTS.location;
-  }
-
-  if (
-    prefs.preferred_job_types.length &&
-    job.job_type &&
-    prefs.preferred_job_types.includes(job.job_type)
-  ) {
-    score += SCORE_WEIGHTS.jobType;
-  }
-
-  const userLevel = resolveUserExperienceLevel(user);
-  const jobLevel = inferJobExperienceLevel(job);
-  if (experienceLevelsCompatible(userLevel, jobLevel)) {
-    score += SCORE_WEIGHTS.experience;
-  }
-
-  score += keywordOverlapScore(extractUserKeywords(user), extractJobKeywords(job));
+  score += skillScore(user, job);
+  score += experienceScore(user, job);
+  score += locationScore(user, job, prefs);
+  score += workModeScore(job, prefs);
+  score += preferenceScore(user, job, prefs);
+  score += recentActivityScore(user, job);
 
   return Math.min(100, Math.max(0, score));
 }

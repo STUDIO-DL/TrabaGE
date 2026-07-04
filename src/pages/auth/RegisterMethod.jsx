@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
@@ -11,11 +11,19 @@ import { mapAuthError } from '../../utils/errors';
 export default function RegisterMethod() {
   const navigate = useNavigate();
   const location = useLocation();
-  const accountType = location.state?.accountType ?? ROLES.CANDIDATE;
+  const [searchParams] = useSearchParams();
+  const requestedType = location.state?.accountType ?? searchParams.get('type');
+  const accountType = [ROLES.CANDIDATE, ROLES.COMPANY].includes(requestedType) ? requestedType : null;
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (!accountType) {
+      navigate('/account-type', { replace: true });
+    }
+  }, [accountType, navigate]);
+
   const goToEmail = () => {
-    navigate('/register', { state: { accountType } });
+    navigate(`/register?type=${accountType}`, { state: { accountType } });
   };
 
   const handleGoogle = async () => {
@@ -27,6 +35,8 @@ export default function RegisterMethod() {
       setError(mapAuthError(googleError));
     }
   };
+
+  if (!accountType) return null;
 
   return (
     <MobileScreenLayout

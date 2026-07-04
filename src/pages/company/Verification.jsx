@@ -21,6 +21,7 @@ import {
 import { FILE_HINTS } from '../../utils/validateFile';
 import { formatRelativeTime } from '../../utils/formatDate';
 import { PREVIEW_COMPANY_PROFILE, PREVIEW_COMPANY_VERIFICATION } from '../../constants/preview';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function Verification() {
   const { user, isPreviewMode } = useAuth();
@@ -89,7 +90,7 @@ export default function Verification() {
 
     if (storageError) {
       setUploading(false);
-      showToast(storageError.message, 'error');
+      showToast(getSupabaseErrorMessage(storageError), 'error');
       return;
     }
 
@@ -99,7 +100,7 @@ export default function Verification() {
     setUploading(false);
 
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
 
@@ -178,7 +179,7 @@ export default function Verification() {
           accept={VERIFICATION_ACCEPT}
           fileType="verification"
           loading={uploading}
-          maxSize="10 MB"
+          maxSize={FILE_HINTS.verification}
           onUpload={handleUpload}
         />
       </Card>

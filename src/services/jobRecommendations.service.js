@@ -1,42 +1,8 @@
 import { supabase } from '../config/supabase';
-import { calculateJobMatch, MATCH_THRESHOLD } from '../utils/calculateJobMatch';
 import { notificationsService } from './notifications.service';
+import { reportError } from '../utils/logger';
 
 const MATCH_FUNCTION = 'match_job_recommendations';
-
-async function fetchEligibleCandidates() {
-  const { data, error } = await supabase
-    .from('candidate_profiles')
-    .select(
-      `
-      user_id,
-      headline,
-      about,
-      years_experience,
-      job_preferences,
-      notifications_enabled,
-      notification_frequency,
-      onesignal_player_id,
-      skills(name),
-      experience(position)
-    `,
-    )
-    .eq('notifications_enabled', true)
-    .eq('setup_complete', true);
-
-  return { data: data ?? [], error };
-}
-
-function buildMatchPayload(candidates, job) {
-  return candidates
-    .map((candidate) => ({
-      user_id: candidate.user_id,
-      score: calculateJobMatch(candidate, job),
-      player_id: candidate.onesignal_player_id,
-      frequency: candidate.notification_frequency ?? 'instant',
-    }))
-    .filter((item) => item.score >= MATCH_THRESHOLD);
-}
 
 export const jobRecommendationsService = {
   processNewJob: async (job) => {
@@ -55,65 +21,21 @@ export const jobRecommendationsService = {
             recipientIds: pushIds,
             jobTitle: job.title,
             jobId: job.id,
-            playerIdsByUser: edgeResult.player_ids_by_user ?? {},
           });
         }
         return { data: edgeResult, error: null };
       }
     } catch (error) {
-      console.warn('[TrabaGE] Edge function unavailable, using client fallback:', error);
+      reportError(error, { area: 'job_recommendations_edge_unavailable', jobId: job.id });
     }
 
-    const { data: fullJob, error: jobError } = await supabase
-      .from('jobs')
-      .select('*, company_profiles(company_name, sector)')
-      .eq('id', job.id)
-      .single();
-
-    if (jobError || !fullJob) {
-      return { data: null, error: jobError ?? new Error('No se pudo cargar el empleo') };
-    }
-
-    const { data: candidates, error: candidatesError } = await fetchEligibleCandidates();
-    if (candidatesError) {
-      return { data: null, error: candidatesError };
-    }
-
-    const matches = buildMatchPayload(candidates, fullJob);
-    if (!matches.length) {
-      return { data: { in_app_count: 0, push_recipient_ids: [] }, error: null };
-    }
-
-    const { data: notifyResult, error: notifyError } = await supabase.rpc(
-      'notify_job_recommendations',
-      {
-        p_job_id: job.id,
-        p_matches: matches.map(({ user_id, score }) => ({ user_id, score })),
+    return {
+      data: {
+        in_app_count: 0,
+        push_recipient_ids: [],
+        reason: 'edge_function_required',
       },
-    );
-
-    if (notifyError) {
-      return { data: null, error: notifyError };
-    }
-
-    const pushIds = Array.isArray(notifyResult?.push_recipient_ids)
-      ? notifyResult.push_recipient_ids
-      : [];
-    if (pushIds.length) {
-      const playerMap = Object.fromEntries(
-        matches
-          .filter((item) => pushIds.includes(item.user_id) && item.player_id)
-          .map((item) => [item.user_id, item.player_id]),
-      );
-
-      await notificationsService.sendJobRecommendationPush({
-        recipientIds: pushIds,
-        jobTitle: fullJob.title,
-        jobId: fullJob.id,
-        playerIdsByUser: playerMap,
-      });
-    }
-
-    return { data: notifyResult, error: null };
+      error: null,
+    };
   },
 };

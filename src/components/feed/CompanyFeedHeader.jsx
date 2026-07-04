@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import { Bell, Filter, Search, ICON_COLORS, ICON_SIZES } from '../../constants/icons';
@@ -5,6 +6,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 
 export default function CompanyFeedHeader({ query = '', onQueryChange }) {
   const { unreadCount } = useNotifications();
+  const searchInputRef = useRef(null);
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-100 bg-white">
@@ -31,6 +33,7 @@ export default function CompanyFeedHeader({ query = '', onQueryChange }) {
               className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${ICON_COLORS.inactive}`}
             />
             <input
+              ref={searchInputRef}
               type="search"
               name="companyFeedSearch"
               value={query}
@@ -42,6 +45,7 @@ export default function CompanyFeedHeader({ query = '', onQueryChange }) {
           </div>
           <button
             type="button"
+            onClick={() => searchInputRef.current?.focus()}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
             aria-label="Filtros"
           >

@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import { formatDate } from '../../utils/formatDate';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 function getJobDisplayStatus(job) {
   if (job.admin_hidden) return { key: 'hidden', label: 'Oculta' };
@@ -16,11 +18,12 @@ export default function AdminJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
+  const [query, setQuery] = useState('');
 
   const loadJobs = async () => {
     setLoading(true);
     const { data, error } = await adminService.getJobs();
-    if (error) showToast(error.message, 'error');
+    if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setJobs(data ?? []);
     setLoading(false);
   };
@@ -32,15 +35,50 @@ export default function AdminJobs() {
   const handleToggleHidden = async (job) => {
     setActionId(job.id);
     const nextHidden = !job.admin_hidden;
-    const { error } = await adminService.setJobHidden(job.id, nextHidden);
+    const { error } = await adminService.setJobModeration(job.id, {
+      hidden: nextHidden,
+      status: nextHidden ? 'paused' : 'active',
+    });
     setActionId(null);
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
     showToast(nextHidden ? 'Oferta oculta' : 'Oferta restaurada', 'success');
     await loadJobs();
   };
+
+  const handleDelete = async (job) => {
+    if (!window.confirm(`¿Eliminar la oferta "${job.title}" del panel público? Se cerrará y quedará oculta.`)) return;
+
+    setActionId(job.id);
+    const { error } = await adminService.deleteJob(job.id);
+    setActionId(null);
+    if (error) {
+      showToast(getSupabaseErrorMessage(error), 'error');
+      return;
+    }
+    showToast('Oferta cerrada y oculta', 'success');
+    await loadJobs();
+  };
+
+  const filteredJobs = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return jobs;
+
+    return jobs.filter((job) =>
+      [
+        job.title,
+        job.company_profiles?.company_name,
+        job.city,
+        job.status,
+        job.job_type,
+        job.work_mode,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalized)),
+    );
+  }, [jobs, query]);
 
   const columns = useMemo(
     () => [
@@ -78,7 +116,7 @@ export default function AdminJobs() {
               size="sm"
               variant="secondary"
               onClick={() =>
-                window.open(`/candidate/jobs/${row.id}`, '_blank', 'noopener,noreferrer')
+                window.open(`/jobs/${row.id}`, '_blank', 'noopener,noreferrer')
               }
             >
               Ver
@@ -89,7 +127,15 @@ export default function AdminJobs() {
               loading={actionId === row.id}
               onClick={() => handleToggleHidden(row)}
             >
-              {row.admin_hidden ? 'Restaurar' : 'Ocultar'}
+              {row.admin_hidden ? 'Reactivar' : 'Suspender'}
+            </Button>
+            <Button
+              size="sm"
+              variant="danger"
+              loading={actionId === row.id}
+              onClick={() => handleDelete(row)}
+            >
+              Eliminar
             </Button>
           </div>
         ),
@@ -99,11 +145,19 @@ export default function AdminJobs() {
   );
 
   return (
-    <AdminTable
-      columns={columns}
-      rows={jobs.map((job) => ({ ...job, id: job.id }))}
-      loading={loading}
-      emptyMessage="No hay ofertas de trabajo."
-    />
+    <div className="space-y-4">
+      <Input
+        label="Buscar ofertas"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder="Buscar por título, empresa, ciudad o estado"
+      />
+      <AdminTable
+        columns={columns}
+        rows={filteredJobs.map((job) => ({ ...job, id: job.id }))}
+        loading={loading}
+        emptyMessage="No hay ofertas de trabajo."
+      />
+    </div>
   );
 }

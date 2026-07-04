@@ -7,6 +7,7 @@ import Modal from '../../components/ui/Modal';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import { formatDate } from '../../utils/formatDate';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function AdminVerifications() {
   const { showToast } = useNotificationContext();
@@ -15,11 +16,13 @@ export default function AdminVerifications() {
   const [reviewingId, setReviewingId] = useState(null);
   const [rejectModal, setRejectModal] = useState({ open: false, id: null });
   const [rejectNotes, setRejectNotes] = useState('');
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   const loadVerifications = async () => {
     setLoading(true);
     const { data, error } = await adminService.getAllVerifications();
-    if (error) showToast(error.message, 'error');
+    if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setVerifications(data ?? []);
     setLoading(false);
   };
@@ -33,7 +36,7 @@ export default function AdminVerifications() {
     const { error } = await adminService.reviewVerification(id, 'approved', null);
     setReviewingId(null);
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
     showToast('Empresa verificada', 'success');
@@ -42,6 +45,11 @@ export default function AdminVerifications() {
 
   const handleReject = async () => {
     if (!rejectModal.id) return;
+    if (!rejectNotes.trim()) {
+      showToast('Indica el motivo del rechazo para que la empresa pueda corregirlo.', 'error');
+      return;
+    }
+
     setReviewingId(rejectModal.id);
     const { error } = await adminService.reviewVerification(
       rejectModal.id,
@@ -52,7 +60,7 @@ export default function AdminVerifications() {
     setRejectModal({ open: false, id: null });
     setRejectNotes('');
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
     showToast('Solicitud rechazada', 'success');
@@ -62,11 +70,30 @@ export default function AdminVerifications() {
   const handlePreview = async (documentPath) => {
     const { data, error } = await adminService.getVerificationDocumentUrl(documentPath);
     if (error || !data?.signedUrl) {
-      showToast(error?.message || 'No se pudo abrir el documento', 'error');
+      showToast(getSupabaseErrorMessage(error, 'No se pudo abrir el documento'), 'error');
       return;
     }
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   };
+
+  const filteredVerifications = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return verifications.filter((item) => {
+      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      const matchesQuery =
+        !normalized ||
+        [
+          item.company_profiles?.company_name,
+          item.document_name,
+          item.status,
+          item.review_notes,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalized));
+
+      return matchesStatus && matchesQuery;
+    });
+  }, [query, statusFilter, verifications]);
 
   const columns = useMemo(
     () => [
@@ -84,6 +111,15 @@ export default function AdminVerifications() {
         key: 'document',
         label: 'Documento',
         render: (row) => row.document_name || 'Documento adjunto',
+      },
+      {
+        key: 'review_notes',
+        label: 'Notas',
+        render: (row) => (
+          <span className="block max-w-xs truncate text-gray-600">
+            {row.review_notes || '—'}
+          </span>
+        ),
       },
       {
         key: 'status',
@@ -125,9 +161,30 @@ export default function AdminVerifications() {
 
   return (
     <>
+      <div className="mb-4 grid gap-3 md:grid-cols-[1fr_220px]">
+        <Input
+          label="Buscar verificaciones"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Buscar por empresa, documento o estado"
+        />
+        <label className="text-sm font-medium text-gray-700">
+          Estado
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900"
+          >
+            <option value="all">Todos</option>
+            <option value="pending">Pendientes</option>
+            <option value="approved">Aprobadas</option>
+            <option value="rejected">Rechazadas</option>
+          </select>
+        </label>
+      </div>
       <AdminTable
         columns={columns}
-        rows={verifications.map((item) => ({ ...item, id: item.id }))}
+        rows={filteredVerifications.map((item) => ({ ...item, id: item.id }))}
         loading={loading}
         emptyMessage="No hay solicitudes de verificación."
       />
@@ -151,6 +208,7 @@ export default function AdminVerifications() {
             fullWidth
             variant="danger"
             loading={reviewingId === rejectModal.id}
+            disabled={!rejectNotes.trim()}
             onClick={handleReject}
           >
             Confirmar rechazo

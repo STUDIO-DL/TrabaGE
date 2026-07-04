@@ -1,5 +1,9 @@
 import { supabase } from '../config/supabase';
 import { calculateJobMatch, MATCH_THRESHOLD } from '../utils/calculateJobMatch';
+import { jobsService } from './jobs.service';
+import { profileService } from './profile.service';
+import { followsService, FOLLOWS_TARGET } from './follows.service';
+import { applicationsService } from './applications.service';
 
 export const jobMatchesService = {
   upsertMatch: (userId, jobId, score) =>
@@ -30,14 +34,42 @@ export const jobMatchesService = {
 
     if (!matches.length) return { data: [], error: null };
 
-    const results = await Promise.all(
-      matches.map((item) =>
-        jobMatchesService.upsertMatch(item.user_id, item.job_id, item.score),
-      ),
-    );
+    const { error } = await supabase.rpc('upsert_job_matches', {
+      p_matches: matches,
+    });
 
-    const error = results.find((result) => result.error)?.error ?? null;
+    if (error?.code === 'PGRST202' || error?.message?.includes('upsert_job_matches')) {
+      const results = await Promise.all(
+        matches.map((item) =>
+          jobMatchesService.upsertMatch(item.user_id, item.job_id, item.score),
+        ),
+      );
+      const fallbackError = results.find((result) => result.error)?.error ?? null;
+      return { data: matches, error: fallbackError };
+    }
+
     return { data: matches, error };
+  },
+
+  recalculateForCandidate: async (userId) => {
+    const [profileResult, jobsResult, followsResult, applicationsResult] = await Promise.all([
+      profileService.getCandidateFullProfile(userId),
+      jobsService.getActiveJobs(),
+      followsService.getFollowing(userId, FOLLOWS_TARGET.COMPANY),
+      applicationsService.getCandidateApplications(userId),
+    ]);
+
+    if (profileResult.error || jobsResult.error) {
+      return { data: null, error: profileResult.error || jobsResult.error };
+    }
+
+    const profile = {
+      ...profileResult.data,
+      followed_company_ids: (followsResult.data ?? []).map((row) => row.target_id),
+      application_history: applicationsResult.data ?? [],
+    };
+
+    return jobMatchesService.cacheUserJobScores(userId, jobsResult.data ?? [], profile);
   },
 };
 

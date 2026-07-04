@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import PageContainer from '../../components/layout/PageContainer';
 import ApplicantCard from '../../components/company/ApplicantCard';
 import VerifiedBadge from '../../components/company/VerifiedBadge';
 import EmptyState from '../../components/common/EmptyState';
 import { ApplicationListSkeleton } from '../../components/common/Skeleton';
+import Input from '../../components/ui/Input';
+import Select from '../../components/ui/Select';
 import { useApplications } from '../../hooks/useApplications';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
@@ -14,6 +16,8 @@ import { resolveCvBucket } from '../../utils/storagePaths';
 import { profileService } from '../../services/profile.service';
 import { openCandidateContact } from '../../utils/contact';
 import { isCompanyVerified } from '../../utils/companyVerification';
+import { APPLICATION_STATUSES } from '../../constants/applicationStatuses';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function Applicants() {
   const { applications, loading, refetch } = useApplications();
@@ -22,6 +26,24 @@ export default function Applicants() {
   const { showToast } = useNotificationContext();
   const verified = isCompanyVerified(profile);
   const [updatingId, setUpdatingId] = useState(null);
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+
+  const filteredApplications = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return applications.filter((application) => {
+      const matchesStatus = statusFilter === 'all' || application.status === statusFilter;
+      const candidateName = application.candidate_profiles?.full_name || application.full_name || '';
+      const jobTitle = application.jobs?.title || '';
+      const matchesQuery =
+        !normalizedQuery
+        || candidateName.toLowerCase().includes(normalizedQuery)
+        || jobTitle.toLowerCase().includes(normalizedQuery);
+
+      return matchesStatus && matchesQuery;
+    });
+  }, [applications, query, statusFilter]);
 
   const handleDownloadCv = async (applicationId) => {
     if (isPreviewMode) {
@@ -62,7 +84,7 @@ export default function Applicants() {
     setUpdatingId(null);
 
     if (error) {
-      showToast(error.message, 'error');
+      showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
 
@@ -78,15 +100,44 @@ export default function Applicants() {
       actions={verified ? <VerifiedBadge size="md" /> : null}
     >
       <div className="p-4">
+        <div className="mb-4 grid gap-3 sm:grid-cols-2">
+          <Input
+            label="Buscar"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Nombre del candidato u oferta"
+          />
+          <Select
+            label="Estado"
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value)}
+            options={[
+              { value: 'all', label: 'Todos los estados' },
+              ...APPLICATION_STATUSES.map((status) => ({
+                value: status.value,
+                label: status.label,
+              })),
+            ]}
+          />
+        </div>
+        {!loading && (
+          <p className="mb-3 text-sm text-gray-500">
+            {filteredApplications.length} de {applications.length} postulaciones
+          </p>
+        )}
         {loading ? (
           <ApplicationListSkeleton count={3} />
-        ) : applications.length === 0 ? (
+        ) : filteredApplications.length === 0 ? (
           <EmptyState
             title="Sin candidatos"
-            description="Cuando alguien aplique a tus empleos, aparecerá aquí."
+            description={
+              applications.length === 0
+                ? 'Cuando alguien aplique a tus empleos, aparecerá aquí.'
+                : 'No hay candidatos que coincidan con los filtros.'
+            }
           />
         ) : (
-          applications.map((app) => (
+          filteredApplications.map((app) => (
             <ApplicantCard
               key={app.id}
               application={app}

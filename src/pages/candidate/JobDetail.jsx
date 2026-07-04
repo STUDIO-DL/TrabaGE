@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import FormPageLayout from '../../components/layout/FormPageLayout';
@@ -10,24 +10,31 @@ import { isCompanyVerified } from '../../utils/companyVerification';
 import Button from '../../components/ui/Button';
 import AppIcon from '../../components/common/AppIcon';
 import Spinner from '../../components/ui/Spinner';
-import { FileText, ICON_SIZES } from '../../constants/icons';
+import { Bookmark, FileText, ICON_SIZES } from '../../constants/icons';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
 import { useJob } from '../../hooks/useJobs';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { analyticsService } from '../../services/analytics.service';
+import { applicationsService } from '../../services/applications.service';
+import { jobsService } from '../../services/jobs.service';
 import { formatSalary } from '../../utils/formatSalary';
 import { getWorkModeLabel } from '../../constants/workModes';
 import { parseBenefits, parseRequirements } from '../../utils/jobParsing';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
+import { useSavedJobs } from '../../hooks/useSavedJobs';
+import { ROLES } from '../../constants/roles';
 
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isPreviewMode, user } = useAuth();
+  const { isPreviewMode, user, role } = useAuth();
   const { showToast } = useNotificationContext();
   const { job, loading } = useJob(id);
+  const { isSaved, toggleSavedJob, actionLoadingId } = useSavedJobs();
+  const [applicationCount, setApplicationCount] = useState(0);
+  const [application, setApplication] = useState(null);
   const company = job?.company_profiles;
 
   useEffect(() => {
@@ -35,14 +42,44 @@ export default function JobDetail() {
     analyticsService.trackJobViewed(user.id, id, { source: 'job_detail' });
   }, [user?.id, id, loading, job]);
 
+  useEffect(() => {
+    if (!id || loading || !job) return;
+
+    jobsService.getApplicationCount(id).then(({ count }) => {
+      setApplicationCount(count ?? 0);
+    });
+
+    if (user?.id && !isPreviewMode) {
+      applicationsService.hasApplied(user.id, id).then(({ data }) => {
+        setApplication(data);
+      });
+    }
+  }, [id, isPreviewMode, job, loading, user?.id]);
+
   const handleApply = () => {
-    if (isPreviewMode) {
+    if (isPreviewMode || !user?.id) {
       showToast(GUEST_MODE_MESSAGE, 'info');
       navigate('/login');
       return;
     }
+    if (role !== ROLES.CANDIDATE) {
+      showToast('Solo las cuentas de candidato pueden postularse a ofertas.', 'info');
+      return;
+    }
     navigate(`/candidate/jobs/${id}/apply`);
   };
+
+  const handleSaveToggle = async () => {
+    if (role !== ROLES.CANDIDATE) {
+      showToast('Solo las cuentas de candidato pueden guardar ofertas.', 'info');
+      return;
+    }
+    const result = await toggleSavedJob(id);
+    showToast(result.message, result.ok ? 'success' : 'error');
+  };
+
+  const hasActiveApplication = application && application.status !== 'withdrawn';
+  const canUseCandidateActions = role === ROLES.CANDIDATE;
 
   if (loading) {
     return (
@@ -73,10 +110,29 @@ export default function JobDetail() {
         />
       }
       footer={
-        <Button fullWidth className="btn-primary-mobile !inline-flex !rounded-btn-primary !py-0" onClick={handleApply}>
-          <AppIcon icon={FileText} size={ICON_SIZES.default} className="text-white" />
-          Aplicar
-        </Button>
+        <div className="flex gap-2">
+          {canUseCandidateActions && (
+            <Button
+              type="button"
+              variant="secondary"
+              className="!inline-flex !rounded-btn-secondary !py-0"
+              onClick={handleSaveToggle}
+              loading={actionLoadingId === id}
+            >
+              <AppIcon icon={Bookmark} size={ICON_SIZES.default} />
+              {isSaved(id) ? 'Guardado' : 'Guardar'}
+            </Button>
+          )}
+          <Button
+            fullWidth
+            className="btn-primary-mobile !inline-flex !rounded-btn-primary !py-0"
+            onClick={handleApply}
+            disabled={canUseCandidateActions && hasActiveApplication}
+          >
+            <AppIcon icon={FileText} size={ICON_SIZES.default} className="text-white" />
+            {canUseCandidateActions && hasActiveApplication ? 'Ya aplicaste' : 'Aplicar'}
+          </Button>
+        </div>
       }
     >
       <div className="space-y-md p-md pb-lg">
@@ -93,7 +149,7 @@ export default function JobDetail() {
             {job.city ? ` · ${job.city}` : ''}
             {job.work_mode ? ` · ${getWorkModeLabel(job.work_mode)}` : ''}
           </p>
-          <ApplicationsCounter count={0} />
+          <ApplicationsCounter count={applicationCount} />
         </div>
 
         {!isCompanyVerified(company) && (

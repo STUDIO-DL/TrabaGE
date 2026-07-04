@@ -4,6 +4,7 @@ import Spinner from '../../components/ui/Spinner';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import { formatRelativeTime } from '../../utils/formatDate';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function AdminNotifications() {
   const { showToast } = useNotificationContext();
@@ -14,7 +15,7 @@ export default function AdminNotifications() {
     const load = async () => {
       setLoading(true);
       const { data, error } = await adminService.getAdminNotifications();
-      if (error) showToast(error.message, 'error');
+      if (error) showToast(getSupabaseErrorMessage(error), 'error');
       setItems(data ?? []);
       setLoading(false);
     };
