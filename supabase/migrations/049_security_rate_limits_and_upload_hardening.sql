@@ -128,7 +128,7 @@ ALTER TABLE public.jobs
       char_length(trim(title)) BETWEEN 1 AND 180
       AND (description IS NULL OR char_length(description) <= 5000)
       AND (requirements IS NULL OR char_length(requirements) <= 5000)
-      AND (benefits IS NULL OR char_length(benefits) <= 5000)
+      AND (benefits IS NULL OR char_length(benefits::text) <= 5000)
     ) NOT VALID;
 
 ALTER TABLE public.applications

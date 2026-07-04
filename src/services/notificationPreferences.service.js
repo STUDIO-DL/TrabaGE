@@ -10,8 +10,25 @@ export function normalizeNotificationPreferences(raw) {
 }
 
 export const notificationPreferencesService = {
-  getOrCreate: async () => {
-    const { data, error } = await supabase.rpc('ensure_notification_preferences');
+  getOrCreate: async (userId) => {
+    if (!userId) {
+      return { data: null, error: new Error('Usuario no autenticado') };
+    }
+
+    const { error: upsertError } = await supabase
+      .from('notification_preferences')
+      .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true });
+
+    if (upsertError) {
+      return { data: null, error: upsertError };
+    }
+
+    const { data, error } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
+
     return {
       data: data ? normalizeNotificationPreferences(data) : null,
       error,

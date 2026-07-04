@@ -24,7 +24,8 @@ export const profileService = {
   updateCandidateProfile: (userId, data) =>
     supabase
       .from('candidate_profiles')
-      .upsert({ ...data, user_id: userId }, { onConflict: 'user_id' })
+      .update(data)
+      .eq('user_id', userId)
       .select('*')
       .maybeSingle(),
 

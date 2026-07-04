@@ -1,0 +1,124 @@
+import { useNavigate } from 'react-router-dom';
+import { Briefcase, Building2, Landmark, Loader2, User } from 'lucide-react';
+import Avatar from '../ui/Avatar';
+import AppIcon from '../common/AppIcon';
+import { DEFAULT_COMPANY_LOGO, DEFAULT_USER_AVATAR, getCompanyLogoUrl } from '../../constants/images';
+import { resolveAvatarUrl } from '../../utils/storagePaths';
+import {
+  SEARCH_ENTITY_TYPE_LABELS,
+  groupSearchResults,
+} from '../../utils/globalSearch';
+import { ICON_SIZES } from '../../constants/icons';
+
+const ENTITY_ICONS = {
+  candidate: User,
+  company: Building2,
+  institution: Landmark,
+  job: Briefcase,
+};
+
+function resolveAvatarSrc(item) {
+  if (!item.avatar_path) {
+    return item.type === 'candidate' ? DEFAULT_USER_AVATAR : DEFAULT_COMPANY_LOGO;
+  }
+
+  if (item.type === 'candidate') {
+    return resolveAvatarUrl(item.avatar_path) || DEFAULT_USER_AVATAR;
+  }
+
+  return getCompanyLogoUrl(item.avatar_path);
+}
+
+function SearchResultRow({ item, onSelect }) {
+  const Icon = ENTITY_ICONS[item.type] || User;
+  const avatarFallback = item.type === 'candidate' ? DEFAULT_USER_AVATAR : DEFAULT_COMPANY_LOGO;
+
+  return (
+    <button
+      type="button"
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={() => onSelect(item)}
+      className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none"
+    >
+      <Avatar
+        src={resolveAvatarSrc(item)}
+        name={item.title}
+        fallback={avatarFallback}
+        size="sm"
+        className={item.type === 'company' || item.type === 'institution' || item.type === 'job' ? '!rounded-xl' : ''}
+      />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5">
+          <span className="truncate font-medium text-gray-900">{item.title}</span>
+          <AppIcon icon={Icon} size={ICON_SIZES.sm} className="shrink-0 text-gray-400" />
+        </span>
+        {item.subtitle ? (
+          <span className="mt-0.5 block truncate text-xs text-gray-500">{item.subtitle}</span>
+        ) : null}
+        <span className="mt-1 inline-block text-[10px] font-semibold uppercase tracking-wide text-primary-600">
+          {SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado'}
+        </span>
+      </span>
+    </button>
+  );
+}
+
+export default function GlobalSearchResults({
+  query = '',
+  results = [],
+  loading = false,
+  onSelect,
+  className = '',
+}) {
+  const navigate = useNavigate();
+  const trimmedQuery = query.trim();
+  const groups = groupSearchResults(results);
+
+  const handleSelect = (item) => {
+    onSelect?.(item);
+    navigate(item.path);
+  };
+
+  if (!trimmedQuery) {
+    return null;
+  }
+
+  return (
+    <div
+      className={[
+        'absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl',
+        className,
+      ].join(' ')}
+      role="listbox"
+      aria-label="Resultados de búsqueda"
+    >
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 px-4 py-6 text-sm text-gray-500">
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          Buscando…
+        </div>
+      ) : groups.length === 0 ? (
+        <p className="px-4 py-6 text-center text-sm text-gray-500">
+          No se encontraron resultados
+        </p>
+      ) : (
+        <div className="max-h-[min(70vh,28rem)] overflow-y-auto py-1">
+          {groups.map((group) => (
+            <section key={group.type} aria-label={group.label}>
+              <h3 className="sticky top-0 z-10 bg-gray-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+                {group.label}
+              </h3>
+              <ul>
+                {group.items.map((item) => (
+                  <li key={`${item.type}-${item.id}`}>
+                    <SearchResultRow item={item} onSelect={handleSelect} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

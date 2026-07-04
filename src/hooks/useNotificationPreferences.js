@@ -36,7 +36,7 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
     setError(null);
 
     notificationPreferencesService
-      .getOrCreate()
+      .getOrCreate(userId)
       .then(({ data, error: loadError }) => {
         if (!mounted) return;
         if (loadError) {

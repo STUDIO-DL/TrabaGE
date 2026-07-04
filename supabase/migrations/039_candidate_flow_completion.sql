@@ -33,6 +33,9 @@ GRANT SELECT, INSERT, DELETE ON public.saved_jobs TO authenticated;
 ALTER TABLE public.applications
   DROP CONSTRAINT IF EXISTS applications_status_check;
 
+-- Migrate legacy status values before applying the new constraint.
+UPDATE public.applications SET status = 'accepted' WHERE status = 'hired';
+
 ALTER TABLE public.applications
   ADD CONSTRAINT applications_status_check
   CHECK (status IN ('pending','viewed','contacted','accepted','rejected','withdrawn'));

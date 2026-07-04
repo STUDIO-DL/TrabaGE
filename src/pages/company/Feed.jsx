@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CompanyFeedHeader from '../../components/feed/CompanyFeedHeader';
@@ -14,20 +14,13 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { postsService } from '../../services/posts.service';
 import { storageService } from '../../services/storage.service';
 import { STORAGE_BUCKETS } from '../../constants/storage';
-import { filterCandidatePostsByQuery } from '../../utils/feedSearch';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function Feed() {
-  const [query, setQuery] = useState('');
   const { user, isPreviewMode } = useAuth();
   const { showToast } = useNotificationContext();
   const { posts, loading, loadingMore, hasMore, refetch, loadMore } = usePosts();
   const { createPost, loading: publishing } = useCreatePost();
-
-  const filteredPosts = useMemo(
-    () => filterCandidatePostsByQuery(posts, query),
-    [posts, query],
-  );
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,7 +75,7 @@ export default function Feed() {
   };
 
   return (
-    <PageContainer topBar={<CompanyFeedHeader query={query} onQueryChange={setQuery} />}>
+    <PageContainer topBar={<CompanyFeedHeader />}>
       <div className="p-4">
         {isPreviewMode ? (
           <div className="mb-4 rounded-2xl border border-primary-100 bg-primary-50 p-4 text-center">
@@ -100,18 +93,14 @@ export default function Feed() {
 
         {loading ? (
           <PostListSkeleton count={3} />
-        ) : filteredPosts.length === 0 ? (
+        ) : posts.length === 0 ? (
           <EmptyState
             image={NoPosts}
-            title={query.trim() ? 'Sin resultados' : 'No hay publicaciones'}
-            description={
-              query.trim()
-                ? 'Prueba con otro término de búsqueda.'
-                : 'Las publicaciones de candidatos aparecerán aquí.'
-            }
+            title="No hay publicaciones"
+            description="Las publicaciones de candidatos aparecerán aquí."
           />
         ) : (
-          filteredPosts.map((post) => (
+          posts.map((post) => (
             <PostCard
               key={post.id}
               post={post}

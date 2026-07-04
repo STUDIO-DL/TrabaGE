@@ -7,10 +7,9 @@ import { ROLES } from '../../constants/roles';
 import { getCompanyLogoUrl } from '../../constants/images';
 import UserAvatar from '../common/UserAvatar';
 import Avatar from '../ui/Avatar';
-import AppIcon from '../common/AppIcon';
-import { Search, ICON_COLORS, ICON_SIZES } from '../../constants/icons';
+import GlobalSearch from '../search/GlobalSearch';
 
-export default function FeedHeader({ query = '', onQueryChange }) {
+export default function FeedHeader() {
   const { role } = useAuth();
   const { profile } = useProfile();
   const isCompany = role === ROLES.COMPANY;
@@ -35,22 +34,7 @@ export default function FeedHeader({ query = '', onQueryChange }) {
 
         {showVerifiedBadge && <VerifiedBadge size="sm" className="shrink-0" />}
 
-        <div className="relative min-w-0 flex-1">
-          <AppIcon
-            icon={Search}
-            size={ICON_SIZES.default}
-            className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${ICON_COLORS.inactive}`}
-          />
-          <input
-            type="search"
-            name="feedSearch"
-            value={query}
-            onChange={(e) => onQueryChange?.(e.target.value)}
-            placeholder="Buscar"
-            aria-label="Buscar"
-            className="w-full rounded-full border-0 bg-gray-100 py-2 pl-9 pr-4 text-sm text-gray-900 outline-none transition-colors placeholder:text-gray-500 focus:bg-white focus:ring-2 focus:ring-primary-100"
-          />
-        </div>
+        <GlobalSearch placeholder="Buscar personas, empresas, empleos…" />
       </div>
     </header>
   );
