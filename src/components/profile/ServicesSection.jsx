@@ -48,7 +48,7 @@ export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) 
       iconTone="service"
       title="Servicios que ofrezco"
       isOwn={isOwn}
-      isEmpty={!items.length}
+      isEmpty={!items.length && !isOwn}
       emptyText="Sin servicios registrados."
       footerLabel={footerLabel}
     >
