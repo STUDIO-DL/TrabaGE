@@ -79,6 +79,7 @@ export default function GlobalSearch({
 
       {showResults && open && query.trim() ? (
         <GlobalSearchResults
+          listId={listId}
           query={query}
           results={results}
           loading={loading}

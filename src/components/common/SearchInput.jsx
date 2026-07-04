@@ -1,4 +1,4 @@
-import GlobalSearch from './search/GlobalSearch';
+import GlobalSearch from '../search/GlobalSearch';
 
 export default function SearchInput({ placeholder = 'Buscar personas, empresas, empleos…' }) {
   return (

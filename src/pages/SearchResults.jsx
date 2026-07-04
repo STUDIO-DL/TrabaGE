@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { searchService } from '../services/search.service';
-import { reportError } from '../utils/logger';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import Spinner from '../components/ui/Spinner';
 import Avatar from '../components/ui/Avatar';
@@ -59,41 +58,42 @@ export default function SearchResults() {
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    if (!query || !role) {
+    if (!query?.trim()) {
+      setResults([]);
       setLoading(false);
-      return;
+      return undefined;
     }
+
+    let cancelled = false;
 
     const performSearch = async () => {
       setLoading(true);
-      setError('');
-      const { data, error: searchError } = await searchService.search({
+      const { data } = await searchService.search({
         query,
         user: user ? { id: user.id, role } : null,
       });
 
-      if (searchError) {
-        setError('Hubo un error al realizar la búsqueda.');
-        reportError(searchError, { area: 'search_results', query });
-      } else {
+      if (!cancelled) {
         setResults(data || []);
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     performSearch();
+
+    return () => {
+      cancelled = true;
+    };
   }, [query, role, user]);
 
   const groupedResults = groupSearchResults(results);
 
   const renderResults = () => {
     if (loading) return <Spinner />;
-    if (error) return <p className="p-4 text-red-600">{error}</p>;
     if (results.length === 0) {
-      return <p className="p-4 text-slate-500">No se encontraron resultados</p>;
+      return <p className="p-4 text-slate-500">No se encontraron resultados.</p>;
     }
 
     return groupedResults.map((group) => (

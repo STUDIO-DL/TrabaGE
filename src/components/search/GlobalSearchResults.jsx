@@ -69,6 +69,7 @@ export default function GlobalSearchResults({
   loading = false,
   onSelect,
   className = '',
+  listId,
 }) {
   const navigate = useNavigate();
   const trimmedQuery = query.trim();
@@ -85,6 +86,7 @@ export default function GlobalSearchResults({
 
   return (
     <div
+      id={listId}
       className={[
         'absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl',
         className,
@@ -99,7 +101,7 @@ export default function GlobalSearchResults({
         </div>
       ) : groups.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-gray-500">
-          No se encontraron resultados
+          No se encontraron resultados.
         </p>
       ) : (
         <div className="max-h-[min(70vh,28rem)] overflow-y-auto py-1">
