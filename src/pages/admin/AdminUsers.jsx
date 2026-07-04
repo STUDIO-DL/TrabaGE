@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
@@ -22,19 +22,19 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [query, setQuery] = useState('');
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     setLoading(true);
     const { data, error } = await adminService.getUsers();
     if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setUsers(data ?? []);
     setLoading(false);
-  };
+  }, [showToast]);
 
   useEffect(() => {
     loadUsers();
-  }, []);
+  }, [loadUsers]);
 
-  const handleToggleActive = async (user) => {
+  const handleToggleActive = useCallback(async (user) => {
     setActionId(user.user_id);
     const nextActive = !user.is_active;
     const { error } = await adminService.setUserActive(user.user_id, user.role, nextActive);
@@ -45,9 +45,9 @@ export default function AdminUsers() {
     }
     showToast(nextActive ? 'Usuario reactivado' : 'Usuario desactivado', 'success');
     await loadUsers();
-  };
+  }, [loadUsers, showToast]);
 
-  const handleRoleChange = async (targetUser, nextRole) => {
+  const handleRoleChange = useCallback(async (targetUser, nextRole) => {
     if (targetUser.user_id === currentUser?.id) {
       showToast('No puedes cambiar tu propio rol.', 'error');
       return;
@@ -62,9 +62,9 @@ export default function AdminUsers() {
     }
     showToast('Rol actualizado', 'success');
     await loadUsers();
-  };
+  }, [currentUser?.id, loadUsers, showToast]);
 
-  const handleDelete = async (targetUser) => {
+  const handleDelete = useCallback(async (targetUser) => {
     if (targetUser.user_id === currentUser?.id) {
       showToast('No puedes eliminar tu propia cuenta admin.', 'error');
       return;
@@ -82,7 +82,7 @@ export default function AdminUsers() {
     }
     showToast('Usuario eliminado', 'success');
     await loadUsers();
-  };
+  }, [currentUser?.id, loadUsers, showToast]);
 
   const filteredUsers = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -184,7 +184,7 @@ export default function AdminUsers() {
         ),
       },
     ],
-    [actionId, currentUser?.id],
+    [actionId, currentUser?.id, handleDelete, handleRoleChange, handleToggleActive],
   );
 
   return (

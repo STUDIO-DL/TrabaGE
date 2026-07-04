@@ -89,7 +89,7 @@ export default function LegalDocumentLayout({
 
         <footer className="mt-12 rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center dark:border-slate-800 dark:bg-slate-900/50">
           <p className="text-sm font-medium text-slate-900 dark:text-slate-50">
-            TrabaGE © 2025 — Todos los derechos reservados
+            TrabaGE © 2026 — Todos los derechos reservados
           </p>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
             <a

@@ -312,8 +312,8 @@ export default function CompanyProfileLayout({
   const [editMode, setEditMode] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [previewMedia, setPreviewMedia] = useState({ cover: null, logo: null });
-  const [previewServices, setPreviewServices] = useState(null);
-  const [previewContact, setPreviewContact] = useState(null);
+  const [previewServices] = useState(null);
+  const [previewContact] = useState(null);
 
   useEffect(() => {
     if (!isPreviewMode) return;

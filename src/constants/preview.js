@@ -55,7 +55,7 @@ export const PREVIEW_APPLICANT_PROFILES = {
         id: 'preview-exp-1',
         title: 'Desarrolladora web',
         company: 'Digital Malabo',
-        start_date: '2021-03',
+        start_date: '2026-03',
         end_date: null,
         current: true,
       },

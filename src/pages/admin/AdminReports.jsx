@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
@@ -16,19 +16,19 @@ export default function AdminReports() {
   const [actionId, setActionId] = useState(null);
   const [query, setQuery] = useState('');
 
-  const loadReports = async () => {
+  const loadReports = useCallback(async () => {
     setLoading(true);
     const { data, error } = await adminService.getReports();
     if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setReports(data ?? []);
     setLoading(false);
-  };
+  }, [showToast]);
 
   useEffect(() => {
     loadReports();
-  }, []);
+  }, [loadReports]);
 
-  const updateStatus = async (reportId, status) => {
+  const updateStatus = useCallback(async (reportId, status) => {
     setActionId(reportId);
     const { error } = await adminService.updateReportStatus(reportId, status);
     setActionId(null);
@@ -38,9 +38,9 @@ export default function AdminReports() {
     }
     showToast('Reporte actualizado', 'success');
     await loadReports();
-  };
+  }, [loadReports, showToast]);
 
-  const deleteReport = async (report) => {
+  const deleteReport = useCallback(async (report) => {
     if (!window.confirm('¿Eliminar este reporte duplicado? Esta acción no afecta al contenido reportado.')) return;
 
     setActionId(report.id);
@@ -52,7 +52,7 @@ export default function AdminReports() {
     }
     showToast('Reporte eliminado', 'success');
     await loadReports();
-  };
+  }, [loadReports, showToast]);
 
   const filteredReports = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -150,7 +150,7 @@ export default function AdminReports() {
         ),
       },
     ],
-    [actionId],
+    [actionId, deleteReport, updateStatus],
   );
 
   return (

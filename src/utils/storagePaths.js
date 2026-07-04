@@ -3,7 +3,7 @@ import { STORAGE_BUCKETS } from '../constants/storage';
 
 const PUBLIC_URL_PATTERN = /\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/;
 
-export function extractStoragePath(value, bucket) {
+export function extractStoragePath(value, _bucket) {
   if (!value || typeof value !== 'string') return null;
   const trimmed = value.trim();
   if (!trimmed) return null;

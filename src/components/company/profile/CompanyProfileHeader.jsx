@@ -64,7 +64,6 @@ function MediaUploadButton({ label, loading, className = '', inputId }) {
 
 export default function CompanyProfileHeader({
   profile,
-  companyId,
   readOnly = false,
   onEditName,
   onBookmark,

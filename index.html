@@ -15,6 +15,20 @@
     <meta name="apple-mobile-web-app-title" content="TrabaGE" />
     <meta name="application-name" content="TrabaGE" />
     <title>TrabaGE</title>
+    <script>
+      (() => {
+        try {
+          const theme = localStorage.getItem('trabage_theme') === 'dark' ? 'dark' : 'light';
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+          document.documentElement.style.colorScheme = theme;
+          const meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', theme === 'dark' ? '#0F172A' : '#2563EB');
+        } catch {
+          document.documentElement.dataset.theme = 'light';
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

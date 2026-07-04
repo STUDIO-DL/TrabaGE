@@ -1,6 +1,6 @@
 const variants = {
   primary: 'bg-primary-600 text-white hover:bg-primary-700 disabled:bg-primary-300',
-  secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:bg-gray-50',
+  secondary: 'bg-app-card text-app-text ring-1 ring-app-border hover:bg-app-surface disabled:bg-app-surface',
   ghost: 'bg-transparent text-primary-600 hover:bg-primary-50',
   danger: 'bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300',
 };

@@ -11,7 +11,7 @@ export default function MobileScreenLayout({
   footerClassName = '',
   noScroll = false,
   maxWidth = 'max-w-lg',
-  bg = 'bg-white',
+  bg = 'bg-app-bg',
 }) {
   return (
     <div
@@ -45,7 +45,7 @@ export default function MobileScreenLayout({
       {footer ? (
         <footer
           className={[
-            'shrink-0 border-t border-slate-100 bg-white px-md pb-md pt-sm',
+            'shrink-0 border-t border-app-border bg-app-card px-md pb-md pt-sm',
             footerClassName,
           ]
             .filter(Boolean)

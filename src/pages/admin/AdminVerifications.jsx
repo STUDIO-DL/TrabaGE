@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
@@ -19,19 +19,19 @@ export default function AdminVerifications() {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const loadVerifications = async () => {
+  const loadVerifications = useCallback(async () => {
     setLoading(true);
     const { data, error } = await adminService.getAllVerifications();
     if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setVerifications(data ?? []);
     setLoading(false);
-  };
+  }, [showToast]);
 
   useEffect(() => {
     loadVerifications();
-  }, []);
+  }, [loadVerifications]);
 
-  const handleApprove = async (id) => {
+  const handleApprove = useCallback(async (id) => {
     setReviewingId(id);
     const { error } = await adminService.reviewVerification(id, 'approved', null);
     setReviewingId(null);
@@ -41,7 +41,7 @@ export default function AdminVerifications() {
     }
     showToast('Empresa verificada', 'success');
     await loadVerifications();
-  };
+  }, [loadVerifications, showToast]);
 
   const handleReject = async () => {
     if (!rejectModal.id) return;
@@ -67,14 +67,14 @@ export default function AdminVerifications() {
     await loadVerifications();
   };
 
-  const handlePreview = async (documentPath) => {
+  const handlePreview = useCallback(async (documentPath) => {
     const { data, error } = await adminService.getVerificationDocumentUrl(documentPath);
     if (error || !data?.signedUrl) {
       showToast(getSupabaseErrorMessage(error, 'No se pudo abrir el documento'), 'error');
       return;
     }
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
-  };
+  }, [showToast]);
 
   const filteredVerifications = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -156,7 +156,7 @@ export default function AdminVerifications() {
         ),
       },
     ],
-    [reviewingId],
+    [handleApprove, handlePreview, reviewingId],
   );
 
   return (

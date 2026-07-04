@@ -20,7 +20,7 @@ export default function AdminNotifications() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [showToast]);
 
   if (loading) {
     return (

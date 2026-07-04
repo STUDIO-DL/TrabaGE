@@ -4,6 +4,6 @@ export const LEGAL_ROUTES = {
 };
 
 export const LEGAL_VERSION = '2.0';
-export const LEGAL_DATE = 'Julio 2025';
+export const LEGAL_DATE = 'Julio 2026';
 
 export { SUPPORT_EMAIL as LEGAL_SUPPORT_EMAIL } from './support';

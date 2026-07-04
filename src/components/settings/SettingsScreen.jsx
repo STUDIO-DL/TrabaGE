@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import DeleteAccountModal from '../profile/modals/DeleteAccountModal';
 import PageContainer from '../layout/PageContainer';
+import NotificationPreferencesPanel from './NotificationPreferencesPanel';
 import {
   Bell,
   ChevronRight,
@@ -130,6 +131,7 @@ export default function SettingsScreen({ accountType }) {
       notifications: isCompany ? '/company/notifications' : '/candidate/notifications',
       help: isCompany ? '/company/help' : '/help',
       settings: isCompany ? '/company/settings' : '/candidate/settings',
+      appearance: isCompany ? '/company/settings/appearance' : '/candidate/settings/appearance',
     }),
     [isCompany],
   );
@@ -191,18 +193,25 @@ export default function SettingsScreen({ accountType }) {
                 icon={ShieldCheck}
                 title="Contraseña y seguridad"
                 subtitle="Actualizar contraseña y acceso"
-                onClick={() => navigate('/auth/set-password', { state: { redirectTo: routes.settings } })}
+                onClick={() => navigate('/auth/set-password', { state: { redirectTo: routes.settings, requireCurrentPassword: true } })}
               />
               <Divider />
-              <SettingsRow icon={Bell} title="Notificaciones" to={routes.notifications} />
+              <SettingsRow
+                icon={Bell}
+                title="Bandeja de notificaciones"
+                subtitle="Ver avisos recibidos"
+                to={routes.notifications}
+              />
             </SectionCard>
+
+            <NotificationPreferencesPanel userId={user?.id} isPreviewMode={isPreviewMode} />
 
             <SectionCard title="Preferencias">
               <SettingsRow
                 icon={SlidersHorizontal}
                 title="Apariencia"
-                subtitle="Preparado para modo oscuro"
-                onClick={() => showComingSoon('Apariencia')}
+                subtitle="Modo claro u oscuro"
+                to={routes.appearance}
               />
               <Divider />
               <SettingsRow

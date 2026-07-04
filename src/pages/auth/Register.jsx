@@ -10,6 +10,7 @@ import { ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
+import { validateStrongPassword } from '../../utils/passwordValidation';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -59,6 +60,12 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const passwordValidation = validateStrongPassword(password);
+    if (!passwordValidation.valid) {
+      setError(passwordValidation.error);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
       return;
@@ -196,6 +203,9 @@ export default function Register() {
     >
       <form id="register-password-form" onSubmit={handleSubmit} className="mt-sm space-y-sm">
         <Input label="Contraseña" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <p className="text-xs text-gray-500">
+          Mínimo 10 caracteres con mayúscula, minúscula, número y símbolo.
+        </p>
         <Input
           label="Confirmar contraseña"
           type="password"

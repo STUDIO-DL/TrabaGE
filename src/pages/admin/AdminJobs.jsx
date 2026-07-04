@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
@@ -20,19 +20,19 @@ export default function AdminJobs() {
   const [actionId, setActionId] = useState(null);
   const [query, setQuery] = useState('');
 
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     setLoading(true);
     const { data, error } = await adminService.getJobs();
     if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setJobs(data ?? []);
     setLoading(false);
-  };
+  }, [showToast]);
 
   useEffect(() => {
     loadJobs();
-  }, []);
+  }, [loadJobs]);
 
-  const handleToggleHidden = async (job) => {
+  const handleToggleHidden = useCallback(async (job) => {
     setActionId(job.id);
     const nextHidden = !job.admin_hidden;
     const { error } = await adminService.setJobModeration(job.id, {
@@ -46,9 +46,9 @@ export default function AdminJobs() {
     }
     showToast(nextHidden ? 'Oferta oculta' : 'Oferta restaurada', 'success');
     await loadJobs();
-  };
+  }, [loadJobs, showToast]);
 
-  const handleDelete = async (job) => {
+  const handleDelete = useCallback(async (job) => {
     if (!window.confirm(`¿Eliminar la oferta "${job.title}" del panel público? Se cerrará y quedará oculta.`)) return;
 
     setActionId(job.id);
@@ -60,7 +60,7 @@ export default function AdminJobs() {
     }
     showToast('Oferta cerrada y oculta', 'success');
     await loadJobs();
-  };
+  }, [loadJobs, showToast]);
 
   const filteredJobs = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -141,7 +141,7 @@ export default function AdminJobs() {
         ),
       },
     ],
-    [actionId],
+    [actionId, handleDelete, handleToggleHidden],
   );
 
   return (

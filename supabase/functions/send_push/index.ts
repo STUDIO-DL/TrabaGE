@@ -88,15 +88,15 @@ serve(async (req) => {
   }
 
   const uniqueExternalIds = [...new Set(externalIds.map(String))];
+  const notificationType = String(data?.type ?? '').trim();
+  if (!notificationType) {
+    return jsonResponse({ error: 'No autorizado' }, 403);
+  }
+
   const isSelfOnly = uniqueExternalIds.every((id) => id === callerId);
+  const admin = createClient(supabaseUrl, serviceKey);
 
   if (!isSelfOnly) {
-    const notificationType = String(data?.type ?? '').trim();
-    if (!notificationType) {
-      return jsonResponse({ error: 'No autorizado' }, 403);
-    }
-
-    const admin = createClient(supabaseUrl, serviceKey);
     let notificationQuery = admin
       .from('notifications')
       .select('recipient_id')
@@ -123,6 +123,25 @@ serve(async (req) => {
     }
   }
 
+  const { data: allowedRecipients, error: preferencesError } = await admin.rpc('filter_push_recipients', {
+    p_recipient_ids: uniqueExternalIds,
+    p_type: notificationType,
+  });
+
+  if (preferencesError) {
+    return jsonResponse({ error: 'No se pudieron validar las preferencias' }, 500);
+  }
+
+  const pushRecipients = Array.isArray(allowedRecipients) ? allowedRecipients.map(String) : [];
+  if (pushRecipients.length === 0) {
+    return jsonResponse({
+      ok: true,
+      id: null,
+      recipients: 0,
+      skipped: uniqueExternalIds.length,
+    });
+  }
+
   const payload: Record<string, unknown> = {
     app_id: oneSignalAppId,
     target_channel: 'push',
@@ -131,7 +150,7 @@ serve(async (req) => {
     data,
   };
 
-  payload.include_aliases = { external_id: uniqueExternalIds };
+  payload.include_aliases = { external_id: pushRecipients };
 
   const res = await fetch('https://onesignal.com/api/v1/notifications', {
     method: 'POST',
@@ -150,6 +169,7 @@ serve(async (req) => {
   return jsonResponse({
     ok: true,
     id: result?.id ?? null,
-    recipients: uniqueExternalIds.length,
+    recipients: pushRecipients.length,
+    skipped: uniqueExternalIds.length - pushRecipients.length,
   });
 });

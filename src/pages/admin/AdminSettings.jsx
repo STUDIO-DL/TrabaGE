@@ -34,7 +34,7 @@ export default function AdminSettings() {
       setLoading(false);
     };
     load();
-  }, []);
+  }, [showToast]);
 
   const handleSave = async (e) => {
     e.preventDefault();

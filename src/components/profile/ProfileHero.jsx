@@ -159,7 +159,7 @@ function EditableHeroSelect({
             className="min-w-0 flex-1 rounded-lg border-0 bg-white/15 px-3 py-2 text-sm text-white outline-none ring-2 ring-white/30"
           >
             <option value="" className="text-gray-900">
-              Seleccionar…
+              {placeholder || 'Seleccionar...'}
             </option>
             {options.map((option) => (
               <option key={option.value} value={option.value} className="text-gray-900">

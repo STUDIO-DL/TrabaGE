@@ -14,7 +14,7 @@ export default function Input({
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-gray-700">
+        <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-app-muted">
           {label}
         </label>
       )}
@@ -23,16 +23,16 @@ export default function Input({
           <AppIcon
             icon={Icon}
             size={ICON_SIZES.default}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-app-muted/70"
           />
         )}
         <input
           id={inputId}
           className={[
-            'w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none transition-colors',
+            'w-full rounded-xl border bg-app-card px-4 py-2.5 text-sm text-app-text outline-none transition-colors placeholder:text-app-muted/70',
             'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
             Icon ? 'pl-10' : '',
-            error ? 'border-red-500' : 'border-gray-200',
+            error ? 'border-red-500' : 'border-app-border',
           ].join(' ')}
           {...props}
         />

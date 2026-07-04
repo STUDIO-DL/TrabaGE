@@ -1,3 +1,5 @@
+import { STRONG_PASSWORD_MESSAGE } from './passwordValidation';
+
 export function mapAuthError(error) {
   const message = error?.message?.toLowerCase() || '';
   const code = error?.code?.toLowerCase?.() || '';
@@ -15,8 +17,8 @@ export function mapAuthError(error) {
   ) {
     return 'Ya existe una cuenta registrada con este correo electrónico.';
   }
-  if (message.includes('password should be at least 6 characters')) {
-    return 'La contraseña debe tener al menos 6 caracteres.';
+  if (message.includes('password should be at least') || message.includes('password')) {
+    return STRONG_PASSWORD_MESSAGE;
   }
   if (message.includes('unable to validate email address') || message.includes('invalid email')) {
     return 'El formato del correo electrónico no es válido.';

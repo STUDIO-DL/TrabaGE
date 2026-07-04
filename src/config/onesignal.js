@@ -1,4 +1,5 @@
 import OneSignal from 'react-onesignal';
+import { NOTIFICATION_PREFERENCE_FIELDS } from '../constants/notificationPreferences';
 import { profileService } from '../services/profile.service';
 import { readViteEnv } from './env';
 import { reportError } from '../utils/logger';
@@ -91,20 +92,68 @@ export const requestNotificationPermission = async () => {
       if (granted) void syncOnGrant();
     });
 
-    // Show the customizable Spanish slidedown (its copy is set in promptOptions
-    // above). The native browser prompt that follows is controlled by the
-    // browser and cannot be translated from code.
+    const granted = await OneSignal.Notifications?.requestPermission?.();
+    if (granted) await syncOnGrant();
+    if (typeof granted === 'boolean') return granted;
+
     if (OneSignal.Slidedown?.promptPush) {
-      await OneSignal.Slidedown.promptPush({ force: true });
+      await OneSignal.Slidedown.promptPush({ force: false });
       return Boolean(OneSignal.Notifications?.permission);
     }
 
-    const granted = await OneSignal.Notifications.requestPermission();
-    if (granted) await syncOnGrant();
-    return granted;
+    return false;
   } catch (error) {
     reportError(error, { area: 'onesignal_permission' });
     return false;
+  }
+};
+
+export const getNotificationPermissionStatus = () => {
+  if (typeof window === 'undefined' || !('Notification' in window)) {
+    return 'default';
+  }
+
+  return Notification.permission;
+};
+
+export const setOneSignalPushEnabled = async (enabled) => {
+  await initOneSignal();
+  if (!initialized) return;
+
+  try {
+    const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
+    if (enabled) {
+      await subscription?.optIn?.();
+    } else {
+      await subscription?.optOut?.();
+    }
+  } catch (error) {
+    reportError(error, { area: 'onesignal_push_subscription_toggle', enabled });
+  }
+};
+
+export const syncOneSignalNotificationTags = async (preferences) => {
+  await initOneSignal();
+  if (!initialized || !preferences) return;
+
+  const tags = NOTIFICATION_PREFERENCE_FIELDS.reduce((acc, key) => {
+    acc[`pref_${key}`] = preferences[key] === true ? 'true' : 'false';
+    return acc;
+  }, {});
+
+  tags.pref_push_enabled = preferences.push_enabled === true ? 'true' : 'false';
+
+  try {
+    if (OneSignal.User?.addTags) {
+      await OneSignal.User.addTags(tags);
+      return;
+    }
+
+    if (OneSignal.sendTags) {
+      await OneSignal.sendTags(tags);
+    }
+  } catch (error) {
+    reportError(error, { area: 'onesignal_preference_tags_sync' });
   }
 };
 

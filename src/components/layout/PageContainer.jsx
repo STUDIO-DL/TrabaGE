@@ -11,7 +11,7 @@ export default function PageContainer({
   className = '',
 }) {
   return (
-    <div className={`page-shell mx-auto max-w-lg ${className}`}>
+    <div className={`page-shell mx-auto max-w-lg bg-app-bg text-app-text ${className}`}>
       {topBar !== false && (topBar || (title && <TopBar title={title} backButton={backButton} actions={actions} />))}
       <main>{children}</main>
       {bottomNav && <BottomNav />}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PageContainer from '../../components/layout/PageContainer';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
@@ -31,7 +31,7 @@ export default function Verification() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user?.id) return;
 
     if (isPreviewMode) {
@@ -49,11 +49,11 @@ export default function Verification() {
     setCompanyProfile(profile);
     setRequest(latestRequest);
     setLoading(false);
-  };
+  }, [isPreviewMode, user?.id]);
 
   useEffect(() => {
     loadData();
-  }, [user?.id, isPreviewMode]);
+  }, [loadData]);
 
   const verificationStatus = getVerificationStatus(companyProfile);
   const verified = isCompanyVerified(companyProfile);

@@ -4,7 +4,7 @@ export default function Card({ children, padding = 'md', shadow = true, classNam
   return (
     <div
       className={[
-        'rounded-2xl border border-gray-100 bg-white',
+        'rounded-2xl border border-app-border bg-app-card text-app-text',
         paddingClass,
         shadow ? 'shadow-sm' : '',
         className,

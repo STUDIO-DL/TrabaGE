@@ -44,7 +44,7 @@ export default function HelpContactCard() {
     }
 
     setSubmitting(true);
-    const { ok, error: submitError } = await submitToFormspree({
+    const { ok } = await submitToFormspree({
       form_type: 'help',
       name,
       email,

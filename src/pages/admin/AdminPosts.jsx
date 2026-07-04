@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
@@ -17,19 +17,19 @@ export default function AdminPosts() {
   const [actionId, setActionId] = useState(null);
   const [query, setQuery] = useState('');
 
-  const loadPosts = async () => {
+  const loadPosts = useCallback(async () => {
     setLoading(true);
     const { data, error } = await adminService.getPosts();
     if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setPosts(data ?? []);
     setLoading(false);
-  };
+  }, [showToast]);
 
   useEffect(() => {
     loadPosts();
-  }, []);
+  }, [loadPosts]);
 
-  const handleDelete = async (post) => {
+  const handleDelete = useCallback(async (post) => {
     if (!window.confirm('¿Eliminar esta publicación?')) return;
     setActionId(post.id);
     const { error } = await adminService.deletePost(post.id);
@@ -40,9 +40,9 @@ export default function AdminPosts() {
     }
     showToast('Publicación eliminada', 'success');
     await loadPosts();
-  };
+  }, [loadPosts, showToast]);
 
-  const handleToggleHidden = async (post) => {
+  const handleToggleHidden = useCallback(async (post) => {
     setActionId(post.id);
     const nextHidden = !post.is_hidden;
     const { error } = await adminService.setPostHidden(post.id, nextHidden);
@@ -53,7 +53,7 @@ export default function AdminPosts() {
     }
     showToast(nextHidden ? 'Publicación oculta' : 'Publicación restaurada', 'success');
     await loadPosts();
-  };
+  }, [loadPosts, showToast]);
 
   const filteredPosts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -157,7 +157,7 @@ export default function AdminPosts() {
         ),
       },
     ],
-    [actionId],
+    [actionId, handleDelete, handleToggleHidden],
   );
 
   return (

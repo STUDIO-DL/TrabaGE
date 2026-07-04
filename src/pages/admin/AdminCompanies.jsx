@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
@@ -16,13 +16,13 @@ export default function AdminCompanies() {
   const [actionId, setActionId] = useState(null);
   const [query, setQuery] = useState('');
 
-  const loadCompanies = async () => {
+  const loadCompanies = useCallback(async () => {
     setLoading(true);
     const { data, error } = await adminService.getCompanies();
     if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setCompanies(data ?? []);
     setLoading(false);
-  };
+  }, [showToast]);
 
   const filteredCompanies = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -42,9 +42,9 @@ export default function AdminCompanies() {
 
   useEffect(() => {
     loadCompanies();
-  }, []);
+  }, [loadCompanies]);
 
-  const handleToggleActive = async (company) => {
+  const handleToggleActive = useCallback(async (company) => {
     setActionId(company.user_id);
     const nextActive = !company.is_active;
     const { error } = await adminService.setCompanyActive(company.user_id, nextActive);
@@ -55,7 +55,7 @@ export default function AdminCompanies() {
     }
     showToast(nextActive ? 'Empresa reactivada' : 'Empresa desactivada', 'success');
     await loadCompanies();
-  };
+  }, [loadCompanies, showToast]);
 
   const columns = useMemo(
     () => [
@@ -113,7 +113,7 @@ export default function AdminCompanies() {
         ),
       },
     ],
-    [actionId],
+    [actionId, handleToggleActive],
   );
 
   return (

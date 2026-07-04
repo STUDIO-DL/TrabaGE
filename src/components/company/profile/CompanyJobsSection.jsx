@@ -26,7 +26,7 @@ function CompanyJobItem({ job }) {
   );
 }
 
-export default function CompanyJobsSection({ jobs = [], companyId, readOnly = false }) {
+export default function CompanyJobsSection({ jobs = [], readOnly = false }) {
   const activeJobs = jobs.filter((job) => job.status === 'active');
   const jobCount = activeJobs.length;
   const manageLink = readOnly ? null : '/company/dashboard';

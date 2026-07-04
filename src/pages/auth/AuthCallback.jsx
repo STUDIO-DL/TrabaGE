@@ -43,7 +43,7 @@ export default function AuthCallback() {
         if (isPasswordRecovery || event === 'PASSWORD_RECOVERY') {
           await refreshAuthState();
           if (cancelled) return true;
-          navigate('/auth/set-password', { replace: true });
+          navigate('/auth/set-password', { replace: true, state: { passwordRecovery: true } });
           return true;
         }
 

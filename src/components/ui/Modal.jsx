@@ -26,17 +26,17 @@ export default function Modal({ isOpen, onClose, title, children }) {
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-slate-950/55"
         aria-label="Cerrar modal"
         onClick={onClose}
       />
-      <div className="relative z-10 max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-white p-6 sm:max-w-lg sm:rounded-2xl">
+      <div className="relative z-10 max-h-[90dvh] w-full overflow-y-auto rounded-t-2xl bg-app-card p-6 text-app-text sm:max-w-lg sm:rounded-2xl">
         <div className="mb-4 flex items-start justify-between gap-3">
-          {title && <h2 className="text-lg font-semibold text-gray-900">{title}</h2>}
+          {title && <h2 className="text-lg font-semibold text-app-text">{title}</h2>}
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto rounded-lg p-1.5 text-gray-500 hover:bg-gray-100"
+            className="ml-auto rounded-lg p-1.5 text-app-muted hover:bg-app-surface"
             aria-label="Cerrar"
           >
             <AppIcon icon={X} size={ICON_SIZES.default} />

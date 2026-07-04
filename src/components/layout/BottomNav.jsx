@@ -53,7 +53,7 @@ export default function BottomNav() {
   if (role === ROLES.ADMIN) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-gray-200 bg-white pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-app-border bg-app-card/95 pb-safe backdrop-blur">
       <div className="mx-auto flex max-w-lg items-end">
         {items.map(({ to, label, icon, showBadge, prominent }) => {
           if (prominent) {
@@ -101,7 +101,7 @@ export default function BottomNav() {
               <span className="relative">
                 <NavIcon name={icon} className="h-6 w-6" />
                 {showBadge && unreadCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary-600 ring-2 ring-white" />
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary-600 ring-2 ring-app-card" />
                 )}
               </span>
               <span className="truncate">{label}</span>

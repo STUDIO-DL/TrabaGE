@@ -9,35 +9,60 @@ const logoPath = path.join(rootDir, 'src/assets/branding/trabage-icon.png');
 const iconsDir = path.join(rootDir, 'public/icons');
 
 const iconSizes = [16, 32, 48, 64, 72, 96, 128, 144, 152, 180, 192, 256, 384, 512];
+const iconBackground = { r: 255, g: 255, b: 255, alpha: 1 };
+const blackBackgroundThreshold = 32;
 
-async function generateIcon(size, outputName) {
-  await sharp(logoPath)
+async function createIconBuffer(size) {
+  const { data, info } = await sharp(logoPath)
     .resize(size, size, {
       fit: 'contain',
-      background: { r: 0, g: 0, b: 0, alpha: 1 },
+      background: iconBackground,
     })
-    .png({
-      compressionLevel: 9,
-      adaptiveFiltering: true,
-      palette: size <= 64,
-    })
-    .toFile(path.join(iconsDir, outputName));
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
 
-  console.log(`Generated ${outputName} (${size}x${size})`);
-}
+  for (let index = 0; index < data.length; index += 4) {
+    const red = data[index];
+    const green = data[index + 1];
+    const blue = data[index + 2];
 
-async function createPngBuffer(size) {
-  return sharp(logoPath)
-    .resize(size, size, {
-      fit: 'contain',
-      background: { r: 0, g: 0, b: 0, alpha: 1 },
-    })
+    if (
+      red <= blackBackgroundThreshold &&
+      green <= blackBackgroundThreshold &&
+      blue <= blackBackgroundThreshold
+    ) {
+      data[index] = 255;
+      data[index + 1] = 255;
+      data[index + 2] = 255;
+      data[index + 3] = 255;
+    }
+  }
+
+  return sharp(data, {
+    raw: {
+      width: info.width,
+      height: info.height,
+      channels: info.channels,
+    },
+  })
+    .flatten({ background: iconBackground })
     .png({
       compressionLevel: 9,
       adaptiveFiltering: true,
       palette: size <= 64,
     })
     .toBuffer();
+}
+
+async function generateIcon(size, outputName) {
+  await writeFile(path.join(iconsDir, outputName), await createIconBuffer(size));
+
+  console.log(`Generated ${outputName} (${size}x${size})`);
+}
+
+async function createPngBuffer(size) {
+  return createIconBuffer(size);
 }
 
 async function generateFaviconIco() {

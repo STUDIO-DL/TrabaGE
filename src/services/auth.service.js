@@ -237,6 +237,17 @@ export const authService = {
   setPassword: (password) =>
     supabase.auth.updateUser({ password: normalizePassword(password) }),
 
+  changePasswordWithCurrent: async (email, currentPassword, newPassword) => {
+    const loginResult = await supabase.auth.signInWithPassword({
+      email: normalizeEmail(email),
+      password: normalizePassword(currentPassword),
+    });
+
+    if (loginResult.error) return loginResult;
+
+    return supabase.auth.updateUser({ password: normalizePassword(newPassword) });
+  },
+
   getSession: () => {
     if (!isSupabaseConfigured) {
       return configError();

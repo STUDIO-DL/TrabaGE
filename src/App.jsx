@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import RoleRoute from './components/routing/RoleRoute';
 import GuestBar from './components/common/GuestBar';
@@ -32,6 +33,7 @@ const CandidateNotifications = lazy(() => import('./pages/candidate/Notification
 const CandidateProfile = lazy(() => import('./pages/candidate/Profile'));
 const CandidateSavedJobs = lazy(() => import('./pages/candidate/SavedJobs'));
 const CandidateSettings = lazy(() => import('./pages/candidate/Settings'));
+const CandidateAppearance = lazy(() => import('./pages/candidate/Appearance'));
 const PublicProfile = lazy(() => import('./pages/candidate/PublicProfile'));
 
 const CompanyFeed = lazy(() => import('./pages/company/Feed'));
@@ -42,6 +44,7 @@ const Applicants = lazy(() => import('./pages/company/Applicants'));
 const CompanyNotifications = lazy(() => import('./pages/company/Notifications'));
 const CompanyProfile = lazy(() => import('./pages/company/Profile'));
 const CompanySettings = lazy(() => import('./pages/company/Settings'));
+const CompanyAppearance = lazy(() => import('./pages/company/Appearance'));
 const Verification = lazy(() => import('./pages/company/Verification'));
 
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -103,6 +106,7 @@ function AppRoutes() {
                 <Route path="/candidate/notifications" element={<CandidateNotifications />} />
                 <Route path="/candidate/profile" element={<CandidateProfile />} />
                 <Route path="/candidate/settings" element={<CandidateSettings />} />
+                <Route path="/candidate/settings/appearance" element={<CandidateAppearance />} />
                 <Route path="/help" element={<HelpCenter />} />
               </Route>
 
@@ -118,6 +122,7 @@ function AppRoutes() {
                 <Route path="/company/notifications" element={<CompanyNotifications />} />
                 <Route path="/company/profile" element={<CompanyProfile />} />
                 <Route path="/company/settings" element={<CompanySettings />} />
+                <Route path="/company/settings/appearance" element={<CompanyAppearance />} />
                 <Route path="/company/verification" element={<Verification />} />
                 <Route path="/company/help" element={<HelpCenter />} />
               </Route>
@@ -157,10 +162,12 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <NotificationProvider>
-          <AppToasts />
-          <AppRoutes />
-        </NotificationProvider>
+        <ThemeProvider>
+          <NotificationProvider>
+            <AppToasts />
+            <AppRoutes />
+          </NotificationProvider>
+        </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
   );
