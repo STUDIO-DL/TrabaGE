@@ -1,5 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
 import {
   buildWelcomeEmailHtml,
@@ -26,16 +26,43 @@ function getFromAddress() {
   return Deno.env.get('SMTP_FROM_EMAIL')?.trim() || DEFAULT_FROM_EMAIL;
 }
 
+function getSmtpPassword() {
+  return Deno.env.get('SMTP_PASS')?.trim() || Deno.env.get('SMTP_PASSWORD')?.trim() || '';
+}
+
 function isAuthorizedWebhook(req: Request) {
   const expected = Deno.env.get('WELCOME_WEBHOOK_SECRET')?.trim();
   if (!expected) return false;
   return req.headers.get('x-welcome-webhook-secret') === expected;
 }
 
+function isAuthorizedServiceRole(req: Request, serviceRoleKey: string) {
+  const authHeader = req.headers.get('Authorization') ?? '';
+  return authHeader === `Bearer ${serviceRoleKey}`;
+}
+
+async function logWelcomeEmailEvent(
+  admin: SupabaseClient,
+  userId: string,
+  status: 'sent' | 'failed' | 'skipped',
+  details?: { email?: string; error?: string; reason?: string },
+) {
+  try {
+    await admin.from('welcome_email_logs').insert({
+      user_id: userId,
+      status,
+      email: details?.email ?? null,
+      error_message: details?.error ?? details?.reason ?? null,
+    });
+  } catch (logError) {
+    console.error('[send_welcome_email] log error:', logError);
+  }
+}
+
 async function sendViaSmtp(to: string, userName: string) {
   const host = Deno.env.get('SMTP_HOST')?.trim();
   const user = Deno.env.get('SMTP_USER')?.trim();
-  const pass = Deno.env.get('SMTP_PASS')?.trim();
+  const pass = getSmtpPassword();
 
   if (!host || !user || !pass) {
     throw new Error('SMTP no configurado en la Edge Function');
@@ -77,10 +104,13 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
 
     if (!supabaseUrl || !serviceRoleKey) {
       return jsonResponse({ error: 'Supabase no configurado' }, 500);
+    }
+
+    if (!isAuthorizedWebhook(req) && !isAuthorizedServiceRole(req, serviceRoleKey)) {
+      return jsonResponse({ error: 'No autorizado' }, 401);
     }
 
     const payload = await req.json();
@@ -92,22 +122,6 @@ serve(async (req) => {
     }
 
     const admin = createClient(supabaseUrl, serviceRoleKey);
-    const isWebhook = isAuthorizedWebhook(req);
-
-    if (!isWebhook) {
-      const authHeader = req.headers.get('Authorization');
-      if (!authHeader || !anonKey) {
-        return jsonResponse({ error: 'No autorizado' }, 401);
-      }
-
-      const userClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
-      });
-      const { data: authData, error: authError } = await userClient.auth.getUser();
-      if (authError || authData.user?.id !== userId) {
-        return jsonResponse({ error: 'No autorizado' }, 403);
-      }
-    }
 
     const { data: claimed, error: claimError } = await admin.rpc('claim_welcome_email_send', {
       p_user_id: userId,
@@ -119,6 +133,9 @@ serve(async (req) => {
     }
 
     if (!claimed) {
+      console.log('[send_welcome_email] skipped (already sent):', userId);
+      await admin.from('welcome_email_outbox').delete().eq('user_id', userId);
+      await logWelcomeEmailEvent(admin, userId, 'skipped', { reason: 'already_sent' });
       return jsonResponse({ ok: true, skipped: true, reason: 'already_sent' });
     }
 
@@ -129,25 +146,31 @@ serve(async (req) => {
       const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
       if (userError || !userData.user?.email) {
         await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
+        await logWelcomeEmailEvent(admin, userId, 'failed', { error: 'Usuario no encontrado' });
         return jsonResponse({ error: 'Usuario no encontrado' }, 404);
       }
 
       email = userData.user.email;
-      userName =
-        userName ||
-        String(userData.user.user_metadata?.full_name ?? userData.user.user_metadata?.name ?? '').trim() ||
-        email.split('@')[0];
+      if (!userName) {
+        userName = String(
+          userData.user.user_metadata?.full_name ?? userData.user.user_metadata?.name ?? '',
+        ).trim();
+      }
     }
 
     try {
       await sendViaSmtp(email, userName);
     } catch (smtpError) {
+      const errorMessage = smtpError instanceof Error ? smtpError.message : String(smtpError);
       await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
-      console.error('[send_welcome_email] SMTP error:', smtpError);
+      console.error('[send_welcome_email] SMTP error:', errorMessage);
+      await logWelcomeEmailEvent(admin, userId, 'failed', { email, error: errorMessage });
       return jsonResponse({ error: 'No se pudo enviar el correo de bienvenida' }, 502);
     }
 
     await admin.from('welcome_email_outbox').delete().eq('user_id', userId);
+    console.log('[send_welcome_email] sent:', userId, email);
+    await logWelcomeEmailEvent(admin, userId, 'sent', { email });
 
     return jsonResponse({ ok: true, sent: true, user_id: userId });
   } catch (error) {
