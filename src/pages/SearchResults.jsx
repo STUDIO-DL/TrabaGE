@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useProfile } from '../hooks/useProfile';
 import { searchService } from '../services/search.service';
+import { jobsService } from '../services/jobs.service';
+import { ROLES } from '../constants/roles';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import Spinner from '../components/ui/Spinner';
 import Avatar from '../components/ui/Avatar';
@@ -54,10 +57,23 @@ function SearchResultItem({ item }) {
 export default function SearchResults() {
   const [searchParams] = useSearchParams();
   const { user, role } = useAuth();
+  const { profile } = useProfile();
   const query = searchParams.get('q');
 
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [companyJobs, setCompanyJobs] = useState([]);
+
+  useEffect(() => {
+    if (role !== ROLES.COMPANY || !user?.id) {
+      setCompanyJobs([]);
+      return;
+    }
+
+    jobsService.getCompanyJobs(user.id).then(({ data }) => {
+      setCompanyJobs((data ?? []).filter((job) => job.status === 'active'));
+    });
+  }, [role, user?.id]);
 
   useEffect(() => {
     if (!query?.trim()) {
@@ -70,9 +86,17 @@ export default function SearchResults() {
 
     const performSearch = async () => {
       setLoading(true);
+      const matchingContext =
+        role === ROLES.CANDIDATE && profile
+          ? { userProfile: profile }
+          : role === ROLES.COMPANY && companyJobs.length
+            ? { companyJobs }
+            : null;
+
       const { data } = await searchService.search({
         query,
         user: user ? { id: user.id, role } : null,
+        matchingContext,
       });
 
       if (!cancelled) {
@@ -86,7 +110,7 @@ export default function SearchResults() {
     return () => {
       cancelled = true;
     };
-  }, [query, role, user]);
+  }, [companyJobs, profile, query, role, user]);
 
   const groupedResults = groupSearchResults(results);
 

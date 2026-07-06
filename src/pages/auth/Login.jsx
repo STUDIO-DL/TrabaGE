@@ -243,7 +243,7 @@ function LoginScreen({
           <p className="mt-6 text-center text-sm text-slate-500">
             ¿No tienes cuenta?{' '}
             <Link
-              to="/account-type" // This is the correct starting point for the registration flow.
+              to="/register"
               className="font-bold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
             >
               Crear cuenta
@@ -317,7 +317,7 @@ export default function Login() {
   // Un usuario con sesión real (no invitado/preview) que llega a /login se
   // redirige directamente a su inicio en lugar de mostrarle el formulario.
   if (isAuthenticated && !isPreviewMode) {
-    return <Navigate to={role ? getHomePath() : '/account-type'} replace />;
+    return <Navigate to={role ? getHomePath() : '/register'} replace />;
   }
 
   return (

@@ -25,7 +25,7 @@ export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onD
         <ProfileEntryRow
           key={item.id}
           title={item.institution}
-          subtitle={item.program}
+          subtitle={[item.program, item.specialty].filter(Boolean).join(' · ')}
           meta={[formatDateRange(item.start_date, item.end_date), item.grade].filter(Boolean).join(' · ')}
           entryIcon={GraduationCap}
           entryIconTone="education"

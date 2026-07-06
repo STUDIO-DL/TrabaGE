@@ -245,6 +245,33 @@ export function useCandidateProfile() {
     [afterCandidateProfileChanged],
   );
 
+  const addCandidateLink = useCallback(
+    async (data) => {
+      const { error: saveError } = await profileService.addCandidateLink({ ...data, user_id: userId });
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
+    },
+    [afterCandidateProfileChanged, userId],
+  );
+
+  const updateCandidateLink = useCallback(
+    async (id, data) => {
+      const { error: saveError } = await profileService.updateCandidateLink(id, data);
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
+    },
+    [afterCandidateProfileChanged],
+  );
+
+  const deleteCandidateLink = useCallback(
+    async (id) => {
+      const { error: saveError } = await profileService.deleteCandidateLink(id);
+      if (!saveError) await afterCandidateProfileChanged();
+      return { error: friendlyProfileError(saveError) };
+    },
+    [afterCandidateProfileChanged],
+  );
+
   return {
     profile,
     loading,
@@ -270,5 +297,8 @@ export function useCandidateProfile() {
     addLanguage,
     updateLanguage,
     deleteLanguage,
+    addCandidateLink,
+    updateCandidateLink,
+    deleteCandidateLink,
   };
 }

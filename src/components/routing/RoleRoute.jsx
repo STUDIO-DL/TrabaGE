@@ -24,14 +24,14 @@ export default function RoleRoute({ role: requiredRole }) {
   }
 
   if (!previewActive && isAuthenticated && !effectiveRole) {
-    return <Navigate to="/account-type" replace state={{ fromOAuth: true }} />;
+    return <Navigate to="/register" replace state={{ fromOAuth: true }} />;
   }
 
   if (effectiveRole !== requiredRole) {
     if (requiredRole === 'admin') {
       return <Navigate to="/login" replace />;
     }
-    const fallback = previewActive || isAuthenticated ? '/account-type' : '/login';
+    const fallback = previewActive || isAuthenticated ? '/register' : '/login';
     return <Navigate to={ROLE_HOME[effectiveRole] || fallback} replace />;
   }
 

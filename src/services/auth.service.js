@@ -1,14 +1,17 @@
 import { isSupabaseConfigured, supabase } from '../config/supabase';
+import { accountKindToRole, isValidAccountKind } from '../constants/accountKinds';
 import { ROLES } from '../constants/roles';
 
 const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
+const PENDING_ORG_KIND_KEY = 'pending_org_kind';
 const VALID_ACCOUNT_TYPES = [ROLES.CANDIDATE, ROLES.COMPANY];
 const VALID_STORED_ROLES = [ROLES.CANDIDATE, ROLES.COMPANY, ROLES.ADMIN];
 const NEW_OAUTH_USER_WINDOW_MS = 10 * 60 * 1000;
 
 function normalizeAccountType(accountType) {
   if (accountType === 'organization') return ROLES.COMPANY;
+  if (isValidAccountKind(accountType)) return accountKindToRole(accountType);
   return VALID_ACCOUNT_TYPES.includes(accountType) ? accountType : null;
 }
 
@@ -40,15 +43,33 @@ function configError() {
   };
 }
 
-function savePendingAccountType(role) {
-  const normalizedRole = normalizeAccountType(role);
+function savePendingOrgKind(accountKind) {
+  if (isValidAccountKind(accountKind)) {
+    sessionStorage.setItem(PENDING_ORG_KIND_KEY, accountKind);
+    return;
+  }
+  sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
+}
+
+export function consumePendingOrgKind() {
+  const kind = sessionStorage.getItem(PENDING_ORG_KIND_KEY);
+  sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
+  return isValidAccountKind(kind) ? kind : null;
+}
+
+function savePendingAccountType(roleOrKind) {
+  const normalizedRole = normalizeAccountType(roleOrKind);
 
   if (normalizedRole) {
     localStorage.setItem(PENDING_ACCOUNT_TYPE_KEY, toPendingAccountType(normalizedRole));
     localStorage.removeItem(LEGACY_PENDING_ACCOUNT_TYPE_KEY);
+    if (isValidAccountKind(roleOrKind)) {
+      savePendingOrgKind(roleOrKind);
+    }
   } else {
     localStorage.removeItem(PENDING_ACCOUNT_TYPE_KEY);
     localStorage.removeItem(LEGACY_PENDING_ACCOUNT_TYPE_KEY);
+    sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
   }
 }
 
@@ -101,16 +122,27 @@ export const authService = {
     });
   },
 
-  register: async (email, password, role) => {
+  register: async (email, password, role, metadata = {}) => {
     if (!isSupabaseConfigured) {
       return configError();
+    }
+
+    const signupData = {
+      role,
+      full_name: metadata.fullName?.trim() || undefined,
+      city: metadata.city?.trim() || undefined,
+      account_kind: metadata.accountKind || undefined,
+    };
+
+    if (metadata.accountKind) {
+      savePendingOrgKind(metadata.accountKind);
     }
 
     return supabase.auth.signUp({
       email: normalizeEmail(email),
       password: normalizePassword(password),
       options: {
-        data: { role },
+        data: signupData,
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
@@ -191,13 +223,13 @@ export const authService = {
     return result;
   },
 
-  signupWithGoogle: async (role = ROLES.CANDIDATE) => {
+  signupWithGoogle: async (accountKind = ROLES.CANDIDATE) => {
     if (!isSupabaseConfigured) {
       return configError();
     }
 
-    const normalizedRole = normalizeAccountType(role) ?? ROLES.CANDIDATE;
-    savePendingAccountType(normalizedRole);
+    const normalizedRole = normalizeAccountType(accountKind) ?? ROLES.CANDIDATE;
+    savePendingAccountType(accountKind);
 
     const result = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -206,7 +238,10 @@ export const authService = {
         queryParams: {
           prompt: 'select_account',
         },
-        data: { role: normalizedRole },
+        data: {
+          role: normalizedRole,
+          account_kind: isValidAccountKind(accountKind) ? accountKind : undefined,
+        },
       },
     });
 

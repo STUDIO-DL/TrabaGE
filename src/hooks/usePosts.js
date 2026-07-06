@@ -6,7 +6,8 @@ import { ROLES } from '../constants/roles';
 import { getPreviewPosts } from '../constants/preview';
 import { getCompanyLogoUrl } from '../constants/images';
 import { resolveUserAvatar } from '../utils/resolveUserAvatar';
-import { extractUserKeywords } from '../utils/calculateJobMatch';
+import { extractUserKeywords, calculateJobMatch } from '../utils/calculateJobMatch';
+import { jobsService } from '../services/jobs.service';
 
 const PAGE_SIZE = 30;
 
@@ -112,28 +113,68 @@ function rankPostsForCandidate(posts, profile, followedCompanyIds) {
     .map(({ post }) => post);
 }
 
+function rankPostsForCompany(posts, companyJobs) {
+  if (!companyJobs?.length) return posts;
+
+  return [...posts]
+    .map((post) => {
+      if (post.author_type !== 'candidate') {
+        return {
+          post,
+          score: (post.author_type === 'company' ? 8 : 0) + recencyScore(post.created_at),
+        };
+      }
+
+      const pseudoCandidate = {
+        headline: post.author_headline,
+        about: post.content,
+      };
+      const relevance = companyJobs.reduce(
+        (best, job) => Math.max(best, calculateJobMatch(pseudoCandidate, job)),
+        0,
+      );
+
+      return {
+        post,
+        score: relevance + recencyScore(post.created_at),
+      };
+    })
+    .sort((a, b) => b.score - a.score || new Date(b.post.created_at) - new Date(a.post.created_at))
+    .map(({ post }) => post);
+}
+
 async function rankPosts(posts, user, role, authorId) {
-  if (authorId || role !== ROLES.CANDIDATE || !user?.id) return posts;
+  if (authorId) return posts;
 
-  const [profileResult, followsResult] = await Promise.all([
-    supabase
-      .from('candidate_profiles')
-      .select('user_id, headline, about, job_preferences, skills(name), experience(position), education(institution, program, grade), languages(language, level)')
-      .eq('user_id', user.id)
-      .maybeSingle(),
-    supabase
-      .from('follows')
-      .select('target_id')
-      .eq('user_id', user.id)
-      .eq('target_type', 'company'),
-  ]);
+  if (role === ROLES.CANDIDATE && user?.id) {
+    const [profileResult, followsResult] = await Promise.all([
+      supabase
+        .from('candidate_profiles')
+        .select('user_id, headline, about, job_preferences, skills(name), experience(position), education(institution, program, grade), languages(language, level)')
+        .eq('user_id', user.id)
+        .maybeSingle(),
+      supabase
+        .from('follows')
+        .select('target_id')
+        .eq('user_id', user.id)
+        .eq('target_type', 'company'),
+    ]);
 
-  if (profileResult.error) return posts;
-  return rankPostsForCandidate(
-    posts,
-    profileResult.data,
-    (followsResult.data ?? []).map((follow) => follow.target_id),
-  );
+    if (profileResult.error) return posts;
+    return rankPostsForCandidate(
+      posts,
+      profileResult.data,
+      (followsResult.data ?? []).map((follow) => follow.target_id),
+    );
+  }
+
+  if (role === ROLES.COMPANY && user?.id) {
+    const { data: jobs } = await jobsService.getCompanyJobs(user.id);
+    const activeJobs = (jobs ?? []).filter((job) => job.status === 'active');
+    return rankPostsForCompany(posts, activeJobs);
+  }
+
+  return posts;
 }
 
 export function usePosts(authorId) {

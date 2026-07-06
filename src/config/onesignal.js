@@ -51,7 +51,7 @@ export const initOneSignal = async () => {
                 autoPrompt: false,
                 text: {
                   actionMessage:
-                    '¿Quieres recibir avisos de TrabaGE? Te notificamos cuando aparezcan ofertas para ti, recibas mensajes o haya novedades en tus postulaciones.',
+                    '¿Quieres recibir avisos de TrabaGE? Te notificamos sobre ofertas, postulaciones y novedades de empresas que sigues.',
                   acceptButton: 'Sí, activar',
                   cancelButton: 'Ahora no',
                 },

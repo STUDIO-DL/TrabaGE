@@ -1,3 +1,5 @@
+import { normalizeSkillName } from '../utils/normalizeSkill';
+
 /** Common professional skills for autocomplete suggestions */
 export const SKILL_SUGGESTIONS = [
   'Atención al cliente',
@@ -71,7 +73,7 @@ export const SKILL_SUGGESTIONS = [
 
 export function filterSkillSuggestions(query, existingNames = [], limit = 8) {
   const q = query.trim().toLowerCase();
-  const taken = new Set(existingNames.map((n) => n.trim().toLowerCase()));
+  const taken = new Set(existingNames.map((n) => normalizeSkillName(n).toLowerCase()));
 
   return SKILL_SUGGESTIONS.filter((skill) => {
     if (taken.has(skill.toLowerCase())) return false;

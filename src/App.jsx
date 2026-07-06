@@ -16,9 +16,7 @@ const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Explore = lazy(() => import('./pages/auth/Explore'));
 const Register = lazy(() => import('./pages/auth/Register'));
-const RegisterMethod = lazy(() => import('./pages/auth/RegisterMethod'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
-const AccountTypeSelect = lazy(() => import('./pages/auth/AccountTypeSelect'));
 const SetPassword = lazy(() => import('./pages/auth/SetPassword'));
 const CandidateSetup = lazy(() => import('./pages/setup/CandidateSetup'));
 const CompanySetup = lazy(() => import('./pages/setup/CompanySetup'));
@@ -34,6 +32,7 @@ const CandidateProfile = lazy(() => import('./pages/candidate/Profile'));
 const CandidateSavedJobs = lazy(() => import('./pages/candidate/SavedJobs'));
 const CandidateSettings = lazy(() => import('./pages/candidate/Settings'));
 const CandidateAppearance = lazy(() => import('./pages/candidate/Appearance'));
+const CandidateNotificationSettings = lazy(() => import('./pages/candidate/NotificationSettings'));
 const PublicProfile = lazy(() => import('./pages/candidate/PublicProfile'));
 
 const CompanyFeed = lazy(() => import('./pages/company/Feed'));
@@ -45,6 +44,7 @@ const CompanyNotifications = lazy(() => import('./pages/company/Notifications'))
 const CompanyProfile = lazy(() => import('./pages/company/Profile'));
 const CompanySettings = lazy(() => import('./pages/company/Settings'));
 const CompanyAppearance = lazy(() => import('./pages/company/Appearance'));
+const CompanyNotificationSettings = lazy(() => import('./pages/company/NotificationSettings'));
 const Verification = lazy(() => import('./pages/company/Verification'));
 
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -83,8 +83,8 @@ function AppRoutes() {
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/explore" element={<Explore />} />
-            <Route path="/account-type" element={<AccountTypeSelect />} />
-            <Route path="/register-method" element={<RegisterMethod />} />
+            <Route path="/account-type" element={<Navigate to="/register" replace />} />
+            <Route path="/register-method" element={<Navigate to="/register" replace />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/demo/company" element={<DemoCompanyEntry />} />
@@ -107,6 +107,7 @@ function AppRoutes() {
                 <Route path="/candidate/profile" element={<CandidateProfile />} />
                 <Route path="/candidate/settings" element={<CandidateSettings />} />
                 <Route path="/candidate/settings/appearance" element={<CandidateAppearance />} />
+                <Route path="/candidate/settings/notifications" element={<CandidateNotificationSettings />} />
                 <Route path="/help" element={<HelpCenter />} />
               </Route>
 
@@ -123,6 +124,7 @@ function AppRoutes() {
                 <Route path="/company/profile" element={<CompanyProfile />} />
                 <Route path="/company/settings" element={<CompanySettings />} />
                 <Route path="/company/settings/appearance" element={<CompanyAppearance />} />
+                <Route path="/company/settings/notifications" element={<CompanyNotificationSettings />} />
                 <Route path="/company/verification" element={<Verification />} />
                 <Route path="/company/help" element={<HelpCenter />} />
               </Route>

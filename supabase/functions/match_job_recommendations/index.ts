@@ -15,11 +15,14 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
 }
 
 const SCORE_WEIGHTS = {
-  skills: 40,
-  experience: 20,
-  location: 15,
+  role: 25,
+  skills: 28,
+  experience: 15,
+  location: 10,
   workMode: 10,
-  preferences: 10,
+  availability: 5,
+  languages: 4,
+  education: 3,
   recentActivity: 5,
 };
 
@@ -259,7 +262,7 @@ function preferenceScore(candidate: Record<string, unknown>, job: Record<string,
   if (educationMeetsRequirement(userEducationLevel, requiredEducation)) score += 2;
   if (prefs.availability === 'immediate' && !job.application_deadline) score += 1;
 
-  return Math.min(SCORE_WEIGHTS.preferences, score);
+  return Math.min(3, score);
 }
 
 function recentActivityScore(candidate: Record<string, unknown>, job: Record<string, unknown>, company: Record<string, unknown> | null) {

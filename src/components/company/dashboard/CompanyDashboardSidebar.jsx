@@ -15,7 +15,7 @@ import {
   ICON_SIZES,
 } from '../../../constants/icons';
 import { getCompanyLogoUrl } from '../../../constants/images';
-import { isCompanyVerified } from '../../../utils/companyVerification';
+import { getOrgLabels } from '../../../utils/orgLabels';
 
 const NAV_ITEMS = [
   { to: '/company/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },

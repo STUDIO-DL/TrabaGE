@@ -11,5 +11,5 @@ export async function resolvePostAuthRedirect(userId) {
   // be reliably available in the user_roles table.
   const { data: roleData } = await authService.getUserRole(userId);
   const userRole = roleData?.role;
-  return ROLE_HOME[userRole] || '/account-type';
+  return ROLE_HOME[userRole] || '/register';
 }

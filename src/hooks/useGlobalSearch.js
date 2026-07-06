@@ -1,14 +1,30 @@
 import { useEffect, useRef, useState } from 'react';
 import { searchService } from '../services/search.service';
+import { jobsService } from '../services/jobs.service';
 import { useAuth } from './useAuth';
+import { useProfile } from './useProfile';
+import { ROLES } from '../constants/roles';
 
 const DEBOUNCE_MS = 300;
 
 export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}) {
   const { user, role } = useAuth();
+  const { profile } = useProfile();
+  const [companyJobs, setCompanyJobs] = useState([]);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    if (role !== ROLES.COMPANY || !user?.id) {
+      setCompanyJobs([]);
+      return;
+    }
+
+    jobsService.getCompanyJobs(user.id).then(({ data }) => {
+      setCompanyJobs((data ?? []).filter((job) => job.status === 'active'));
+    });
+  }, [role, user?.id]);
 
   useEffect(() => {
     const trimmed = query?.trim() ?? '';
@@ -23,11 +39,19 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
     requestIdRef.current = requestId;
     setLoading(true);
 
+    const matchingContext =
+      role === ROLES.CANDIDATE && profile
+        ? { userProfile: profile }
+        : role === ROLES.COMPANY && companyJobs.length
+          ? { companyJobs }
+          : null;
+
     const timer = window.setTimeout(async () => {
       const { data } = await searchService.globalSearch({
         query: trimmed,
         limitPerType,
         user: user ? { id: user.id, role } : null,
+        matchingContext,
       });
 
       if (requestIdRef.current !== requestId) return;
@@ -37,7 +61,7 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
     }, DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [query, enabled, limitPerType, user, role]);
+  }, [companyJobs, profile, query, enabled, limitPerType, user, role]);
 
   return { results, loading };
 }

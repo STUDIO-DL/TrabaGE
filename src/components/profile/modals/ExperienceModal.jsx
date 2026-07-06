@@ -9,6 +9,7 @@ import { Save, ICON_SIZES } from '../../../constants/icons';
 const empty = {
   company: '',
   position: '',
+  location: '',
   description: '',
   start_date: '',
   end_date: '',
@@ -26,6 +27,7 @@ export default function ExperienceModal({ isOpen, onClose, initial, onSave, load
           ? {
               company: initial.company || '',
               position: initial.position || '',
+              location: initial.location || '',
               description: initial.description || '',
               start_date: initial.start_date || '',
               end_date: initial.end_date || '',
@@ -46,6 +48,7 @@ export default function ExperienceModal({ isOpen, onClose, initial, onSave, load
     const payload = {
       company: form.company,
       position: form.position,
+      location: form.location || null,
       description: form.description,
       start_date: form.start_date || null,
       end_date: form.is_current ? null : form.end_date || null,
@@ -63,6 +66,7 @@ export default function ExperienceModal({ isOpen, onClose, initial, onSave, load
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Puesto" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} required />
         <Input label="Empresa" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} required />
+        <Input label="Ubicación" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
         <div className="grid grid-cols-2 gap-3">
           <Input
             label="Inicio"

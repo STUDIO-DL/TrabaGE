@@ -12,6 +12,7 @@ import CertificationsSection from '../../components/profile/CertificationsSectio
 import SkillsSection from '../../components/profile/SkillsSection';
 import ServicesSection from '../../components/profile/ServicesSection';
 import LanguagesSection from '../../components/profile/LanguagesSection';
+import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
 import DocumentsSection from '../../components/profile/DocumentsSection';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
@@ -53,6 +54,8 @@ export default function Profile() {
     addLanguage,
     updateLanguage,
     deleteLanguage,
+    addCandidateLink,
+    deleteCandidateLink,
   } = useCandidateProfile();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -314,6 +317,19 @@ export default function Profile() {
           onDelete={async (id) => {
             await deleteSkill(id);
             showToast('Habilidad eliminada', 'success');
+          }}
+        />
+
+        <PortfolioLinksSection
+          items={profile?.candidate_links}
+          isOwn={canEdit}
+          onAdd={async (data) => {
+            const { error } = await addCandidateLink(data);
+            showToast(error ? error.message : 'Enlace añadido', error ? 'error' : 'success');
+          }}
+          onDelete={async (id) => {
+            await deleteCandidateLink(id);
+            showToast('Enlace eliminado', 'success');
           }}
         />
 

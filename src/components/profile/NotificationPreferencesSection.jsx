@@ -58,6 +58,12 @@ export default function NotificationPreferencesSection({
   onSaveNotificationSettings,
   loading = false,
 }) {
+  const WORK_MODE_OPTIONS = [
+    { value: 'onsite', label: 'Presencial' },
+    { value: 'remote', label: 'Remoto' },
+    { value: 'hybrid', label: 'Híbrido' },
+  ];
+
   const [prefs, setPrefs] = useState(EMPTY_JOB_PREFERENCES);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [notificationFrequency, setNotificationFrequency] = useState('instant');
@@ -175,6 +181,13 @@ export default function NotificationPreferencesSection({
           onToggle={(value) => toggle('preferred_job_types', value)}
         />
 
+        <ChipGroup
+          label="Modalidad de trabajo"
+          options={WORK_MODE_OPTIONS}
+          selected={prefs.preferred_work_modes}
+          onToggle={(value) => toggle('preferred_work_modes', value)}
+        />
+
         <Select
           label="Nivel de experiencia"
           value={prefs.experience_level ?? ''}
@@ -189,6 +202,22 @@ export default function NotificationPreferencesSection({
             { value: '', label: 'Seleccionar' },
             ...EXPERIENCE_LEVELS,
           ]}
+        />
+
+        <Input
+          label="Salario esperado (opcional)"
+          type="number"
+          min="0"
+          placeholder="Ej. 800000"
+          value={prefs.expected_salary ?? ''}
+          onChange={(e) => {
+            const value = e.target.value;
+            setPrefs((current) => ({
+              ...current,
+              expected_salary: value === '' ? null : Number(value),
+            }));
+            setDirty(true);
+          }}
         />
 
         <Select

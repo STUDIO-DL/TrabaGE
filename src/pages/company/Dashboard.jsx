@@ -63,8 +63,7 @@ export default function Dashboard() {
 
   const recentCandidates = useMemo(
     () =>
-      [...applications]
-        .sort((a, b) => new Date(b.applied_at) - new Date(a.applied_at))
+      applications
         .slice(0, 5)
         .map(mapCandidateForDashboard)
         .filter((candidate) => candidate.full_name),

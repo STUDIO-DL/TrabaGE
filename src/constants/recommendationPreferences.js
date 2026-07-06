@@ -1,11 +1,15 @@
 export const MATCH_THRESHOLD = 70;
 
+/** Internal weights (sum = 100). Never exposed in UI. */
 export const SCORE_WEIGHTS = {
-  skills: 40,
-  experience: 20,
-  location: 15,
+  role: 25,
+  skills: 28,
+  experience: 15,
+  location: 10,
   workMode: 10,
-  preferences: 10,
+  availability: 5,
+  languages: 4,
+  education: 3,
   recentActivity: 5,
 };
 

@@ -28,7 +28,6 @@ export default function JobCard({
   saved = false,
   onSaveToggle,
   saving = false,
-  matchScore,
 }) {
   if (!job) return null;
 
@@ -71,11 +70,6 @@ export default function JobCard({
       <div className="space-y-1">
         <div className="flex items-start justify-between gap-2">
           <h3 className="text-base font-bold text-gray-900">{job.title}</h3>
-          {typeof matchScore === 'number' && matchScore > 0 && (
-            <span className="shrink-0 rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700">
-              {matchScore}% compatible
-            </span>
-          )}
         </div>
         <CompanyNameWithBadge company={company} userId={job.company_id} showUnverifiedLabel />
       </div>

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import DeleteAccountModal from '../profile/modals/DeleteAccountModal';
 import PageContainer from '../layout/PageContainer';
-import NotificationPreferencesPanel from './NotificationPreferencesPanel';
 import {
   Bell,
   ChevronRight,
@@ -129,6 +128,7 @@ export default function SettingsScreen({ accountType }) {
     () => ({
       profile: isCompany ? '/company/profile' : '/candidate/profile',
       notifications: isCompany ? '/company/notifications' : '/candidate/notifications',
+      notificationSettings: isCompany ? '/company/settings/notifications' : '/candidate/settings/notifications',
       help: isCompany ? '/company/help' : '/help',
       settings: isCompany ? '/company/settings' : '/candidate/settings',
       appearance: isCompany ? '/company/settings/appearance' : '/candidate/settings/appearance',
@@ -202,9 +202,14 @@ export default function SettingsScreen({ accountType }) {
                 subtitle="Ver avisos recibidos"
                 to={routes.notifications}
               />
+              <Divider />
+              <SettingsRow
+                icon={Bell}
+                title="Notificaciones"
+                subtitle="Push y categorías de avisos"
+                to={routes.notificationSettings}
+              />
             </SectionCard>
-
-            <NotificationPreferencesPanel userId={user?.id} isPreviewMode={isPreviewMode} />
 
             <SectionCard title="Preferencias">
               <SettingsRow

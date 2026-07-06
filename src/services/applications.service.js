@@ -1,6 +1,6 @@
 import { supabase } from '../config/supabase';
 import { notificationsService } from './notifications.service';
-import { calculateJobMatch } from '../utils/calculateJobMatch';
+import { rankApplicantsByJob } from '../utils/jobMatching';
 
 const STATUS_NOTIFICATION_COPY = {
   viewed: {
@@ -75,21 +75,12 @@ export const applicationsService = {
     }
 
     const profilesById = new Map((profilesResult.data ?? []).map((profile) => [profile.user_id, profile]));
-    const data = applicationsResult.data
-      .map((application) => {
-        const candidateProfile = profilesById.get(application.candidate_id);
-        const matchScore = calculateJobMatch(candidateProfile, application.jobs);
-        return {
-          ...application,
-          candidate_profiles: candidateProfile,
-          applicant_match_score: matchScore,
-        };
-      })
-      .sort(
-        (a, b) =>
-          (b.applicant_match_score ?? 0) - (a.applicant_match_score ?? 0) ||
-          new Date(b.applied_at ?? 0) - new Date(a.applied_at ?? 0),
-      );
+    const data = rankApplicantsByJob(
+      applicationsResult.data.map((application) => ({
+        ...application,
+        candidate_profiles: profilesById.get(application.candidate_id),
+      })),
+    );
 
     return { ...applicationsResult, data };
   },

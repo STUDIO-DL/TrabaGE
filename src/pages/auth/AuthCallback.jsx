@@ -57,17 +57,17 @@ export default function AuthCallback() {
 
         const roleHome = ROLE_HOME[accountTypeResult?.role] || (await resolvePostAuthRedirect(session.user.id));
         const redirectTo = accountTypeResult?.needsAccountTypeSelection
-          ? '/account-type'
+          ? '/register'
           : roleHome;
 
-        if (redirectTo !== '/account-type') {
+        if (redirectTo !== '/register') {
           await refreshAuthState();
         }
 
         if (cancelled) return true;
         navigate(redirectTo, {
           replace: true,
-          state: redirectTo === '/account-type' ? { fromOAuth: true } : undefined,
+          state: redirectTo === '/register' ? { fromOAuth: true } : undefined,
         });
         return true;
       };

@@ -8,6 +8,7 @@ import { Save, ICON_SIZES } from '../../../constants/icons';
 const empty = {
   institution: '',
   program: '',
+  specialty: '',
   grade: '',
   start_date: '',
   end_date: '',
@@ -24,6 +25,7 @@ export default function EducationModal({ isOpen, onClose, initial, onSave, loadi
           ? {
               institution: initial.institution || '',
               program: initial.program || '',
+              specialty: initial.specialty || '',
               grade: initial.grade || '',
               start_date: initial.start_date || '',
               end_date: initial.end_date || '',
@@ -58,6 +60,7 @@ export default function EducationModal({ isOpen, onClose, initial, onSave, loadi
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input label="Institución" value={form.institution} onChange={(e) => setForm({ ...form, institution: e.target.value })} required />
         <Input label="Programa / título" value={form.program} onChange={(e) => setForm({ ...form, program: e.target.value })} />
+        <Input label="Especialidad" value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} />
         <Input label="Nota / grado" value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })} />
         <div className="grid grid-cols-2 gap-3">
           <Input label="Inicio" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />

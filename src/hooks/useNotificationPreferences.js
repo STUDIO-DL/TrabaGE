@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  getNotificationPermissionStatus,
-  requestNotificationPermission,
-  setOneSignalPushEnabled,
-  syncOneSignalNotificationTags,
-} from '../config/onesignal';
+import { syncOneSignalNotificationTags } from '../config/onesignal';
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   NOTIFICATION_PERMISSION_STATUS,
@@ -14,9 +9,11 @@ import {
   normalizeNotificationPreferences,
   notificationPreferencesService,
 } from '../services/notificationPreferences.service';
+import { usePushPermissionActions } from './usePushPermission';
 import { reportError } from '../utils/logger';
 
 export function useNotificationPreferences(userId, { disabled = false } = {}) {
+  const { requestPermission, disablePushSubscription, getPermissionStatus } = usePushPermissionActions();
   const [preferences, setPreferences] = useState(DEFAULT_NOTIFICATION_PREFERENCES);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState(null);
@@ -95,11 +92,11 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
       setPermissionMessage(null);
 
       if (!enabled) {
-        await setOneSignalPushEnabled(false);
+        await disablePushSubscription();
         return savePatch({ push_enabled: false }, 'push_enabled');
       }
 
-      const currentStatus = getNotificationPermissionStatus();
+      const currentStatus = getPermissionStatus();
       const alreadyDenied = preferences.permission_status === NOTIFICATION_PERMISSION_STATUS.DENIED;
       const alreadyPromptedWithoutGrant = preferences.permission_prompted_at
         && preferences.permission_status !== NOTIFICATION_PERMISSION_STATUS.GRANTED
@@ -117,12 +114,12 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
 
       const granted = currentStatus === NOTIFICATION_PERMISSION_STATUS.GRANTED
         ? true
-        : await requestNotificationPermission();
+        : await requestPermission();
 
       if (!granted) {
         await savePatch({
           push_enabled: false,
-          permission_status: getNotificationPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.DENIED
+          permission_status: getPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.DENIED
             ? NOTIFICATION_PERMISSION_STATUS.DENIED
             : NOTIFICATION_PERMISSION_STATUS.DEFAULT,
           permission_prompted_at: new Date().toISOString(),
@@ -131,14 +128,13 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
         return { data: null, error: null };
       }
 
-      await setOneSignalPushEnabled(true);
       return savePatch({
         push_enabled: true,
         permission_status: NOTIFICATION_PERMISSION_STATUS.GRANTED,
         permission_prompted_at: preferences.permission_prompted_at ?? new Date().toISOString(),
       }, 'push_enabled');
     },
-    [preferences, savePatch],
+    [disablePushSubscription, getPermissionStatus, preferences, requestPermission, savePatch],
   );
 
   const setPreference = useCallback(

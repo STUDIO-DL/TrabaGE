@@ -209,11 +209,11 @@ export function AuthProvider({ children }) {
     return { data, error: null, redirectTo };
   }, [hydrateUser]);
 
-  const register = useCallback(async (email, password, userRole) => {
+  const register = useCallback(async (email, password, userRole, metadata = {}) => {
     clearPreviewMode();
     setIsPreviewMode(false);
 
-    const { data, error } = await authService.register(email, password, userRole);
+    const { data, error } = await authService.register(email, password, userRole, metadata);
     if (error) return { data, error, redirectTo: null };
 
     // Per the new flow, email sign-up always requires verification. `register`
@@ -270,7 +270,7 @@ export function AuthProvider({ children }) {
     // longer redirect setup-incomplete users into the setup flow. The
     // `setupComplete` flag remains available for showing an optional prompt.
     const activeRole = role ?? (getPreviewMode() ? getPreviewRole() : null);
-    if (!activeRole) return '/account-type';
+    if (!activeRole) return '/register';
     return ROLE_HOME[activeRole] || '/login';
   }, [role]);
 

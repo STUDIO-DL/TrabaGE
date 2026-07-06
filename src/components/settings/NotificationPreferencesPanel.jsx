@@ -3,11 +3,12 @@ import { useEffect } from 'react';
 import AppIcon from '../common/AppIcon';
 import { ICON_SIZES, ShieldCheck } from '../../constants/icons';
 import {
+  getNotificationGroupsForRole,
   NOTIFICATION_MASTER_CARD,
-  NOTIFICATION_PREFERENCE_GROUPS,
   NOTIFICATION_SAVED_COPY,
 } from '../../constants/notificationPreferences';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { useAuth } from '../../hooks/useAuth';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -58,7 +59,6 @@ function PreferenceCard({
   item,
   checked,
   disabled,
-  locked,
   savingKey,
   savedKey,
   onToggle,
@@ -67,7 +67,7 @@ function PreferenceCard({
     <div
       className={[
         'rounded-2xl border border-slate-100 bg-white/95 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.04)] transition duration-200',
-        disabled && !locked ? 'opacity-55 grayscale-[0.15]' : 'hover:-translate-y-0.5 hover:border-primary-100',
+        disabled ? 'opacity-55 grayscale-[0.15]' : 'hover:-translate-y-0.5 hover:border-primary-100',
       ].join(' ')}
     >
       <div className="flex items-start gap-3">
@@ -78,18 +78,12 @@ function PreferenceCard({
           </div>
           <p className="mt-1 text-[12px] leading-relaxed text-slate-500">{item.description}</p>
         </div>
-        {locked ? (
-          <span className="inline-flex h-7 shrink-0 items-center rounded-full bg-primary-50 px-2.5 text-[11px] font-semibold text-primary-700">
-            Siempre activo
-          </span>
-        ) : (
-          <PreferenceSwitch
-            checked={checked}
-            disabled={disabled}
-            label={item.title}
-            onChange={onToggle}
-          />
-        )}
+        <PreferenceSwitch
+          checked={checked}
+          disabled={disabled}
+          label={item.title}
+          onChange={onToggle}
+        />
       </div>
     </div>
   );
@@ -110,14 +104,7 @@ function PreferenceGroup({
           <AppIcon icon={group.icon} size={ICON_SIZES.default} strokeWidth={1.8} />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-[16px] font-bold text-slate-950">{group.title}</h3>
-            {group.badge ? (
-              <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-500">
-                {group.badge}
-              </span>
-            ) : null}
-          </div>
+          <h3 className="text-[16px] font-bold text-slate-950">{group.title}</h3>
           <p className="mt-1 text-[13px] leading-relaxed text-slate-500">{group.description}</p>
         </div>
       </div>
@@ -128,8 +115,7 @@ function PreferenceGroup({
             key={item.key}
             item={item}
             checked={preferences[item.key] === true}
-            disabled={disabled || group.locked || savingKey === item.key}
-            locked={group.locked}
+            disabled={disabled || savingKey === item.key}
             savingKey={savingKey}
             savedKey={savedKey}
             onToggle={() => onTogglePreference(item.key)}
@@ -143,22 +129,25 @@ function PreferenceGroup({
 function PreferencesSkeleton() {
   return (
     <div className="space-y-4">
-      {[0, 1, 2].map((item) => (
+      {[0, 1].map((item) => (
         <div key={item} className="h-28 animate-pulse rounded-[28px] bg-white shadow-[0_12px_30px_rgba(15,23,42,0.04)]" />
       ))}
     </div>
   );
 }
 
-export default function NotificationPreferencesPanel({ userId, isPreviewMode = false }) {
+export default function NotificationPreferencesPanel({ accountType }) {
+  const { user, isPreviewMode, role } = useAuth();
   const { showToast } = useNotificationContext();
+  const activeRole = accountType || role;
+  const groups = getNotificationGroupsForRole(activeRole);
   const {
     preferences,
     setMasterEnabled,
     setPreference,
     status,
     clearPermissionMessage,
-  } = useNotificationPreferences(userId, { disabled: isPreviewMode });
+  } = useNotificationPreferences(user?.id, { disabled: isPreviewMode });
 
   useEffect(() => {
     if (status.permissionMessage === 'denied') {
@@ -192,16 +181,7 @@ export default function NotificationPreferencesPanel({ userId, isPreviewMode = f
   const disabledCategories = !preferences.push_enabled || status.savingKey === 'push_enabled' || isPreviewMode;
 
   return (
-    <section className="space-y-5">
-      <div className="px-1">
-        <h2 className="text-[13px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-          Notificaciones
-        </h2>
-        <p className="mt-2 text-[13px] leading-relaxed text-slate-500">
-          Elige qué avisos quieres recibir en tus dispositivos. Tus preferencias se guardan en TrabaGE y se sincronizan al iniciar sesión.
-        </p>
-      </div>
-
+    <div className="space-y-5">
       <div className="rounded-[30px] border border-primary-100 bg-white p-5 shadow-[0_20px_52px_rgba(37,99,235,0.09)]">
         <div className="flex items-start gap-4">
           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-600 text-white shadow-[0_12px_26px_rgba(37,99,235,0.25)]">
@@ -250,7 +230,7 @@ export default function NotificationPreferencesPanel({ userId, isPreviewMode = f
         <PreferencesSkeleton />
       ) : (
         <div className="space-y-4">
-          {NOTIFICATION_PREFERENCE_GROUPS.map((group) => (
+          {groups.map((group) => (
             <PreferenceGroup
               key={group.id}
               group={group}
@@ -263,6 +243,6 @@ export default function NotificationPreferencesPanel({ userId, isPreviewMode = f
           ))}
         </div>
       )}
-    </section>
+    </div>
   );
 }

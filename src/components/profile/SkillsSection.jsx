@@ -6,6 +6,7 @@ import AppIcon from '../common/AppIcon';
 import { Trash2, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { SKILL_SUGGESTIONS, filterSkillSuggestions } from '../../constants/skills';
+import { normalizeSkillName } from '../../utils/normalizeSkill';
 
 const PREVIEW_COUNT = 8;
 const POPULAR_COUNT = 6;
@@ -30,12 +31,12 @@ export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
   }, [existingNames]);
 
   const addSkill = async (name) => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    if (existingNames.some((n) => n.toLowerCase() === trimmed.toLowerCase())) return;
+    const normalized = normalizeSkillName(name);
+    if (!normalized) return;
+    if (existingNames.some((n) => normalizeSkillName(n).toLowerCase() === normalized.toLowerCase())) return;
 
     setAdding(true);
-    await onAdd?.(trimmed);
+    await onAdd?.(normalized);
     setSkillName('');
     setAdding(false);
   };

@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CompanyFeedHeader from '../../components/feed/CompanyFeedHeader';
 import PostComposer from '../../components/feed/PostComposer';
-import PostCard from '../../components/feed/PostCard';
+import FeedItemRenderer from '../../components/feed/FeedItemRenderer';
 import EmptyState from '../../components/common/EmptyState';
 import { PostListSkeleton } from '../../components/common/Skeleton';
 import { NoPosts } from '../../assets/empty-states';
-import { usePosts } from '../../hooks/usePosts';
+import { useIntelligentFeed } from '../../hooks/useIntelligentFeed';
 import { useCreatePost } from '../../hooks/useCreatePost';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -15,11 +15,12 @@ import { postsService } from '../../services/posts.service';
 import { storageService } from '../../services/storage.service';
 import { STORAGE_BUCKETS } from '../../constants/storage';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
+import { FEED_CONTENT_TYPES } from '../../constants/feedContentTypes';
 
 export default function Feed() {
   const { user, isPreviewMode } = useAuth();
   const { showToast } = useNotificationContext();
-  const { posts, loading, loadingMore, hasMore, refetch, loadMore } = usePosts();
+  const { items, loading, loadingMore, hasMore, error, refetch, loadMore } = useIntelligentFeed();
   const { createPost, loading: publishing } = useCreatePost();
 
   useEffect(() => {
@@ -91,36 +92,53 @@ export default function Feed() {
           <PostComposer onSubmit={handleSubmit} loading={publishing} />
         )}
 
+        {error && (
+          <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <p>No se pudo cargar el feed. Inténtalo de nuevo.</p>
+            <button
+              type="button"
+              onClick={refetch}
+              className="mt-2 font-medium text-red-700 underline hover:text-red-900"
+              aria-label="Reintentar cargar el feed"
+            >
+              Reintentar
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <PostListSkeleton count={3} />
-        ) : posts.length === 0 ? (
+        ) : items.length === 0 ? (
           <EmptyState
             image={NoPosts}
-            title="No hay publicaciones"
-            description="Las publicaciones de candidatos aparecerán aquí."
+            title="No hay contenido"
+            description="Tu feed mostrará publicaciones, noticias del sector y candidatos recomendados."
           />
         ) : (
-          posts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              authorId={post.author_id}
-              authorName={post.author_name ?? 'Usuario'}
-              authorHeadline={post.author_headline ?? ''}
-              authorAvatar={post.author_avatar}
-              authorType={post.author_type ?? 'candidate'}
-              authorCompany={post.author_company}
-              canManage={post.author_id === user?.id}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))
+          items.map((item, index) => {
+            const post = item.payload;
+            const isPost =
+              item.content_type === FEED_CONTENT_TYPES.POST ||
+              item.content_type === FEED_CONTENT_TYPES.ADVICE;
+
+            return (
+              <FeedItemRenderer
+                key={item.item_key ?? item.id}
+                item={item}
+                jobAccentIndex={index}
+                canManage={isPost && post?.author_id === user?.id}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            );
+          })
         )}
         {loadingMore && <PostListSkeleton count={1} />}
         {!loading && hasMore && !loadingMore && (
           <button
             type="button"
             onClick={loadMore}
+            aria-label="Cargar más contenido del feed"
             className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
           >
             Cargar más

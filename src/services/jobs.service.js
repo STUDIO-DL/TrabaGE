@@ -3,6 +3,7 @@ import { notificationsService } from './notifications.service';
 import { jobRecommendationsService } from './jobRecommendations.service';
 import { FOLLOWS_TARGET } from './follows.service';
 import { reportError } from '../utils/logger';
+import { enrichJobMatchingFields } from '../utils/inferJobMatchingFields';
 
 function mapJobError(error) {
   if (!error) return null;
@@ -76,12 +77,15 @@ export const jobsService = {
       .eq('job_id', jobId),
 
   createJob: async (data) => {
-    const result = await supabase.from('jobs').insert(data).select().single();
+    const payload = enrichJobMatchingFields(data);
+    const result = await supabase.from('jobs').insert(payload).select().single();
     return { ...result, error: mapJobError(result.error) };
   },
 
   updateJob: async (id, data) => {
-    const result = await supabase.from('jobs').update(data).eq('id', id).select().single();
+    const shouldEnrich = ['title', 'description', 'requirements'].some((key) => key in data);
+    const payload = shouldEnrich ? enrichJobMatchingFields(data) : data;
+    const result = await supabase.from('jobs').update(payload).eq('id', id).select().single();
     return { ...result, error: mapJobError(result.error) };
   },
 

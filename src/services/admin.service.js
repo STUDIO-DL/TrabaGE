@@ -300,6 +300,23 @@ export const adminService = {
 
   hidePost: (postId) => adminService.setPostHidden(postId, true),
 
+  getNewsArticles: () =>
+    supabase
+      .from('news_articles')
+      .select('*')
+      .order('published_at', { ascending: false }),
+
+  createNewsArticle: (data) =>
+    supabase.from('news_articles').insert(data).select().single(),
+
+  updateNewsArticle: (id, data) =>
+    supabase.from('news_articles').update(data).eq('id', id).select().single(),
+
+  deleteNewsArticle: (id) => supabase.from('news_articles').delete().eq('id', id),
+
+  setNewsActive: (id, isActive) =>
+    supabase.from('news_articles').update({ is_active: isActive }).eq('id', id).select().single(),
+
   getReports: async () => {
     const { data: reports, error } = await supabase
       .from('reports')

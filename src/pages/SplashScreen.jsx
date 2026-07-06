@@ -28,7 +28,7 @@ export default function SplashScreen() {
     if (loading || !minTimeElapsed) return;
 
     if (isAuthenticated) {
-      const destination = role ? getHomePath() : '/account-type';
+      const destination = role ? getHomePath() : '/register';
       navigate(destination, { replace: true });
       return;
     }

@@ -63,6 +63,7 @@ export default function PostCard({
               <button
                 type="button"
                 onClick={() => onEdit?.(post)}
+                aria-label="Editar publicación"
                 className="font-medium text-primary-600 hover:text-primary-700"
               >
                 Editar
@@ -70,6 +71,7 @@ export default function PostCard({
               <button
                 type="button"
                 onClick={() => onDelete?.(post)}
+                aria-label="Eliminar publicación"
                 className="font-medium text-red-600 hover:text-red-700"
               >
                 Eliminar
@@ -82,7 +84,12 @@ export default function PostCard({
       <p className="whitespace-pre-wrap text-sm text-gray-800">{post.content}</p>
 
       {postImageSrc && (
-        <img src={postImageSrc} alt="" className="mt-3 w-full rounded-xl object-cover" />
+        <img
+          src={postImageSrc}
+          alt="Imagen de la publicación"
+          loading="lazy"
+          className="mt-3 w-full rounded-xl object-cover"
+        />
       )}
     </Card>
   );

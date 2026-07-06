@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase';
+import { normalizeSkillName } from '../utils/normalizeSkill';
 
 const FULL_PROFILE_SELECT = `
   *,
@@ -6,6 +7,7 @@ const FULL_PROFILE_SELECT = `
   experience(*),
   certifications(*),
   skills(*),
+  candidate_links(*),
   services(*),
   languages(*)
 `;
@@ -66,8 +68,36 @@ export const profileService = {
   updateCertification: (id, data) => supabase.from('certifications').update(data).eq('id', id).select('*').maybeSingle(),
   deleteCertification: (id) => supabase.from('certifications').delete().eq('id', id),
 
-  addSkill: (data) => supabase.from('skills').insert(data).select('*').maybeSingle(),
+  addSkill: async (data) => {
+    const normalized = normalizeSkillName(data?.name);
+    if (!normalized) {
+      return { data: null, error: { message: 'La habilidad no es válida.' } };
+    }
+
+    const userId = data?.user_id;
+    const { data: existingSkills, error: listError } = await supabase
+      .from('skills')
+      .select('id, name')
+      .eq('user_id', userId);
+
+    if (listError) return { data: null, error: listError };
+
+    const duplicate = (existingSkills ?? []).find(
+      (skill) => normalizeSkillName(skill.name).toLowerCase() === normalized.toLowerCase(),
+    );
+    if (duplicate) return { data: duplicate, error: null };
+
+    return supabase
+      .from('skills')
+      .insert({ ...data, name: normalized })
+      .select('*')
+      .maybeSingle();
+  },
   deleteSkill: (id) => supabase.from('skills').delete().eq('id', id),
+
+  addCandidateLink: (data) => supabase.from('candidate_links').insert(data).select('*').maybeSingle(),
+  updateCandidateLink: (id, data) => supabase.from('candidate_links').update(data).eq('id', id).select('*').maybeSingle(),
+  deleteCandidateLink: (id) => supabase.from('candidate_links').delete().eq('id', id),
 
   addService: (data) => supabase.from('services').insert(data).select('*').maybeSingle(),
   deleteService: (id) => supabase.from('services').delete().eq('id', id),
