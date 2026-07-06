@@ -6,15 +6,31 @@ import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
 import Select from '../../components/ui/Select';
 import { CITIES } from '../../constants/cities';
+import { ACCOUNT_KINDS } from '../../constants/accountKinds';
 import { SECTORS } from '../../constants/sectors';
 import { useAuth } from '../../hooks/useAuth';
+import { consumePendingOrgKind } from '../../services/auth.service';
 import { companyService } from '../../services/company.service';
+import { getOrgLabels } from '../../utils/orgLabels';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+
+function getDefaultCompanyType(orgKind) {
+  if (orgKind === ACCOUNT_KINDS.INSTITUTION) return 'Institucion publica';
+  return '';
+}
 
 export default function CompanySetup() {
   const navigate = useNavigate();
   const { user, refreshSetupStatus } = useAuth();
-  const [form, setForm] = useState({ company_name: '', sector: '', description: '', city: '' });
+  const pendingOrgKind = consumePendingOrgKind();
+  const orgLabels = getOrgLabels(null, pendingOrgKind);
+  const [form, setForm] = useState({
+    company_name: '',
+    sector: '',
+    description: '',
+    city: '',
+    company_type: getDefaultCompanyType(pendingOrgKind),
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -41,7 +57,7 @@ export default function CompanySetup() {
 
   return (
     <FormPageLayout
-      title="Configura tu empresa / institución"
+      title={`Configura tu ${orgLabels.entity}`}
       footer={
         <>
           {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
@@ -52,7 +68,12 @@ export default function CompanySetup() {
       }
     >
       <form id="company-setup-form" onSubmit={handleSubmit} className="space-y-md p-md">
-        <Input label="Nombre de la empresa / institución" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} required />
+        <Input
+          label={`Nombre de la ${orgLabels.entity}`}
+          value={form.company_name}
+          onChange={(e) => setForm({ ...form, company_name: e.target.value })}
+          required
+        />
         <Select label="Sector" value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} options={[{ value: '', label: 'Seleccionar' }, ...SECTORS.map((s) => ({ value: s, label: s }))]} />
         <Textarea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         <Select label="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]} />

@@ -15,27 +15,33 @@ import {
   ICON_SIZES,
 } from '../../../constants/icons';
 import { getCompanyLogoUrl } from '../../../constants/images';
+import { isCompanyVerified } from '../../../utils/companyVerification';
 import { getOrgLabels } from '../../../utils/orgLabels';
 
-const NAV_ITEMS = [
+const NAV_ITEMS_BASE = [
   { to: '/company/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },
   { to: '/company/jobs', label: 'Ofertas de trabajo', icon: Briefcase },
   { to: '/company/applicants', label: 'Candidatos', icon: Users },
   { to: '/company/feed', label: 'Publicaciones', icon: Newspaper },
   { to: '/company/notifications', label: 'Notificaciones', icon: Bell },
-  { to: '/company/profile', label: 'Perfil de empresa', icon: Building2 },
+  { to: '/company/profile', labelKey: 'profile', icon: Building2 },
   { to: '/company/settings', label: 'Configuración', icon: Settings },
 ];
 
-function getSidebarCompanyLabel(profile) {
+function getSidebarCompanyLabel(profile, orgLabels) {
   const name = profile?.company_name?.trim();
-  return name || 'Tu empresa';
+  return name || orgLabels.defaultName;
 }
 
 export default function CompanyDashboardSidebar({ profile }) {
-  const companyLabel = getSidebarCompanyLabel(profile);
+  const orgLabels = getOrgLabels(profile);
+  const companyLabel = getSidebarCompanyLabel(profile, orgLabels);
   const logoSrc = getCompanyLogoUrl(profile?.logo_path);
   const verified = isCompanyVerified(profile);
+  const navItems = NAV_ITEMS_BASE.map((item) => ({
+    ...item,
+    label: item.labelKey ? orgLabels[item.labelKey] : item.label,
+  }));
 
   return (
     <aside className="hidden w-[260px] shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
@@ -60,11 +66,11 @@ export default function CompanyDashboardSidebar({ profile }) {
               <p className="truncate text-sm font-semibold text-gray-900">{companyLabel}</p>
               {verified ? (
                 <div className="mt-1 flex items-center gap-1">
-                  <span className="text-xs text-gray-500">Empresa verificada</span>
+                  <span className="text-xs text-gray-500">{orgLabels.verified}</span>
                   <VerifiedBadge size="sm" showTooltip={false} />
                 </div>
               ) : (
-                <p className="mt-0.5 text-xs text-gray-500">Perfil de empresa</p>
+                <p className="mt-0.5 text-xs text-gray-500">{orgLabels.profile}</p>
               )}
             </div>
           </div>
@@ -72,7 +78,7 @@ export default function CompanyDashboardSidebar({ profile }) {
       </div>
 
       <nav className="flex-1 space-y-1 px-3">
-        {NAV_ITEMS.map(({ to, label, icon, end }) => (
+        {navItems.map(({ to, label, icon, end }) => (
           <NavLink
             key={label}
             to={to}

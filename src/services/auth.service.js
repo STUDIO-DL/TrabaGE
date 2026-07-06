@@ -111,6 +111,14 @@ export async function setUserRole(_userId, role) {
 }
 
 export const authService = {
+  rememberAccountKind(accountKind) {
+    if (isValidAccountKind(accountKind)) {
+      savePendingOrgKind(accountKind);
+    }
+  },
+
+  consumePendingOrgKind,
+
   login: async (email, password) => {
     if (!isSupabaseConfigured) {
       return configError();

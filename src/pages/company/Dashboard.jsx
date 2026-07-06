@@ -23,6 +23,7 @@ import { useProfile } from '../../hooks/useProfile';
 import { useApplications } from '../../hooks/useApplications';
 import { useNotifications } from '../../hooks/useNotifications';
 import { jobsService } from '../../services/jobs.service';
+import { getOrgLabels } from '../../utils/orgLabels';
 
 function mapCandidateForDashboard(application) {
   return {
@@ -70,6 +71,8 @@ export default function Dashboard() {
     [applications],
   );
 
+  const orgLabels = getOrgLabels(profile);
+
   if (profileLoading) {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-[#F9FAFB]">
@@ -84,7 +87,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">Resumen</h1>
-            <p className="mt-1 text-sm text-gray-500">Bienvenido de nuevo</p>
+            <p className="mt-1 text-sm text-gray-500">{orgLabels.welcome}</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -104,7 +107,7 @@ export default function Dashboard() {
             <Link
               to="/company/profile"
               className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-1.5 shadow-sm"
-              aria-label="Perfil de empresa"
+              aria-label={orgLabels.profile}
             >
               <img src={logoSrc} alt="" className="h-8 w-8 rounded-lg object-cover" />
               <AppIcon icon={ChevronDown} size={ICON_SIZES.sm} className="text-gray-400" />
@@ -113,7 +116,7 @@ export default function Dashboard() {
             <Link to="/company/jobs/create" className="hidden sm:block">
               <Button className="inline-flex items-center gap-2 rounded-xl px-4">
                 <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
-                Crear oferta
+                {orgLabels.createOffer}
               </Button>
             </Link>
           </div>

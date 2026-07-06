@@ -6,7 +6,7 @@ function SocialAuthButton({ icon, label, onClick, comingSoon = false }) {
       disabled={comingSoon}
       aria-disabled={comingSoon}
       title={comingSoon ? 'Próximamente' : undefined}
-      className="flex h-btn-secondary w-full items-center justify-center gap-3 rounded-btn-secondary border border-slate-200 bg-white px-md text-small font-medium text-[#0F172A] shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
+      className="flex h-[2.75rem] w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
     >
       {icon}
       <span>{label}</span>

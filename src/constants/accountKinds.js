@@ -11,19 +11,19 @@ export const ACCOUNT_KIND_OPTIONS = [
   {
     id: ACCOUNT_KINDS.CANDIDATE,
     label: 'Candidato',
-    description: 'Busca empleo y oportunidades.',
+    description: 'Busco oportunidades laborales',
     icon: User,
   },
   {
     id: ACCOUNT_KINDS.COMPANY,
     label: 'Empresa',
-    description: 'Publica ofertas y encuentra talento.',
+    description: 'Publico ofertas y encuentro talento',
     icon: Building2,
   },
   {
     id: ACCOUNT_KINDS.INSTITUTION,
     label: 'Institución',
-    description: 'Gestiona programas y convocatorias.',
+    description: 'Conectamos educación con oportunidades',
     icon: Landmark,
   },
 ];
