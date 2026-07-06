@@ -25,6 +25,7 @@ import { useCandidateProfile } from '../../hooks/useCandidateProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { validateFile } from '../../utils/validateFile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
+import { shareContent, getShareDescription } from '../../utils/shareContent';
 import { authService } from '../../services/auth.service';
 
 export default function Profile() {
@@ -213,13 +214,13 @@ export default function Profile() {
     setLanguageOpen(true);
   };
 
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(generateProfileUrl(user?.id));
-      showToast('Enlace copiado', 'success');
-    } catch {
-      showToast('No se pudo copiar el enlace', 'error');
-    }
+  const handleShare = () => {
+    shareContent({
+      title: profile?.full_name || 'Perfil en TrabaGE',
+      text: getShareDescription('profile'),
+      url: generateProfileUrl(user?.id),
+      showToast,
+    });
   };
 
   if (loading) {

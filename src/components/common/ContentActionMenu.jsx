@@ -1,40 +1,34 @@
 import { useState } from 'react';
 import ActionMenu from './ActionMenu';
-import ShareMenu from '../feed/ShareMenu';
 import ReportModal from './ReportModal';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { notifyGuestBlocked } from '../../utils/guestMode';
 import { generateShareUrl } from '../../utils/generateShareUrl';
+import { shareContent, copyLink, getShareDescription } from '../../utils/shareContent';
 
 export default function ContentActionMenu({
   shareUrl,
   shareTitle = 'TrabaGE',
+  shareText,
   targetType,
   targetId,
   align = 'right',
   className = '',
-  shareMode = 'copy',
 }) {
-  const [shareOpen, setShareOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const { isPreviewMode, user } = useAuth();
   const { showToast } = useNotificationContext();
 
   const resolvedUrl = shareUrl.startsWith('http') ? shareUrl : generateShareUrl(shareUrl);
+  const description = shareText || getShareDescription(targetType);
 
-  const handleShare = async () => {
-    if (shareMode === 'panel') {
-      setShareOpen((v) => !v);
-      return;
-    }
+  const handleShare = () => {
+    shareContent({ title: shareTitle, text: description, url: resolvedUrl, showToast });
+  };
 
-    try {
-      await navigator.clipboard.writeText(resolvedUrl);
-      showToast('Enlace copiado', 'success');
-    } catch {
-      showToast('No se pudo copiar el enlace', 'error');
-    }
+  const handleCopy = () => {
+    copyLink(resolvedUrl, showToast);
   };
 
   const handleReport = () => {
@@ -46,22 +40,20 @@ export default function ContentActionMenu({
   };
 
   return (
-    <div className={shareMode === 'panel' ? 'space-y-2' : undefined}>
+    <>
       <ActionMenu
         onShare={handleShare}
+        onCopy={handleCopy}
         onReport={handleReport}
         align={align}
         className={className}
       />
-      {shareMode === 'panel' && shareOpen && (
-        <ShareMenu url={shareUrl} title={shareTitle} />
-      )}
       <ReportModal
         isOpen={reportOpen}
         onClose={() => setReportOpen(false)}
         targetType={targetType}
         targetId={targetId}
       />
-    </div>
+    </>
   );
 }

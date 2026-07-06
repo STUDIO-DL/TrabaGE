@@ -1,7 +1,7 @@
 /** Términos y Condiciones de Uso — TrabaGE v2.0 (contenido definitivo, sin notas de revisión legal) */
 
 export const TERMS_INTRO = {
-  part: 'Parte A',
+  part: '',
   title: 'Términos y Condiciones de Uso',
   subtitle:
     'Condiciones que rigen el acceso y uso de la plataforma TrabaGE por candidatos, empresas y demás usuarios registrados.',
@@ -32,7 +32,7 @@ export const TERMS_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: '2.1. El acceso y uso de TrabaGE implica la aceptación plena, expresa e incondicionada de los presentes Términos y Condiciones de Uso (en adelante, "los Términos") y de la Política de Privacidad incluida en la Parte B de este documento.',
+        text: '2.1. El acceso y uso de TrabaGE implica la aceptación plena, expresa e incondicionada de los presentes Términos y Condiciones de Uso (en adelante, "los Términos") y de la Política de Privacidad, disponible como documento independiente.',
       },
       {
         type: 'p',
@@ -276,7 +276,7 @@ export const TERMS_ARTICLES = [
       },
       {
         type: 'p',
-        text: '8.7. Los documentos cargados son almacenados mediante Supabase Storage. Véase el Artículo 21 de la Política de Privacidad para más información sobre el almacenamiento en la nube.',
+        text: '8.7. Los documentos cargados son almacenados mediante Supabase Storage. Véase el Artículo 4 de la Política de Privacidad para más información sobre el almacenamiento en la nube.',
       },
     ],
   },

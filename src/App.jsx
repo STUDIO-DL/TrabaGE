@@ -99,7 +99,6 @@ function AppRoutes() {
                 <Route path="/candidate/feed" element={<CandidateFeed />} />
                 <Route path="/candidate/jobs" element={<CandidateJobs />} />
                 <Route path="/candidate/publish" element={<CandidatePublish />} />
-                <Route path="/candidate/jobs/:id" element={<JobDetail />} />
                 <Route path="/candidate/jobs/:id/apply" element={<ApplyJob />} />
                 <Route path="/candidate/saved-jobs" element={<CandidateSavedJobs />} />
                 <Route path="/candidate/applications" element={<CandidateApplications />} />
@@ -145,8 +144,15 @@ function AppRoutes() {
               </Route>
             </Route>
 
+            {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
             <Route path="/profile/:userId" element={<PublicProfile />} />
+            <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
             <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
+            <Route path="/job/:id" element={<JobDetail />} />
+            {/* Legacy share paths kept public for backward compatibility with links
+                shared before the clean deep-link URLs (see src/utils/deepLinks.js). */}
+            <Route path="/candidate/jobs/:id" element={<JobDetail />} />
+            <Route path="/post/:postId" element={<PostDetail />} />
             <Route path="/feed/post/:postId" element={<PostDetail />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfUse />} />

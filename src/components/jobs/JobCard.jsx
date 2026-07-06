@@ -61,7 +61,8 @@ export default function JobCard({
             <div className="-mr-1 -mt-1 flex shrink-0 items-center">
               <ContentActionMenu
                 shareUrl={generateJobUrl(job.id)}
-                shareTitle={job.title}
+                shareTitle={company?.company_name ? `${job.title} - ${company.company_name}` : job.title}
+                shareText="Encontré esta oferta de empleo en TrabaGE."
                 targetType={REPORT_TARGET_TYPES.JOB}
                 targetId={job.id}
               />

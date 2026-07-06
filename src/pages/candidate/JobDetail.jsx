@@ -105,7 +105,8 @@ export default function JobDetail() {
       actions={
         <ContentActionMenu
           shareUrl={generateJobUrl(id)}
-          shareTitle={job.title}
+          shareTitle={company?.company_name ? `${job.title} - ${company.company_name}` : job.title}
+          shareText="Encontré esta oferta de empleo en TrabaGE."
           targetType={REPORT_TARGET_TYPES.JOB}
           targetId={id}
         />

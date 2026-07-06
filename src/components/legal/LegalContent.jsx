@@ -1,7 +1,7 @@
 function LegalBlock({ block }) {
   if (block.type === 'ul') {
     return (
-      <ul className="my-4 list-disc space-y-2 pl-5 text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">
+      <ul className="my-2 list-disc space-y-1.5 pl-5 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
         {block.items.map((item) => (
           <li key={item}>{item}</li>
         ))}
@@ -11,7 +11,7 @@ function LegalBlock({ block }) {
 
   if (block.type === 'link') {
     return (
-      <p className="my-3 text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">
+      <p className="my-2 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
         <a
           href={block.href}
           target="_blank"
@@ -31,7 +31,7 @@ function LegalBlock({ block }) {
     const [url] = urlMatch;
     const [before, after] = text.split(url);
     return (
-      <p className="my-3 text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">
+      <p className="my-2 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
         {before}
         <a
           href={url}
@@ -47,17 +47,17 @@ function LegalBlock({ block }) {
   }
 
   return (
-    <p className="my-3 text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">{text}</p>
+    <p className="my-2 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">{text}</p>
   );
 }
 
 export function LegalArticle({ article }) {
   return (
-    <section id={article.id} className="scroll-mt-24 border-b border-slate-100 py-8 last:border-b-0 dark:border-slate-800">
-      <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+    <section id={article.id} className="scroll-mt-24 border-b border-slate-100 py-5 last:border-b-0 dark:border-slate-800">
+      <h2 className="text-base font-semibold tracking-tight text-slate-900 dark:text-slate-50">
         {article.title}
       </h2>
-      <div className="mt-4">
+      <div className="mt-2">
         {article.blocks.map((block, index) => (
           <LegalBlock key={`${article.id}-${index}`} block={block} />
         ))}
@@ -77,12 +77,12 @@ export function LegalTableOfContents({ articles, finalArticles = [] }) {
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
         Índice
       </p>
-      <ol className="max-h-48 space-y-1 overflow-y-auto pr-1 text-sm sm:max-h-none">
+      <ol className="max-h-48 space-y-0.5 overflow-y-auto pr-1 text-[13px] sm:max-h-none">
         {allArticles.map((article) => (
           <li key={article.id}>
             <a
               href={`#${article.id}`}
-              className="block rounded-lg px-2 py-1.5 text-slate-600 transition hover:bg-white hover:text-primary-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-primary-400"
+              className="block rounded-lg px-2 py-1 text-slate-600 transition hover:bg-white hover:text-primary-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-primary-400"
             >
               {article.title.replace(/^Artículo \d+\.\s*/, '')}
             </a>

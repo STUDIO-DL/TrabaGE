@@ -8,6 +8,7 @@ import Modal from '../../ui/Modal';
 import Select from '../../ui/Select';
 import Textarea from '../../ui/Textarea';
 import { generateCompanyUrl } from '../../../utils/generateShareUrl';
+import { shareContent, getShareDescription } from '../../../utils/shareContent';
 import { useNotificationContext } from '../../../context/NotificationContext';
 import { authService } from '../../../services/auth.service';
 import { companyService } from '../../../services/company.service';
@@ -356,14 +357,14 @@ export default function CompanyProfileLayout({
     setEditMode(mode);
   };
 
-  const handleShare = async () => {
+  const handleShare = () => {
     if (!userId) return;
-    try {
-      await navigator.clipboard.writeText(generateCompanyUrl(userId));
-      showToast('Enlace copiado', 'success');
-    } catch {
-      showToast('No se pudo copiar el enlace', 'error');
-    }
+    shareContent({
+      title: displayProfile?.company_name || profile?.company_name || 'Empresa en TrabaGE',
+      text: getShareDescription('company'),
+      url: generateCompanyUrl(userId),
+      showToast,
+    });
   };
 
   const uploadImage = async (file, type) => {

@@ -24,6 +24,8 @@ async function sendPushBatch(recipientIds, title, body, data = {}) {
   }
 }
 
+export const NOTIFICATIONS_PAGE_SIZE = 15;
+
 export const notificationsService = {
   getAll: (userId) =>
     supabase
@@ -31,6 +33,33 @@ export const notificationsService = {
       .select('*')
       .eq('recipient_id', userId)
       .order('created_at', { ascending: false }),
+
+  // Progressive/lazy loading via cursor (keyset) pagination. Returns a single
+  // page of notifications ordered newest-first. Unlike offset/range paging,
+  // this is resilient to rows being deleted between fetches: the window is
+  // anchored to the (created_at, id) of the last loaded row, so deletions can
+  // never shift the offset and cause items to be skipped or duplicated.
+  //
+  // `cursor` is `{ createdAt, id }` of the last row already loaded, or null for
+  // the first page. `id` (UUID) is a stable tiebreaker for rows sharing the
+  // exact same `created_at` timestamp.
+  getPage: (userId, { cursor = null, limit = NOTIFICATIONS_PAGE_SIZE } = {}) => {
+    let query = supabase
+      .from('notifications')
+      .select('*')
+      .eq('recipient_id', userId)
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .limit(limit);
+
+    if (cursor?.createdAt) {
+      query = query.or(
+        `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+      );
+    }
+
+    return query;
+  },
 
   getUnreadCount: (userId) =>
     supabase

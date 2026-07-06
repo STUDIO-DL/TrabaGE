@@ -4,6 +4,7 @@ import ContentActionMenu from '../common/ContentActionMenu';
 import VerifiedBadge from '../company/VerifiedBadge';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
+import { generatePostUrl } from '../../utils/generateShareUrl';
 import { resolvePostImageUrl } from '../../utils/storagePaths';
 import TimeAgo from '../common/TimeAgo';
 
@@ -52,11 +53,11 @@ export default function PostCard({
         <div className="flex shrink-0 flex-col items-end gap-1">
           <TimeAgo date={post.created_at} className="text-xs text-gray-400" />
           <ContentActionMenu
-            shareUrl={`/feed/post/${post.id}`}
-            shareTitle={(post.content || '').slice(0, 50)}
+            shareUrl={generatePostUrl(post.id)}
+            shareTitle={`${authorName} en TrabaGE`}
+            shareText={(post.content || '').slice(0, 120) || 'Mira esta publicación en TrabaGE.'}
             targetType={REPORT_TARGET_TYPES.POST}
             targetId={post.id}
-            shareMode="panel"
           />
           {canManage && (
             <div className="flex gap-2 text-xs">

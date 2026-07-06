@@ -1,7 +1,7 @@
-/** Política de Privacidad — TrabaGE v2.0 (contenido definitivo, sin notas de revisión legal) */
+/** Política de Privacidad — TrabaGE (documento completo y autónomo) */
 
 export const PRIVACY_INTRO = {
-  part: 'Parte B',
+  part: '',
   title: 'Política de Privacidad',
   subtitle:
     'Información sobre cómo TrabaGE recopila, utiliza, comparte y protege los datos personales de sus usuarios.',
@@ -9,25 +9,25 @@ export const PRIVACY_INTRO = {
 
 export const PRIVACY_ARTICLES = [
   {
-    id: 'article-20',
-    title: 'Artículo 20. Marco Legal y Principios Generales',
+    id: 'article-1',
+    title: 'Artículo 1. Marco Legal y Principios Generales',
     blocks: [
       {
         type: 'p',
-        text: '20.1. TrabaGE está comprometida con la protección de la privacidad y los datos personales de sus usuarios. La presente Política de Privacidad describe qué información recopilamos, cómo la utilizamos, con quién la compartimos y qué derechos asisten a los usuarios en relación con sus datos.',
+        text: '1.1. TrabaGE está comprometida con la protección de la privacidad y los datos personales de sus usuarios. La presente Política de Privacidad describe qué información recopilamos, cómo la utilizamos, con quién la compartimos y qué derechos asisten a los usuarios en relación con sus datos.',
       },
       {
         type: 'p',
-        text: '20.2. El tratamiento de datos personales se realiza conforme a los principios de licitud, lealtad y transparencia; limitación de la finalidad; minimización de datos; exactitud; limitación del plazo de conservación; integridad y confidencialidad; y responsabilidad proactiva.',
+        text: '1.2. El tratamiento de datos personales se realiza conforme a los principios de licitud, lealtad y transparencia; limitación de la finalidad; minimización de datos; exactitud; limitación del plazo de conservación; integridad y confidencialidad; y responsabilidad proactiva.',
       },
     ],
   },
   {
-    id: 'article-21',
-    title: 'Artículo 21. Datos Personales Recopilados',
+    id: 'article-2',
+    title: 'Artículo 2. Datos Personales Recopilados',
     blocks: [
-      { type: 'p', text: '21.1. TrabaGE recopila los siguientes tipos de datos personales:' },
-      { type: 'p', text: '21.1.1. Datos proporcionados directamente por el usuario' },
+      { type: 'p', text: '2.1. TrabaGE recopila los siguientes tipos de datos personales:' },
+      { type: 'p', text: '2.1.1. Datos proporcionados directamente por el usuario' },
       {
         type: 'ul',
         items: [
@@ -36,7 +36,7 @@ export const PRIVACY_ARTICLES = [
           'Datos de formularios de postulación: toda la información que el candidato proporcione al completar un formulario personalizado de una empresa, incluyendo respuestas a preguntas abiertas y archivos adjuntos.',
         ],
       },
-      { type: 'p', text: '21.1.2. Datos generados automáticamente por el uso del servicio' },
+      { type: 'p', text: '2.1.2. Datos generados automáticamente por el uso del servicio' },
       {
         type: 'ul',
         items: [
@@ -46,7 +46,7 @@ export const PRIVACY_ARTICLES = [
           'Datos de diagnóstico: registros de errores y datos de rendimiento recopilados por herramientas de monitorización.',
         ],
       },
-      { type: 'p', text: '21.1.3. Datos recibidos de servicios de terceros' },
+      { type: 'p', text: '2.1.3. Datos recibidos de servicios de terceros' },
       {
         type: 'ul',
         items: [
@@ -56,10 +56,10 @@ export const PRIVACY_ARTICLES = [
     ],
   },
   {
-    id: 'article-22',
-    title: 'Artículo 22. Finalidades y Base Jurídica del Tratamiento',
+    id: 'article-3',
+    title: 'Artículo 3. Finalidades y Base Jurídica del Tratamiento',
     blocks: [
-      { type: 'p', text: '22.1. TrabaGE trata los datos personales para las siguientes finalidades y con las correspondientes bases jurídicas:' },
+      { type: 'p', text: '3.1. TrabaGE trata los datos personales para las siguientes finalidades y con las correspondientes bases jurídicas:' },
       {
         type: 'ul',
         items: [
@@ -75,82 +75,82 @@ export const PRIVACY_ARTICLES = [
     ],
   },
   {
-    id: 'article-23',
-    title: 'Artículo 23. Almacenamiento: Supabase y Servicios en la Nube',
+    id: 'article-4',
+    title: 'Artículo 4. Almacenamiento: Supabase y Servicios en la Nube',
     blocks: [
       {
         type: 'p',
-        text: '23.1. TrabaGE utiliza Supabase como plataforma principal para la autenticación, almacenamiento y gestión de datos. Los servicios de Supabase empleados incluyen Supabase Auth, Supabase Database (PostgreSQL) y Supabase Storage.',
+        text: '4.1. TrabaGE utiliza Supabase como plataforma principal para la autenticación, almacenamiento y gestión de datos. Los servicios de Supabase empleados incluyen Supabase Auth, Supabase Database (PostgreSQL) y Supabase Storage.',
       },
       {
         type: 'p',
-        text: '23.2. Los datos almacenados a través de Supabase pueden procesarse en centros de datos ubicados fuera de Guinea Ecuatorial, según la configuración de región seleccionada por TrabaGE. TrabaGE se asegura de que dichas transferencias internacionales se realizan con las garantías adecuadas conforme a la normativa aplicable.',
+        text: '4.2. Los datos almacenados a través de Supabase pueden procesarse en centros de datos ubicados fuera de Guinea Ecuatorial, según la configuración de región seleccionada por TrabaGE. TrabaGE se asegura de que dichas transferencias internacionales se realizan con las garantías adecuadas conforme a la normativa aplicable.',
       },
       {
         type: 'p',
-        text: '23.3. Para información detallada sobre las prácticas de privacidad de Supabase, el usuario puede consultar la Política de Privacidad disponible en https://supabase.com/privacy.',
+        text: '4.3. Para información detallada sobre las prácticas de privacidad de Supabase, el usuario puede consultar la Política de Privacidad disponible en https://supabase.com/privacy.',
       },
     ],
   },
   {
-    id: 'article-24',
-    title: 'Artículo 24. Autenticación con Google OAuth',
+    id: 'article-5',
+    title: 'Artículo 5. Autenticación con Google OAuth',
     blocks: [
       {
         type: 'p',
-        text: '24.1. TrabaGE ofrece la posibilidad de registrarse e iniciar sesión mediante Google OAuth, un servicio de autenticación de Google LLC. Al utilizar esta funcionalidad, el usuario autoriza a Google a compartir con TrabaGE determinada información de su perfil de Google, según los permisos que el propio usuario apruebe durante el proceso de autenticación.',
+        text: '5.1. TrabaGE ofrece la posibilidad de registrarse e iniciar sesión mediante Google OAuth, un servicio de autenticación de Google LLC. Al utilizar esta funcionalidad, el usuario autoriza a Google a compartir con TrabaGE determinada información de su perfil de Google, según los permisos que el propio usuario apruebe durante el proceso de autenticación.',
       },
       {
         type: 'p',
-        text: '24.2. Los datos recibidos de Google a través de OAuth se utilizan exclusivamente para crear y gestionar la cuenta del usuario en TrabaGE y no se comparten con terceros más allá de lo descrito en esta Política de Privacidad.',
+        text: '5.2. Los datos recibidos de Google a través de OAuth se utilizan exclusivamente para crear y gestionar la cuenta del usuario en TrabaGE y no se comparten con terceros más allá de lo descrito en esta Política de Privacidad.',
       },
       {
         type: 'p',
-        text: '24.3. Para información sobre cómo Google trata los datos del usuario, puede consultarse la Política de Privacidad de Google en https://policies.google.com/privacy.',
+        text: '5.3. Para información sobre cómo Google trata los datos del usuario, puede consultarse la Política de Privacidad de Google en https://policies.google.com/privacy.',
       },
     ],
   },
   {
-    id: 'article-25',
-    title: 'Artículo 25. Monitorización Técnica: Sentry y Herramientas de Diagnóstico',
+    id: 'article-6',
+    title: 'Artículo 6. Monitorización Técnica: Sentry y Herramientas de Diagnóstico',
     blocks: [
       {
         type: 'p',
-        text: '25.1. TrabaGE utiliza Sentry (Functional Software, Inc.) para la monitorización de errores técnicos, detección de fallos y mejora de la estabilidad de la Plataforma. Sentry puede recopilar datos técnicos como registros de errores, seguimientos de pila (stack traces), identificadores de sesión anónimos e información sobre el entorno del dispositivo.',
+        text: '6.1. TrabaGE utiliza Sentry (Functional Software, Inc.) para la monitorización de errores técnicos, detección de fallos y mejora de la estabilidad de la Plataforma. Sentry puede recopilar datos técnicos como registros de errores, seguimientos de pila (stack traces), identificadores de sesión anónimos e información sobre el entorno del dispositivo.',
       },
       {
         type: 'p',
-        text: '25.2. TrabaGE configura Sentry para minimizar la recogida de datos personales identificables. Para más información sobre las prácticas de privacidad de Sentry, puede consultarse https://sentry.io/privacy/.',
+        text: '6.2. TrabaGE configura Sentry para minimizar la recogida de datos personales identificables. Para más información sobre las prácticas de privacidad de Sentry, puede consultarse https://sentry.io/privacy/.',
       },
     ],
   },
   {
-    id: 'article-26',
-    title: 'Artículo 26. Notificaciones Push',
+    id: 'article-7',
+    title: 'Artículo 7. Notificaciones Push',
     blocks: [
       {
         type: 'p',
-        text: '26.1. TrabaGE podrá enviar notificaciones push a los dispositivos de los usuarios a través de proveedores de servicios de mensajería como OneSignal u otros servicios equivalentes.',
+        text: '7.1. TrabaGE podrá enviar notificaciones push a los dispositivos de los usuarios a través de proveedores de servicios de mensajería como OneSignal u otros servicios equivalentes.',
       },
       {
         type: 'p',
-        text: '26.2. Las notificaciones push podrán incluir: información sobre nuevas ofertas de empleo relevantes, actualizaciones sobre el estado de las postulaciones, selección del candidato para avanzar en un proceso, alertas de actividad en la cuenta y comunicaciones de seguridad del servicio.',
+        text: '7.2. Las notificaciones push podrán incluir: información sobre nuevas ofertas de empleo relevantes, actualizaciones sobre el estado de las postulaciones, selección del candidato para avanzar en un proceso, alertas de actividad en la cuenta y comunicaciones de seguridad del servicio.',
       },
       {
         type: 'p',
-        text: '26.3. El usuario puede gestionar sus preferencias de notificación en cualquier momento desde la configuración de su cuenta en la Plataforma o desde la configuración de notificaciones de su dispositivo. La desactivación de notificaciones no afectará al acceso a las funcionalidades principales de la Plataforma.',
+        text: '7.3. El usuario puede gestionar sus preferencias de notificación en cualquier momento desde la configuración de su cuenta en la Plataforma o desde la configuración de notificaciones de su dispositivo. La desactivación de notificaciones no afectará al acceso a las funcionalidades principales de la Plataforma.',
       },
     ],
   },
   {
-    id: 'article-27',
-    title: 'Artículo 27. Cookies y Tecnologías Similares',
+    id: 'article-8',
+    title: 'Artículo 8. Cookies y Tecnologías Similares',
     blocks: [
       {
         type: 'p',
-        text: '27.1. TrabaGE utiliza cookies y tecnologías similares (como almacenamiento local, balizas web o identificadores de sesión) para garantizar el correcto funcionamiento de la Plataforma, mejorar la experiencia del usuario y obtener información analítica sobre el uso del servicio.',
+        text: '8.1. TrabaGE utiliza cookies y tecnologías similares (como almacenamiento local, balizas web o identificadores de sesión) para garantizar el correcto funcionamiento de la Plataforma, mejorar la experiencia del usuario y obtener información analítica sobre el uso del servicio.',
       },
-      { type: 'p', text: '27.2. Las cookies utilizadas por TrabaGE se clasifican en:' },
+      { type: 'p', text: '8.2. Las cookies utilizadas por TrabaGE se clasifican en:' },
       {
         type: 'ul',
         items: [
@@ -161,19 +161,19 @@ export const PRIVACY_ARTICLES = [
       },
       {
         type: 'p',
-        text: '27.3. El usuario puede configurar su navegador para bloquear o eliminar cookies, si bien ello podrá afectar la disponibilidad o correcto funcionamiento de determinadas funcionalidades de la Plataforma.',
+        text: '8.3. El usuario puede configurar su navegador para bloquear o eliminar cookies, si bien ello podrá afectar la disponibilidad o correcto funcionamiento de determinadas funcionalidades de la Plataforma.',
       },
     ],
   },
   {
-    id: 'article-28',
-    title: 'Artículo 28. Compartición de Datos con Terceros',
+    id: 'article-9',
+    title: 'Artículo 9. Compartición de Datos con Terceros',
     blocks: [
       {
         type: 'p',
-        text: '28.1. TrabaGE no vende, alquila ni cede datos personales de los usuarios a terceros con fines comerciales propios de esos terceros.',
+        text: '9.1. TrabaGE no vende, alquila ni cede datos personales de los usuarios a terceros con fines comerciales propios de esos terceros.',
       },
-      { type: 'p', text: '28.2. TrabaGE puede compartir datos personales únicamente en los siguientes supuestos:' },
+      { type: 'p', text: '9.2. TrabaGE puede compartir datos personales únicamente en los siguientes supuestos:' },
       {
         type: 'ul',
         items: [
@@ -186,32 +186,32 @@ export const PRIVACY_ARTICLES = [
     ],
   },
   {
-    id: 'article-29',
-    title: 'Artículo 29. Integraciones con Servicios de Terceros',
+    id: 'article-10',
+    title: 'Artículo 10. Integraciones con Servicios de Terceros',
     blocks: [
       {
         type: 'p',
-        text: '29.1. TrabaGE podrá integrar en el futuro funcionalidades o servicios de terceros, como herramientas de pago, servicios de análisis avanzado, plataformas de comunicación, sistemas de inteligencia artificial para recomendación de empleo u otras integraciones que mejoren la experiencia del usuario.',
+        text: '10.1. TrabaGE podrá integrar en el futuro funcionalidades o servicios de terceros, como herramientas de pago, servicios de análisis avanzado, plataformas de comunicación, sistemas de inteligencia artificial para recomendación de empleo u otras integraciones que mejoren la experiencia del usuario.',
       },
       {
         type: 'p',
-        text: '29.2. Cuando se introduzcan nuevas integraciones que impliquen tratamiento de datos personales, TrabaGE informará a los usuarios con antelación razonable y actualizará la presente Política de Privacidad.',
+        text: '10.2. Cuando se introduzcan nuevas integraciones que impliquen tratamiento de datos personales, TrabaGE informará a los usuarios con antelación razonable y actualizará la presente Política de Privacidad.',
       },
       {
         type: 'p',
-        text: '29.3. Los servicios de terceros integrados tienen sus propias políticas de privacidad, cuya consulta se recomienda al usuario. TrabaGE no es responsable de las prácticas de privacidad de terceros.',
+        text: '10.3. Los servicios de terceros integrados tienen sus propias políticas de privacidad, cuya consulta se recomienda al usuario. TrabaGE no es responsable de las prácticas de privacidad de terceros.',
       },
     ],
   },
   {
-    id: 'article-30',
-    title: 'Artículo 30. Conservación de los Datos',
+    id: 'article-11',
+    title: 'Artículo 11. Conservación de los Datos',
     blocks: [
       {
         type: 'p',
-        text: '30.1. TrabaGE conservará los datos personales durante el tiempo necesario para el cumplimiento de las finalidades para las que fueron recogidos y, en todo caso, durante los plazos legalmente exigidos en la jurisdicción aplicable.',
+        text: '11.1. TrabaGE conservará los datos personales durante el tiempo necesario para el cumplimiento de las finalidades para las que fueron recogidos y, en todo caso, durante los plazos legalmente exigidos en la jurisdicción aplicable.',
       },
-      { type: 'p', text: '30.2. Tras la eliminación de una cuenta, TrabaGE podrá conservar determinados datos durante un periodo adicional para:' },
+      { type: 'p', text: '11.2. Tras la eliminación de una cuenta, TrabaGE podrá conservar determinados datos durante un periodo adicional para:' },
       {
         type: 'ul',
         items: [
@@ -222,19 +222,19 @@ export const PRIVACY_ARTICLES = [
       },
       {
         type: 'p',
-        text: '30.3. Los datos conservados exclusivamente para los fines anteriores serán tratados de forma restringida y no serán utilizados para ninguna otra finalidad.',
+        text: '11.3. Los datos conservados exclusivamente para los fines anteriores serán tratados de forma restringida y no serán utilizados para ninguna otra finalidad.',
       },
       {
         type: 'p',
-        text: '30.4. Las postulaciones transmitidas a empresas destinatarias son tratadas por estas como responsables independientes del tratamiento. El candidato deberá dirigirse directamente a la empresa para solicitar la eliminación de dichos datos.',
+        text: '11.4. Las postulaciones transmitidas a empresas destinatarias son tratadas por estas como responsables independientes del tratamiento. El candidato deberá dirigirse directamente a la empresa para solicitar la eliminación de dichos datos.',
       },
     ],
   },
   {
-    id: 'article-31',
-    title: 'Artículo 31. Derechos de los Usuarios sobre sus Datos',
+    id: 'article-12',
+    title: 'Artículo 12. Derechos de los Usuarios sobre sus Datos',
     blocks: [
-      { type: 'p', text: '31.1. En relación con sus datos personales, los usuarios tienen los siguientes derechos:' },
+      { type: 'p', text: '12.1. En relación con sus datos personales, los usuarios tienen los siguientes derechos:' },
       {
         type: 'ul',
         items: [
@@ -249,15 +249,15 @@ export const PRIVACY_ARTICLES = [
       },
       {
         type: 'p',
-        text: '31.2. Para ejercer cualquiera de estos derechos, el usuario puede dirigirse a TrabaGE a través de los canales indicados en el Artículo 15, acreditando su identidad. TrabaGE responderá en el plazo legalmente establecido.',
+        text: '12.2. Para ejercer cualquiera de estos derechos, el usuario puede dirigirse a TrabaGE a través de los canales de contacto indicados en la Plataforma o mediante el correo electrónico de soporte, acreditando su identidad. TrabaGE responderá en el plazo legalmente establecido.',
       },
     ],
   },
   {
-    id: 'article-32',
-    title: 'Artículo 32. Medidas de Seguridad',
+    id: 'article-13',
+    title: 'Artículo 13. Medidas de Seguridad',
     blocks: [
-      { type: 'p', text: '32.1. TrabaGE implementa medidas técnicas y organizativas adecuadas para proteger los datos personales contra el acceso no autorizado, la alteración, divulgación o destrucción. Estas medidas incluyen, entre otras:' },
+      { type: 'p', text: '13.1. TrabaGE implementa medidas técnicas y organizativas adecuadas para proteger los datos personales contra el acceso no autorizado, la alteración, divulgación o destrucción. Estas medidas incluyen, entre otras:' },
       {
         type: 'ul',
         items: [
@@ -270,25 +270,25 @@ export const PRIVACY_ARTICLES = [
       },
       {
         type: 'p',
-        text: '32.2. A pesar de las medidas implementadas, ninguna transmisión de datos por Internet ni sistema de almacenamiento puede garantizar seguridad absoluta. En caso de producirse una brecha de seguridad que afecte a datos personales, TrabaGE notificará a los usuarios afectados y a las autoridades competentes en los plazos y formas establecidos por la normativa aplicable.',
+        text: '13.2. A pesar de las medidas implementadas, ninguna transmisión de datos por Internet ni sistema de almacenamiento puede garantizar seguridad absoluta. En caso de producirse una brecha de seguridad que afecte a datos personales, TrabaGE notificará a los usuarios afectados y a las autoridades competentes en los plazos y formas establecidos por la normativa aplicable.',
       },
     ],
   },
   {
-    id: 'article-33',
-    title: 'Artículo 33. Actualizaciones de la Política de Privacidad',
+    id: 'article-14',
+    title: 'Artículo 14. Actualizaciones de la Política de Privacidad',
     blocks: [
       {
         type: 'p',
-        text: '33.1. TrabaGE podrá actualizar la presente Política de Privacidad cuando sea necesario para reflejar cambios en el servicio, en los tratamientos realizados, en la normativa aplicable o en las integraciones de terceros.',
+        text: '14.1. TrabaGE podrá actualizar la presente Política de Privacidad cuando sea necesario para reflejar cambios en el servicio, en los tratamientos realizados, en la normativa aplicable o en las integraciones de terceros.',
       },
       {
         type: 'p',
-        text: '33.2. Las actualizaciones serán notificadas a los usuarios registrados con antelación razonable y publicadas en la Plataforma con indicación de la fecha de última actualización.',
+        text: '14.2. Las actualizaciones serán notificadas a los usuarios registrados con antelación razonable y publicadas en la Plataforma con indicación de la fecha de última actualización.',
       },
       {
         type: 'p',
-        text: '33.3. El uso continuado de la Plataforma tras la entrada en vigor de las actualizaciones implicará la aceptación de la nueva Política de Privacidad.',
+        text: '14.3. El uso continuado de la Plataforma tras la entrada en vigor de las actualizaciones implicará la aceptación de la nueva Política de Privacidad.',
       },
     ],
   },

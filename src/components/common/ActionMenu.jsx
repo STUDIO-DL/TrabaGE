@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import AppIcon from './AppIcon';
-import { AlertTriangle, MoreVertical, Share2, ICON_SIZES } from '../../constants/icons';
+import { AlertTriangle, Copy, MoreVertical, Share2, ICON_SIZES } from '../../constants/icons';
 
-export default function ActionMenu({ onShare, onReport, align = 'right', className = '' }) {
+export default function ActionMenu({ onShare, onCopy, onReport, align = 'right', className = '' }) {
   const menuRef = useRef(null);
   const [open, setOpen] = useState(false);
 
@@ -38,22 +38,36 @@ export default function ActionMenu({ onShare, onReport, align = 'right', classNa
         <div
           className={`absolute ${alignClass} top-full z-50 mt-1 min-w-[200px] overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg`}
         >
-          <button
-            type="button"
-            onClick={() => run(onShare)}
-            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
-          >
-            <AppIcon icon={Share2} size={ICON_SIZES.sm} className="text-gray-500" />
-            Compartir
-          </button>
-          <button
-            type="button"
-            onClick={() => run(onReport)}
-            className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
-          >
-            <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-amber-600" />
-            Reportar
-          </button>
+          {onShare && (
+            <button
+              type="button"
+              onClick={() => run(onShare)}
+              className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <AppIcon icon={Share2} size={ICON_SIZES.sm} className="text-gray-500" />
+              Compartir
+            </button>
+          )}
+          {onCopy && (
+            <button
+              type="button"
+              onClick={() => run(onCopy)}
+              className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <AppIcon icon={Copy} size={ICON_SIZES.sm} className="text-gray-500" />
+              Copiar enlace
+            </button>
+          )}
+          {onReport && (
+            <button
+              type="button"
+              onClick={() => run(onReport)}
+              className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+            >
+              <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-amber-600" />
+              Reportar
+            </button>
+          )}
         </div>
       )}
     </div>

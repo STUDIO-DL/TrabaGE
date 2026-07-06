@@ -10,6 +10,16 @@
   "theme_color": "#2563EB",
   "orientation": "portrait-primary",
   "lang": "es",
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
   "icons": [
     {
       "src": "/icons/trabage-icon-16.png",
