@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import FormPageLayout from '../../components/layout/FormPageLayout';
+import EmptyState from '../../components/common/EmptyState';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
@@ -68,7 +69,7 @@ function parseCustomQuestions(value) {
 export default function PublishJob() {
   const navigate = useNavigate();
   const { jobId } = useParams();
-  const { user, isPreviewMode } = useAuth();
+  const { user, isPreviewMode, setupComplete } = useAuth();
   const { showToast } = useNotificationContext();
   const [form, setForm] = useState({
     title: '',
@@ -139,6 +140,13 @@ export default function PublishJob() {
       return;
     }
 
+    // Publishing requires a complete company/institution profile. Drafts are
+    // allowed so work isn't lost; only going live is restricted.
+    if (status === 'active' && !setupComplete) {
+      setError('Completa el perfil de tu empresa antes de publicar ofertas.');
+      return;
+    }
+
     if (!form.title.trim()) {
       setError('El título es obligatorio.');
       return;
@@ -197,6 +205,24 @@ export default function PublishJob() {
     return (
       <PageContainer title="Editar empleo" backButton bottomNav={false}>
         <Spinner fullscreen />
+      </PageContainer>
+    );
+  }
+
+  if (!isPreviewMode && !setupComplete) {
+    return (
+      <PageContainer title="Publicar empleo" backButton bottomNav={false}>
+        <div className="p-md">
+          <EmptyState
+            title="Completa tu perfil para publicar"
+            description="Antes de publicar ofertas, completa los datos requeridos de tu empresa o institución."
+          />
+          <Link to="/setup/company" className="mt-md block">
+            <Button fullWidth className="btn-primary-mobile !rounded-btn-primary !py-0">
+              Completar perfil
+            </Button>
+          </Link>
+        </div>
       </PageContainer>
     );
   }

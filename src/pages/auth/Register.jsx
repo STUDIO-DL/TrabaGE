@@ -21,6 +21,8 @@ import { clearPreviewMode } from '../../constants/preview';
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
+import { bootstrapProfile } from '../../services/profileBootstrap';
+import { resolvePostAuthRedirect } from '../../utils/resolvePostAuthRedirect';
 import { mapAuthError } from '../../utils/errors';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
@@ -151,7 +153,7 @@ function RegisterHeader({ subtitle }) {
 export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { register, user, isAuthenticated, refreshAuthState, getHomePath } = useAuth();
+  const { register, user, isAuthenticated, refreshAuthState } = useAuth();
   const fromOAuth = location.state?.fromOAuth === true;
   const oauthCompletion = fromOAuth && isAuthenticated && Boolean(user?.id);
 
@@ -223,8 +225,12 @@ export default function Register() {
       return;
     }
 
+    // Same shared bootstrap + gated routing as the auth callback so this
+    // fallback lands the user on their dashboard or the setup assistant.
+    await bootstrapProfile({ user, role });
     await refreshAuthState();
-    navigate(getHomePath(), { replace: true });
+    const redirectTo = await resolvePostAuthRedirect(user.id, role);
+    navigate(redirectTo, { replace: true });
     setLoading(false);
   };
 

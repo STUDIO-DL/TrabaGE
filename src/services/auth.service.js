@@ -52,10 +52,15 @@ function savePendingOrgKind(accountKind) {
   sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
 }
 
-export function consumePendingOrgKind() {
+export function peekPendingOrgKind() {
   const kind = sessionStorage.getItem(PENDING_ORG_KIND_KEY);
-  sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
   return isValidAccountKind(kind) ? kind : null;
+}
+
+export function consumePendingOrgKind() {
+  const kind = peekPendingOrgKind();
+  sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
+  return kind;
 }
 
 // Mirrors the pending_org_kind pattern: stores only the org-specific profile
@@ -76,17 +81,21 @@ function savePendingOrgDetails(details) {
   sessionStorage.removeItem(PENDING_ORG_DETAILS_KEY);
 }
 
-export function consumePendingOrgDetails() {
+export function peekPendingOrgDetails() {
   try {
     const raw = sessionStorage.getItem(PENDING_ORG_DETAILS_KEY);
-    sessionStorage.removeItem(PENDING_ORG_DETAILS_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw);
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch {
-    sessionStorage.removeItem(PENDING_ORG_DETAILS_KEY);
     return {};
   }
+}
+
+export function consumePendingOrgDetails() {
+  const details = peekPendingOrgDetails();
+  sessionStorage.removeItem(PENDING_ORG_DETAILS_KEY);
+  return details;
 }
 
 function savePendingAccountType(roleOrKind) {

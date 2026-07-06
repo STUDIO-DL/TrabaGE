@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import Spinner from '../../components/ui/Spinner';
 import { clearPreviewMode } from '../../constants/preview';
-import { ROLE_HOME } from '../../constants/roles';
+import { ROLES } from '../../constants/roles';
 import { authService } from '../../services/auth.service';
+import { bootstrapProfile } from '../../services/profileBootstrap';
 import { resolvePostAuthRedirect } from '../../utils/resolvePostAuthRedirect';
 import { mapAuthError } from '../../utils/errors';
 import { useAuth } from '../../hooks/useAuth';
@@ -55,20 +56,32 @@ export default function AuthCallback() {
           return true;
         }
 
-        const roleHome = ROLE_HOME[accountTypeResult?.role] || (await resolvePostAuthRedirect(session.user.id));
-        const redirectTo = accountTypeResult?.needsAccountTypeSelection
-          ? '/register'
-          : roleHome;
-
-        if (redirectTo !== '/register') {
-          await refreshAuthState();
+        // Safety net only: a brand-new user who reached OAuth WITHOUT a pending
+        // account-type selection (e.g. "login with Google" of a new user) picks
+        // their account type on /register. Signups from the register form always
+        // carry the pending type, so they skip this screen entirely.
+        if (accountTypeResult?.needsAccountTypeSelection) {
+          if (cancelled) return true;
+          navigate('/register', { replace: true, state: { fromOAuth: true } });
+          return true;
         }
 
+        const role = accountTypeResult?.role ?? null;
+
+        // Shared profile-creation path for BOTH manual (verified) and Google
+        // sign-ups: ensure the correct profile exists and prefill known data
+        // (Google name/photo, city, org details). Role is already applied above,
+        // which the profile INSERT policies require.
+        if (role && role !== ROLES.ADMIN) {
+          await bootstrapProfile({ user: session.user, role });
+        }
+
+        const redirectTo = await resolvePostAuthRedirect(session.user.id, role);
+
+        await refreshAuthState();
+
         if (cancelled) return true;
-        navigate(redirectTo, {
-          replace: true,
-          state: redirectTo === '/register' ? { fromOAuth: true } : undefined,
-        });
+        navigate(redirectTo, { replace: true });
         return true;
       };
 

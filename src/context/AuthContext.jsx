@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase';
 import { authService } from '../services/auth.service';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
 import { clearOneSignalUserId, setOneSignalUserId } from '../config/onesignal';
-import { ROLE_HOME, ROLES } from '../constants/roles';
+import { ROLE_HOME, ROLE_SETUP, ROLES } from '../constants/roles';
 import {
   clearPreviewMode,
   getPreviewMode,
@@ -16,6 +16,7 @@ import {
 import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
+import { isProfileSetupComplete } from '../utils/profileRequirements';
 import { reportError } from '../utils/logger';
 
 const AuthContext = createContext(null);
@@ -41,10 +42,10 @@ export function AuthProvider({ children }) {
 
     if (userRole === ROLES.CANDIDATE) {
       const { data } = await profileService.getCandidateProfile(userId);
-      setSetupComplete(Boolean(data?.setup_complete));
+      setSetupComplete(isProfileSetupComplete(ROLES.CANDIDATE, data));
     } else if (userRole === ROLES.COMPANY) {
       const { data } = await companyService.getCompanyProfile(userId);
-      setSetupComplete(Boolean(data?.setup_complete));
+      setSetupComplete(isProfileSetupComplete(ROLES.COMPANY, data));
     } else if (userRole === ROLES.ADMIN) {
       setSetupComplete(true);
     }
@@ -106,9 +107,9 @@ export function AuthProvider({ children }) {
     setRole(userRole);
 
     if (userRole === ROLES.CANDIDATE) {
-      setSetupComplete(Boolean(candidateResult?.data?.setup_complete));
+      setSetupComplete(isProfileSetupComplete(ROLES.CANDIDATE, candidateResult?.data));
     } else if (userRole === ROLES.COMPANY) {
-      setSetupComplete(Boolean(companyResult?.data?.setup_complete));
+      setSetupComplete(isProfileSetupComplete(ROLES.COMPANY, companyResult?.data));
     } else if (userRole === ROLES.ADMIN) {
       setSetupComplete(true);
     } else {
@@ -266,13 +267,18 @@ export function AuthProvider({ children }) {
   }, [hydrateUser, isPreviewMode]);
 
   const getHomePath = useCallback(() => {
-    // Profile setup is optional: we always resolve to the role-based home and no
-    // longer redirect setup-incomplete users into the setup flow. The
-    // `setupComplete` flag remains available for showing an optional prompt.
-    const activeRole = role ?? (getPreviewMode() ? getPreviewRole() : null);
+    // Guide users with an incomplete required profile to the setup assistant;
+    // everyone else lands on their role-based home. Preview users are never
+    // gated. Keeps manual and Google flows identical (LinkedIn-like: dashboard
+    // or complete-profile assistant, never an extra account-type screen).
+    const previewActive = isPreviewMode || getPreviewMode();
+    const activeRole = role ?? (previewActive ? getPreviewRole() : null);
     if (!activeRole) return '/register';
+    if (!previewActive && ROLE_SETUP[activeRole] && !setupComplete) {
+      return ROLE_SETUP[activeRole];
+    }
     return ROLE_HOME[activeRole] || '/login';
-  }, [role]);
+  }, [role, setupComplete, isPreviewMode]);
 
   const value = useMemo(
     () => ({
