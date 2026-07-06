@@ -11,11 +11,11 @@ const TONES = {
 
 export default function AdminStatCard({ icon, tone = 'blue', value, label }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-      <span className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${TONES[tone]}`}>
+    <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+      <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${TONES[tone]}`}>
         <AppIcon icon={icon} size={ICON_SIZES.default} />
       </span>
-      <p className="mt-5 text-3xl font-bold tracking-tight text-gray-900">{value}</p>
+      <p className="mt-4 text-2xl font-bold tracking-tight text-gray-900">{value}</p>
       <p className="mt-1 text-sm text-gray-500">{label}</p>
     </div>
   );

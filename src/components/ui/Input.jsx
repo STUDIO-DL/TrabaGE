@@ -29,7 +29,7 @@ export default function Input({
         <input
           id={inputId}
           className={[
-            'w-full rounded-xl border bg-app-card px-4 py-2.5 text-sm text-app-text outline-none transition-colors placeholder:text-app-muted/70',
+            'w-full rounded-xl border bg-app-card px-3.5 py-2 text-sm text-app-text outline-none transition-colors placeholder:text-app-muted/70',
             'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
             Icon ? 'pl-10' : '',
             error ? 'border-red-500' : 'border-app-border',

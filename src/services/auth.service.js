@@ -5,6 +5,7 @@ import { ROLES } from '../constants/roles';
 const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
 const PENDING_ORG_KIND_KEY = 'pending_org_kind';
+const PENDING_ORG_DETAILS_KEY = 'pending_org_details';
 const VALID_ACCOUNT_TYPES = [ROLES.CANDIDATE, ROLES.COMPANY];
 const VALID_STORED_ROLES = [ROLES.CANDIDATE, ROLES.COMPANY, ROLES.ADMIN];
 const NEW_OAUTH_USER_WINDOW_MS = 10 * 60 * 1000;
@@ -55,6 +56,37 @@ export function consumePendingOrgKind() {
   const kind = sessionStorage.getItem(PENDING_ORG_KIND_KEY);
   sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
   return isValidAccountKind(kind) ? kind : null;
+}
+
+// Mirrors the pending_org_kind pattern: stores only the org-specific profile
+// fields (company_name, sector, company_type) entered at sign-up so CompanySetup
+// can pre-fill them. No candidate-only data is ever stored here.
+function savePendingOrgDetails(details) {
+  if (details && typeof details === 'object') {
+    const clean = {};
+    if (details.company_name) clean.company_name = details.company_name;
+    if (details.sector) clean.sector = details.sector;
+    if (details.company_type) clean.company_type = details.company_type;
+
+    if (Object.keys(clean).length > 0) {
+      sessionStorage.setItem(PENDING_ORG_DETAILS_KEY, JSON.stringify(clean));
+      return;
+    }
+  }
+  sessionStorage.removeItem(PENDING_ORG_DETAILS_KEY);
+}
+
+export function consumePendingOrgDetails() {
+  try {
+    const raw = sessionStorage.getItem(PENDING_ORG_DETAILS_KEY);
+    sessionStorage.removeItem(PENDING_ORG_DETAILS_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    sessionStorage.removeItem(PENDING_ORG_DETAILS_KEY);
+    return {};
+  }
 }
 
 function savePendingAccountType(roleOrKind) {
@@ -119,6 +151,8 @@ export const authService = {
 
   consumePendingOrgKind,
 
+  consumePendingOrgDetails,
+
   login: async (email, password) => {
     if (!isSupabaseConfigured) {
       return configError();
@@ -145,6 +179,10 @@ export const authService = {
     if (metadata.accountKind) {
       savePendingOrgKind(metadata.accountKind);
     }
+
+    // Persist org-only profile details (never candidate data) so CompanySetup
+    // can pre-fill them after email verification.
+    savePendingOrgDetails(metadata.orgDetails);
 
     return supabase.auth.signUp({
       email: normalizeEmail(email),

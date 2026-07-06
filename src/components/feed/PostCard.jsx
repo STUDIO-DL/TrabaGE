@@ -5,7 +5,7 @@ import VerifiedBadge from '../company/VerifiedBadge';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { resolvePostImageUrl } from '../../utils/storagePaths';
-import { formatRelativeTime } from '../../utils/formatDate';
+import TimeAgo from '../common/TimeAgo';
 
 export default function PostCard({
   post,
@@ -50,7 +50,7 @@ export default function PostCard({
           {authorHeadline && <p className="text-sm text-gray-500">{authorHeadline}</p>}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className="text-xs text-gray-400">{formatRelativeTime(post.created_at)}</span>
+          <TimeAgo date={post.created_at} className="text-xs text-gray-400" />
           <ContentActionMenu
             shareUrl={`/feed/post/${post.id}`}
             shareTitle={(post.content || '').slice(0, 50)}

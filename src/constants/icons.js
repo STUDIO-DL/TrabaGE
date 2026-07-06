@@ -105,12 +105,12 @@ export {
   X,
 };
 
-/** Default: 20px · Navigation: 24px */
+/** Compact scale — Default: 18px · Navigation: 22px */
 export const ICON_SIZES = {
-  default: 20,
-  nav: 24,
+  default: 18,
+  nav: 22,
   sm: 16,
-  lg: 24,
+  lg: 20,
 };
 
 /** Primary #2563EB · Inactive #64748B — icons inherit via text-* */

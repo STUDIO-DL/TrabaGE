@@ -4,7 +4,7 @@ const SIZES = {
   sm: { box: 'h-8 w-8', px: 32 },
   md: { box: 'h-12 w-12', px: 48 },
   lg: { box: 'h-[72px] w-[72px]', px: 72 },
-  xl: { box: 'h-[120px] w-[120px]', px: 120 },
+  xl: { box: 'h-24 w-24', px: 96 },
 };
 
 export default function UserAvatar({ src, alt = '', size = 'md', className = '', imageClassName = '' }) {

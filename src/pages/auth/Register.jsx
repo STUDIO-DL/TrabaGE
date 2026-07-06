@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, Eye, EyeOff, Lock, Mail, MapPin, User } from 'lucide-react';
+import { ChevronDown, Eye, EyeOff, Lock, Mail, MapPin } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
@@ -13,6 +13,10 @@ import {
   accountKindToRole,
   isValidAccountKind,
 } from '../../constants/accountKinds';
+import {
+  getRegisterConfig,
+  normalizeFieldOptions,
+} from '../../constants/registerAccountConfig';
 import { clearPreviewMode } from '../../constants/preview';
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
 import { useAuth } from '../../hooks/useAuth';
@@ -31,6 +35,101 @@ function RegisterField({ label, id, children }) {
       </label>
       {children}
     </div>
+  );
+}
+
+function FieldIcon({ icon: Icon }) {
+  if (!Icon) return null;
+  return (
+    <Icon
+      className="pointer-events-none absolute right-3.5 top-1/2 h-[1.1rem] w-[1.1rem] -translate-y-1/2 text-slate-400"
+      strokeWidth={1.75}
+      aria-hidden
+    />
+  );
+}
+
+function TextField({ id, label, icon, value, onChange, placeholder, autoComplete, type = 'text' }) {
+  return (
+    <RegisterField label={label} id={id}>
+      <div className="relative">
+        <input
+          id={id}
+          type={type}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`${fieldClassName} pr-11`}
+        />
+        <FieldIcon icon={icon} />
+      </div>
+    </RegisterField>
+  );
+}
+
+function SelectField({ id, label, icon: Icon, value, onChange, placeholder, options }) {
+  return (
+    <RegisterField label={label} id={id}>
+      <div className="relative">
+        <select
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`${fieldClassName} appearance-none pr-16`}
+        >
+          <option value="">{placeholder}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 text-slate-400">
+          {Icon ? <Icon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.75} aria-hidden /> : null}
+          <ChevronDown className="h-4 w-4" aria-hidden />
+        </div>
+      </div>
+    </RegisterField>
+  );
+}
+
+function PasswordField({ id, label, value, onChange, placeholder, autoComplete, show, onToggle }) {
+  return (
+    <RegisterField label={label} id={id}>
+      <div className="relative">
+        <input
+          id={id}
+          type={onToggle && show ? 'text' : 'password'}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`${fieldClassName} ${onToggle ? 'pr-[4.25rem]' : 'pr-11'}`}
+        />
+        <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
+          {onToggle ? (
+            <button
+              type="button"
+              onClick={onToggle}
+              className="rounded-md p-0.5 text-slate-400 transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            >
+              {show ? (
+                <EyeOff className="h-[1.1rem] w-[1.1rem]" aria-hidden />
+              ) : (
+                <Eye className="h-[1.1rem] w-[1.1rem]" aria-hidden />
+              )}
+            </button>
+          ) : null}
+          <Lock
+            className="pointer-events-none h-[1.1rem] w-[1.1rem] text-slate-400"
+            strokeWidth={1.75}
+            aria-hidden
+          />
+        </div>
+      </div>
+    </RegisterField>
   );
 }
 
@@ -61,7 +160,10 @@ export default function Register() {
       ? location.state.accountKind
       : ACCOUNT_KINDS.CANDIDATE,
   );
-  const [fullName, setFullName] = useState('');
+  // Type-specific values (name, sector, institution type) keyed by field key so
+  // the three account types share a single, config-driven code path.
+  const [typeValues, setTypeValues] = useState({});
+  // Common fields — preserved across account-type switches.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -72,11 +174,17 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  const config = getRegisterConfig(accountKind);
+
   useEffect(() => {
     if (location.state?.accountKind && isValidAccountKind(location.state.accountKind)) {
       setAccountKind(location.state.accountKind);
     }
   }, [location.state?.accountKind]);
+
+  const setTypeValue = (key, value) => {
+    setTypeValues((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleGoogleRegister = async () => {
     setError('');
@@ -128,9 +236,15 @@ export default function Register() {
       return;
     }
 
-    if (!fullName.trim()) {
-      setError('Introduce tu nombre completo.');
-      return;
+    // Validate ONLY the fields visible for the currently selected account type.
+    for (const field of config.fields) {
+      if (field.required) {
+        const value = typeValues[field.key];
+        if (!value || !String(value).trim()) {
+          setError(field.requiredMessage);
+          return;
+        }
+      }
     }
 
     if (!email.trim()) {
@@ -163,11 +277,8 @@ export default function Register() {
     setError('');
 
     const role = accountKindToRole(accountKind);
-    const { error: registerError, redirectTo } = await register(email, password, role, {
-      fullName: fullName.trim(),
-      city: city.trim(),
-      accountKind,
-    });
+    const metadata = config.buildMetadata(typeValues, { city: city.trim() });
+    const { error: registerError, redirectTo } = await register(email, password, role, metadata);
 
     if (registerError) {
       setError(mapAuthError(registerError));
@@ -273,127 +384,83 @@ export default function Register() {
                     />
                   </div>
 
-                  <RegisterField label="Nombre completo" id="register-full-name">
-                    <div className="relative">
-                      <input
-                        id="register-full-name"
-                        type="text"
-                        name="trabage-full-name"
-                        autoComplete="name"
-                        required
-                        placeholder="Ej. Juan Pérez"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className={`${fieldClassName} pr-11`}
-                      />
-                      <User
-                        className="pointer-events-none absolute right-3.5 top-1/2 h-[1.1rem] w-[1.1rem] -translate-y-1/2 text-slate-400"
-                        strokeWidth={1.75}
-                        aria-hidden
-                      />
-                    </div>
-                  </RegisterField>
+                  {/* Account-type specific fields. Keyed by accountKind so they
+                      smoothly animate in on every switch, with no page reload. */}
+                  <div key={accountKind} className="register-fields-in space-y-4">
+                    {config.fields.map((field) => {
+                      const id = `register-${field.key}`;
+                      const value = typeValues[field.key] ?? '';
 
-                  <RegisterField label="Correo electrónico" id="register-email">
-                    <div className="relative">
-                      <input
-                        id="register-email"
-                        type="email"
-                        name="trabage-email"
-                        autoComplete="email"
-                        required
-                        placeholder="ejemplo@correo.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className={`${fieldClassName} pr-11`}
-                      />
-                      <Mail
-                        className="pointer-events-none absolute right-3.5 top-1/2 h-[1.1rem] w-[1.1rem] -translate-y-1/2 text-slate-400"
-                        strokeWidth={1.75}
-                        aria-hidden
-                      />
-                    </div>
-                  </RegisterField>
+                      if (field.type === 'select') {
+                        return (
+                          <SelectField
+                            key={field.key}
+                            id={id}
+                            label={field.label}
+                            icon={field.icon}
+                            placeholder={field.placeholder}
+                            options={normalizeFieldOptions(field.options)}
+                            value={value}
+                            onChange={(next) => setTypeValue(field.key, next)}
+                          />
+                        );
+                      }
 
-                  <RegisterField label="Contraseña" id="register-password">
-                    <div className="relative">
-                      <input
-                        id="register-password"
-                        type={showPassword ? 'text' : 'password'}
-                        name="trabage-password"
-                        autoComplete="new-password"
-                        required
-                        placeholder="Crea una contraseña segura"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className={`${fieldClassName} pr-[4.25rem]`}
-                      />
-                      <div className="absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          className="rounded-md p-0.5 text-slate-400 transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                          aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-[1.1rem] w-[1.1rem]" aria-hidden />
-                          ) : (
-                            <Eye className="h-[1.1rem] w-[1.1rem]" aria-hidden />
-                          )}
-                        </button>
-                        <Lock
-                          className="pointer-events-none h-[1.1rem] w-[1.1rem] text-slate-400"
-                          strokeWidth={1.75}
-                          aria-hidden
+                      return (
+                        <TextField
+                          key={field.key}
+                          id={id}
+                          label={field.label}
+                          icon={field.icon}
+                          placeholder={field.placeholder}
+                          autoComplete={field.autoComplete}
+                          value={value}
+                          onChange={(next) => setTypeValue(field.key, next)}
                         />
-                      </div>
-                    </div>
-                  </RegisterField>
+                      );
+                    })}
+                  </div>
 
-                  <RegisterField label="Confirmar contraseña" id="register-confirm-password">
-                    <div className="relative">
-                      <input
-                        id="register-confirm-password"
-                        type="password"
-                        name="trabage-confirm-password"
-                        autoComplete="new-password"
-                        required
-                        placeholder="Repite tu contraseña"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className={`${fieldClassName} pr-11`}
-                      />
-                      <Lock
-                        className="pointer-events-none absolute right-3.5 top-1/2 h-[1.1rem] w-[1.1rem] -translate-y-1/2 text-slate-400"
-                        strokeWidth={1.75}
-                        aria-hidden
-                      />
-                    </div>
-                  </RegisterField>
+                  <TextField
+                    id="register-email"
+                    type="email"
+                    label={config.emailLabel}
+                    icon={Mail}
+                    placeholder={config.emailPlaceholder}
+                    autoComplete="email"
+                    value={email}
+                    onChange={setEmail}
+                  />
 
-                  <RegisterField label="Ciudad" id="register-city">
-                    <div className="relative">
-                      <select
-                        id="register-city"
-                        name="trabage-city"
-                        required
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        className={`${fieldClassName} appearance-none pr-16`}
-                      >
-                        <option value="">Selecciona tu ciudad</option>
-                        {CITIES.map((item) => (
-                          <option key={item} value={item}>
-                            {item}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 text-slate-400">
-                        <MapPin className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.75} aria-hidden />
-                        <ChevronDown className="h-4 w-4" aria-hidden />
-                      </div>
-                    </div>
-                  </RegisterField>
+                  <PasswordField
+                    id="register-password"
+                    label="Contraseña"
+                    placeholder="Crea una contraseña segura"
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={setPassword}
+                    show={showPassword}
+                    onToggle={() => setShowPassword((prev) => !prev)}
+                  />
+
+                  <PasswordField
+                    id="register-confirm-password"
+                    label="Confirmar contraseña"
+                    placeholder="Repite tu contraseña"
+                    autoComplete="new-password"
+                    value={confirmPassword}
+                    onChange={setConfirmPassword}
+                  />
+
+                  <SelectField
+                    id="register-city"
+                    label="Ciudad"
+                    icon={MapPin}
+                    placeholder="Selecciona tu ciudad"
+                    options={normalizeFieldOptions(CITIES)}
+                    value={city}
+                    onChange={setCity}
+                  />
 
                   <label className="flex cursor-pointer items-start gap-2.5 pt-0.5">
                     <input

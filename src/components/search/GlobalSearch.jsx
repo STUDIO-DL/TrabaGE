@@ -6,7 +6,7 @@ import { useGlobalSearch } from '../../hooks/useGlobalSearch';
 import GlobalSearchResults from './GlobalSearchResults';
 
 export default function GlobalSearch({
-  placeholder = 'Buscar personas, empresas, empleos…',
+  placeholder = 'Buscar personas, empresas, instituciones…',
   className = '',
   inputClassName = '',
   variant = 'pill',

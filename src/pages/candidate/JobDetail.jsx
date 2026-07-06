@@ -10,7 +10,8 @@ import { isCompanyVerified } from '../../utils/companyVerification';
 import Button from '../../components/ui/Button';
 import AppIcon from '../../components/common/AppIcon';
 import Spinner from '../../components/ui/Spinner';
-import { Bookmark, FileText, ICON_SIZES } from '../../constants/icons';
+import TimeAgo from '../../components/common/TimeAgo';
+import { Bookmark, Clock, FileText, ICON_SIZES } from '../../constants/icons';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
 import { useJob } from '../../hooks/useJobs';
@@ -150,6 +151,12 @@ export default function JobDetail() {
             {job.work_mode ? ` · ${getWorkModeLabel(job.work_mode)}` : ''}
           </p>
           <ApplicationsCounter count={applicationCount} />
+          {job.created_at && (
+            <p className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+              <AppIcon icon={Clock} size={ICON_SIZES.sm} className="shrink-0" />
+              <TimeAgo date={job.created_at} />
+            </p>
+          )}
         </div>
 
         {!isCompanyVerified(company) && (

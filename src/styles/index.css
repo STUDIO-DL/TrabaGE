@@ -106,6 +106,10 @@
     animation: loginFadeIn 0.65s ease-out 0.1s forwards;
   }
 
+  .register-fields-in {
+    animation: registerFieldsIn 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
   .login-shell {
     @apply flex min-h-dvh min-w-0 flex-col overflow-x-hidden;
     background: rgb(var(--app-surface));
@@ -312,6 +316,18 @@
   }
 }
 
+@keyframes registerFieldsIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes loginFadeIn {
   from {
     opacity: 0;
@@ -343,6 +359,7 @@
   .splash-tagline-in,
   .login-fade-in,
   .login-fade-in-delayed,
+  .register-fields-in,
   .onboarding-illustration-in,
   .onboarding-title-in,
   .onboarding-body-in,

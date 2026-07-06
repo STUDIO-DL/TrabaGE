@@ -3,7 +3,7 @@ import PageContainer from '../../components/layout/PageContainer';
 import NotificationItem from '../../components/notifications/NotificationItem';
 import EmptyState from '../../components/common/EmptyState';
 import { NotificationListSkeleton } from '../../components/common/Skeleton';
-import { NoNotifications } from '../../assets/empty-states';
+import { Bell } from '../../constants/icons';
 import Button from '../../components/ui/Button';
 import { useNotifications } from '../../hooks/useNotifications';
 import { usePushPermission } from '../../hooks/usePushPermission';
@@ -56,7 +56,8 @@ export default function Notifications() {
           <NotificationListSkeleton count={5} />
         ) : notifications.length === 0 ? (
           <EmptyState
-            image={NoNotifications}
+            variant="soft"
+            icon={Bell}
             title="No tienes notificaciones"
             description="Cuando recibas notificaciones importantes, las verás aquí."
           />

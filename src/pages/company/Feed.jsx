@@ -115,7 +115,7 @@ export default function Feed() {
             description="Tu feed mostrará publicaciones, noticias del sector y candidatos recomendados."
           />
         ) : (
-          items.map((item, index) => {
+          items.map((item) => {
             const post = item.payload;
             const isPost =
               item.content_type === FEED_CONTENT_TYPES.POST ||
@@ -125,7 +125,6 @@ export default function Feed() {
               <FeedItemRenderer
                 key={item.item_key ?? item.id}
                 item={item}
-                jobAccentIndex={index}
                 canManage={isPost && post?.author_id === user?.id}
                 onEdit={handleEdit}
                 onDelete={handleDelete}

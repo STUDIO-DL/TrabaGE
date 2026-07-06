@@ -47,11 +47,15 @@ function mapGlobalSearchRow(item, user) {
 }
 
 export const searchService = {
+  // The Home/global search is a people-and-organizations search only. Job
+  // offers are excluded by default (`includeJobs: false`) so the Empleos
+  // section stays the single place to search and explore vacancies.
   async globalSearch({
     query,
     limitPerType = GLOBAL_SEARCH_LIMIT_PER_TYPE,
     user,
     matchingContext = null,
+    includeJobs = false,
   }) {
     const trimmedQuery = query?.trim();
 
@@ -69,7 +73,9 @@ export const searchService = {
       return { data: [], error: null };
     }
 
-    let data = (rpcResult.data || []).map((item) => mapGlobalSearchRow(item, user));
+    let data = (rpcResult.data || [])
+      .map((item) => mapGlobalSearchRow(item, user))
+      .filter((item) => includeJobs || item.type !== 'job');
 
     if (matchingContext?.userProfile) {
       const jobIds = data.filter((item) => item.type === 'job').map((item) => item.id);

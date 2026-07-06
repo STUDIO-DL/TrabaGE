@@ -23,20 +23,22 @@ export function SkeletonText({ lines = 1, className = '' }) {
 
 export function JobCardSkeleton() {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm" aria-hidden="true">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <Skeleton className="h-11 w-11 shrink-0 rounded-xl" />
-        <Skeleton className="h-8 w-8 rounded-lg" />
-      </div>
-      <Skeleton className="mb-2 h-5 w-3/4" />
-      <Skeleton className="mb-4 h-4 w-1/2" />
-      <div className="space-y-2">
-        <Skeleton className="h-3.5 w-2/3" />
-        <Skeleton className="h-3.5 w-1/2" />
-        <Skeleton className="h-3.5 w-2/5" />
-      </div>
-      <div className="mt-4 flex justify-end">
-        <Skeleton className="h-4 w-24" />
+    <article className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm" aria-hidden="true">
+      <div className="flex gap-3">
+        <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+        <div className="min-w-0 flex-1">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="mt-2 h-3.5 w-1/2" />
+          <Skeleton className="mt-2 h-3 w-1/3" />
+          <div className="mt-2 flex gap-1.5">
+            <Skeleton className="h-5 w-16 rounded-md" />
+            <Skeleton className="h-5 w-20 rounded-md" />
+          </div>
+          <div className="mt-2.5 flex items-center justify-between">
+            <Skeleton className="h-3 w-20" />
+            <Skeleton className="h-7 w-24 rounded-lg" />
+          </div>
+        </div>
       </div>
     </article>
   );

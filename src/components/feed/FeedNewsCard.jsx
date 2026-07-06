@@ -1,5 +1,5 @@
 import Card from '../ui/Card';
-import { formatRelativeTime } from '../../utils/formatDate';
+import TimeAgo from '../common/TimeAgo';
 
 export default function FeedNewsCard({ article }) {
   if (!article) return null;
@@ -14,9 +14,10 @@ export default function FeedNewsCard({ article }) {
           <h3 className="mt-1 text-base font-semibold text-gray-900">{article.title}</h3>
           {article.source && <p className="mt-0.5 text-xs text-gray-500">{article.source}</p>}
         </div>
-        <span className="shrink-0 text-xs text-gray-400">
-          {formatRelativeTime(article.published_at)}
-        </span>
+        <TimeAgo
+          date={article.published_at}
+          className="shrink-0 text-xs text-gray-400"
+        />
       </div>
       {article.summary && <p className="text-sm text-gray-700">{article.summary}</p>}
       {externalUrl && (

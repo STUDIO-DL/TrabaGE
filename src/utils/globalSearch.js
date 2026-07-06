@@ -1,4 +1,6 @@
-export const SEARCH_ENTITY_ORDER = ['candidate', 'company', 'institution', 'job'];
+// Home/global search groups people and organizations only. Jobs are searched
+// exclusively from the Empleos section, so 'job' is intentionally excluded.
+export const SEARCH_ENTITY_ORDER = ['candidate', 'company', 'institution'];
 
 export const SEARCH_ENTITY_LABELS = {
   candidate: 'Personas',

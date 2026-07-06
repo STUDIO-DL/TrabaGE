@@ -55,17 +55,6 @@ export function scoreFeedItem(item, context = {}) {
   if (item.payload?.is_sponsored) score += 5;
 
   switch (item.content_type) {
-    case FEED_CONTENT_TYPES.JOB: {
-      const job = item.payload?.job ?? item.payload;
-      const companyId = item.payload?.company_id ?? job?.company_id;
-      if (followedCompanyIds.includes(companyId)) score += 30;
-      if (profile && job) {
-        const matchScore = item.payload?.match_score ?? calculateJobMatch(profile, job);
-        score += Math.min(40, matchScore * 0.4);
-      }
-      break;
-    }
-
     case FEED_CONTENT_TYPES.POST:
     case FEED_CONTENT_TYPES.ADVICE: {
       const post = item.payload;

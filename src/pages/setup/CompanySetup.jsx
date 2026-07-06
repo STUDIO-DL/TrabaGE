@@ -9,7 +9,7 @@ import { CITIES } from '../../constants/cities';
 import { ACCOUNT_KINDS } from '../../constants/accountKinds';
 import { SECTORS } from '../../constants/sectors';
 import { useAuth } from '../../hooks/useAuth';
-import { consumePendingOrgKind } from '../../services/auth.service';
+import { consumePendingOrgDetails, consumePendingOrgKind } from '../../services/auth.service';
 import { companyService } from '../../services/company.service';
 import { getOrgLabels } from '../../utils/orgLabels';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -23,13 +23,14 @@ export default function CompanySetup() {
   const navigate = useNavigate();
   const { user, refreshSetupStatus } = useAuth();
   const pendingOrgKind = consumePendingOrgKind();
+  const pendingOrgDetails = consumePendingOrgDetails();
   const orgLabels = getOrgLabels(null, pendingOrgKind);
   const [form, setForm] = useState({
-    company_name: '',
-    sector: '',
+    company_name: pendingOrgDetails.company_name || '',
+    sector: pendingOrgDetails.sector || '',
     description: '',
     city: '',
-    company_type: getDefaultCompanyType(pendingOrgKind),
+    company_type: pendingOrgDetails.company_type || getDefaultCompanyType(pendingOrgKind),
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

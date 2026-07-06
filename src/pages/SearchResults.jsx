@@ -135,7 +135,7 @@ export default function SearchResults() {
   return (
     <MobileScreenLayout header={<h1 className="truncate text-xl font-bold">Resultados para &quot;{query}&quot;</h1>}>
       {!query ? (
-        <p className="p-4 text-slate-500">Escribe algo para buscar personas, empresas o empleos.</p>
+        <p className="p-4 text-slate-500">Escribe algo para buscar personas, empresas o instituciones.</p>
       ) : (
         renderResults()
       )}

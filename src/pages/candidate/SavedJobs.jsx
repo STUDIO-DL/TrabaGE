@@ -37,11 +37,10 @@ export default function SavedJobs() {
             onAction={() => navigate('/candidate/jobs')}
           />
         ) : (
-          savedJobs.map((job, index) => (
+          savedJobs.map((job) => (
             <JobCard
               key={job.id}
               job={job}
-              accentIndex={index}
               saved={isSaved(job.id)}
               saving={actionLoadingId === job.id}
               onSaveToggle={() => handleRemove(job.id)}

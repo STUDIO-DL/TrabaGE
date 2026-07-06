@@ -1,5 +1,5 @@
 import Card from '../ui/Card';
-import { formatRelativeTime } from '../../utils/formatDate';
+import TimeAgo from '../common/TimeAgo';
 
 export default function FeedCourseCard({ course }) {
   if (!course) return null;
@@ -17,7 +17,7 @@ export default function FeedCourseCard({ course }) {
           <h3 className="mt-1 text-base font-semibold text-gray-900">{course.title}</h3>
           {course.provider && <p className="mt-0.5 text-xs text-gray-500">{course.provider}</p>}
         </div>
-        <span className="shrink-0 text-xs text-gray-400">{formatRelativeTime(course.created_at)}</span>
+        <TimeAgo date={course.created_at} className="shrink-0 text-xs text-gray-400" />
       </div>
       {tags.length > 0 && (
         <div className="mt-2 flex flex-wrap gap-1.5">

@@ -3,28 +3,19 @@ import FeedNewsCard from './FeedNewsCard';
 import FeedEventCard from './FeedEventCard';
 import FeedCourseCard from './FeedCourseCard';
 import FeedRecommendationCard from './FeedRecommendationCard';
-import JobCard from '../jobs/JobCard';
 import { FEED_CONTENT_TYPES } from '../../constants/feedContentTypes';
 
+// The Home feed is social/informational only. Job offers are intentionally not
+// rendered here — the entire vacancy experience lives in the Empleos section.
 export default function FeedItemRenderer({
   item,
   canManage = false,
   onEdit,
   onDelete,
-  jobAccentIndex = 0,
 }) {
   const post = item.payload;
 
   switch (item.content_type) {
-    case FEED_CONTENT_TYPES.JOB: {
-      const job = post?.job ?? post;
-      return (
-        <div className="mb-3">
-          <JobCard job={job} accentIndex={jobAccentIndex} />
-        </div>
-      );
-    }
-
     case FEED_CONTENT_TYPES.NEWS:
       return <FeedNewsCard article={post} />;
 

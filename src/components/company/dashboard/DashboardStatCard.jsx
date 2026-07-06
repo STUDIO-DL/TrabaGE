@@ -11,9 +11,9 @@ const ICON_STYLES = {
 
 export default function DashboardStatCard({ icon, tone = 'blue', value, label, linkLabel, to }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
-        <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${ICON_STYLES[tone]}`}>
+        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${ICON_STYLES[tone]}`}>
           <AppIcon icon={icon} size={ICON_SIZES.default} />
         </span>
         {to && (
@@ -26,7 +26,7 @@ export default function DashboardStatCard({ icon, tone = 'blue', value, label, l
           </Link>
         )}
       </div>
-      <p className="mt-5 text-3xl font-bold tracking-tight text-gray-900">{value}</p>
+      <p className="mt-4 text-2xl font-bold tracking-tight text-gray-900">{value}</p>
       <p className="mt-1 text-sm text-gray-500">{label}</p>
     </div>
   );

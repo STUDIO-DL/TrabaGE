@@ -99,7 +99,7 @@ export default function BottomNav() {
               }
             >
               <span className="relative">
-                <NavIcon name={icon} className="h-6 w-6" />
+                <NavIcon name={icon} className="h-[22px] w-[22px]" />
                 {showBadge && unreadCount > 0 && (
                   <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary-600 ring-2 ring-app-card" />
                 )}

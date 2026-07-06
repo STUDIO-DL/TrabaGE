@@ -34,7 +34,7 @@ export default function FeedHeader() {
 
         {showVerifiedBadge && <VerifiedBadge size="sm" className="shrink-0" />}
 
-        <GlobalSearch placeholder="Buscar personas, empresas, empleos…" />
+        <GlobalSearch placeholder="Buscar personas, empresas, instituciones…" />
       </div>
     </header>
   );

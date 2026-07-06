@@ -42,11 +42,11 @@ export default function Feed() {
           <EmptyState
             image={NoPosts}
             title="No hay contenido"
-            description="Tu feed mostrará ofertas, publicaciones, noticias y recomendaciones según tu perfil."
+            description="Tu feed mostrará publicaciones, noticias y recomendaciones según tu perfil."
           />
         ) : (
-          items.map((item, index) => (
-            <FeedItemRenderer key={item.item_key ?? item.id} item={item} jobAccentIndex={index} />
+          items.map((item) => (
+            <FeedItemRenderer key={item.item_key ?? item.id} item={item} />
           ))
         )}
         {loadingMore && <PostListSkeleton count={1} />}

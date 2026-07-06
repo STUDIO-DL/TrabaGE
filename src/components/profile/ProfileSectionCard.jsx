@@ -47,7 +47,7 @@ export default function ProfileSectionCard({
   if (isEmpty && !isOwn) return null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+    <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           {icon && (
@@ -112,12 +112,12 @@ export function ProfileEntryRow({
     <div className="flex gap-3 border-b border-gray-100 py-4 first:pt-0 last:border-0 last:pb-0">
       {entryIcon ? (
         <span
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg ring-1 ${toneClass}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ring-1 ${toneClass}`}
         >
           <AppIcon icon={entryIcon} size={ICON_SIZES.lg} />
         </span>
       ) : (
-        <div className="h-12 w-12 shrink-0 rounded-lg bg-gray-100" aria-hidden />
+        <div className="h-11 w-11 shrink-0 rounded-lg bg-gray-100" aria-hidden />
       )}
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-gray-900">{title || '—'}</p>

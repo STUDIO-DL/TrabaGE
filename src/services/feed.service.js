@@ -14,8 +14,12 @@ import { followsService, FOLLOWS_TARGET } from './follows.service';
 import { profileService } from './profile.service';
 import { dedupeFeedItems } from '../utils/feedRanking';
 
-const JOB_SELECT =
-  '*, company_profiles(company_name, logo_path, is_verified, verification_status, sector, city)';
+// The Home (Inicio) feed is purely social/informational. Job offers live
+// exclusively in the Empleos section, so we strip any job items that a data
+// source might return before they reach the feed.
+function excludeJobItems(items) {
+  return (items ?? []).filter((item) => item?.content_type !== FEED_CONTENT_TYPES.JOB);
+}
 
 async function fetchFeedPool(userId, role, { limit = FEED_PAGE_SIZE, offset = 0 } = {}) {
   const { data, error } = await supabase.rpc('get_personalized_feed', {
@@ -25,7 +29,7 @@ async function fetchFeedPool(userId, role, { limit = FEED_PAGE_SIZE, offset = 0 
     p_offset: offset,
   });
 
-  if (!error) return { data: data ?? [], error: null };
+  if (!error) return { data: excludeJobItems(data), error: null };
 
   return fetchFeedPoolFallback(userId, role, { limit, offset });
 }
@@ -41,23 +45,8 @@ async function fetchFeedPoolFallback(userId, role, { limit, offset }) {
       .range(offset, offset + poolSize - 1),
   ];
 
-  if (role === ROLES.CANDIDATE && userId) {
-    queries.push(
-      supabase.rpc('get_ranked_jobs_for_candidate', {
-        p_user_id: userId,
-        p_limit: poolSize,
-        p_min_score: 1,
-      }),
-    );
-    queries.push(
-      supabase
-        .from('news_articles')
-        .select('*')
-        .eq('is_active', true)
-        .order('published_at', { ascending: false })
-        .range(Math.floor(offset / 2), Math.floor(offset / 2) + Math.floor(poolSize / 2) - 1),
-    );
-  } else if (role === ROLES.COMPANY) {
+  // Home feed only mixes social posts and informational news — never jobs.
+  if (role === ROLES.CANDIDATE || role === ROLES.COMPANY) {
     queries.push(
       supabase
         .from('news_articles')
@@ -80,43 +69,14 @@ async function fetchFeedPoolFallback(userId, role, { limit, offset }) {
     payload: post,
   }));
 
-  if (role === ROLES.CANDIDATE && results[1]?.data?.length) {
-    const jobIds = results[1].data.map((row) => row.job_id);
-    const { data: jobs } = await supabase.from('jobs').select(JOB_SELECT).in('id', jobIds);
-    const jobMap = new Map((jobs ?? []).map((job) => [job.id, job]));
-
-    results[1].data.forEach((row) => {
-      const job = jobMap.get(row.job_id);
-      if (!job) return;
-      items.push({
-        item_key: `job:${job.id}`,
-        content_type: FEED_CONTENT_TYPES.JOB,
-        relevance_score: row.score,
-        sort_at: job.created_at,
-        payload: { job, match_score: row.score, company_id: job.company_id },
-      });
-    });
-  }
-
-  if (role === ROLES.CANDIDATE && results[2]?.data?.length) {
-    results[2].data.forEach((article) => {
+  const newsResult = results[1];
+  if (newsResult?.data?.length) {
+    const newsScore = role === ROLES.CANDIDATE ? 15 : 14;
+    newsResult.data.forEach((article) => {
       items.push({
         item_key: `news:${article.id}`,
         content_type: FEED_CONTENT_TYPES.NEWS,
-        relevance_score: 15,
-        sort_at: article.published_at,
-        payload: article,
-      });
-    });
-  }
-
-  const newsResultIndex = role === ROLES.CANDIDATE ? 2 : 1;
-  if (role === ROLES.COMPANY && results[newsResultIndex]?.data?.length) {
-    results[newsResultIndex].data.forEach((article) => {
-      items.push({
-        item_key: `news:${article.id}`,
-        content_type: FEED_CONTENT_TYPES.NEWS,
-        relevance_score: 14,
+        relevance_score: newsScore,
         sort_at: article.published_at,
         payload: article,
       });
@@ -176,24 +136,6 @@ async function enrichPosts(posts, user) {
   });
 
   return enriched;
-}
-
-async function enrichJobs(jobPayloads) {
-  const missingIds = jobPayloads
-    .filter((entry) => !entry.job?.company_profiles)
-    .map((entry) => entry.job?.id ?? entry.id)
-    .filter(Boolean);
-
-  if (!missingIds.length) return jobPayloads;
-
-  const { data: jobs } = await supabase.from('jobs').select(JOB_SELECT).in('id', missingIds);
-  const jobMap = new Map((jobs ?? []).map((job) => [job.id, job]));
-
-  return jobPayloads.map((entry) => {
-    const jobId = entry.job?.id ?? entry.id;
-    const job = jobMap.get(jobId) ?? entry.job ?? entry;
-    return { job, match_score: entry.match_score, company_id: job.company_id };
-  });
 }
 
 async function enrichRecommendationCards(items) {
@@ -354,32 +296,21 @@ export const feedService = {
       .filter((item) => item.content_type === FEED_CONTENT_TYPES.POST || item.content_type === FEED_CONTENT_TYPES.ADVICE)
       .map((item) => item.payload);
 
-    const jobPayloads = items
-      .filter((item) => item.content_type === FEED_CONTENT_TYPES.JOB)
-      .map((item) => item.payload);
-
     const recommendationItems = items.filter(
       (item) => item.content_type === FEED_CONTENT_TYPES.RECOMMENDATION_CARD,
     );
 
-    const [enrichedPosts, enrichedJobs, enrichedRecommendations] = await Promise.all([
+    const [enrichedPosts, enrichedRecommendations] = await Promise.all([
       enrichPosts(postPayloads, { ...user, role }),
-      enrichJobs(jobPayloads),
       enrichRecommendationCards(recommendationItems),
     ]);
 
-    const jobMap = new Map(enrichedJobs.map((entry, index) => [jobPayloads[index]?.job?.id ?? jobPayloads[index]?.id, entry]));
     const recMap = new Map(enrichedRecommendations.map((item) => [item.item_key, item]));
 
     return items.map((item) => {
       if (item.content_type === FEED_CONTENT_TYPES.POST || item.content_type === FEED_CONTENT_TYPES.ADVICE) {
         const postId = item.payload?.id;
         return { ...item, payload: enrichedPosts.get(postId) ?? item.payload };
-      }
-      if (item.content_type === FEED_CONTENT_TYPES.JOB) {
-        const jobId = item.payload?.job?.id ?? item.payload?.id;
-        const enriched = jobMap.get(jobId);
-        return enriched ? { ...item, payload: enriched } : item;
       }
       if (item.content_type === FEED_CONTENT_TYPES.RECOMMENDATION_CARD) {
         return recMap.get(item.item_key) ?? item;

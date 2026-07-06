@@ -12,7 +12,7 @@ export default function Textarea({ label, error, className = '', id, rows = 4, .
         id={inputId}
         rows={rows}
         className={[
-          'w-full resize-y rounded-xl border bg-app-card px-4 py-2.5 text-sm text-app-text outline-none transition-colors placeholder:text-app-muted/70',
+          'w-full resize-y rounded-xl border bg-app-card px-3.5 py-2 text-sm text-app-text outline-none transition-colors placeholder:text-app-muted/70',
           'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
           error ? 'border-red-500' : 'border-app-border',
         ].join(' ')}
