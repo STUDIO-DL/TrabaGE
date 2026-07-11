@@ -1,16 +1,16 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { LEGAL_DATE, LEGAL_SUPPORT_EMAIL, LEGAL_VERSION } from '../../constants/legalRoutes';
+import { LEGAL_DATE, LEGAL_VERSION } from '../../constants/legalRoutes';
 import { LegalArticle, LegalTableOfContents } from './LegalContent';
-import { LegalFooterLinks } from './LegalLinks';
+import LegalBrandFooter from './LegalBrandFooter';
 
 export default function LegalDocumentLayout({
   pageTitle,
   intro,
   articles,
   finalArticles = [],
-  finalPartTitle = 'Disposiciones Finales',
+  finalPartTitle = null,
   relatedLink,
 }) {
   useEffect(() => {
@@ -79,9 +79,11 @@ export default function LegalDocumentLayout({
 
           {finalArticles.length > 0 ? (
             <>
-              <div className="border-b border-slate-100 py-5 dark:border-slate-800">
-                <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">{finalPartTitle}</h2>
-              </div>
+              {finalPartTitle ? (
+                <div className="border-b border-slate-100 py-5 dark:border-slate-800">
+                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">{finalPartTitle}</h2>
+                </div>
+              ) : null}
               {finalArticles.map((article) => (
                 <LegalArticle key={article.id} article={article} />
               ))}
@@ -89,25 +91,7 @@ export default function LegalDocumentLayout({
           ) : null}
         </article>
 
-        <footer className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-center dark:border-slate-800 dark:bg-slate-900/50">
-          <p className="text-xs font-medium text-slate-900 dark:text-slate-50">
-            TrabaGE © 2026 — Todos los derechos reservados
-          </p>
-          <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">
-            <a
-              href={`mailto:${LEGAL_SUPPORT_EMAIL}`}
-              className="font-medium text-primary-600 hover:text-primary-700"
-            >
-              {LEGAL_SUPPORT_EMAIL}
-            </a>
-          </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Versión {LEGAL_VERSION} — {LEGAL_DATE}
-          </p>
-          <div className="mt-6">
-            <LegalFooterLinks />
-          </div>
-        </footer>
+        <LegalBrandFooter />
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
+import ZarrelCredit from '../branding/ZarrelCredit';
 import { ICON_SIZES } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { ADMIN_LOGOUT_ITEM, ADMIN_NAV_ITEMS } from './adminNav';
@@ -68,6 +69,13 @@ export default function AdminSidebar({ onNavigate, className = '' }) {
           <AppIcon icon={ADMIN_LOGOUT_ITEM.icon} size={ICON_SIZES.default} className="text-slate-400" />
           {ADMIN_LOGOUT_ITEM.label}
         </button>
+        <div className="mt-3 flex justify-center px-2 pb-1">
+          <ZarrelCredit
+            variant="powered"
+            className="!text-slate-500"
+            linkClassName="!text-slate-400 !decoration-slate-600 hover:!text-slate-300"
+          />
+        </div>
       </div>
     </aside>
   );

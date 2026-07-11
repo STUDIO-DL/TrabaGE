@@ -7,6 +7,7 @@ import Spinner from '../../components/ui/Spinner';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import AccountTypeCards from '../../components/auth/AccountTypeCards';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
+import ZarrelCredit from '../../components/branding/ZarrelCredit';
 import { LegalInlineLink } from '../../components/legal/LegalLinks';
 import { CITIES } from '../../constants/cities';
 import {
@@ -335,6 +336,9 @@ export default function Register() {
               He verificado mi correo
             </Link>
           </div>
+          <div className="mt-8 flex justify-center">
+            <ZarrelCredit variant="developed" />
+          </div>
         </div>
       </div>
     );
@@ -556,6 +560,10 @@ export default function Register() {
                 </p>
               </>
             )}
+          </div>
+
+          <div className="mt-8 flex justify-center">
+            <ZarrelCredit variant="developed" />
           </div>
         </div>
       </div>

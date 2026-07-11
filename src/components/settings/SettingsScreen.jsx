@@ -10,6 +10,7 @@ import {
   FileText,
   Globe,
   Headphones,
+  Info,
   LogOut,
   Mail,
   ShieldCheck,
@@ -21,6 +22,7 @@ import {
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
 import { ROLES } from '../../constants/roles';
 import { SUPPORT_EMAIL } from '../../constants/support';
+import { APP_VERSION } from '../../constants/zarrel';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
@@ -136,10 +138,6 @@ export default function SettingsScreen({ accountType }) {
     [isCompany],
   );
 
-  const showComingSoon = (label) => {
-    showToast(`${label} estará disponible próximamente.`, 'info');
-  };
-
   const handleSupport = () => {
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=Soporte%20TrabaGE`;
   };
@@ -222,7 +220,14 @@ export default function SettingsScreen({ accountType }) {
               <SettingsRow
                 icon={Globe}
                 title="Acerca de TrabaGE"
-                onClick={() => showComingSoon('Acerca de TrabaGE')}
+                to="/about"
+              />
+              <Divider />
+              <SettingsRow
+                icon={Info}
+                title="Información de la app"
+                subtitle={`Versión ${APP_VERSION}`}
+                to="/app-info"
               />
             </SectionCard>
 

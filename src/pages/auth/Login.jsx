@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
+import ZarrelCredit from '../../components/branding/ZarrelCredit';
 import { LegalFooterLinks } from '../../components/legal/LegalLinks';
 import { clearPreviewMode } from '../../constants/preview';
 import { useAuth } from '../../hooks/useAuth';
@@ -304,6 +305,9 @@ function LoginScreen({
               <br />
               TrabaGE es tu plataforma de oportunidades.
             </p>
+          </div>
+          <div className="flex justify-center pt-1">
+            <ZarrelCredit variant="developed" />
           </div>
         </div>
       </div>

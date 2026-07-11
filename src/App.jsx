@@ -64,6 +64,9 @@ const DemoCompanyEntry = lazy(() => import('./pages/demo/DemoCompanyEntry'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const PrivacyPolicy = lazy(() => import('./pages/shared/PrivacyPolicy'));
 const TermsOfUse = lazy(() => import('./pages/shared/TermsOfUse'));
+const About = lazy(() => import('./pages/shared/About'));
+const AppInfo = lazy(() => import('./pages/shared/AppInfo'));
+const Maintenance = lazy(() => import('./pages/shared/Maintenance'));
 const NotFound = lazy(() => import('./pages/shared/NotFound'));
 
 function AppToasts() {
@@ -156,6 +159,9 @@ function AppRoutes() {
             <Route path="/feed/post/:postId" element={<PostDetail />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfUse />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/app-info" element={<AppInfo />} />
+            <Route path="/maintenance" element={<Maintenance />} />
             <Route path="/legal/privacy" element={<Navigate to="/privacy" replace />} />
             <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
             <Route path="/legal/help" element={<HelpCenter />} />

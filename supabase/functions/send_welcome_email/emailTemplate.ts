@@ -14,6 +14,8 @@ const TEXT_PRIMARY = '#0f172a';
 const TEXT_MUTED = '#64748b';
 const BORDER = '#e2e8f0';
 const APP_URL = 'https://trabage.org';
+const ZARREL_URL = 'https://zarrel.org';
+const ZARREL_NAME = 'ZARREL';
 
 const BULLET_ITEMS = [
   'Crear y completar tu perfil.',
@@ -108,7 +110,11 @@ export function buildWelcomeEmailHtml(userName?: string | null) {
           <tr>
             <td style="padding:24px 32px;background:#f8fafc;border-top:1px solid ${BORDER};">
               <p style="margin:0 0 4px;font-size:12px;line-height:1.5;color:${TEXT_MUTED};text-align:center;">&copy; TrabaGE</p>
-              <p style="margin:0;font-size:12px;line-height:1.5;color:${TEXT_MUTED};text-align:center;">Todos los derechos reservados.</p>
+              <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:${TEXT_MUTED};text-align:center;">Todos los derechos reservados.</p>
+              <p style="margin:0;font-size:11px;line-height:1.5;color:${TEXT_MUTED};text-align:center;">
+                Developed by
+                <a href="${ZARREL_URL}" target="_blank" rel="noopener noreferrer" style="color:${TEXT_MUTED};text-decoration:underline;">${ZARREL_NAME}</a>
+              </p>
             </td>
           </tr>
         </table>
@@ -144,5 +150,6 @@ El equipo de TrabaGE.
 
 ---
 © TrabaGE
-Todos los derechos reservados.`;
+Todos los derechos reservados.
+Developed by ${ZARREL_NAME} — ${ZARREL_URL}`;
 }

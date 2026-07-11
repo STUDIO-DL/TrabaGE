@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ZarrelCredit from '../components/branding/ZarrelCredit';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import EquatorialGuineaMap from '../components/splash/EquatorialGuineaMap';
 import TrabaGEWordmark from '../components/splash/TrabaGEWordmark';
@@ -72,6 +73,12 @@ export default function SplashScreen() {
       contentClassName="items-center justify-center px-md"
       noScroll
       className="bg-white"
+      footerClassName="!border-0 !bg-transparent !pt-0"
+      footer={
+        <div className="flex justify-center pb-1">
+          <ZarrelCredit variant="developed" className="splash-tagline-in" />
+        </div>
+      }
     >
       <div className="flex flex-col items-center text-center">
         <TrabaGEWordmark className="splash-logo-in h-10 w-auto sm:h-11" />

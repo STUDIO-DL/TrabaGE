@@ -1,294 +1,295 @@
-/** Política de Privacidad — TrabaGE (documento completo y autónomo) */
+/** Política de Privacidad — TrabaGE v2.0 (formato Q&A) */
 
 export const PRIVACY_INTRO = {
   part: '',
   title: 'Política de Privacidad',
   subtitle:
-    'Información sobre cómo TrabaGE recopila, utiliza, comparte y protege los datos personales de sus usuarios.',
+    'Explicamos de forma clara qué datos usamos, para qué, cómo los protegemos y qué control tienes sobre ellos.',
 };
 
 export const PRIVACY_ARTICLES = [
   {
-    id: 'article-1',
-    title: 'Artículo 1. Marco Legal y Principios Generales',
+    id: 'que-informacion-recopilamos',
+    title: '¿Qué información recopilamos?',
     blocks: [
       {
         type: 'p',
-        text: '1.1. TrabaGE está comprometida con la protección de la privacidad y los datos personales de sus usuarios. La presente Política de Privacidad describe qué información recopilamos, cómo la utilizamos, con quién la compartimos y qué derechos asisten a los usuarios en relación con sus datos.',
+        text: 'Recopilamos la información necesaria para que TrabaGE funcione como plataforma de empleo y networking profesional.',
       },
       {
         type: 'p',
-        text: '1.2. El tratamiento de datos personales se realiza conforme a los principios de licitud, lealtad y transparencia; limitación de la finalidad; minimización de datos; exactitud; limitación del plazo de conservación; integridad y confidencialidad; y responsabilidad proactiva.',
+        text: 'Datos que nos facilitas:',
+      },
+      {
+        type: 'ul',
+        items: [
+          'Candidatos: nombre, correo, teléfono, fecha de nacimiento, foto de perfil y portada, headline, biografía, experiencia, formación, habilidades, idiomas, certificados, CV y preferencias laborales.',
+          'Empresas e instituciones: nombre o razón social, datos del representante, sector, descripción, logo, portada, documentación de verificación (si la solicitas) y formularios de postulación personalizados.',
+          'Postulaciones: respuestas y archivos que envías al aplicar a una oferta.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'Datos generados por el uso del servicio:',
+      },
+      {
+        type: 'ul',
+        items: [
+          'Datos técnicos: IP, tipo de navegador o sistema operativo e identificadores de dispositivo.',
+          'Datos de uso: páginas visitadas, búsquedas, postulaciones, follows, publicaciones y duración de sesión.',
+          'Notificaciones: registros de envío y recepción de avisos push.',
+          'Diagnóstico: errores y métricas de rendimiento (por ejemplo, a través de Sentry), configurados para minimizar datos identificables.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'Datos de terceros: si inicias sesión con Google, recibimos el nombre, correo y foto de perfil que Google nos autoriza a obtener.',
       },
     ],
   },
   {
-    id: 'article-2',
-    title: 'Artículo 2. Datos Personales Recopilados',
+    id: 'por-que-utilizamos-esta-informacion',
+    title: '¿Por qué utilizamos esta información?',
     blocks: [
-      { type: 'p', text: '2.1. TrabaGE recopila los siguientes tipos de datos personales:' },
-      { type: 'p', text: '2.1.1. Datos proporcionados directamente por el usuario' },
       {
-        type: 'ul',
-        items: [
-          'Candidatos: nombre y apellidos, dirección de correo electrónico, número de teléfono, fecha de nacimiento, fotografía de perfil, imagen de portada, headline profesional, biografía, experiencia laboral, formación académica, habilidades, idiomas, certificados, CV y documentos adjuntos, y preferencias laborales.',
-          'Empresas: nombre o razón social, datos de contacto del representante, sector de actividad, descripción de la empresa, logotipo, imagen de portada, documentación acreditativa de existencia legal (en caso de verificación) y formularios de postulación personalizados.',
-          'Datos de formularios de postulación: toda la información que el candidato proporcione al completar un formulario personalizado de una empresa, incluyendo respuestas a preguntas abiertas y archivos adjuntos.',
-        ],
+        type: 'p',
+        text: 'Usamos tus datos para:',
       },
-      { type: 'p', text: '2.1.2. Datos generados automáticamente por el uso del servicio' },
       {
         type: 'ul',
         items: [
-          'Datos técnicos: dirección IP, tipo y versión de navegador o sistema operativo, identificadores de dispositivo.',
-          'Datos de uso: páginas visitadas, funcionalidades utilizadas, búsquedas realizadas, postulaciones enviadas, empresas seguidas, publicaciones creadas, tiempo de sesión.',
-          'Datos de comunicación: registros de notificaciones push enviadas y recibidas.',
-          'Datos de diagnóstico: registros de errores y datos de rendimiento recopilados por herramientas de monitorización.',
-        ],
-      },
-      { type: 'p', text: '2.1.3. Datos recibidos de servicios de terceros' },
-      {
-        type: 'ul',
-        items: [
-          'Google OAuth: cuando el usuario inicia sesión mediante su cuenta de Google, TrabaGE recibe de Google el nombre, la dirección de correo electrónico y la fotografía de perfil asociados a esa cuenta de Google, en los términos autorizados por el usuario en el momento de la autenticación.',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'article-3',
-    title: 'Artículo 3. Finalidades y Base Jurídica del Tratamiento',
-    blocks: [
-      { type: 'p', text: '3.1. TrabaGE trata los datos personales para las siguientes finalidades y con las correspondientes bases jurídicas:' },
-      {
-        type: 'ul',
-        items: [
-          'Prestación del servicio: gestión de cuentas, perfiles, postulaciones, verificación de usuarios y empresas. Base jurídica: ejecución del contrato con el usuario.',
-          'Transmisión de postulaciones: envío del perfil y documentación del candidato a la empresa destinataria. Base jurídica: ejecución del contrato y consentimiento expreso del candidato al postularse.',
-          'Notificaciones: envío de notificaciones sobre actividad de cuenta, actualizaciones de postulaciones, nuevas ofertas y alertas relevantes. Base jurídica: ejecución del contrato e interés legítimo.',
-          'Mejora del servicio: análisis del uso de la Plataforma para identificar áreas de mejora y optimizar la experiencia de usuario. Base jurídica: interés legítimo de TrabaGE.',
-          'Seguridad y prevención del fraude: detección, investigación y prevención de actividades ilícitas y usos indebidos. Base jurídica: interés legítimo y cumplimiento de obligaciones legales.',
-          'Cumplimiento legal: respuesta a requerimientos de autoridades competentes y cumplimiento de obligaciones normativas. Base jurídica: cumplimiento de una obligación legal.',
-          'Comunicaciones comerciales: información sobre nuevas funcionalidades, servicios u otras novedades. Base jurídica: consentimiento del usuario cuando sea exigido, o interés legítimo en caso contrario.',
+          'Crear y gestionar tu cuenta, perfil y preferencias.',
+          'Permitir postulaciones y transmitir tu perfil y documentos a la empresa a la que aplicas.',
+          'Enviar notificaciones relevantes (estado de postulaciones, ofertas, seguridad).',
+          'Mejorar el producto y la experiencia de uso.',
+          'Detectar fraude, abuso y usos indebidos.',
+          'Cumplir obligaciones legales cuando corresponda.',
+          'Informarte de novedades del servicio, cuando la normativa lo permita o hayas dado tu consentimiento.',
         ],
       },
     ],
   },
   {
-    id: 'article-4',
-    title: 'Artículo 4. Almacenamiento: Supabase y Servicios en la Nube',
+    id: 'como-protegemos-tus-datos',
+    title: '¿Cómo protegemos tus datos?',
     blocks: [
       {
         type: 'p',
-        text: '4.1. TrabaGE utiliza Supabase como plataforma principal para la autenticación, almacenamiento y gestión de datos. Los servicios de Supabase empleados incluyen Supabase Auth, Supabase Database (PostgreSQL) y Supabase Storage.',
+        text: 'Aplicamos medidas técnicas y organizativas habituales en plataformas modernas:',
       },
-      {
-        type: 'p',
-        text: '4.2. Los datos almacenados a través de Supabase pueden procesarse en centros de datos ubicados fuera de Guinea Ecuatorial, según la configuración de región seleccionada por TrabaGE. TrabaGE se asegura de que dichas transferencias internacionales se realizan con las garantías adecuadas conforme a la normativa aplicable.',
-      },
-      {
-        type: 'p',
-        text: '4.3. Para información detallada sobre las prácticas de privacidad de Supabase, el usuario puede consultar la Política de Privacidad disponible en https://supabase.com/privacy.',
-      },
-    ],
-  },
-  {
-    id: 'article-5',
-    title: 'Artículo 5. Autenticación con Google OAuth',
-    blocks: [
-      {
-        type: 'p',
-        text: '5.1. TrabaGE ofrece la posibilidad de registrarse e iniciar sesión mediante Google OAuth, un servicio de autenticación de Google LLC. Al utilizar esta funcionalidad, el usuario autoriza a Google a compartir con TrabaGE determinada información de su perfil de Google, según los permisos que el propio usuario apruebe durante el proceso de autenticación.',
-      },
-      {
-        type: 'p',
-        text: '5.2. Los datos recibidos de Google a través de OAuth se utilizan exclusivamente para crear y gestionar la cuenta del usuario en TrabaGE y no se comparten con terceros más allá de lo descrito en esta Política de Privacidad.',
-      },
-      {
-        type: 'p',
-        text: '5.3. Para información sobre cómo Google trata los datos del usuario, puede consultarse la Política de Privacidad de Google en https://policies.google.com/privacy.',
-      },
-    ],
-  },
-  {
-    id: 'article-6',
-    title: 'Artículo 6. Monitorización Técnica: Sentry y Herramientas de Diagnóstico',
-    blocks: [
-      {
-        type: 'p',
-        text: '6.1. TrabaGE utiliza Sentry (Functional Software, Inc.) para la monitorización de errores técnicos, detección de fallos y mejora de la estabilidad de la Plataforma. Sentry puede recopilar datos técnicos como registros de errores, seguimientos de pila (stack traces), identificadores de sesión anónimos e información sobre el entorno del dispositivo.',
-      },
-      {
-        type: 'p',
-        text: '6.2. TrabaGE configura Sentry para minimizar la recogida de datos personales identificables. Para más información sobre las prácticas de privacidad de Sentry, puede consultarse https://sentry.io/privacy/.',
-      },
-    ],
-  },
-  {
-    id: 'article-7',
-    title: 'Artículo 7. Notificaciones Push',
-    blocks: [
-      {
-        type: 'p',
-        text: '7.1. TrabaGE podrá enviar notificaciones push a los dispositivos de los usuarios a través de proveedores de servicios de mensajería como OneSignal u otros servicios equivalentes.',
-      },
-      {
-        type: 'p',
-        text: '7.2. Las notificaciones push podrán incluir: información sobre nuevas ofertas de empleo relevantes, actualizaciones sobre el estado de las postulaciones, selección del candidato para avanzar en un proceso, alertas de actividad en la cuenta y comunicaciones de seguridad del servicio.',
-      },
-      {
-        type: 'p',
-        text: '7.3. El usuario puede gestionar sus preferencias de notificación en cualquier momento desde la configuración de su cuenta en la Plataforma o desde la configuración de notificaciones de su dispositivo. La desactivación de notificaciones no afectará al acceso a las funcionalidades principales de la Plataforma.',
-      },
-    ],
-  },
-  {
-    id: 'article-8',
-    title: 'Artículo 8. Cookies y Tecnologías Similares',
-    blocks: [
-      {
-        type: 'p',
-        text: '8.1. TrabaGE utiliza cookies y tecnologías similares (como almacenamiento local, balizas web o identificadores de sesión) para garantizar el correcto funcionamiento de la Plataforma, mejorar la experiencia del usuario y obtener información analítica sobre el uso del servicio.',
-      },
-      { type: 'p', text: '8.2. Las cookies utilizadas por TrabaGE se clasifican en:' },
       {
         type: 'ul',
         items: [
-          'Cookies estrictamente necesarias: imprescindibles para el funcionamiento básico de la Plataforma, incluyendo la autenticación y la seguridad de sesión. No requieren consentimiento del usuario.',
-          'Cookies de análisis y rendimiento: permiten medir el tráfico, el comportamiento de los usuarios y la eficacia del servicio. Requieren consentimiento cuando así lo exija la normativa aplicable.',
-          'Cookies de funcionalidad: recuerdan las preferencias del usuario para personalizar su experiencia.',
+          'Cifrado en tránsito (HTTPS/TLS).',
+          'Autenticación y gestión de sesiones a través de Supabase Auth.',
+          'Control de acceso por roles (incluyendo Row Level Security en base de datos).',
+          'Infraestructura en la nube con prácticas de seguridad reconocidas.',
+          'Revisión periódica de controles de seguridad.',
         ],
       },
       {
         type: 'p',
-        text: '8.3. El usuario puede configurar su navegador para bloquear o eliminar cookies, si bien ello podrá afectar la disponibilidad o correcto funcionamiento de determinadas funcionalidades de la Plataforma.',
+        text: 'Ningún sistema es 100 % invulnerable. Si detectáramos una brecha que afecte a datos personales, informaríamos según la normativa aplicable.',
       },
     ],
   },
   {
-    id: 'article-9',
-    title: 'Artículo 9. Compartición de Datos con Terceros',
+    id: 'compartimos-tus-datos',
+    title: '¿Compartimos tus datos?',
     blocks: [
       {
         type: 'p',
-        text: '9.1. TrabaGE no vende, alquila ni cede datos personales de los usuarios a terceros con fines comerciales propios de esos terceros.',
+        text: 'No vendemos ni alquilamos tus datos personales.',
       },
-      { type: 'p', text: '9.2. TrabaGE puede compartir datos personales únicamente en los siguientes supuestos:' },
+      {
+        type: 'p',
+        text: 'Podemos compartir información solo en estos casos:',
+      },
       {
         type: 'ul',
         items: [
-          'Con empresas que publican ofertas: al producirse una postulación, la información del perfil del candidato, los datos del formulario de postulación y los documentos adjuntos son transmitidos a la empresa destinataria. El candidato acepta esta transmisión al realizar la postulación. Tras la transmisión, la empresa actúa como responsable independiente del tratamiento de esos datos.',
-          'Con proveedores de servicios tecnológicos: proveedores que prestan servicios de infraestructura, autenticación, almacenamiento, analítica, monitorización o comunicaciones en nombre de TrabaGE (incluyendo Supabase, Google LLC, Sentry, OneSignal). Estos proveedores actúan como encargados del tratamiento y están sujetos a obligaciones de confidencialidad y seguridad.',
-          'Por requerimiento legal: cuando sea necesario para cumplir con obligaciones legales, órdenes judiciales o requerimientos de autoridades competentes.',
-          'En procesos corporativos: en caso de fusión, adquisición, reorganización o venta de activos de TrabaGE, los datos podrán transferirse al sucesor o adquirente, que quedará obligado por esta Política de Privacidad.',
+          'Con empresas a las que te postulas: al aplicar, compartes tu perfil, respuestas del formulario y documentos adjuntos con esa empresa. Ella pasa a tratar esos datos como responsable independiente.',
+          'Con proveedores tecnológicos que nos ayudan a operar el servicio (autenticación, almacenamiento, push, diagnóstico), bajo obligaciones de confidencialidad y seguridad.',
+          'Cuando la ley o una autoridad competente lo exija.',
+          'En una fusión, adquisición u operación corporativa similar, con el sucesor obligado por esta política.',
         ],
       },
     ],
   },
   {
-    id: 'article-10',
-    title: 'Artículo 10. Integraciones con Servicios de Terceros',
+    id: 'proveedores-externos',
+    title: '¿Qué ocurre cuando usamos proveedores externos?',
     blocks: [
       {
         type: 'p',
-        text: '10.1. TrabaGE podrá integrar en el futuro funcionalidades o servicios de terceros, como herramientas de pago, servicios de análisis avanzado, plataformas de comunicación, sistemas de inteligencia artificial para recomendación de empleo u otras integraciones que mejoren la experiencia del usuario.',
+        text: 'TrabaGE se apoya en proveedores especializados para ofrecer un servicio estable y seguro:',
       },
-      {
-        type: 'p',
-        text: '10.2. Cuando se introduzcan nuevas integraciones que impliquen tratamiento de datos personales, TrabaGE informará a los usuarios con antelación razonable y actualizará la presente Política de Privacidad.',
-      },
-      {
-        type: 'p',
-        text: '10.3. Los servicios de terceros integrados tienen sus propias políticas de privacidad, cuya consulta se recomienda al usuario. TrabaGE no es responsable de las prácticas de privacidad de terceros.',
-      },
-    ],
-  },
-  {
-    id: 'article-11',
-    title: 'Artículo 11. Conservación de los Datos',
-    blocks: [
-      {
-        type: 'p',
-        text: '11.1. TrabaGE conservará los datos personales durante el tiempo necesario para el cumplimiento de las finalidades para las que fueron recogidos y, en todo caso, durante los plazos legalmente exigidos en la jurisdicción aplicable.',
-      },
-      { type: 'p', text: '11.2. Tras la eliminación de una cuenta, TrabaGE podrá conservar determinados datos durante un periodo adicional para:' },
       {
         type: 'ul',
         items: [
-          'Cumplimiento de obligaciones legales, fiscales o contables.',
-          'Prevención del fraude y seguridad de la Plataforma.',
-          'Resolución de disputas pendientes.',
+          'Supabase: autenticación, base de datos y almacenamiento. Más info: https://supabase.com/privacy',
+          'Google OAuth: inicio de sesión con Google. Más info: https://policies.google.com/privacy',
+          'OneSignal (u equivalente): notificaciones push.',
+          'Sentry: monitorización de errores técnicos. Más info: https://sentry.io/privacy/',
         ],
       },
       {
         type: 'p',
-        text: '11.3. Los datos conservados exclusivamente para los fines anteriores serán tratados de forma restringida y no serán utilizados para ninguna otra finalidad.',
-      },
-      {
-        type: 'p',
-        text: '11.4. Las postulaciones transmitidas a empresas destinatarias son tratadas por estas como responsables independientes del tratamiento. El candidato deberá dirigirse directamente a la empresa para solicitar la eliminación de dichos datos.',
+        text: 'Estos proveedores actúan como encargados del tratamiento o según su propio rol legal. Si añadimos nuevas integraciones relevantes, actualizaremos esta política.',
       },
     ],
   },
   {
-    id: 'article-12',
-    title: 'Artículo 12. Derechos de los Usuarios sobre sus Datos',
+    id: 'notificaciones',
+    title: '¿Cómo gestionamos las notificaciones?',
     blocks: [
-      { type: 'p', text: '12.1. En relación con sus datos personales, los usuarios tienen los siguientes derechos:' },
+      {
+        type: 'p',
+        text: 'Podemos enviarte notificaciones push (por ejemplo, vía OneSignal) sobre ofertas relevantes, cambios en postulaciones, actividad de cuenta y avisos de seguridad.',
+      },
+      {
+        type: 'p',
+        text: 'Puedes ajustar tus preferencias desde Configuración → Notificaciones, o desde los ajustes de tu dispositivo. Desactivar notificaciones no elimina el acceso al resto de la plataforma.',
+      },
+    ],
+  },
+  {
+    id: 'cuentas-verificadas',
+    title: '¿Cómo protegemos las cuentas verificadas?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'La verificación de empresas acredita, tras revisión, la existencia legal de la entidad mediante documentación oficial. El sello de verificación aumenta la confianza en la comunidad, pero no es un endoso de solvencia ni de prácticas de contratación.',
+      },
+      {
+        type: 'p',
+        text: 'Los documentos de verificación se tratan con acceso restringido y solo para el proceso de revisión. No se muestran públicamente en el feed ni en el perfil.',
+      },
+    ],
+  },
+  {
+    id: 'empresas-e-instituciones',
+    title: '¿Cómo tratamos la información de empresas e instituciones?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Los perfiles de empresa incluyen datos públicos orientados a atraer talento (nombre, sector, descripción, logo, ofertas). Los datos del representante y la documentación de verificación se usan para administración, soporte y verificación.',
+      },
+      {
+        type: 'p',
+        text: 'Las empresas son responsables del tratamiento de los datos de candidatos que reciben al gestionar postulaciones.',
+      },
+    ],
+  },
+  {
+    id: 'fotografias-y-documentos',
+    title: '¿Qué ocurre con las fotografías y documentos de verificación?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Fotos de perfil, portadas, logos, CVs y adjuntos de postulación se almacenan de forma segura y se usan solo para las finalidades del servicio (perfil, empleo, verificación).',
+      },
+      {
+        type: 'p',
+        text: 'Los documentos de verificación empresarial se conservan el tiempo necesario para revisar la solicitud y, si procede, mantener el historial de verificación y seguridad. No se publican en el feed ni en ofertas.',
+      },
+    ],
+  },
+  {
+    id: 'conservacion',
+    title: '¿Durante cuánto tiempo conservamos los datos?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Conservamos los datos mientras tu cuenta esté activa y el tiempo necesario para prestar el servicio. Tras eliminar la cuenta, podremos retener cierta información de forma limitada para cumplir obligaciones legales, prevenir fraude o resolver disputas.',
+      },
+      {
+        type: 'p',
+        text: 'Los datos ya enviados a una empresa en una postulación quedan bajo responsabilidad de esa empresa; para borrarlos allí, contacta directamente con ella.',
+      },
+    ],
+  },
+  {
+    id: 'eliminar-cuenta',
+    title: '¿Cómo puedes eliminar tu cuenta?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Puedes solicitar la eliminación desde Configuración → Eliminar cuenta. La acción es irreversible: tu perfil dejará de estar visible y procesaremos la baja conforme a esta política.',
+      },
+      {
+        type: 'p',
+        text: 'También puedes escribir a soporte.trabage@gmail.com si necesitas ayuda con el proceso.',
+      },
+    ],
+  },
+  {
+    id: 'derechos-usuarios',
+    title: '¿Qué derechos tienen los usuarios?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Según la normativa aplicable, puedes solicitar:',
+      },
       {
         type: 'ul',
         items: [
-          'Derecho de acceso: obtener confirmación de si TrabaGE trata datos personales suyos y acceder a dicha información.',
-          'Derecho de rectificación: solicitar la corrección de datos inexactos o incompletos.',
-          'Derecho de supresión ("derecho al olvido"): solicitar la eliminación de sus datos cuando ya no sean necesarios para los fines para los que fueron recogidos, salvo obligación legal de conservación.',
-          'Derecho de limitación del tratamiento: solicitar la restricción del tratamiento de sus datos en determinados supuestos.',
-          'Derecho de portabilidad: recibir sus datos en un formato estructurado, de uso común y lectura mecánica, cuando el tratamiento se base en el consentimiento o en la ejecución de un contrato.',
-          'Derecho de oposición: oponerse al tratamiento de sus datos para determinadas finalidades basadas en el interés legítimo de TrabaGE.',
-          'Derecho a retirar el consentimiento: cuando el tratamiento se base en el consentimiento del usuario, este podrá retirarlo en cualquier momento, sin que ello afecte a la licitud del tratamiento previo.',
+          'Acceso a tus datos.',
+          'Rectificación de datos inexactos.',
+          'Supresión, cuando proceda.',
+          'Limitación u oposición en determinados casos.',
+          'Portabilidad, cuando corresponda.',
+          'Retirada del consentimiento, sin afectar el tratamiento previo.',
         ],
       },
       {
         type: 'p',
-        text: '12.2. Para ejercer cualquiera de estos derechos, el usuario puede dirigirse a TrabaGE a través de los canales de contacto indicados en la Plataforma o mediante el correo electrónico de soporte, acreditando su identidad. TrabaGE responderá en el plazo legalmente establecido.',
+        text: 'Para ejercer estos derechos, contacta con soporte.trabage@gmail.com o usa los canales de la plataforma. Responderemos en los plazos legalmente establecidos.',
       },
     ],
   },
   {
-    id: 'article-13',
-    title: 'Artículo 13. Medidas de Seguridad',
+    id: 'contacto',
+    title: '¿Cómo puedes contactar con nosotros?',
     blocks: [
-      { type: 'p', text: '13.1. TrabaGE implementa medidas técnicas y organizativas adecuadas para proteger los datos personales contra el acceso no autorizado, la alteración, divulgación o destrucción. Estas medidas incluyen, entre otras:' },
+      {
+        type: 'p',
+        text: 'Para privacidad, soporte o derechos sobre tus datos:',
+      },
       {
         type: 'ul',
         items: [
-          'Cifrado de datos en tránsito mediante protocolos seguros (HTTPS/TLS).',
-          'Gestión segura de credenciales y accesos a través de Supabase Auth.',
-          'Control de accesos basado en roles (Row Level Security en Supabase Database).',
-          'Revisión periódica de los controles de seguridad.',
-          'Uso de infraestructura en la nube con certificaciones de seguridad reconocidas.',
+          'Correo: soporte.trabage@gmail.com',
+          'Centro de ayuda dentro de TrabaGE',
         ],
-      },
-      {
-        type: 'p',
-        text: '13.2. A pesar de las medidas implementadas, ninguna transmisión de datos por Internet ni sistema de almacenamiento puede garantizar seguridad absoluta. En caso de producirse una brecha de seguridad que afecte a datos personales, TrabaGE notificará a los usuarios afectados y a las autoridades competentes en los plazos y formas establecidos por la normativa aplicable.',
       },
     ],
   },
   {
-    id: 'article-14',
-    title: 'Artículo 14. Actualizaciones de la Política de Privacidad',
+    id: 'tecnologia-zarrel',
+    title: '¿Quién ha desarrollado la tecnología de TrabaGE?',
     blocks: [
       {
         type: 'p',
-        text: '14.1. TrabaGE podrá actualizar la presente Política de Privacidad cuando sea necesario para reflejar cambios en el servicio, en los tratamientos realizados, en la normativa aplicable o en las integraciones de terceros.',
+        text: 'TrabaGE fue diseñado y desarrollado por [ZARREL](https://zarrel.org), empresa especializada en software, diseño digital y soluciones tecnológicas. ZARREL es el responsable tecnológico de la plataforma.',
       },
       {
         type: 'p',
-        text: '14.2. Las actualizaciones serán notificadas a los usuarios registrados con antelación razonable y publicadas en la Plataforma con indicación de la fecha de última actualización.',
+        text: 'Más información sobre ZARREL: https://zarrel.org',
+      },
+    ],
+  },
+  {
+    id: 'actualizaciones',
+    title: '¿Cómo actualizamos esta política?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Podemos actualizar esta Política de Privacidad cuando cambie el servicio, la normativa o nuestros proveedores. Publicaremos la versión vigente en la plataforma e informaremos con antelación razonable cuando el cambio sea relevante.',
       },
       {
         type: 'p',
-        text: '14.3. El uso continuado de la Plataforma tras la entrada en vigor de las actualizaciones implicará la aceptación de la nueva Política de Privacidad.',
+        text: 'El uso continuado de TrabaGE tras la entrada en vigor de una actualización implica la aceptación de la nueva versión.',
       },
     ],
   },
