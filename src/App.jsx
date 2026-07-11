@@ -37,6 +37,7 @@ const CandidateNotificationSettings = lazy(() => import('./pages/candidate/Notif
 const PublicProfile = lazy(() => import('./pages/candidate/PublicProfile'));
 
 const CompanyFeed = lazy(() => import('./pages/company/Feed'));
+const CompanyPublish = lazy(() => import('./pages/company/Publish'));
 const Dashboard = lazy(() => import('./pages/company/Dashboard'));
 const PublishJob = lazy(() => import('./pages/company/PublishJob'));
 const CompanyJobs = lazy(() => import('./pages/company/Jobs'));
@@ -85,7 +86,7 @@ function LegacyPathRedirect({ toPrefix }) {
 function EmployerPublishJobRedirect() {
   const { pathname } = useLocation();
   const base = pathname.startsWith('/organization') ? '/organization' : '/business';
-  return <Navigate to={`${base}/jobs/create`} replace />;
+  return <Navigate to={`${base}/publish`} replace />;
 }
 
 function LegacyCompanyJobEditRedirect() {
@@ -99,6 +100,7 @@ function EmployerAppRoutes() {
     <>
       <Route path="feed" element={<CompanyFeed />} />
       <Route path="dashboard" element={<Dashboard />} />
+      <Route path="publish" element={<CompanyPublish />} />
       <Route path="jobs" element={<CompanyJobs />} />
       <Route path="jobs/create" element={<PublishJob />} />
       <Route path="jobs/:jobId/edit" element={<PublishJob />} />
@@ -190,7 +192,7 @@ function AppRoutes() {
               element={<LegacyCompanyJobEditRedirect />}
             />
             <Route path="/company/jobs" element={<Navigate to="/business/jobs" replace />} />
-            <Route path="/company/publish-job" element={<Navigate to="/business/jobs/create" replace />} />
+            <Route path="/company/publish-job" element={<Navigate to="/business/publish" replace />} />
             <Route path="/company/applicants" element={<Navigate to="/business/applicants" replace />} />
             <Route path="/company/notifications" element={<Navigate to="/business/notifications" replace />} />
             <Route path="/company/profile" element={<Navigate to="/business/profile" replace />} />

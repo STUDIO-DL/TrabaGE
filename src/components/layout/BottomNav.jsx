@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { ROLES, isEmployerRole, rolePath } from '../../constants/roles';
+import { ROLES, getRolePathPrefix, isEmployerRole, rolePath } from '../../constants/roles';
 import { ICON_COLORS } from '../../constants/icons';
 import { NavIcon } from './NavIcons';
 import AppIcon from '../common/AppIcon';
@@ -18,13 +18,24 @@ function buildPersonalNav(role) {
   ];
 }
 
+function isEmployerPublishActive(pathname, role) {
+  const prefix = getRolePathPrefix(role);
+  if (!prefix) return false;
+
+  return (
+    pathname === `${prefix}/publish` ||
+    pathname === `${prefix}/jobs/create` ||
+    new RegExp(`^${prefix}/jobs/[^/]+/edit$`).test(pathname)
+  );
+}
+
 function buildEmployerNav(role) {
   const employerRole = role ?? ROLES.BUSINESS;
   return [
     { to: rolePath(employerRole, '/feed'), label: 'Inicio', icon: 'home' },
     { to: rolePath(employerRole, '/dashboard'), label: 'Dashboard', icon: 'dashboard' },
     {
-      to: rolePath(employerRole, '/jobs/create'),
+      to: rolePath(employerRole, '/publish'),
       label: 'Publicar',
       icon: 'publish',
       prominent: true,
@@ -79,6 +90,8 @@ export default function BottomNav() {
               <NavLink
                 key={to}
                 to={to}
+                end
+                isActive={(_, location) => isEmployerPublishActive(location.pathname, role)}
                 className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-space-xs px-0.5 pb-space-sm pt-space-xs"
               >
                 {({ isActive }) => (
