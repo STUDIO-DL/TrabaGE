@@ -1,14 +1,14 @@
-import { ICON_SIZES } from '../../constants/icons';
+import { ICON_SIZES, ICON_STROKE } from '../../constants/icons';
 
 /**
- * Reusable Lucide icon wrapper.
- * Icons inherit text color from className (e.g. text-primary-600, text-slate-500).
+ * Reusable Lucide icon wrapper (single icon family).
+ * Prefer ICON_SIZES.sm|md|lg|xl. Icons inherit color via text-* classes.
  */
 export default function AppIcon({
   icon: Icon,
-  size = ICON_SIZES.default,
+  size = ICON_SIZES.md,
   className = '',
-  strokeWidth = 2,
+  strokeWidth = ICON_STROKE.default,
   'aria-hidden': ariaHidden = true,
   ...props
 }) {

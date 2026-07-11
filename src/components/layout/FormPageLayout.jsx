@@ -17,7 +17,7 @@ export default function FormPageLayout({
   return (
     <div
       className={[
-        'mx-auto flex h-dvh max-h-dvh w-full max-w-lg flex-col overflow-hidden bg-white',
+        'mx-auto flex h-dvh max-h-dvh w-full max-w-lg flex-col overflow-hidden bg-app-bg',
         className,
       ]
         .filter(Boolean)
@@ -36,7 +36,7 @@ export default function FormPageLayout({
 
       {footer ? (
         <footer
-          className="shrink-0 border-t border-gray-100 bg-white p-md"
+          className="shrink-0 border-t border-app-border bg-app-card p-space-base"
           style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}
         >
           {footer}

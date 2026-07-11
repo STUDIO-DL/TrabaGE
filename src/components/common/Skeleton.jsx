@@ -2,7 +2,7 @@ export default function Skeleton({ className = '', ...props }) {
   return (
     <div
       aria-hidden="true"
-      className={`animate-pulse rounded-lg bg-gray-200/80 ${className}`}
+      className={`animate-pulse rounded-radius-md bg-app-disabled ${className}`}
       {...props}
     />
   );
@@ -10,7 +10,7 @@ export default function Skeleton({ className = '', ...props }) {
 
 export function SkeletonText({ lines = 1, className = '' }) {
   return (
-    <div className={`space-y-2 ${className}`} aria-hidden="true">
+    <div className={`space-y-space-sm ${className}`} aria-hidden="true">
       {Array.from({ length: lines }, (_, i) => (
         <Skeleton
           key={i}
@@ -23,20 +23,23 @@ export function SkeletonText({ lines = 1, className = '' }) {
 
 export function JobCardSkeleton() {
   return (
-    <article className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm" aria-hidden="true">
-      <div className="flex gap-3">
-        <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+    <article
+      className="rounded-radius-md border border-app-border bg-app-card p-space-md shadow-elevation-1"
+      aria-hidden="true"
+    >
+      <div className="flex gap-space-md">
+        <Skeleton className="h-10 w-10 shrink-0 rounded-radius-md" />
         <div className="min-w-0 flex-1">
           <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="mt-2 h-3.5 w-1/2" />
-          <Skeleton className="mt-2 h-3 w-1/3" />
-          <div className="mt-2 flex gap-1.5">
-            <Skeleton className="h-5 w-16 rounded-md" />
-            <Skeleton className="h-5 w-20 rounded-md" />
+          <Skeleton className="mt-space-sm h-3.5 w-1/2" />
+          <Skeleton className="mt-space-sm h-3 w-1/3" />
+          <div className="mt-space-sm flex gap-space-sm">
+            <Skeleton className="h-5 w-16 rounded-radius-sm" />
+            <Skeleton className="h-5 w-20 rounded-radius-sm" />
           </div>
-          <div className="mt-2.5 flex items-center justify-between">
+          <div className="mt-space-md flex items-center justify-between">
             <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-7 w-24 rounded-lg" />
+            <Skeleton className="h-7 w-24 rounded-radius-md" />
           </div>
         </div>
       </div>
@@ -46,7 +49,7 @@ export function JobCardSkeleton() {
 
 export function JobListSkeleton({ count = 3 }) {
   return (
-    <div className="space-y-3" aria-busy="true" aria-label="Cargando empleos">
+    <div className="space-y-space-md" aria-busy="true" aria-label="Cargando empleos">
       {Array.from({ length: count }, (_, i) => (
         <JobCardSkeleton key={i} />
       ))}
@@ -56,10 +59,13 @@ export function JobListSkeleton({ count = 3 }) {
 
 export function PostCardSkeleton() {
   return (
-    <article className="mb-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm" aria-hidden="true">
-      <div className="mb-3 flex items-center gap-3">
-        <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-        <div className="min-w-0 flex-1 space-y-2">
+    <article
+      className="mb-space-base rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1"
+      aria-hidden="true"
+    >
+      <div className="mb-space-md flex items-center gap-space-md">
+        <Skeleton className="h-10 w-10 shrink-0 rounded-radius-circular" />
+        <div className="min-w-0 flex-1 space-y-space-sm">
           <Skeleton className="h-4 w-1/3" />
           <Skeleton className="h-3 w-1/4" />
         </div>
@@ -81,9 +87,9 @@ export function PostListSkeleton({ count = 3 }) {
 
 export function NotificationItemSkeleton() {
   return (
-    <div className="flex gap-3 border-b border-gray-100 py-4" aria-hidden="true">
-      <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
-      <div className="min-w-0 flex-1 space-y-2">
+    <div className="flex gap-space-md border-b border-app-divider py-space-base" aria-hidden="true">
+      <Skeleton className="h-10 w-10 shrink-0 rounded-radius-circular" />
+      <div className="min-w-0 flex-1 space-y-space-sm">
         <Skeleton className="h-4 w-full" />
         <Skeleton className="h-3 w-2/3" />
       </div>
@@ -103,10 +109,13 @@ export function NotificationListSkeleton({ count = 5 }) {
 
 export function ApplicationCardSkeleton() {
   return (
-    <article className="mb-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" aria-hidden="true">
-      <Skeleton className="mb-2 h-5 w-3/4" />
-      <Skeleton className="mb-3 h-4 w-1/2" />
-      <Skeleton className="h-6 w-20 rounded-full" />
+    <article
+      className="mb-space-md rounded-radius-md border border-app-border bg-app-card p-space-base shadow-elevation-1"
+      aria-hidden="true"
+    >
+      <Skeleton className="mb-space-sm h-5 w-3/4" />
+      <Skeleton className="mb-space-md h-4 w-1/2" />
+      <Skeleton className="h-6 w-20 rounded-radius-circular" />
     </article>
   );
 }
@@ -118,5 +127,39 @@ export function ApplicationListSkeleton({ count = 3 }) {
         <ApplicationCardSkeleton key={i} />
       ))}
     </div>
+  );
+}
+
+export function ProfileCardSkeleton() {
+  return (
+    <article
+      className="rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1"
+      aria-hidden="true"
+    >
+      <div className="flex items-center gap-space-base">
+        <Skeleton className="h-14 w-14 shrink-0 rounded-radius-circular" />
+        <div className="min-w-0 flex-1 space-y-space-sm">
+          <Skeleton className="h-5 w-1/2" />
+          <Skeleton className="h-3 w-2/3" />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+export function CompanyCardSkeleton() {
+  return (
+    <article
+      className="rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1"
+      aria-hidden="true"
+    >
+      <div className="flex items-center gap-space-base">
+        <Skeleton className="h-12 w-12 shrink-0 rounded-radius-md" />
+        <div className="min-w-0 flex-1 space-y-space-sm">
+          <Skeleton className="h-4 w-2/5" />
+          <Skeleton className="h-3 w-3/5" />
+        </div>
+      </div>
+    </article>
   );
 }

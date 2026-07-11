@@ -53,7 +53,7 @@ export default function BottomNav() {
   if (role === ROLES.ADMIN) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-app-border bg-app-card/95 pb-safe backdrop-blur">
+    <nav className="fixed bottom-0 left-0 right-0 z-nav border-t border-app-border bg-app-card/95 pb-safe backdrop-blur">
       <div className="mx-auto flex max-w-lg items-end">
         {items.map(({ to, label, icon, showBadge, prominent }) => {
           if (prominent) {
@@ -61,13 +61,13 @@ export default function BottomNav() {
               <NavLink
                 key={to}
                 to={to}
-                className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-1 px-0.5 pb-2 pt-1"
+                className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-space-xs px-0.5 pb-space-sm pt-space-xs"
               >
                 {({ isActive }) => (
                   <>
                     <span
                       className={[
-                        'flex h-12 w-12 items-center justify-center rounded-2xl shadow-md transition-colors',
+                        'flex h-12 w-12 items-center justify-center rounded-radius-lg shadow-elevation-2 transition-colors duration-fast ease-out',
                         isActive ? 'bg-primary-700' : 'bg-primary-600',
                       ].join(' ')}
                     >
@@ -93,15 +93,15 @@ export default function BottomNav() {
               to={to}
               className={({ isActive }) =>
                 [
-                  'relative flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-2 text-[9px] font-medium leading-tight transition-colors sm:px-1 sm:text-[10px]',
+                  'relative flex min-h-touch min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-space-sm text-[9px] font-medium leading-tight transition-colors duration-fast ease-out sm:px-space-xs sm:text-[10px]',
                   isActive ? ICON_COLORS.primary : ICON_COLORS.inactive,
                 ].join(' ')
               }
             >
               <span className="relative">
-                <NavIcon name={icon} className="h-[22px] w-[22px]" />
+                <NavIcon name={icon} className="h-icon-lg w-icon-lg" />
                 {showBadge && unreadCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-primary-600 ring-2 ring-app-card" />
+                  <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-radius-circular bg-primary-600 ring-2 ring-app-card" />
                 )}
               </span>
               <span className="truncate">{label}</span>

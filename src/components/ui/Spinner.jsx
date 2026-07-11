@@ -4,12 +4,15 @@ const sizes = {
   lg: 'h-12 w-12 border-[3px]',
 };
 
-export default function Spinner({ size = 'md', color = 'primary', fullscreen = false }) {
-  const colorClass = color === 'white' ? 'border-white border-t-transparent' : 'border-primary-600 border-t-transparent';
+export default function Spinner({ size = 'md', color = 'primary', fullscreen = false, className = '' }) {
+  const colorClass =
+    color === 'white'
+      ? 'border-white border-t-transparent'
+      : 'border-primary-600 border-t-transparent';
 
   const spinner = (
     <div
-      className={`animate-spin rounded-full ${sizes[size]} ${colorClass}`}
+      className={`animate-spin rounded-radius-circular ${sizes[size] || sizes.md} ${colorClass} ${className}`}
       role="status"
       aria-label="Cargando"
     />
@@ -17,7 +20,9 @@ export default function Spinner({ size = 'md', color = 'primary', fullscreen = f
 
   if (fullscreen) {
     return (
-      <div className="flex min-h-[200px] items-center justify-center">{spinner}</div>
+      <div className="flex min-h-[200px] items-center justify-center" aria-busy="true">
+        {spinner}
+      </div>
     );
   }
 

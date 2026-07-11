@@ -29,11 +29,11 @@ import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 function SectionCard({ title, children }) {
   return (
-    <section className="space-y-3">
-      <h2 className="px-1 text-[13px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+    <section className="space-y-space-md">
+      <h2 className="px-space-xs text-label font-semibold uppercase tracking-[0.16em] text-app-subtle">
         {title}
       </h2>
-      <div className="overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-[0_14px_40px_rgba(15,23,42,0.04)]">
+      <div className="overflow-hidden rounded-radius-xl border border-app-border bg-app-card shadow-elevation-2">
         {children}
       </div>
     </section>
@@ -62,32 +62,32 @@ function SettingsRow({
     <button
       type="button"
       onClick={handleClick}
-      className="group flex min-h-[58px] w-full items-center gap-4 px-5 py-3.5 text-left transition duration-200 hover:bg-primary-50/40 active:scale-[0.99] active:bg-primary-50 focus:outline-none focus-visible:bg-primary-50 focus-visible:ring-2 focus-visible:ring-primary-100"
+      className="group flex min-h-[58px] w-full items-center gap-space-base px-space-lg py-space-md text-left transition-colors duration-fast ease-out hover:bg-primary-50/40 active:scale-[0.99] active:bg-primary-50 focus:outline-none focus-visible:bg-primary-50 focus-visible:ring-2 focus-visible:ring-primary-100"
     >
       <span
         className={[
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl',
-          danger ? 'bg-red-50 text-red-600' : 'bg-primary-50 text-primary-600',
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-radius-lg',
+          danger ? 'bg-error-50 text-error-600' : 'bg-primary-50 text-primary-600',
         ].join(' ')}
       >
-        <AppIcon icon={icon} size={ICON_SIZES.default} strokeWidth={1.9} />
+        <AppIcon icon={icon} size={ICON_SIZES.md} strokeWidth={1.9} />
       </span>
       <span className="min-w-0 flex-1">
         <span
           className={[
-            'block text-[15px] font-semibold',
-            danger ? 'text-red-600' : 'text-slate-900',
+            'block text-button font-semibold',
+            danger ? 'text-error-600' : 'text-app-text',
           ].join(' ')}
         >
           {title}
         </span>
-        {subtitle ? <span className="mt-0.5 block text-xs text-slate-400">{subtitle}</span> : null}
+        {subtitle ? <span className="mt-0.5 block text-caption text-app-subtle">{subtitle}</span> : null}
       </span>
       {showChevron ? (
         <AppIcon
           icon={ChevronRight}
           size={ICON_SIZES.sm}
-          className={danger ? 'text-red-300' : 'text-slate-300 transition group-hover:text-primary-400'}
+          className={danger ? 'text-error-300' : 'text-app-subtle transition-colors duration-fast group-hover:text-primary-400'}
           strokeWidth={2}
         />
       ) : null}
@@ -96,19 +96,19 @@ function SettingsRow({
 }
 
 function Divider() {
-  return <div className="mx-5 h-px bg-slate-100" />;
+  return <div className="mx-space-lg h-px bg-app-divider" />;
 }
 
 function EmailSummaryCard({ email }) {
   return (
-    <div className="rounded-[30px] border border-primary-100/70 bg-white px-5 py-5 shadow-[0_18px_50px_rgba(37,99,235,0.08)]">
-      <div className="flex items-center gap-4">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-          <AppIcon icon={Mail} size={ICON_SIZES.default} strokeWidth={1.9} />
+    <div className="rounded-radius-xl border border-primary-100/70 bg-app-card px-space-lg py-space-lg shadow-elevation-2">
+      <div className="flex items-center gap-space-base">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-radius-circular bg-primary-50 text-primary-600">
+          <AppIcon icon={Mail} size={ICON_SIZES.md} strokeWidth={1.9} />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[15px] font-semibold text-slate-950">{email || 'Cuenta sin correo'}</p>
-          <p className="mt-1 text-sm text-slate-400">Cuenta activa</p>
+          <p className="truncate text-button font-semibold text-app-text">{email || 'Cuenta sin correo'}</p>
+          <p className="mt-space-xs text-body-small text-app-subtle">Cuenta activa</p>
         </div>
       </div>
     </div>
@@ -176,14 +176,14 @@ export default function SettingsScreen({ accountType }) {
   };
 
   return (
-    <PageContainer topBar={false} bottomNav className="bg-slate-50">
-      <div className="min-h-dvh bg-gradient-to-b from-white via-slate-50 to-slate-50 pb-28 pt-safe">
-        <div className="mx-auto w-full max-w-lg px-5 pt-6 sm:px-6">
-          <header className="mb-7 text-center">
-            <h1 className="text-[22px] font-bold tracking-[-0.02em] text-slate-950">Configuración</h1>
+    <PageContainer topBar={false} bottomNav className="bg-app-surface">
+      <div className="min-h-dvh bg-gradient-to-b from-app-card via-app-surface to-app-surface pb-28 pt-safe">
+        <div className="mx-auto w-full max-w-lg px-space-lg pt-space-xl sm:px-space-xl">
+          <header className="mb-space-2xl text-center">
+            <h1 className="text-title font-bold tracking-tight text-app-text">Configuración</h1>
           </header>
 
-          <div className="space-y-8">
+          <div className="space-y-space-2xl">
             <EmailSummaryCard email={user?.email} />
 
             <SectionCard title="Cuenta">

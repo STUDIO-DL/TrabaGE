@@ -1,7 +1,8 @@
 const sizes = {
-  sm: 'h-8 w-8 text-xs',
-  md: 'h-10 w-10 text-sm',
-  lg: 'h-14 w-14 text-lg',
+  sm: 'h-8 w-8 text-caption',
+  md: 'h-10 w-10 text-body-small',
+  lg: 'h-14 w-14 text-subtitle',
+  xl: 'h-20 w-20 text-title',
 };
 
 function getInitials(name = '') {
@@ -16,6 +17,7 @@ function getInitials(name = '') {
 export default function Avatar({ src, name = '', size = 'md', fallback, className = '' }) {
   const initials = getInitials(name);
   const fallbackSrc = fallback || undefined;
+  const sizeClass = sizes[size] || sizes.md;
 
   if (src) {
     return (
@@ -24,7 +26,7 @@ export default function Avatar({ src, name = '', size = 'md', fallback, classNam
         alt={name || 'Avatar'}
         loading="lazy"
         decoding="async"
-        className={`rounded-full border border-slate-200 object-cover ${sizes[size]} ${className}`}
+        className={`rounded-radius-circular border border-app-border object-cover ${sizeClass} ${className}`}
       />
     );
   }
@@ -36,14 +38,14 @@ export default function Avatar({ src, name = '', size = 'md', fallback, classNam
         alt={name || 'Avatar'}
         loading="lazy"
         decoding="async"
-        className={`rounded-full border border-slate-200 object-cover ${sizes[size]} ${className}`}
+        className={`rounded-radius-circular border border-app-border object-cover ${sizeClass} ${className}`}
       />
     );
   }
 
   return (
     <div
-      className={`flex items-center justify-center rounded-full border border-slate-200 bg-primary-100 font-semibold text-primary-700 ${sizes[size]} ${className}`}
+      className={`flex items-center justify-center rounded-radius-circular border border-app-border bg-primary-100 font-semibold text-primary-700 ${sizeClass} ${className}`}
       aria-label={name || 'Avatar'}
     >
       {initials || '?'}

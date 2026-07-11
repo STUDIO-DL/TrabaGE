@@ -1,6 +1,6 @@
 import Button from '../ui/Button';
 import AppIcon from './AppIcon';
-import { ICON_SIZES } from '../../constants/icons';
+import { ICON_SIZES, ICON_STROKE } from '../../constants/icons';
 
 export default function EmptyState({
   image,
@@ -17,26 +17,27 @@ export default function EmptyState({
 
   return (
     <div
-      className={`mx-auto flex w-full max-w-[400px] flex-col items-center px-6 py-10 text-center sm:py-12${
-        isSoft ? '' : ' bg-white'
-      }`}
+      className={[
+        'mx-auto flex w-full max-w-[400px] flex-col items-center px-space-xl py-space-3xl text-center sm:py-space-4xl',
+        isSoft ? '' : 'bg-app-card',
+      ].join(' ')}
       role="status"
     >
       {isSoft && icon ? (
         <span
-          className="mb-6 flex h-[72px] w-[72px] items-center justify-center rounded-full bg-app-primary-soft/70 ring-1 ring-inset ring-app-border/40 dark:bg-app-primary-soft/25"
+          className="mb-space-xl flex h-[72px] w-[72px] items-center justify-center rounded-radius-circular bg-app-primary-soft/70 ring-1 ring-inset ring-app-border/40 dark:bg-app-primary-soft/25"
           aria-hidden="true"
         >
           <AppIcon
             icon={icon}
-            size={ICON_SIZES.nav + 8}
+            size={ICON_SIZES.xl}
             className="text-app-subtle dark:text-app-muted"
-            strokeWidth={1.5}
+            strokeWidth={ICON_STROKE.thin}
           />
         </span>
       ) : image ? (
         isSoft ? (
-          <span className="mb-6 flex items-center justify-center rounded-2xl bg-app-primary-soft/50 p-5 ring-1 ring-inset ring-app-border/30 dark:bg-app-primary-soft/20">
+          <span className="mb-space-xl flex items-center justify-center rounded-radius-lg bg-app-primary-soft/50 p-space-lg ring-1 ring-inset ring-app-border/30 dark:bg-app-primary-soft/20">
             <img
               src={image}
               alt={alt}
@@ -49,21 +50,21 @@ export default function EmptyState({
           <img
             src={image}
             alt={alt}
-            className="mb-6 w-full max-w-[260px] object-contain"
+            className="mb-space-xl w-full max-w-[260px] object-contain"
             loading="lazy"
             decoding="async"
           />
         )
       ) : null}
 
-      <h2 className="text-lg font-bold tracking-tight text-gray-900 sm:text-xl">{title}</h2>
+      <h2 className="text-title text-app-text sm:text-heading-m">{title}</h2>
 
       {description && (
-        <p className="mt-3 text-sm leading-relaxed text-gray-500 sm:text-[15px]">{description}</p>
+        <p className="mt-space-md text-body-small leading-relaxed text-app-muted">{description}</p>
       )}
 
       {actionLabel && onAction && (
-        <Button type="button" className="mt-8 min-w-[160px]" onClick={onAction}>
+        <Button type="button" className="mt-space-2xl min-w-[160px]" onClick={onAction}>
           {actionLabel}
         </Button>
       )}

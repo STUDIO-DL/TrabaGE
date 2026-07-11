@@ -1,6 +1,6 @@
 /**
  * Mobile-first full-viewport layout: Header | scrollable Content | sticky Footer CTA.
- * Keeps primary actions visible without scrolling on supported mobile heights (667px+).
+ * Uses design-system safe areas, page padding tokens, and app surface colors.
  */
 export default function MobileScreenLayout({
   header,
@@ -26,6 +26,8 @@ export default function MobileScreenLayout({
       style={{
         paddingTop: 'env(safe-area-inset-top, 0px)',
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)',
       }}
     >
       {header ? <header className="shrink-0">{header}</header> : null}
@@ -45,7 +47,7 @@ export default function MobileScreenLayout({
       {footer ? (
         <footer
           className={[
-            'shrink-0 border-t border-app-border bg-app-card px-md pb-md pt-sm',
+            'shrink-0 border-t border-app-border bg-app-card px-space-base pb-space-base pt-space-sm',
             footerClassName,
           ]
             .filter(Boolean)

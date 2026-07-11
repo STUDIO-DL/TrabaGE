@@ -105,19 +105,30 @@ export {
   X,
 };
 
-/** Compact scale — Default: 18px · Navigation: 22px */
+/**
+ * Icon size tokens (Lucide) — sm 16 · md/default 18 · lg/nav 22 · xl 28
+ * Prefer these over arbitrary sizes. Stroke: 2 (default).
+ */
 export const ICON_SIZES = {
-  default: 18,
-  nav: 22,
   sm: 16,
-  lg: 20,
+  md: 18,
+  default: 18,
+  lg: 22,
+  nav: 22,
+  xl: 28,
+};
+
+export const ICON_STROKE = {
+  default: 2,
+  thin: 1.5,
+  bold: 2.25,
 };
 
 /** Primary #2563EB · Inactive #64748B — icons inherit via text-* */
 export const ICON_COLORS = {
   primary: 'text-primary-600',
-  inactive: 'text-slate-500',
-  muted: 'text-gray-400',
+  inactive: 'text-app-muted',
+  muted: 'text-app-subtle',
 };
 
 /** Bottom navigation */

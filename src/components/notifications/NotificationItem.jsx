@@ -6,7 +6,7 @@ import { getNotificationCategory, NOTIFICATION_CATEGORY } from '../../utils/noti
 
 const CATEGORY_BADGE = {
   [NOTIFICATION_CATEGORY.JOBS]: { icon: Briefcase, className: 'bg-primary-600' },
-  [NOTIFICATION_CATEGORY.POSTS]: { icon: Newspaper, className: 'bg-indigo-500' },
+  [NOTIFICATION_CATEGORY.POSTS]: { icon: Newspaper, className: 'bg-primary-700' },
 };
 
 export default function NotificationItem({
@@ -36,20 +36,17 @@ export default function NotificationItem({
           onClick?.(notification);
         }
       }}
-      className={`group relative flex cursor-pointer items-start gap-3 rounded-2xl px-3 py-3 transition-colors ${
-        isUnread
-          ? 'bg-primary-50/70 hover:bg-primary-50'
-          : 'hover:bg-gray-50'
-      }`}
+      className={[
+        'group relative flex cursor-pointer items-start gap-space-md rounded-radius-lg px-space-md py-space-md transition-colors duration-fast ease-out',
+        isUnread ? 'bg-primary-50/70 hover:bg-primary-50' : 'hover:bg-app-surface',
+      ].join(' ')}
     >
-      {/* Unread indicator dot */}
       <span className="mt-5 w-2 shrink-0">
         {isUnread && (
-          <span className="block h-2 w-2 rounded-full bg-primary-600" aria-label="No leída" />
+          <span className="block h-2 w-2 rounded-radius-circular bg-primary-600" aria-label="No leída" />
         )}
       </span>
 
-      {/* Avatar + category badge */}
       <div className="relative shrink-0">
         <UserProfileLink
           userId={actorId}
@@ -62,7 +59,7 @@ export default function NotificationItem({
         />
         {badge && (
           <span
-            className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-white ring-2 ring-app-card ${badge.className}`}
+            className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-radius-circular text-white ring-2 ring-app-card ${badge.className}`}
             aria-hidden="true"
           >
             <AppIcon icon={badge.icon} size={10} />
@@ -70,20 +67,20 @@ export default function NotificationItem({
         )}
       </div>
 
-      {/* Content */}
       <div className="min-w-0 flex-1">
         <p
-          className={`truncate text-sm ${isUnread ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'}`}
+          className={`truncate text-body-small ${
+            isUnread ? 'font-semibold text-app-text' : 'font-medium text-app-muted'
+          }`}
         >
           {notification.title}
         </p>
         {notification.body && (
-          <p className="mt-0.5 line-clamp-2 text-sm text-gray-500">{notification.body}</p>
+          <p className="mt-0.5 line-clamp-2 text-body-small text-app-subtle">{notification.body}</p>
         )}
-        <TimeAgo date={notification.created_at} className="mt-1 block text-xs text-gray-400" />
+        <TimeAgo date={notification.created_at} className="mt-space-xs block text-caption text-app-subtle" />
       </div>
 
-      {/* Subtle delete action */}
       {onDelete && (
         <button
           type="button"
@@ -91,7 +88,7 @@ export default function NotificationItem({
             event.stopPropagation();
             onDelete(notification);
           }}
-          className="shrink-0 rounded-lg p-1.5 text-gray-300 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-600 focus:opacity-100 group-hover:opacity-100"
+          className="shrink-0 rounded-radius-sm p-space-sm text-app-subtle opacity-0 transition-opacity duration-fast hover:bg-error-50 hover:text-error-600 focus:opacity-100 group-hover:opacity-100"
           aria-label="Eliminar notificación"
         >
           <AppIcon icon={Trash2} size={ICON_SIZES.sm} />

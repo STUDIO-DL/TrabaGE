@@ -24,8 +24,8 @@ export default function PostCard({
   const authorPath = post.author_path;
 
   return (
-    <Card className="mb-3">
-      <div className="mb-3 flex items-start gap-3">
+    <Card className="mb-space-md" elevation={1}>
+      <div className="mb-space-md flex items-start gap-space-md">
         <UserProfileLink
           userId={authorId}
           userType={authorType}
@@ -36,7 +36,7 @@ export default function PostCard({
           layout="avatar"
         />
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-space-sm">
             <UserProfileLink
               userId={authorId}
               userType={authorType}
@@ -48,10 +48,10 @@ export default function PostCard({
               <VerifiedBadge size="sm" />
             )}
           </div>
-          {authorHeadline && <p className="text-sm text-gray-500">{authorHeadline}</p>}
+          {authorHeadline && <p className="text-body-small text-app-muted">{authorHeadline}</p>}
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-1">
-          <TimeAgo date={post.created_at} className="text-xs text-gray-400" />
+        <div className="flex shrink-0 flex-col items-end gap-space-xs">
+          <TimeAgo date={post.created_at} className="text-caption text-app-subtle" />
           <ContentActionMenu
             shareUrl={generatePostUrl(post.id)}
             shareTitle={`${authorName} en TrabaGE`}
@@ -60,12 +60,12 @@ export default function PostCard({
             targetId={post.id}
           />
           {canManage && (
-            <div className="flex gap-2 text-xs">
+            <div className="flex gap-space-sm text-caption">
               <button
                 type="button"
                 onClick={() => onEdit?.(post)}
                 aria-label="Editar publicación"
-                className="font-medium text-primary-600 hover:text-primary-700"
+                className="font-medium text-primary-600 transition-colors duration-fast hover:text-primary-700"
               >
                 Editar
               </button>
@@ -73,7 +73,7 @@ export default function PostCard({
                 type="button"
                 onClick={() => onDelete?.(post)}
                 aria-label="Eliminar publicación"
-                className="font-medium text-red-600 hover:text-red-700"
+                className="font-medium text-error-600 transition-colors duration-fast hover:text-error-700"
               >
                 Eliminar
               </button>
@@ -82,14 +82,14 @@ export default function PostCard({
         </div>
       </div>
 
-      <p className="whitespace-pre-wrap text-sm text-gray-800">{post.content}</p>
+      <p className="whitespace-pre-wrap text-body-small text-app-text">{post.content}</p>
 
       {postImageSrc && (
         <img
           src={postImageSrc}
           alt="Imagen de la publicación"
           loading="lazy"
-          className="mt-3 w-full rounded-xl object-cover"
+          className="mt-space-md w-full rounded-radius-md object-cover"
         />
       )}
     </Card>

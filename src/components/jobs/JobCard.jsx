@@ -8,6 +8,7 @@ import {
   ICON_SIZES,
 } from '../../constants/icons';
 import Avatar from '../ui/Avatar';
+import Chip from '../ui/Chip';
 import CompanyNameWithBadge from '../company/CompanyNameWithBadge';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
@@ -16,14 +17,6 @@ import TimeAgo from '../common/TimeAgo';
 import { getCompanyLogoUrl } from '../../constants/images';
 import { getWorkModeLabel } from '../../constants/workModes';
 import { getJobTypeLabel } from '../../constants/jobTypes';
-
-function MetaChip({ children }) {
-  return (
-    <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-      {children}
-    </span>
-  );
-}
 
 export default function JobCard({
   job,
@@ -40,21 +33,21 @@ export default function JobCard({
     : null;
 
   return (
-    <article className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-colors hover:border-gray-300">
-      <div className="flex gap-3">
+    <article className="rounded-radius-md border border-app-border bg-app-card p-space-md shadow-elevation-1 transition-colors duration-fast ease-out hover:border-app-muted/50">
+      <div className="flex gap-space-md">
         <Link to={detailPath} className="shrink-0" aria-label={`Ver ${job.title}`}>
           <Avatar
             src={getCompanyLogoUrl(company?.logo_path)}
             name={company?.company_name}
             size="md"
-            className="!rounded-lg"
+            className="!rounded-radius-md"
           />
         </Link>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-1.5">
+          <div className="flex items-start justify-between gap-space-sm">
             <Link to={detailPath} className="min-w-0 flex-1">
-              <h3 className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-900">
+              <h3 className="line-clamp-2 text-button leading-snug text-app-text">
                 {job.title}
               </h3>
             </Link>
@@ -70,13 +63,13 @@ export default function JobCard({
                 type="button"
                 onClick={onSaveToggle}
                 disabled={!onSaveToggle || saving}
-                className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-50 hover:text-gray-600 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-radius-sm p-space-sm text-app-subtle transition-colors duration-fast hover:bg-app-surface hover:text-app-muted disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}
                 aria-pressed={saved}
               >
                 <AppIcon
                   icon={Bookmark}
-                  size={ICON_SIZES.default}
+                  size={ICON_SIZES.md}
                   className={saved ? 'fill-current text-primary-600' : ''}
                 />
               </button>
@@ -86,28 +79,28 @@ export default function JobCard({
           <CompanyNameWithBadge
             company={company}
             userId={job.company_id}
-            nameClassName="text-sm text-gray-500 truncate"
+            nameClassName="text-body-small text-app-muted truncate"
             className="mt-0.5 max-w-full"
           />
 
           {job.city && (
-            <p className="mt-1 flex items-center gap-1 text-xs text-gray-500">
+            <p className="mt-space-xs flex items-center gap-space-xs text-caption text-app-muted">
               <AppIcon icon={MapPin} size={ICON_SIZES.sm} className="shrink-0" />
               <span className="truncate">{job.city}</span>
             </p>
           )}
 
           {(job.work_mode || job.job_type || salary) && (
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              {job.work_mode && <MetaChip>{getWorkModeLabel(job.work_mode)}</MetaChip>}
-              {job.job_type && <MetaChip>{getJobTypeLabel(job.job_type)}</MetaChip>}
-              {salary && <MetaChip>{salary}</MetaChip>}
+            <div className="mt-space-sm flex flex-wrap items-center gap-space-sm">
+              {job.work_mode && <Chip variant="default">{getWorkModeLabel(job.work_mode)}</Chip>}
+              {job.job_type && <Chip variant="default">{getJobTypeLabel(job.job_type)}</Chip>}
+              {salary && <Chip variant="primary">{salary}</Chip>}
             </div>
           )}
 
-          <div className="mt-2.5 flex items-center justify-between gap-2">
+          <div className="mt-space-md flex items-center justify-between gap-space-sm">
             {job.created_at ? (
-              <span className="flex items-center gap-1 text-xs text-gray-400">
+              <span className="flex items-center gap-space-xs text-caption text-app-subtle">
                 <AppIcon icon={Clock} size={ICON_SIZES.sm} className="shrink-0" />
                 <TimeAgo date={job.created_at} className="truncate" />
               </span>
@@ -116,7 +109,7 @@ export default function JobCard({
             )}
             <Link
               to={detailPath}
-              className="shrink-0 rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-700"
+              className="shrink-0 rounded-radius-sm bg-primary-600 px-space-md py-space-sm text-caption font-semibold text-white transition-colors duration-fast hover:bg-primary-700"
             >
               Ver detalles
             </Link>

@@ -71,18 +71,18 @@ export default function OnboardingSlide({
                 aria-selected={i === currentStep}
                 aria-label={`Paso ${i + 1} de ${totalSteps}`}
                 className={[
-                  'rounded-full transition-colors duration-300',
-                  i === currentStep ? 'h-2.5 w-2.5 bg-[#2563EB]' : 'h-2 w-2 bg-[#D1D5DB]',
+                  'rounded-radius-circular transition-colors duration-normal ease-out',
+                  i === currentStep ? 'h-2.5 w-2.5 bg-primary-600' : 'h-2 w-2 bg-app-border',
                 ].join(' ')}
               />
             ))}
           </div>
 
-          <div className="mx-auto flex w-[90%] flex-col gap-3">
+          <div className="mx-auto flex w-[90%] flex-col gap-space-md">
             <button
               type="button"
               onClick={onNext}
-              className="relative inline-flex h-14 w-full items-center justify-center rounded-2xl bg-[#2563EB] px-6 text-base font-semibold text-white shadow-[0_10px_28px_rgba(37,99,235,0.25)] transition hover:bg-[#1D4ED8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 active:scale-[0.99]"
+              className="relative inline-flex h-btn-primary w-full items-center justify-center rounded-radius-lg bg-primary-600 px-space-xl text-body font-semibold text-white shadow-elevation-3 transition-colors duration-fast ease-out hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 active:scale-[0.99]"
             >
               {nextLabel}
               <ChevronRight className="absolute right-5 h-5 w-5" aria-hidden />

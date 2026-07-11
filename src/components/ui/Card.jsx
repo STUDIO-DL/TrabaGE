@@ -1,18 +1,46 @@
-export default function Card({ children, padding = 'md', shadow = true, className = '' }) {
-  const paddingClass = padding === 'sm' ? 'p-3' : padding === 'lg' ? 'p-6' : 'p-4';
+const paddingMap = {
+  none: 'p-0',
+  sm: 'p-space-md',
+  md: 'p-space-base',
+  lg: 'p-space-xl',
+};
+
+const elevationMap = {
+  none: '',
+  1: 'shadow-elevation-1',
+  2: 'shadow-elevation-2',
+  3: 'shadow-elevation-3',
+  4: 'shadow-elevation-4',
+};
+
+export default function Card({
+  children,
+  padding = 'md',
+  shadow = true,
+  elevation = shadow ? 1 : 'none',
+  interactive = false,
+  className = '',
+  as: Component = 'div',
+  ...props
+}) {
+  const elevationClass = elevationMap[elevation] ?? (shadow ? elevationMap[1] : '');
 
   return (
-    <div
+    <Component
       className={[
-        'rounded-2xl border border-app-border bg-app-card text-app-text',
-        paddingClass,
-        shadow ? 'shadow-sm' : '',
+        'rounded-radius-lg border border-app-border bg-app-card text-app-text',
+        paddingMap[padding] ?? paddingMap.md,
+        elevationClass,
+        interactive
+          ? 'transition-colors duration-fast ease-out hover:border-app-muted/40'
+          : '',
         className,
       ]
         .filter(Boolean)
         .join(' ')}
+      {...props}
     >
       {children}
-    </div>
+    </Component>
   );
 }

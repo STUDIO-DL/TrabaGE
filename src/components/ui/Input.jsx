@@ -4,6 +4,7 @@ import { ICON_SIZES } from '../../constants/icons';
 export default function Input({
   label,
   error,
+  hint,
   icon: Icon,
   className = '',
   id,
@@ -14,7 +15,7 @@ export default function Input({
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-app-muted">
+        <label htmlFor={inputId} className="mb-space-sm block text-label text-app-muted">
           {label}
         </label>
       )}
@@ -22,22 +23,35 @@ export default function Input({
         {Icon && (
           <AppIcon
             icon={Icon}
-            size={ICON_SIZES.default}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-app-muted/70"
+            size={ICON_SIZES.md}
+            className="pointer-events-none absolute left-space-md top-1/2 -translate-y-1/2 text-app-subtle"
           />
         )}
         <input
           id={inputId}
           className={[
-            'w-full rounded-xl border bg-app-card px-3.5 py-2 text-sm text-app-text outline-none transition-colors placeholder:text-app-muted/70',
+            'h-input-md w-full rounded-radius-md border bg-app-card px-space-md text-body-small text-app-text outline-none',
+            'transition-colors duration-fast ease-out placeholder:text-app-subtle',
             'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
+            'disabled:cursor-not-allowed disabled:bg-app-disabled disabled:text-app-text-disabled',
             Icon ? 'pl-10' : '',
-            error ? 'border-red-500' : 'border-app-border',
+            error ? 'border-error-500 focus:ring-error-100' : 'border-app-border',
           ].join(' ')}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
           {...props}
         />
       </div>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && (
+        <p id={`${inputId}-error`} className="mt-space-xs text-caption text-error-600">
+          {error}
+        </p>
+      )}
+      {!error && hint && (
+        <p id={`${inputId}-hint`} className="mt-space-xs text-caption text-app-subtle">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }
