@@ -51,14 +51,14 @@ export default function Applications() {
             title="No has aplicado a ninguna oferta"
             description="Aún no has enviado solicitudes. Explora ofertas y aplica a las que te interesen."
             actionLabel="Ver empleos"
-            onAction={() => navigate('/candidate/jobs')}
+            onAction={() => navigate('/personal/jobs')}
           />
         ) : (
           applications.map((app) => (
             <Card key={app.id} className="mb-3">
               <button
                 type="button"
-                onClick={() => app.jobs?.id && navigate(`/candidate/jobs/${app.jobs.id}`)}
+                onClick={() => app.jobs?.id && navigate(`/personal/jobs/${app.jobs.id}`)}
                 className="text-left font-semibold text-gray-900 hover:text-primary-700"
               >
                 {app.jobs?.title || 'Oferta no disponible'}

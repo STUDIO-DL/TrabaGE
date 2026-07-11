@@ -9,7 +9,7 @@ import { reportError } from '../utils/logger';
 async function buildCandidateProfile(userId) {
   const [profileResult, followsResult, applicationsResult] = await Promise.all([
     profileService.getCandidateFullProfile(userId),
-    followsService.getFollowing(userId, FOLLOWS_TARGET.COMPANY),
+    followsService.getFollowing(userId, FOLLOWS_TARGET.BUSINESS),
     applicationsService.getCandidateApplications(userId),
   ]);
 

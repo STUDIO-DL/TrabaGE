@@ -1,4 +1,4 @@
-import { ROLES } from './roles';
+import { ROLES, isEmployerRole } from './roles';
 
 export const PREVIEW_STORAGE_KEY = 'trabage_preview_mode';
 export const PREVIEW_ROLE_KEY = 'trabage_preview_role';
@@ -169,7 +169,7 @@ export function setPreviewRoleStorage(role) {
 }
 
 export function getPreviewProfile(role) {
-  return role === ROLES.COMPANY ? PREVIEW_COMPANY_PROFILE : PREVIEW_CANDIDATE_PROFILE;
+  return isEmployerRole(role) ? PREVIEW_COMPANY_PROFILE : PREVIEW_CANDIDATE_PROFILE;
 }
 
 export function getPreviewApplicantProfile(userId) {
@@ -177,14 +177,14 @@ export function getPreviewApplicantProfile(userId) {
 }
 
 export function getPreviewPosts(authorId, role) {
-  if (authorId === PREVIEW_USER.id && role === ROLES.COMPANY) {
+  if (authorId === PREVIEW_USER.id && isEmployerRole(role)) {
     return PREVIEW_COMPANY_POSTS;
   }
   return PREVIEW_FEED_POSTS;
 }
 
 export function getPreviewApplications(role) {
-  if (role === ROLES.COMPANY) return PREVIEW_COMPANY_APPLICATIONS;
+  if (isEmployerRole(role)) return PREVIEW_COMPANY_APPLICATIONS;
   return [];
 }
 

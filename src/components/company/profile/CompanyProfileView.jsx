@@ -14,7 +14,7 @@ export default function CompanyProfileView({
   readOnly = false,
   jobs = [],
   companyId,
-  targetType = FOLLOWS_TARGET.COMPANY,
+  targetType = FOLLOWS_TARGET.BUSINESS,
   onEditName,
   onEditAbout,
   onEditDetails,

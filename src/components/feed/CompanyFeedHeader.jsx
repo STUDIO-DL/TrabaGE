@@ -3,9 +3,13 @@ import AppIcon from '../common/AppIcon';
 import GlobalSearch from '../search/GlobalSearch';
 import { Bell, Filter, ICON_SIZES } from '../../constants/icons';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useAuth } from '../../hooks/useAuth';
+import { ROLES, rolePath } from '../../constants/roles';
 
 export default function CompanyFeedHeader() {
   const { unreadCount } = useNotifications();
+  const { role } = useAuth();
+  const notificationsPath = rolePath(role || ROLES.BUSINESS, '/notifications');
 
   return (
     <header className="sticky top-0 z-30 border-b border-gray-100 bg-white">
@@ -13,7 +17,7 @@ export default function CompanyFeedHeader() {
         <div className="flex items-center justify-between px-4 pb-3 pt-3">
           <h1 className="text-2xl font-bold text-gray-900">Inicio</h1>
           <Link
-            to="/company/notifications"
+            to={notificationsPath}
             className="relative rounded-lg p-2 text-gray-700 hover:bg-gray-50"
             aria-label="Notificaciones"
           >
@@ -26,7 +30,7 @@ export default function CompanyFeedHeader() {
 
         <div className="flex items-center gap-2 px-4 pb-3">
           <GlobalSearch
-            placeholder="Buscar candidatos, empresas, empleos…"
+            placeholder="Buscar personas, Business, empleos…"
             variant="rounded"
           />
           <button

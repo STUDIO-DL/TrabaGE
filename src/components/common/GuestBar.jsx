@@ -10,8 +10,9 @@ function shouldHideGuestBar(pathname) {
 }
 
 const ROLE_LABELS = {
-  [ROLES.CANDIDATE]: 'candidato',
-  [ROLES.COMPANY]: 'empresa',
+  [ROLES.PERSONAL]: 'cuenta personal',
+  [ROLES.BUSINESS]: 'Business',
+  [ROLES.ORGANIZATION]: 'organización',
 };
 
 export default function GuestBar() {

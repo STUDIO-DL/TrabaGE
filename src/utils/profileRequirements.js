@@ -1,4 +1,4 @@
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole, isPersonalRole } from '../constants/roles';
 import { isInstitutionProfile } from './orgLabels';
 
 // Minimum "required" fields that gate the onboarding experience. This is
@@ -55,7 +55,7 @@ export function isProfileSetupComplete(role, profile) {
   if (role === ROLES.ADMIN) return true;
   if (!profile) return false;
   if (profile.setup_complete === true) return true;
-  if (role === ROLES.CANDIDATE) return isCandidateRequiredComplete(profile);
-  if (role === ROLES.COMPANY) return isCompanyRequiredComplete(profile);
+  if (isPersonalRole(role)) return isCandidateRequiredComplete(profile);
+  if (isEmployerRole(role)) return isCompanyRequiredComplete(profile);
   return false;
 }

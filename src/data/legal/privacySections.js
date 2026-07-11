@@ -23,8 +23,8 @@ export const PRIVACY_ARTICLES = [
       {
         type: 'ul',
         items: [
-          'Candidatos: nombre, correo, teléfono, fecha de nacimiento, foto de perfil y portada, headline, biografía, experiencia, formación, habilidades, idiomas, certificados, CV y preferencias laborales.',
-          'Empresas e instituciones: nombre o razón social, datos del representante, sector, descripción, logo, portada, documentación de verificación (si la solicitas) y formularios de postulación personalizados.',
+          'Cuentas personales: nombre, correo, teléfono, fecha de nacimiento, foto de perfil y portada, headline, biografía, experiencia, formación, habilidades, idiomas, certificados, CV y preferencias laborales.',
+          'Business y Organizaciones: nombre o razón social, datos del representante, sector, descripción, logo, portada, documentación de verificación (si la solicitas) y formularios de postulación personalizados.',
           'Postulaciones: respuestas y archivos que envías al aplicar a una oferta.',
         ],
       },
@@ -168,16 +168,16 @@ export const PRIVACY_ARTICLES = [
     ],
   },
   {
-    id: 'empresas-e-instituciones',
-    title: '¿Cómo tratamos la información de empresas e instituciones?',
+    id: 'business-y-organizaciones',
+    title: '¿Cómo tratamos la información de Business y Organizaciones?',
     blocks: [
       {
         type: 'p',
-        text: 'Los perfiles de empresa incluyen datos públicos orientados a atraer talento (nombre, sector, descripción, logo, ofertas). Los datos del representante y la documentación de verificación se usan para administración, soporte y verificación.',
+        text: 'Los perfiles Business/Organización incluyen datos públicos orientados a atraer talento (nombre, sector, descripción, logo, ofertas). Los datos del representante y la documentación de verificación se usan para administración, soporte y verificación.',
       },
       {
         type: 'p',
-        text: 'Las empresas son responsables del tratamiento de los datos de candidatos que reciben al gestionar postulaciones.',
+        text: 'Business y Organizaciones son responsables del tratamiento de los datos de cuentas personales que reciben al gestionar postulaciones.',
       },
     ],
   },

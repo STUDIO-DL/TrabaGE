@@ -1,14 +1,25 @@
 import { isSupabaseConfigured, supabase } from '../config/supabase';
-import { accountKindToRole, isValidAccountKind } from '../constants/accountKinds';
-import { ROLES } from '../constants/roles';
+import {
+  accountKindToRole,
+  isValidAccountKind,
+  normalizeAccountKind,
+} from '../constants/accountKinds';
+import {
+  ASSIGNABLE_ROLES,
+  isEmployerRole,
+  isOrganizationCompanyType,
+  isPersonalRole,
+  normalizeRole,
+  ROLES,
+} from '../constants/roles';
 
 const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
 const PENDING_ORG_KIND_KEY = 'pending_org_kind';
 const PENDING_ORG_DETAILS_KEY = 'pending_org_details';
 const OAUTH_INTENT_KEY = 'trabage_oauth_intent';
-const VALID_ACCOUNT_TYPES = [ROLES.CANDIDATE, ROLES.COMPANY];
-const VALID_STORED_ROLES = [ROLES.CANDIDATE, ROLES.COMPANY, ROLES.ADMIN];
+const VALID_ACCOUNT_TYPES = ASSIGNABLE_ROLES;
+const VALID_STORED_ROLES = [...ASSIGNABLE_ROLES, ROLES.ADMIN];
 const NEW_OAUTH_USER_WINDOW_MS = 10 * 60 * 1000;
 /** First Google sign-in: created_at and last_sign_in_at are nearly identical. */
 const FIRST_SIGNIN_WINDOW_MS = 60 * 1000;
@@ -22,18 +33,16 @@ export const GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE =
   'No encontramos una cuenta asociada a este correo.\n\nSi todavía no tienes una cuenta en TrabaGE, puedes crear una utilizando "Crear cuenta".';
 
 function normalizeAccountType(accountType) {
-  if (accountType === 'organization') return ROLES.COMPANY;
   if (isValidAccountKind(accountType)) return accountKindToRole(accountType);
-  return VALID_ACCOUNT_TYPES.includes(accountType) ? accountType : null;
+  return normalizeRole(accountType);
 }
 
-function normalizeStoredRole(role) {
-  if (role === 'organization') return ROLES.COMPANY;
-  return VALID_STORED_ROLES.includes(role) ? role : null;
+function normalizeStoredRole(role, companyType) {
+  return normalizeRole(role, { companyType });
 }
 
 function toPendingAccountType(role) {
-  return role === ROLES.COMPANY ? 'organization' : role;
+  return role;
 }
 
 function normalizeEmail(email) {
@@ -55,16 +64,17 @@ function configError() {
 }
 
 function savePendingOrgKind(accountKind) {
-  if (isValidAccountKind(accountKind)) {
-    sessionStorage.setItem(PENDING_ORG_KIND_KEY, accountKind);
+  const normalized = normalizeAccountKind(accountKind);
+  if (normalized) {
+    sessionStorage.setItem(PENDING_ORG_KIND_KEY, normalized);
     return;
   }
   sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
 }
 
 export function peekPendingOrgKind() {
-  const kind = sessionStorage.getItem(PENDING_ORG_KIND_KEY);
-  return isValidAccountKind(kind) ? kind : null;
+  const kind = normalizeAccountKind(sessionStorage.getItem(PENDING_ORG_KIND_KEY));
+  return kind;
 }
 
 export function consumePendingOrgKind() {
@@ -75,7 +85,7 @@ export function consumePendingOrgKind() {
 
 // Mirrors the pending_org_kind pattern: stores only the org-specific profile
 // fields (company_name, sector, company_type) entered at sign-up so CompanySetup
-// can pre-fill them. No candidate-only data is ever stored here.
+// can pre-fill them. No personal-only data is ever stored here.
 function savePendingOrgDetails(details) {
   if (details && typeof details === 'object') {
     const clean = {};
@@ -162,11 +172,19 @@ export function consumeOAuthIntent() {
 async function getExistingProfileRole(userId) {
   const [candidateProfile, companyProfile] = await Promise.all([
     supabase.from('candidate_profiles').select('user_id').eq('user_id', userId).maybeSingle(),
-    supabase.from('company_profiles').select('user_id').eq('user_id', userId).maybeSingle(),
+    supabase
+      .from('company_profiles')
+      .select('user_id, company_type')
+      .eq('user_id', userId)
+      .maybeSingle(),
   ]);
 
-  if (companyProfile.data?.user_id) return ROLES.COMPANY;
-  if (candidateProfile.data?.user_id) return ROLES.CANDIDATE;
+  if (companyProfile.data?.user_id) {
+    return isOrganizationCompanyType(companyProfile.data.company_type)
+      ? ROLES.ORGANIZATION
+      : ROLES.BUSINESS;
+  }
+  if (candidateProfile.data?.user_id) return ROLES.PERSONAL;
   return null;
 }
 
@@ -242,7 +260,7 @@ export async function discardUnregisteredOAuthSession() {
 export async function setUserRole(_userId, role) {
   const normalizedRole = normalizeAccountType(role);
 
-  if (!normalizedRole) {
+  if (!normalizedRole || !VALID_ACCOUNT_TYPES.includes(normalizedRole)) {
     return { data: null, error: { message: 'Tipo de cuenta inválido' } };
   }
 
@@ -295,7 +313,7 @@ export const authService = {
       savePendingOrgKind(metadata.accountKind);
     }
 
-    // Persist org-only profile details (never candidate data) so CompanySetup
+    // Persist org-only profile details (never personal data) so CompanySetup
     // can pre-fill them after email verification.
     savePendingOrgDetails(metadata.orgDetails);
 
@@ -323,15 +341,18 @@ export const authService = {
       return { data: null, error: roleError };
     }
 
-    const storedRole = normalizeStoredRole(existingRole?.role);
     const profileRole = await getExistingProfileRole(userId);
+    const storedRole = normalizeStoredRole(
+      existingRole?.role,
+      // company_type only needed for legacy `company` rows pre-migration
+    );
 
     if (storedRole === ROLES.ADMIN) {
       return { data: existingRole, error: null };
     }
 
     // OAuth signup: pending role from account-type selection overrides the
-    // default "candidate" row inserted by handle_new_user for brand-new users.
+    // default "personal" row inserted by handle_new_user for brand-new users.
     if (
       pendingRole &&
       currentUser &&
@@ -387,12 +408,12 @@ export const authService = {
     return result;
   },
 
-  signupWithGoogle: async (accountKind = ROLES.CANDIDATE) => {
+  signupWithGoogle: async (accountKind = ROLES.PERSONAL) => {
     if (!isSupabaseConfigured) {
       return configError();
     }
 
-    const normalizedRole = normalizeAccountType(accountKind) ?? ROLES.CANDIDATE;
+    const normalizedRole = normalizeAccountType(accountKind) ?? ROLES.PERSONAL;
     savePendingAccountType(accountKind);
     saveOAuthIntent(OAUTH_INTENTS.SIGNUP);
 
@@ -405,7 +426,7 @@ export const authService = {
         },
         data: {
           role: normalizedRole,
-          account_kind: isValidAccountKind(accountKind) ? accountKind : undefined,
+          account_kind: normalizeAccountKind(accountKind) || undefined,
         },
       },
     });
@@ -460,3 +481,5 @@ export const authService = {
   getUserRole: (userId) =>
     supabase.from('user_roles').select('role, created_at').eq('user_id', userId).maybeSingle(),
 };
+
+export { isEmployerRole, isPersonalRole, normalizeStoredRole };

@@ -38,7 +38,7 @@ export default function FeedItemRenderer({
           authorName={post.author_name ?? 'Usuario'}
           authorHeadline={post.author_headline ?? ''}
           authorAvatar={post.author_avatar}
-          authorType={post.author_type ?? 'candidate'}
+          authorType={post.author_type ?? 'personal'}
           authorCompany={post.author_company}
           canManage={canManage}
           onEdit={onEdit}

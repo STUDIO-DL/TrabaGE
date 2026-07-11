@@ -8,6 +8,7 @@ import { FOLLOWS_TARGET } from '../../services/follows.service';
 import { FEED_RECOMMENDATION_SUBTYPES } from '../../constants/feedContentTypes';
 import { getCompanyLogoUrl } from '../../constants/images';
 import { resolveUserAvatar } from '../../utils/resolveUserAvatar';
+import { AUTHOR_TYPES } from '../../constants/authorTypes';
 
 function FollowSuggestionButton({ targetType, targetId }) {
   const { isFollowing, actionLoading, toggleFollow } = useFollow({ targetType, targetId });
@@ -24,23 +25,52 @@ function FollowSuggestionButton({ targetType, targetId }) {
   );
 }
 
+function isPersonalSubtype(subtype) {
+  return (
+    subtype === FEED_RECOMMENDATION_SUBTYPES.PERSONAL ||
+    subtype === FEED_RECOMMENDATION_SUBTYPES.CANDIDATE ||
+    subtype === 'candidate' ||
+    subtype === 'personal' ||
+    subtype === 'person'
+  );
+}
+
+function isBusinessSubtype(subtype) {
+  return (
+    subtype === FEED_RECOMMENDATION_SUBTYPES.BUSINESS ||
+    subtype === FEED_RECOMMENDATION_SUBTYPES.COMPANY ||
+    subtype === 'company' ||
+    subtype === 'business'
+  );
+}
+
+function isOrganizationSubtype(subtype) {
+  return (
+    subtype === FEED_RECOMMENDATION_SUBTYPES.ORGANIZATION ||
+    subtype === FEED_RECOMMENDATION_SUBTYPES.INSTITUTION ||
+    subtype === 'institution' ||
+    subtype === 'organization'
+  );
+}
+
 export default function FeedRecommendationCard({ item }) {
   const { subtype } = item.payload ?? {};
 
-  if (subtype === FEED_RECOMMENDATION_SUBTYPES.CANDIDATE) {
+  // Personal suggestions: profile link only — follow-people is NOT enabled.
+  if (isPersonalSubtype(subtype)) {
     const profile = item.payload.profile ?? item.payload.candidate_profile;
     if (!profile) return null;
 
     return (
       <Card className="mb-3">
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-primary-600">
-          Candidato recomendado
+          Persona recomendada
         </p>
         <div className="flex items-start justify-between gap-3">
           <UserProfileLink
             userId={profile.user_id}
-            userType="candidate"
-            name={profile.full_name ?? 'Candidato'}
+            userType={AUTHOR_TYPES.PERSONAL}
+            name={profile.full_name ?? 'Persona'}
             avatar={resolveUserAvatar(profile.avatar_path)}
             path={`/profile/${profile.user_id}`}
             size="md"
@@ -49,8 +79,8 @@ export default function FeedRecommendationCard({ item }) {
           <div className="min-w-0 flex-1">
             <UserProfileLink
               userId={profile.user_id}
-              userType="candidate"
-              name={profile.full_name ?? 'Candidato'}
+              userType={AUTHOR_TYPES.PERSONAL}
+              name={profile.full_name ?? 'Persona'}
               path={`/profile/${profile.user_id}`}
               layout="name"
             />
@@ -68,19 +98,19 @@ export default function FeedRecommendationCard({ item }) {
     );
   }
 
-  if (subtype === FEED_RECOMMENDATION_SUBTYPES.COMPANY) {
+  if (isBusinessSubtype(subtype)) {
     const company = item.payload.company;
     if (!company) return null;
 
     return (
       <Card className="mb-3">
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-primary-600">
-          Empresa recomendada
+          Business recomendado
         </p>
         <div className="flex items-start justify-between gap-3">
           <UserProfileLink
             userId={company.user_id}
-            userType="company"
+            userType={AUTHOR_TYPES.BUSINESS}
             name={company.company_name}
             avatar={getCompanyLogoUrl(company.logo_path)}
             path={`/companies/${company.user_id}`}
@@ -94,7 +124,7 @@ export default function FeedRecommendationCard({ item }) {
             </p>
           </div>
           <FollowSuggestionButton
-            targetType={FOLLOWS_TARGET.COMPANY}
+            targetType={FOLLOWS_TARGET.BUSINESS}
             targetId={company.user_id}
           />
         </div>
@@ -102,19 +132,19 @@ export default function FeedRecommendationCard({ item }) {
     );
   }
 
-  if (subtype === FEED_RECOMMENDATION_SUBTYPES.INSTITUTION) {
-    const institution = item.payload.institution;
+  if (isOrganizationSubtype(subtype)) {
+    const institution = item.payload.institution ?? item.payload.organization;
     if (!institution) return null;
 
     return (
       <Card className="mb-3">
         <p className="mb-3 text-xs font-medium uppercase tracking-wide text-primary-600">
-          Institución recomendada
+          Organización recomendada
         </p>
         <div className="flex items-start justify-between gap-3">
           <UserProfileLink
             userId={institution.user_id}
-            userType="company"
+            userType={AUTHOR_TYPES.ORGANIZATION}
             name={institution.company_name}
             avatar={getCompanyLogoUrl(institution.logo_path)}
             path={`/companies/${institution.user_id}`}
@@ -128,7 +158,7 @@ export default function FeedRecommendationCard({ item }) {
             </p>
           </div>
           <FollowSuggestionButton
-            targetType={FOLLOWS_TARGET.INSTITUTION}
+            targetType={FOLLOWS_TARGET.ORGANIZATION}
             targetId={institution.user_id}
           />
         </div>

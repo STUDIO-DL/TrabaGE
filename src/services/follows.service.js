@@ -1,8 +1,15 @@
 import { supabase } from '../config/supabase';
 
+/**
+ * Follow targets: Business and Organizations only.
+ * Personal accounts cannot be followed (product rule — do not enable follow-people).
+ */
 export const FOLLOWS_TARGET = {
-  COMPANY: 'company',
-  INSTITUTION: 'institution',
+  BUSINESS: 'business',
+  ORGANIZATION: 'organization',
+  // Legacy DB values — accepted by follow RPCs during migration transition
+  COMPANY: 'business',
+  INSTITUTION: 'organization',
 };
 
 export const followsService = {

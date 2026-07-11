@@ -18,13 +18,13 @@ import { getCompanyRequiredMissing } from '../../utils/profileRequirements';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 function getDefaultCompanyType(orgKind) {
-  if (orgKind === ACCOUNT_KINDS.INSTITUTION) return 'Institucion publica';
+  if (orgKind === ACCOUNT_KINDS.ORGANIZATION) return 'Institucion publica';
   return '';
 }
 
 export default function CompanySetup() {
   const navigate = useNavigate();
-  const { user, refreshSetupStatus } = useAuth();
+  const { user, role, refreshSetupStatus } = useAuth();
   const [form, setForm] = useState({
     company_name: '',
     sector: '',
@@ -102,7 +102,7 @@ export default function CompanySetup() {
     }
 
     await refreshSetupStatus();
-    navigate(ROLE_HOME[ROLES.COMPANY], { replace: true });
+    navigate(ROLE_HOME[role] || ROLE_HOME[ROLES.BUSINESS], { replace: true });
   };
 
   if (initializing) {

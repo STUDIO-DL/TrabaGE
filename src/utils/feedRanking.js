@@ -1,3 +1,4 @@
+import { isEmployerAuthor } from '../constants/authorTypes';
 import { calculateJobMatch, extractUserKeywords } from './calculateJobMatch';
 import { getCandidateCompletenessWeight } from './profileCompleteness';
 import {
@@ -58,7 +59,7 @@ export function scoreFeedItem(item, context = {}) {
     case FEED_CONTENT_TYPES.POST:
     case FEED_CONTENT_TYPES.ADVICE: {
       const post = item.payload;
-      if (post?.author_type === 'company' && followedCompanyIds.includes(post?.author_id)) {
+      if (isEmployerAuthor(post?.author_type) && followedCompanyIds.includes(post?.author_id)) {
         score += 35;
       }
       if (profile) {
@@ -71,7 +72,7 @@ export function scoreFeedItem(item, context = {}) {
         const keywordMatches = postTokens.filter((token) => userKeywords.has(token)).length;
         score += Math.min(25, keywordMatches * 5);
       }
-      if (post?.author_type === 'company') score += institutionMode ? 6 : 10;
+      if (isEmployerAuthor(post?.author_type)) score += institutionMode ? 6 : 10;
       if (item.content_type === FEED_CONTENT_TYPES.ADVICE) score += 8;
       break;
     }

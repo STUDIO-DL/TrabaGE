@@ -74,7 +74,7 @@ export default function CandidateSetup() {
     }
 
     await refreshSetupStatus();
-    navigate(ROLE_HOME[ROLES.CANDIDATE], { replace: true });
+    navigate(ROLE_HOME[ROLES.PERSONAL], { replace: true });
   };
 
   if (initializing) {

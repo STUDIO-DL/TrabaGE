@@ -1,4 +1,11 @@
-import { ROLE_HOME, ROLE_SETUP, ROLES } from '../constants/roles';
+import {
+  ROLE_HOME,
+  ROLE_SETUP,
+  ROLES,
+  isEmployerRole,
+  isPersonalRole,
+  normalizeRole,
+} from '../constants/roles';
 import { authService } from '../services/auth.service';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
@@ -17,21 +24,21 @@ export async function resolvePostAuthRedirect(userId, knownRole = null) {
   }
 
   if (!userRole) return '/login';
+
   if (userRole === ROLES.ADMIN) return ROLE_HOME[ROLES.ADMIN];
 
-  if (userRole === ROLES.CANDIDATE) {
+  if (isPersonalRole(userRole)) {
+    const role = ROLES.PERSONAL;
     const { data } = await profileService.getCandidateProfile(userId);
-    return isProfileSetupComplete(ROLES.CANDIDATE, data)
-      ? ROLE_HOME[ROLES.CANDIDATE]
-      : ROLE_SETUP[ROLES.CANDIDATE];
+    return isProfileSetupComplete(role, data) ? ROLE_HOME[role] : ROLE_SETUP[role];
   }
 
-  if (userRole === ROLES.COMPANY) {
+  if (isEmployerRole(userRole)) {
     const { data } = await companyService.getCompanyProfile(userId);
-    return isProfileSetupComplete(ROLES.COMPANY, data)
-      ? ROLE_HOME[ROLES.COMPANY]
-      : ROLE_SETUP[ROLES.COMPANY];
+    const role = normalizeRole(userRole, { companyType: data?.company_type }) ?? ROLES.BUSINESS;
+    return isProfileSetupComplete(role, data) ? ROLE_HOME[role] : ROLE_SETUP[role];
   }
 
-  return ROLE_HOME[userRole] || '/login';
+  const normalized = normalizeRole(userRole);
+  return ROLE_HOME[normalized || userRole] || '/login';
 }

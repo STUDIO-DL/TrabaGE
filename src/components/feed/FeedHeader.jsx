@@ -3,7 +3,7 @@ import VerifiedBadge from '../company/VerifiedBadge';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
-import { ROLES } from '../../constants/roles';
+import { ROLES, isEmployerRole, rolePath } from '../../constants/roles';
 import { getCompanyLogoUrl } from '../../constants/images';
 import UserAvatar from '../common/UserAvatar';
 import Avatar from '../ui/Avatar';
@@ -12,8 +12,8 @@ import GlobalSearch from '../search/GlobalSearch';
 export default function FeedHeader() {
   const { role } = useAuth();
   const { profile } = useProfile();
-  const isCompany = role === ROLES.COMPANY;
-  const profilePath = isCompany ? '/company/profile' : '/candidate/profile';
+  const isCompany = isEmployerRole(role);
+  const profilePath = rolePath(role ?? ROLES.PERSONAL, '/profile');
   const showVerifiedBadge = isCompany && isCompanyVerified(profile);
 
   return (
@@ -34,7 +34,7 @@ export default function FeedHeader() {
 
         {showVerifiedBadge && <VerifiedBadge size="sm" className="shrink-0" />}
 
-        <GlobalSearch placeholder="Buscar personas, empresas, instituciones…" />
+        <GlobalSearch placeholder="Buscar personas, Business y organizaciones…" />
       </div>
     </header>
   );

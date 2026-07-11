@@ -242,7 +242,7 @@ export default function Profile() {
         onAvatarChange={canEdit ? handleAvatar : undefined}
         avatarLoading={avatarLoading}
         onShare={handleShare}
-        onSettings={canEdit ? () => navigate('/candidate/settings') : undefined}
+        onSettings={canEdit ? () => navigate('/personal/settings') : undefined}
         onLogout={canEdit ? logout : undefined}
         onDeleteAccount={canEdit ? () => setDeleteOpen(true) : undefined}
         onSaveField={canEdit ? handleSaveField : undefined}

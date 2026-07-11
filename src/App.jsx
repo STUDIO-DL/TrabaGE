@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -9,6 +9,7 @@ import GuestBar from './components/common/GuestBar';
 import InstallPrompt from './components/common/InstallPrompt';
 import { ToastContainer } from './components/ui/Toast';
 import { useNotificationContext } from './context/NotificationContext';
+import { ROLES } from './constants/roles';
 
 const SplashScreen = lazy(() => import('./pages/SplashScreen'));
 const OnboardingFlow = lazy(() => import('./pages/onboarding/OnboardingFlow'));
@@ -74,6 +75,46 @@ function AppToasts() {
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
 }
 
+function LegacyPathRedirect({ toPrefix }) {
+  const { '*': rest } = useParams();
+  const location = useLocation();
+  const suffix = rest ? `/${rest}` : '';
+  return <Navigate to={`${toPrefix}${suffix}${location.search}${location.hash}`} replace />;
+}
+
+function EmployerPublishJobRedirect() {
+  const { pathname } = useLocation();
+  const base = pathname.startsWith('/organization') ? '/organization' : '/business';
+  return <Navigate to={`${base}/jobs/create`} replace />;
+}
+
+function LegacyCompanyJobEditRedirect() {
+  const { jobId } = useParams();
+  return <Navigate to={`/business/jobs/${jobId}/edit`} replace />;
+}
+
+/** Shared employer app routes under /business/* and /organization/*. */
+function EmployerAppRoutes() {
+  return (
+    <>
+      <Route path="feed" element={<CompanyFeed />} />
+      <Route path="dashboard" element={<Dashboard />} />
+      <Route path="jobs" element={<CompanyJobs />} />
+      <Route path="jobs/create" element={<PublishJob />} />
+      <Route path="jobs/:jobId/edit" element={<PublishJob />} />
+      <Route path="publish-job" element={<EmployerPublishJobRedirect />} />
+      <Route path="applicants" element={<Applicants />} />
+      <Route path="notifications" element={<CompanyNotifications />} />
+      <Route path="profile" element={<CompanyProfile />} />
+      <Route path="settings" element={<CompanySettings />} />
+      <Route path="settings/appearance" element={<CompanyAppearance />} />
+      <Route path="settings/notifications" element={<CompanyNotificationSettings />} />
+      <Route path="verification" element={<Verification />} />
+      <Route path="help" element={<HelpCenter />} />
+    </>
+  );
+}
+
 function AppRoutes() {
   return (
     <>
@@ -97,41 +138,30 @@ function AppRoutes() {
               <Route path="/auth/set-password" element={<SetPassword />} />
               <Route path="/search" element={<SearchResults />} />
 
-              <Route element={<RoleRoute role="candidate" />}>
-                <Route path="/setup/candidate" element={<CandidateSetup />} />
-                <Route path="/candidate/feed" element={<CandidateFeed />} />
-                <Route path="/candidate/jobs" element={<CandidateJobs />} />
-                <Route path="/candidate/publish" element={<CandidatePublish />} />
-                <Route path="/candidate/jobs/:id/apply" element={<ApplyJob />} />
-                <Route path="/candidate/saved-jobs" element={<CandidateSavedJobs />} />
-                <Route path="/candidate/applications" element={<CandidateApplications />} />
-                <Route path="/candidate/notifications" element={<CandidateNotifications />} />
-                <Route path="/candidate/profile" element={<CandidateProfile />} />
-                <Route path="/candidate/settings" element={<CandidateSettings />} />
-                <Route path="/candidate/settings/appearance" element={<CandidateAppearance />} />
-                <Route path="/candidate/settings/notifications" element={<CandidateNotificationSettings />} />
+              <Route element={<RoleRoute role={ROLES.PERSONAL} />}>
+                <Route path="/setup/personal" element={<CandidateSetup />} />
+                <Route path="/personal/feed" element={<CandidateFeed />} />
+                <Route path="/personal/jobs" element={<CandidateJobs />} />
+                <Route path="/personal/publish" element={<CandidatePublish />} />
+                <Route path="/personal/jobs/:id/apply" element={<ApplyJob />} />
+                <Route path="/personal/saved-jobs" element={<CandidateSavedJobs />} />
+                <Route path="/personal/applications" element={<CandidateApplications />} />
+                <Route path="/personal/notifications" element={<CandidateNotifications />} />
+                <Route path="/personal/profile" element={<CandidateProfile />} />
+                <Route path="/personal/settings" element={<CandidateSettings />} />
+                <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
+                <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />
                 <Route path="/help" element={<HelpCenter />} />
               </Route>
 
-              <Route element={<RoleRoute role="company" />}>
-                <Route path="/setup/company" element={<CompanySetup />} />
-                <Route path="/company/feed" element={<CompanyFeed />} />
-                <Route path="/company/dashboard" element={<Dashboard />} />
-                <Route path="/company/jobs" element={<CompanyJobs />} />
-                <Route path="/company/jobs/create" element={<PublishJob />} />
-                <Route path="/company/jobs/:jobId/edit" element={<PublishJob />} />
-                <Route path="/company/publish-job" element={<Navigate to="/company/jobs/create" replace />} />
-                <Route path="/company/applicants" element={<Applicants />} />
-                <Route path="/company/notifications" element={<CompanyNotifications />} />
-                <Route path="/company/profile" element={<CompanyProfile />} />
-                <Route path="/company/settings" element={<CompanySettings />} />
-                <Route path="/company/settings/appearance" element={<CompanyAppearance />} />
-                <Route path="/company/settings/notifications" element={<CompanyNotificationSettings />} />
-                <Route path="/company/verification" element={<Verification />} />
-                <Route path="/company/help" element={<HelpCenter />} />
+              <Route element={<RoleRoute roles={[ROLES.BUSINESS, ROLES.ORGANIZATION]} />}>
+                <Route path="/setup/business" element={<CompanySetup />} />
+                <Route path="/setup/organization" element={<CompanySetup />} />
+                <Route path="/business">{EmployerAppRoutes()}</Route>
+                <Route path="/organization">{EmployerAppRoutes()}</Route>
               </Route>
 
-              <Route element={<RoleRoute role="admin" />}>
+              <Route element={<RoleRoute role={ROLES.ADMIN} />}>
                 <Route element={<AdminLayout />}>
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
@@ -147,14 +177,35 @@ function AppRoutes() {
               </Route>
             </Route>
 
+            {/* Legacy path redirects — explicit company app paths before /company/:companyId */}
+            <Route path="/setup/candidate" element={<Navigate to="/setup/personal" replace />} />
+            <Route path="/setup/company" element={<Navigate to="/setup/business" replace />} />
+            <Route path="/candidate/jobs/:id" element={<JobDetail />} />
+            <Route path="/candidate/*" element={<LegacyPathRedirect toPrefix="/personal" />} />
+            <Route path="/company/feed" element={<Navigate to="/business/feed" replace />} />
+            <Route path="/company/dashboard" element={<Navigate to="/business/dashboard" replace />} />
+            <Route path="/company/jobs/create" element={<Navigate to="/business/jobs/create" replace />} />
+            <Route
+              path="/company/jobs/:jobId/edit"
+              element={<LegacyCompanyJobEditRedirect />}
+            />
+            <Route path="/company/jobs" element={<Navigate to="/business/jobs" replace />} />
+            <Route path="/company/publish-job" element={<Navigate to="/business/jobs/create" replace />} />
+            <Route path="/company/applicants" element={<Navigate to="/business/applicants" replace />} />
+            <Route path="/company/notifications" element={<Navigate to="/business/notifications" replace />} />
+            <Route path="/company/profile" element={<Navigate to="/business/profile" replace />} />
+            <Route path="/company/settings/appearance" element={<Navigate to="/business/settings/appearance" replace />} />
+            <Route path="/company/settings/notifications" element={<Navigate to="/business/settings/notifications" replace />} />
+            <Route path="/company/settings" element={<Navigate to="/business/settings" replace />} />
+            <Route path="/company/verification" element={<Navigate to="/business/verification" replace />} />
+            <Route path="/company/help" element={<Navigate to="/business/help" replace />} />
+
             {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
             <Route path="/profile/:userId" element={<PublicProfile />} />
             <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
             <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
             <Route path="/job/:id" element={<JobDetail />} />
-            {/* Legacy share paths kept public for backward compatibility with links
-                shared before the clean deep-link URLs (see src/utils/deepLinks.js). */}
-            <Route path="/candidate/jobs/:id" element={<JobDetail />} />
+            <Route path="/personal/jobs/:id" element={<JobDetail />} />
             <Route path="/post/:postId" element={<PostDetail />} />
             <Route path="/feed/post/:postId" element={<PostDetail />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />

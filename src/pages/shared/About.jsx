@@ -3,15 +3,15 @@ import { ArrowLeft } from 'lucide-react';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
-import { ROLES } from '../../constants/roles';
+import { ROLES, isEmployerRole, rolePath } from '../../constants/roles';
 import { APP_VERSION, ZARREL_NAME, ZARREL_URL } from '../../constants/zarrel';
 import { useAuth } from '../../hooks/useAuth';
 import { usePageTitle } from '../../hooks/usePageTitle';
 
 function settingsFallback(role) {
-  if (role === ROLES.COMPANY) return '/company/settings';
+  if (isEmployerRole(role)) return rolePath(role, '/settings');
   if (role === ROLES.ADMIN) return '/admin/settings';
-  if (role === ROLES.CANDIDATE) return '/candidate/settings';
+  if (role === ROLES.PERSONAL) return rolePath(ROLES.PERSONAL, '/settings');
   return '/login';
 }
 
@@ -55,14 +55,15 @@ export default function About() {
           Donde las oportunidades te encuentran
         </h1>
         <p className="mt-3 text-center text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-          TrabaGE conecta talento, empresas e instituciones en Guinea Ecuatorial. Perfiles
+          TrabaGE conecta talento, Business y Organizaciones en Guinea Ecuatorial. Perfiles
           profesionales, ofertas de empleo y una comunidad pensada para crecer.
         </p>
 
         <div className="mt-8 space-y-3 text-sm leading-relaxed text-slate-600 dark:text-slate-300">
           <p>
-            Diseñado para candidatos que buscan su próximo paso y para organizaciones que necesitan
-            encontrar el talento adecuado — con verificación, postulaciones y herramientas claras.
+            Diseñado para cuentas personales que buscan su próximo paso y para Business y
+            Organizaciones que necesitan encontrar el talento adecuado — con verificación,
+            postulaciones y herramientas claras.
           </p>
           <p>
             TrabaGE fue diseñado y desarrollado por{' '}

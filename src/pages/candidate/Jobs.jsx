@@ -156,7 +156,7 @@ export default function Jobs() {
   useEffect(() => {
     if (!user?.id) return;
 
-    followsService.getFollowing(user.id, FOLLOWS_TARGET.COMPANY).then(({ data }) => {
+    followsService.getFollowing(user.id, FOLLOWS_TARGET.BUSINESS).then(({ data }) => {
       setFollowedCompanyIds((data ?? []).map((row) => row.target_id));
     });
 

@@ -1,34 +1,52 @@
 import { NavLink } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { ROLES } from '../../constants/roles';
+import { ROLES, isEmployerRole, rolePath } from '../../constants/roles';
 import { ICON_COLORS } from '../../constants/icons';
 import { NavIcon } from './NavIcons';
 import AppIcon from '../common/AppIcon';
 import { Plus, ICON_SIZES } from '../../constants/icons';
 import { notificationsService } from '../../services/notifications.service';
 
-const candidateNav = [
-  { to: '/candidate/feed', label: 'Inicio', icon: 'home' },
-  { to: '/candidate/jobs', label: 'Empleos', icon: 'briefcase' },
-  { to: '/candidate/publish', label: 'Publicar', icon: 'publish' },
-  { to: '/candidate/notifications', label: 'Notificaciones', icon: 'bell', showBadge: true },
-  { to: '/candidate/profile', label: 'Perfil', icon: 'user' },
-];
+function buildPersonalNav(role) {
+  return [
+    { to: rolePath(role, '/feed'), label: 'Inicio', icon: 'home' },
+    { to: rolePath(role, '/jobs'), label: 'Empleos', icon: 'briefcase' },
+    { to: rolePath(role, '/publish'), label: 'Publicar', icon: 'publish' },
+    { to: rolePath(role, '/notifications'), label: 'Notificaciones', icon: 'bell', showBadge: true },
+    { to: rolePath(role, '/profile'), label: 'Perfil', icon: 'user' },
+  ];
+}
 
-const companyNav = [
-  { to: '/company/feed', label: 'Inicio', icon: 'home' },
-  { to: '/company/dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { to: '/company/jobs/create', label: 'Publicar', icon: 'publish', prominent: true },
-  { to: '/company/notifications', label: 'Notificaciones', icon: 'bell', showBadge: true },
-  { to: '/company/profile', label: 'Perfil', icon: 'user' },
-];
+function buildEmployerNav(role) {
+  const employerRole = role ?? ROLES.BUSINESS;
+  return [
+    { to: rolePath(employerRole, '/feed'), label: 'Inicio', icon: 'home' },
+    { to: rolePath(employerRole, '/dashboard'), label: 'Dashboard', icon: 'dashboard' },
+    {
+      to: rolePath(employerRole, '/jobs/create'),
+      label: 'Publicar',
+      icon: 'publish',
+      prominent: true,
+    },
+    {
+      to: rolePath(employerRole, '/notifications'),
+      label: 'Notificaciones',
+      icon: 'bell',
+      showBadge: true,
+    },
+    { to: rolePath(employerRole, '/profile'), label: 'Perfil', icon: 'user' },
+  ];
+}
 
 export default function BottomNav() {
   const { role, user, isPreviewMode } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const items = role === ROLES.COMPANY ? companyNav : candidateNav;
+  const items = useMemo(
+    () => (isEmployerRole(role) ? buildEmployerNav(role) : buildPersonalNav(ROLES.PERSONAL)),
+    [role],
+  );
 
   useEffect(() => {
     let cancelled = false;

@@ -37,7 +37,9 @@ export function rankSearchJobsForCandidate(results, jobsById, userProfile) {
 export function rankSearchCandidatesForCompany(results, candidatesById, companyJobs) {
   if (!companyJobs?.length || !results?.length) return results;
 
-  const candidateResults = results.filter((item) => item.type === 'candidate');
+  const candidateResults = results.filter(
+    (item) => item.type === 'personal' || item.type === 'candidate',
+  );
   if (!candidateResults.length) return results;
 
   const rankedCandidates = sortByInternalScore(candidateResults, (item) => {
@@ -54,6 +56,8 @@ export function rankSearchCandidatesForCompany(results, candidatesById, companyJ
     return compareCandidateCompleteness(candidateA, candidateB);
   });
 
-  const other = results.filter((item) => item.type !== 'candidate');
+  const other = results.filter(
+    (item) => item.type !== 'personal' && item.type !== 'candidate',
+  );
   return [...rankedCandidates, ...other];
 }

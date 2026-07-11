@@ -2,14 +2,14 @@ import { Briefcase, Building2, GraduationCap, Landmark, User } from 'lucide-reac
 
 import { ACCOUNT_KINDS } from './accountKinds';
 import { SECTORS } from './sectors';
-import { INSTITUTION_COMPANY_TYPES } from './feedContentTypes';
+import { ORGANIZATION_COMPANY_TYPES } from './feedContentTypes';
 
 /**
- * User-facing institution types. Each option maps to a stored `company_type`
- * that MUST remain within INSTITUTION_COMPANY_TYPES so the profile keeps being
- * classified as an institution (see utils/orgLabels.isInstitutionProfile).
+ * User-facing organization types. Each option maps to a stored `company_type`
+ * that MUST remain within ORGANIZATION_COMPANY_TYPES so the profile keeps being
+ * classified as an organization (see utils/orgLabels.isOrganizationProfile).
  */
-export const INSTITUTION_TYPE_OPTIONS = [
+export const ORGANIZATION_TYPE_OPTIONS = [
   { value: 'Universidad', label: 'Universidad', companyType: 'Institucion publica' },
   { value: 'Centro de Formación', label: 'Centro de Formación', companyType: 'Institucion publica' },
   { value: 'Colegio', label: 'Colegio', companyType: 'Institucion publica' },
@@ -18,18 +18,26 @@ export const INSTITUTION_TYPE_OPTIONS = [
   { value: 'ONG Educativa', label: 'ONG Educativa', companyType: 'ONG' },
 ];
 
-const DEFAULT_INSTITUTION_COMPANY_TYPE = 'Institucion publica';
+/** @deprecated Use ORGANIZATION_TYPE_OPTIONS */
+export const INSTITUTION_TYPE_OPTIONS = ORGANIZATION_TYPE_OPTIONS;
+
+const DEFAULT_ORGANIZATION_COMPANY_TYPE = 'Institucion publica';
 
 /**
- * Maps a friendly institution type to a stored `company_type` guaranteed to be
- * a valid INSTITUTION_COMPANY_TYPES value.
+ * Maps a friendly organization type to a stored `company_type` guaranteed to be
+ * a valid ORGANIZATION_COMPANY_TYPES value.
  */
-export function institutionTypeToCompanyType(value) {
-  const match = INSTITUTION_TYPE_OPTIONS.find((option) => option.value === value);
-  const companyType = match?.companyType ?? DEFAULT_INSTITUTION_COMPANY_TYPE;
-  return INSTITUTION_COMPANY_TYPES.includes(companyType)
+export function organizationTypeToCompanyType(value) {
+  const match = ORGANIZATION_TYPE_OPTIONS.find((option) => option.value === value);
+  const companyType = match?.companyType ?? DEFAULT_ORGANIZATION_COMPANY_TYPE;
+  return ORGANIZATION_COMPANY_TYPES.includes(companyType)
     ? companyType
-    : DEFAULT_INSTITUTION_COMPANY_TYPE;
+    : DEFAULT_ORGANIZATION_COMPANY_TYPE;
+}
+
+/** @deprecated Use organizationTypeToCompanyType */
+export function institutionTypeToCompanyType(value) {
+  return organizationTypeToCompanyType(value);
 }
 
 /**
@@ -38,7 +46,7 @@ export function institutionTypeToCompanyType(value) {
  * to build the signup metadata so the three flows share a single code path.
  */
 export const REGISTER_ACCOUNT_CONFIG = {
-  [ACCOUNT_KINDS.CANDIDATE]: {
+  [ACCOUNT_KINDS.PERSONAL]: {
     emailLabel: 'Correo electrónico',
     emailPlaceholder: 'ejemplo@correo.com',
     fields: [
@@ -56,22 +64,22 @@ export const REGISTER_ACCOUNT_CONFIG = {
     buildMetadata: (values, common) => ({
       fullName: values.fullName?.trim() || undefined,
       city: common.city,
-      accountKind: ACCOUNT_KINDS.CANDIDATE,
+      accountKind: ACCOUNT_KINDS.PERSONAL,
     }),
   },
-  [ACCOUNT_KINDS.COMPANY]: {
+  [ACCOUNT_KINDS.BUSINESS]: {
     emailLabel: 'Correo empresarial',
-    emailPlaceholder: 'nombre@empresa.com',
+    emailPlaceholder: 'nombre@negocio.com',
     fields: [
       {
         key: 'orgName',
         type: 'text',
-        label: 'Nombre de la empresa',
+        label: 'Nombre del negocio',
         placeholder: 'Ej. Tech Solutions Ltd.',
         icon: Building2,
         autoComplete: 'organization',
         required: true,
-        requiredMessage: 'Introduce el nombre de la empresa.',
+        requiredMessage: 'Introduce el nombre del negocio.',
       },
       {
         key: 'sector',
@@ -85,44 +93,46 @@ export const REGISTER_ACCOUNT_CONFIG = {
     ],
     buildMetadata: (values, common) => ({
       city: common.city,
-      accountKind: ACCOUNT_KINDS.COMPANY,
+      accountKind: ACCOUNT_KINDS.BUSINESS,
       orgDetails: {
         company_name: values.orgName?.trim() || undefined,
         sector: values.sector || undefined,
       },
     }),
   },
-  [ACCOUNT_KINDS.INSTITUTION]: {
-    emailLabel: 'Correo institucional',
-    emailPlaceholder: 'nombre@institucion.com',
+  [ACCOUNT_KINDS.ORGANIZATION]: {
+    emailLabel: 'Correo de la organización',
+    emailPlaceholder: 'nombre@organizacion.com',
     fields: [
       {
         key: 'orgName',
         type: 'text',
-        label: 'Nombre de la institución',
+        label: 'Nombre de la organización',
         placeholder: 'Ej. Universidad Nacional',
         icon: Landmark,
         autoComplete: 'organization',
         required: true,
-        requiredMessage: 'Introduce el nombre de la institución.',
+        requiredMessage: 'Introduce el nombre de la organización.',
       },
       {
-        key: 'institutionType',
+        key: 'organizationType',
         type: 'select',
-        label: 'Tipo de institución',
+        label: 'Tipo de organización',
         placeholder: 'Selecciona el tipo',
         icon: GraduationCap,
-        options: INSTITUTION_TYPE_OPTIONS,
+        options: ORGANIZATION_TYPE_OPTIONS,
         required: true,
-        requiredMessage: 'Selecciona el tipo de institución.',
+        requiredMessage: 'Selecciona el tipo de organización.',
       },
     ],
     buildMetadata: (values, common) => ({
       city: common.city,
-      accountKind: ACCOUNT_KINDS.INSTITUTION,
+      accountKind: ACCOUNT_KINDS.ORGANIZATION,
       orgDetails: {
         company_name: values.orgName?.trim() || undefined,
-        company_type: institutionTypeToCompanyType(values.institutionType),
+        company_type: organizationTypeToCompanyType(
+          values.organizationType || values.institutionType,
+        ),
       },
     }),
   },
@@ -136,5 +146,13 @@ export function normalizeFieldOptions(options = []) {
 }
 
 export function getRegisterConfig(accountKind) {
-  return REGISTER_ACCOUNT_CONFIG[accountKind] ?? REGISTER_ACCOUNT_CONFIG[ACCOUNT_KINDS.CANDIDATE];
+  const kind =
+    accountKind === 'candidate'
+      ? ACCOUNT_KINDS.PERSONAL
+      : accountKind === 'company'
+        ? ACCOUNT_KINDS.BUSINESS
+        : accountKind === 'institution'
+          ? ACCOUNT_KINDS.ORGANIZATION
+          : accountKind;
+  return REGISTER_ACCOUNT_CONFIG[kind] ?? REGISTER_ACCOUNT_CONFIG[ACCOUNT_KINDS.PERSONAL];
 }

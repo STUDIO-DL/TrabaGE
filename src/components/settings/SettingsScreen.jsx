@@ -20,7 +20,7 @@ import {
   ICON_SIZES,
 } from '../../constants/icons';
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
-import { ROLES } from '../../constants/roles';
+import { ROLES, isEmployerRole, rolePath } from '../../constants/roles';
 import { SUPPORT_EMAIL } from '../../constants/support';
 import { APP_VERSION } from '../../constants/zarrel';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -125,18 +125,18 @@ export default function SettingsScreen({ accountType }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const activeRole = accountType || role;
-  const isCompany = activeRole === ROLES.COMPANY;
-  const routes = useMemo(
-    () => ({
-      profile: isCompany ? '/company/profile' : '/candidate/profile',
-      notifications: isCompany ? '/company/notifications' : '/candidate/notifications',
-      notificationSettings: isCompany ? '/company/settings/notifications' : '/candidate/settings/notifications',
-      help: isCompany ? '/company/help' : '/help',
-      settings: isCompany ? '/company/settings' : '/candidate/settings',
-      appearance: isCompany ? '/company/settings/appearance' : '/candidate/settings/appearance',
-    }),
-    [isCompany],
-  );
+  const isCompany = isEmployerRole(activeRole);
+  const routes = useMemo(() => {
+    const base = isCompany ? activeRole || ROLES.BUSINESS : ROLES.PERSONAL;
+    return {
+      profile: rolePath(base, '/profile'),
+      notifications: rolePath(base, '/notifications'),
+      notificationSettings: rolePath(base, '/settings/notifications'),
+      help: isCompany ? rolePath(base, '/help') : '/help',
+      settings: rolePath(base, '/settings'),
+      appearance: rolePath(base, '/settings/appearance'),
+    };
+  }, [activeRole, isCompany]);
 
   const handleSupport = () => {
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=Soporte%20TrabaGE`;

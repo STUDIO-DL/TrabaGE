@@ -11,18 +11,35 @@ import {
 import { ICON_SIZES } from '../../constants/icons';
 
 const ENTITY_ICONS = {
+  personal: User,
+  business: Building2,
+  organization: Landmark,
   candidate: User,
   company: Building2,
   institution: Landmark,
   job: Briefcase,
 };
 
+function isPersonType(type) {
+  return type === 'personal' || type === 'candidate';
+}
+
+function isOrgType(type) {
+  return (
+    type === 'business' ||
+    type === 'organization' ||
+    type === 'company' ||
+    type === 'institution' ||
+    type === 'job'
+  );
+}
+
 function resolveAvatarSrc(item) {
   if (!item.avatar_path) {
-    return item.type === 'candidate' ? DEFAULT_USER_AVATAR : DEFAULT_COMPANY_LOGO;
+    return isPersonType(item.type) ? DEFAULT_USER_AVATAR : DEFAULT_COMPANY_LOGO;
   }
 
-  if (item.type === 'candidate') {
+  if (isPersonType(item.type)) {
     return resolveAvatarUrl(item.avatar_path) || DEFAULT_USER_AVATAR;
   }
 
@@ -31,7 +48,7 @@ function resolveAvatarSrc(item) {
 
 function SearchResultRow({ item, onSelect }) {
   const Icon = ENTITY_ICONS[item.type] || User;
-  const avatarFallback = item.type === 'candidate' ? DEFAULT_USER_AVATAR : DEFAULT_COMPANY_LOGO;
+  const avatarFallback = isPersonType(item.type) ? DEFAULT_USER_AVATAR : DEFAULT_COMPANY_LOGO;
 
   return (
     <button
@@ -45,7 +62,7 @@ function SearchResultRow({ item, onSelect }) {
         name={item.title}
         fallback={avatarFallback}
         size="sm"
-        className={item.type === 'company' || item.type === 'institution' || item.type === 'job' ? '!rounded-xl' : ''}
+        className={isOrgType(item.type) ? '!rounded-xl' : ''}
       />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
@@ -112,7 +129,7 @@ export default function GlobalSearchResults({
               </h3>
               <ul>
                 {group.items.map((item) => (
-                  <li key={`${item.type}-${item.id}`}>
+                  <li key={`${item.type}-${item.id ?? item.result_id}`}>
                     <SearchResultRow item={item} onSelect={handleSelect} />
                   </li>
                 ))}

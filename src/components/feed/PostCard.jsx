@@ -7,6 +7,7 @@ import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generatePostUrl } from '../../utils/generateShareUrl';
 import { resolvePostImageUrl } from '../../utils/storagePaths';
 import TimeAgo from '../common/TimeAgo';
+import { AUTHOR_TYPES, isEmployerAuthor } from '../../constants/authorTypes';
 
 export default function PostCard({
   post,
@@ -14,7 +15,7 @@ export default function PostCard({
   authorName,
   authorHeadline,
   authorAvatar,
-  authorType = 'candidate',
+  authorType = AUTHOR_TYPES.PERSONAL,
   authorCompany = null,
   canManage = false,
   onEdit,
@@ -44,7 +45,7 @@ export default function PostCard({
               path={authorPath}
               layout="name"
             />
-            {authorType === 'company' && isCompanyVerified(authorCompany) && (
+            {isEmployerAuthor(authorType) && isCompanyVerified(authorCompany) && (
               <VerifiedBadge size="sm" />
             )}
           </div>

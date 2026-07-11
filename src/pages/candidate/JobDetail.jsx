@@ -63,15 +63,15 @@ export default function JobDetail() {
       navigate('/login');
       return;
     }
-    if (role !== ROLES.CANDIDATE) {
+    if (role !== ROLES.PERSONAL) {
       showToast('Solo las cuentas de candidato pueden postularse a ofertas.', 'info');
       return;
     }
-    navigate(`/candidate/jobs/${id}/apply`);
+    navigate(`/personal/jobs/${id}/apply`);
   };
 
   const handleSaveToggle = async () => {
-    if (role !== ROLES.CANDIDATE) {
+    if (role !== ROLES.PERSONAL) {
       showToast('Solo las cuentas de candidato pueden guardar ofertas.', 'info');
       return;
     }
@@ -80,7 +80,7 @@ export default function JobDetail() {
   };
 
   const hasActiveApplication = application && application.status !== 'withdrawn';
-  const canUseCandidateActions = role === ROLES.CANDIDATE;
+  const canUseCandidateActions = role === ROLES.PERSONAL;
 
   if (loading) {
     return (

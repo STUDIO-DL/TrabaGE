@@ -171,7 +171,7 @@ export default function Register() {
   const [accountKind, setAccountKind] = useState(
     location.state?.accountKind && isValidAccountKind(location.state.accountKind)
       ? location.state.accountKind
-      : ACCOUNT_KINDS.CANDIDATE,
+      : ACCOUNT_KINDS.PERSONAL,
   );
   // Type-specific values (name, sector, institution type) keyed by field key so
   // the three account types share a single, config-driven code path.

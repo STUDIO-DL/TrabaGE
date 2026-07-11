@@ -10,15 +10,15 @@ export const helpCategories = [
       {
         question: '¿Cómo creo una cuenta en TrabaGE?',
         answer:
-          'Crear tu cuenta es rápido y gratuito. Accede a la plataforma y haz clic en "Registrarse". Podrás elegir entre registrarte como candidato o como empresa. Completa el formulario con tus datos básicos, acepta los Términos y Condiciones y confirma tu correo electrónico. En menos de dos minutos tendrás tu cuenta activa.',
+          'Crear tu cuenta es rápido y gratuito. Accede a la plataforma y haz clic en "Registrarse". Podrás elegir entre cuenta personal, Business u Organización. Completa el formulario con tus datos básicos, acepta los Términos y Condiciones y confirma tu correo electrónico. En menos de dos minutos tendrás tu cuenta activa.',
       },
       {
-        question: '¿Cuál es la diferencia entre una cuenta de candidato y una cuenta de empresa?',
+        question: '¿Cuál es la diferencia entre los tipos de cuenta?',
         answer:
-          'Cuenta de candidato: te permite crear tu perfil profesional, subir tu CV, buscar ofertas de empleo y postularte a vacantes.\n\nCuenta de empresa: te permite crear el perfil de tu organización, publicar ofertas de trabajo, recibir postulaciones y gestionar procesos de selección.\n\nCada tipo de cuenta tiene un panel de control adaptado a sus necesidades específicas.',
+          'Cuenta personal: te permite crear tu perfil profesional, subir tu CV, buscar ofertas de empleo y postularte a vacantes.\n\nCuenta Business: te permite crear el perfil de tu negocio, publicar ofertas de trabajo, recibir postulaciones y gestionar procesos de selección.\n\nCuenta de Organización: pensada para instituciones y entidades que conectan educación y oportunidades.\n\nCada tipo de cuenta tiene un panel adaptado a sus necesidades. No se puede seguir a cuentas personales.',
       },
       {
-        question: '¿Puedo tener una cuenta de candidato y una cuenta de empresa al mismo tiempo?',
+        question: '¿Puedo tener una cuenta personal y una Business al mismo tiempo?',
         answer:
           'En este momento, cada dirección de correo electrónico está asociada a un único tipo de cuenta. Si necesitas acceder a ambas funcionalidades, deberás registrarte con correos electrónicos diferentes para cada perfil.',
       },
@@ -310,7 +310,9 @@ export function filterHelpCategories(categories, query) {
 }
 
 export function getHelpPath(role) {
-  if (role === 'company') return '/company/help';
+  if (role === 'business' || role === 'organization' || role === 'company') {
+    return role === 'organization' ? '/organization/help' : '/business/help';
+  }
   if (role === 'admin') return '/admin/help';
   return '/help';
 }

@@ -93,11 +93,13 @@ export function getNotificationLink(notification, role = 'candidate') {
   if (category === NOTIFICATION_CATEGORY.JOBS) {
     if (metadata.job_id) {
       // Canonical shareable job path (maps to JobDetail for any role). This
-      // avoids the previously broken `/company/jobs/:id` route, which never
-      // existed (only `/company/jobs/:jobId/edit` does).
+      // avoids the previously broken `/business/jobs/:id` route, which never
+      // existed (only `/business/jobs/:jobId/edit` does).
       return DEEP_LINK_PATHS.job(metadata.job_id);
     }
-    return role === 'company' ? '/company/applicants' : '/candidate/applications';
+    return role === 'business' || role === 'organization' || role === 'company'
+      ? '/business/applicants'
+      : '/personal/applications';
   }
 
   if (category === NOTIFICATION_CATEGORY.POSTS) {

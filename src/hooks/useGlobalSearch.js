@@ -3,7 +3,7 @@ import { searchService } from '../services/search.service';
 import { jobsService } from '../services/jobs.service';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole } from '../constants/roles';
 
 const DEBOUNCE_MS = 300;
 
@@ -16,7 +16,7 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
   const requestIdRef = useRef(0);
 
   useEffect(() => {
-    if (role !== ROLES.COMPANY || !user?.id) {
+    if (!isEmployerRole(role) || !user?.id) {
       setCompanyJobs([]);
       return;
     }
@@ -40,9 +40,9 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
     setLoading(true);
 
     const matchingContext =
-      role === ROLES.CANDIDATE && profile
+      role === ROLES.PERSONAL && profile
         ? { userProfile: profile }
-        : role === ROLES.COMPANY && companyJobs.length
+        : isEmployerRole(role) && companyJobs.length
           ? { companyJobs }
           : null;
 

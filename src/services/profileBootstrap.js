@@ -1,4 +1,4 @@
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole, isPersonalRole } from '../constants/roles';
 import { ACCOUNT_KINDS } from '../constants/accountKinds';
 import { profileService } from './profile.service';
 import { companyService } from './company.service';
@@ -10,8 +10,9 @@ import {
 } from './auth.service';
 import { extractGoogleProfile } from '../utils/googleProfile';
 import { reportError } from '../utils/logger';
+import { isOrganizationKind } from '../utils/orgLabels';
 
-const INSTITUTION_DEFAULT_COMPANY_TYPE = 'Institucion publica';
+const ORGANIZATION_DEFAULT_COMPANY_TYPE = 'Institucion publica';
 
 function fallbackNameFromEmail(email) {
   const handle = String(email ?? '')
@@ -84,9 +85,9 @@ async function ensureCompanyProfile(userId, user, metadata, orgKind, orgDetails)
     return;
   }
 
-  const isInstitution = orgKind === ACCOUNT_KINDS.INSTITUTION;
+  const isOrganization = isOrganizationKind(orgKind) || orgKind === ACCOUNT_KINDS.ORGANIZATION;
   const companyType =
-    orgDetails.company_type || (isInstitution ? INSTITUTION_DEFAULT_COMPANY_TYPE : null);
+    orgDetails.company_type || (isOrganization ? ORGANIZATION_DEFAULT_COMPANY_TYPE : null);
 
   await companyService.upsertCompanyProfile({
     user_id: userId,
@@ -116,9 +117,9 @@ export async function bootstrapProfile({ user, role }) {
   const metadata = readSignupMetadata(user);
 
   try {
-    if (role === ROLES.CANDIDATE) {
+    if (isPersonalRole(role)) {
       await ensureCandidateProfile(userId, user, metadata);
-    } else if (role === ROLES.COMPANY) {
+    } else if (isEmployerRole(role)) {
       // Peek first so a failed upsert leaves pending values for CompanySetup.
       const orgKind = peekPendingOrgKind();
       const orgDetails = peekPendingOrgDetails();

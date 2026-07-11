@@ -19,6 +19,7 @@ import {
   ICON_SIZES,
 } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
+import { ROLES, rolePath } from '../../constants/roles';
 import { useProfile } from '../../hooks/useProfile';
 import { useApplications } from '../../hooks/useApplications';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -36,11 +37,12 @@ function mapCandidateForDashboard(application) {
 }
 
 export default function Dashboard() {
-  const { user, isPreviewMode } = useAuth();
+  const { user, isPreviewMode, role } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
   const { applications } = useApplications();
   const { unreadCount } = useNotifications();
   const [jobs, setJobs] = useState([]);
+  const base = role || ROLES.BUSINESS;
 
   useEffect(() => {
     if (!user?.id || isPreviewMode) {
@@ -92,7 +94,7 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-3">
             <Link
-              to="/company/notifications"
+              to={rolePath(base, '/notifications')}
               className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm"
               aria-label="Notificaciones"
             >
@@ -105,7 +107,7 @@ export default function Dashboard() {
             </Link>
 
             <Link
-              to="/company/profile"
+              to={rolePath(base, '/profile')}
               className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-1.5 shadow-sm"
               aria-label={orgLabels.profile}
             >
@@ -113,7 +115,7 @@ export default function Dashboard() {
               <AppIcon icon={ChevronDown} size={ICON_SIZES.sm} className="text-gray-400" />
             </Link>
 
-            <Link to="/company/jobs/create" className="hidden sm:block">
+            <Link to={rolePath(base, '/jobs/create')} className="hidden sm:block">
               <Button className="inline-flex items-center gap-2 rounded-xl px-4">
                 <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
                 {orgLabels.createOffer}
@@ -129,15 +131,15 @@ export default function Dashboard() {
             value={stats.activeJobs}
             label="Ofertas activas"
             linkLabel="Ver ofertas"
-            to="/company/jobs"
+            to={rolePath(base, '/jobs')}
           />
           <DashboardStatCard
             icon={Users}
             tone="green"
             value={stats.applications}
             label="Postulaciones recibidas"
-            linkLabel="Ver candidatos"
-            to="/company/applicants"
+            linkLabel="Ver postulaciones"
+            to={rolePath(base, '/applicants')}
           />
           <DashboardStatCard
             icon={FileText}
@@ -145,7 +147,7 @@ export default function Dashboard() {
             value={stats.pendingReviews}
             label="Revisiones pendientes"
             linkLabel="Revisar"
-            to="/company/applicants"
+            to={rolePath(base, '/applicants')}
           />
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
             <p className="text-sm font-medium text-gray-500">Estado de verificación</p>
@@ -153,7 +155,7 @@ export default function Dashboard() {
               <CompanyVerificationStatus company={profile} profile />
             </div>
             <Link
-              to="/company/verification"
+              to={rolePath(base, '/verification')}
               className="mt-4 inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
             >
               Gestionar verificación
@@ -171,7 +173,7 @@ export default function Dashboard() {
         </div>
 
         <div className="mt-4 sm:hidden">
-          <Link to="/company/jobs/create">
+          <Link to={rolePath(base, '/jobs/create')}>
             <Button fullWidth className="inline-flex items-center justify-center gap-2 rounded-xl">
               <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
               Crear oferta

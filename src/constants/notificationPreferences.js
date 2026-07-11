@@ -6,7 +6,7 @@ import {
   Sparkles,
   Users,
 } from './icons';
-import { ROLES } from './roles';
+import { ROLES, isEmployerRole } from './roles';
 
 export const NOTIFICATION_PERMISSION_STATUS = {
   DEFAULT: 'default',
@@ -132,7 +132,7 @@ const COMPANY_NOTIFICATION_GROUPS = [
 ];
 
 export function getNotificationGroupsForRole(role) {
-  return role === ROLES.COMPANY ? COMPANY_NOTIFICATION_GROUPS : CANDIDATE_NOTIFICATION_GROUPS;
+  return isEmployerRole(role) ? COMPANY_NOTIFICATION_GROUPS : CANDIDATE_NOTIFICATION_GROUPS;
 }
 
 export const NOTIFICATION_MASTER_CARD = {

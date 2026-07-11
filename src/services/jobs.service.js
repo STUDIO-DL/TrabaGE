@@ -120,12 +120,12 @@ export const jobsService = {
     const citySuffix = job.city ? ` - ${job.city}` : '';
 
     const notifyResult = await notificationsService.notifyFollowers({
-      targetType: FOLLOWS_TARGET.COMPANY,
+      targetType: FOLLOWS_TARGET.BUSINESS,
       targetId: job.company_id,
       type: 'new_job',
       title: `Nueva oferta de ${companyName}`,
       message: `${job.title}${citySuffix}`,
-      link: `/candidate/jobs/${job.id}`,
+      link: `/personal/jobs/${job.id}`,
     });
 
     jobRecommendationsService.processNewJob(job).catch((error) => {

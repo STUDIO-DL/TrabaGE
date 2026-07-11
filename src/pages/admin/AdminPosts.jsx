@@ -1,3 +1,4 @@
+import { isEmployerAuthor } from '../../constants/authorTypes';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
@@ -193,7 +194,7 @@ export default function AdminPosts() {
       {
         key: 'type',
         label: 'Tipo',
-        render: (row) => (row.author_type === 'company' ? 'Empresa' : 'Candidato'),
+        render: (row) => (isEmployerAuthor(row.author_type) ? 'Business' : 'Personal'),
       },
       {
         key: 'status',

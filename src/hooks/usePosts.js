@@ -1,8 +1,9 @@
+import { isPersonalAuthor, isEmployerAuthor } from '../constants/authorTypes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { postsService } from '../services/posts.service';
 import { supabase } from '../config/supabase';
 import { useAuth } from './useAuth';
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewPosts } from '../constants/preview';
 import { getCompanyLogoUrl } from '../constants/images';
 import { resolveUserAvatar } from '../utils/resolveUserAvatar';
@@ -15,11 +16,11 @@ async function enrichPosts(posts, user) {
   if (!posts?.length) return posts;
 
   const companyIds = [
-    ...new Set(posts.filter((post) => post.author_type === 'company').map((post) => post.author_id)),
+    ...new Set(posts.filter((post) => isEmployerAuthor(post.author_type)).map((post) => post.author_id)),
   ];
   const candidateIds = [
     ...new Set(
-      posts.filter((post) => post.author_type === 'candidate').map((post) => post.author_id),
+      posts.filter((post) => isPersonalAuthor(post.author_type)).map((post) => post.author_id),
     ),
   ];
 
@@ -44,26 +45,26 @@ async function enrichPosts(posts, user) {
   return posts.map((post) => {
     const isOwner = user?.id === post.author_id;
 
-    if (post.author_type === 'company') {
+    if (isEmployerAuthor(post.author_type)) {
       const company = companies.get(post.author_id);
-      const isCompanyOwner = isOwner && user?.role === ROLES.COMPANY;
+      const isCompanyOwner = isOwner && isEmployerRole(user?.role);
       return {
         ...post,
         author_name: company?.company_name ?? post.author_name,
         author_avatar: getCompanyLogoUrl(company?.logo_path) ?? post.author_avatar,
         author_company: company ?? null,
-        author_path: isCompanyOwner ? '/company/profile' : `/companies/${post.author_id}`,
+        author_path: isCompanyOwner ? '/business/profile' : `/companies/${post.author_id}`,
       };
     }
 
     const candidate = candidates.get(post.author_id);
-    const isCandidateOwner = isOwner && user?.role === ROLES.CANDIDATE;
+    const isCandidateOwner = isOwner && user?.role === ROLES.PERSONAL;
     return {
       ...post,
       author_name: candidate?.full_name ?? post.author_name,
       author_headline: candidate?.headline ?? post.author_headline,
       author_avatar: resolveUserAvatar(candidate?.avatar_path) ?? post.author_avatar,
-      author_path: isCandidateOwner ? '/candidate/profile' : `/profile/${post.author_id}`,
+      author_path: isCandidateOwner ? '/personal/profile' : `/profile/${post.author_id}`,
     };
   });
 }
@@ -100,8 +101,8 @@ function rankPostsForCandidate(posts, profile, followedCompanyIds) {
       ].filter(Boolean).join(' '));
       const keywordMatches = postTokens.filter((token) => userKeywords.has(token)).length;
       const followedBoost =
-        post.author_type === 'company' && followedCompanyIds.includes(post.author_id) ? 40 : 0;
-      const companyBoost = post.author_type === 'company' ? 10 : 0;
+        isEmployerAuthor(post.author_type) && followedCompanyIds.includes(post.author_id) ? 40 : 0;
+      const companyBoost = isEmployerAuthor(post.author_type) ? 10 : 0;
       const relevance = Math.min(30, keywordMatches * 6);
 
       return {
@@ -118,10 +119,10 @@ function rankPostsForCompany(posts, companyJobs) {
 
   return [...posts]
     .map((post) => {
-      if (post.author_type !== 'candidate') {
+      if (!isPersonalAuthor(post.author_type)) {
         return {
           post,
-          score: (post.author_type === 'company' ? 8 : 0) + recencyScore(post.created_at),
+          score: (isEmployerAuthor(post.author_type) ? 8 : 0) + recencyScore(post.created_at),
         };
       }
 
@@ -146,7 +147,7 @@ function rankPostsForCompany(posts, companyJobs) {
 async function rankPosts(posts, user, role, authorId) {
   if (authorId) return posts;
 
-  if (role === ROLES.CANDIDATE && user?.id) {
+  if (role === ROLES.PERSONAL && user?.id) {
     const [profileResult, followsResult] = await Promise.all([
       supabase
         .from('candidate_profiles')
@@ -157,7 +158,7 @@ async function rankPosts(posts, user, role, authorId) {
         .from('follows')
         .select('target_id')
         .eq('user_id', user.id)
-        .eq('target_type', 'company'),
+        .in('target_type', ['business', 'organization', 'company', 'institution']),
     ]);
 
     if (profileResult.error) return posts;
@@ -168,7 +169,7 @@ async function rankPosts(posts, user, role, authorId) {
     );
   }
 
-  if (role === ROLES.COMPANY && user?.id) {
+  if (isEmployerRole(role) && user?.id) {
     const { data: jobs } = await jobsService.getCompanyJobs(user.id);
     const activeJobs = (jobs ?? []).filter((job) => job.status === 'active');
     return rankPostsForCompany(posts, activeJobs);
@@ -197,7 +198,7 @@ export function usePosts(authorId) {
 
     if (isPreviewMode) {
       const previewPosts = getPreviewPosts(authorId, role).map((post) =>
-        post.author_type === 'company'
+        isEmployerAuthor(post.author_type)
           ? {
               ...post,
               author_name: post.author_name ?? 'Empresa demo',

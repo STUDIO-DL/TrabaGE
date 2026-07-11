@@ -4,7 +4,7 @@ export const TERMS_INTRO = {
   part: '',
   title: 'Términos y Condiciones de Uso',
   subtitle:
-    'Condiciones claras para usar TrabaGE como candidato, empresa o institución. Léelas con calma: definen cómo funciona la comunidad.',
+    'Condiciones claras para usar TrabaGE con cuenta personal, Business u Organización. Léelas con calma: definen cómo funciona la comunidad.',
 };
 
 export const TERMS_ARTICLES = [
@@ -14,7 +14,7 @@ export const TERMS_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: 'TrabaGE es una plataforma digital de empleo y oportunidades profesionales que conecta candidatos con empresas e instituciones. Opera como marketplace laboral: facilita perfiles, ofertas, postulaciones y networking, sin intervenir en la contratación final.',
+        text: 'TrabaGE es una plataforma digital de empleo y oportunidades profesionales que conecta talento con Business y Organizaciones. Opera como marketplace laboral: facilita perfiles, ofertas, postulaciones y networking, sin intervenir en la contratación final.',
       },
       {
         type: 'p',
@@ -36,17 +36,17 @@ export const TERMS_ARTICLES = [
       },
       {
         type: 'p',
-        text: 'Quien registre una cuenta de empresa declara tener capacidad para representar a esa entidad.',
+        text: 'Quien registre una cuenta Business u Organización declara tener capacidad para representar a esa entidad.',
       },
     ],
   },
   {
     id: 'cuentas-y-responsabilidades',
-    title: '¿Cuáles son las responsabilidades de candidatos y empresas?',
+    title: '¿Cuáles son las responsabilidades de cuentas personales y Business/Organizaciones?',
     blocks: [
       {
         type: 'p',
-        text: 'Candidatos:',
+        text: 'Cuentas personales:',
       },
       {
         type: 'ul',
@@ -58,14 +58,14 @@ export const TERMS_ARTICLES = [
       },
       {
         type: 'p',
-        text: 'Empresas e instituciones:',
+        text: 'Business y Organizaciones:',
       },
       {
         type: 'ul',
         items: [
           'Publicar información real sobre la organización y las ofertas.',
           'Gestionar postulaciones de forma responsable y conforme a la ley.',
-          'No solicitar pagos, depósitos o inversiones a candidatos como condición para participar en un proceso.',
+          'No solicitar pagos, depósitos o inversiones a personas como condición para participar en un proceso.',
           'Tratar los datos recibidos en postulaciones como responsables independientes de ese tratamiento.',
         ],
       },
@@ -77,7 +77,7 @@ export const TERMS_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: 'Las empresas pueden publicar ofertas con requisitos, descripción y, si lo desean, formularios de postulación personalizados. Los candidatos pueden explorar, guardar y postularse.',
+        text: 'Las cuentas Business y Organizaciones pueden publicar ofertas con requisitos, descripción y, si lo desean, formularios de postulación personalizados. Las cuentas personales pueden explorar, guardar y postularse.',
       },
       {
         type: 'p',
@@ -85,7 +85,7 @@ export const TERMS_ARTICLES = [
       },
       {
         type: 'p',
-        text: 'Está prohibido publicar ofertas engañosas, discriminatorias ilegales, fraudulentas o que soliciten dinero a los candidatos.',
+        text: 'Está prohibido publicar ofertas engañosas, discriminatorias ilegales, fraudulentas o que soliciten dinero a quienes se postulan.',
       },
     ],
   },
@@ -128,7 +128,7 @@ export const TERMS_ARTICLES = [
       },
       {
         type: 'p',
-        text: 'La verificación no implica que TrabaGE avale la solvencia, reputación o prácticas laborales de la empresa. Las empresas no verificadas pueden seguir usando la plataforma, con la distinción visible para los candidatos.',
+        text: 'La verificación no implica que TrabaGE avale la solvencia, reputación o prácticas laborales del negocio. Las cuentas no verificadas pueden seguir usando la plataforma, con la distinción visible para el talento.',
       },
     ],
   },
@@ -209,7 +209,7 @@ export const TERMS_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: 'TrabaGE es un intermediario tecnológico. No es parte de las relaciones laborales entre candidatos y empresas, no garantiza empleo y no responde por la veracidad de todo el contenido de terceros.',
+        text: 'TrabaGE es un intermediario tecnológico. No es parte de las relaciones laborales entre cuentas personales y Business/Organizaciones, no garantiza empleo y no responde por la veracidad de todo el contenido de terceros.',
       },
       {
         type: 'p',

@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useProfile } from '../hooks/useProfile';
 import { searchService } from '../services/search.service';
 import { jobsService } from '../services/jobs.service';
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole } from '../constants/roles';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import Spinner from '../components/ui/Spinner';
 import Avatar from '../components/ui/Avatar';
@@ -65,7 +65,7 @@ export default function SearchResults() {
   const [companyJobs, setCompanyJobs] = useState([]);
 
   useEffect(() => {
-    if (role !== ROLES.COMPANY || !user?.id) {
+    if (!isEmployerRole(role) || !user?.id) {
       setCompanyJobs([]);
       return;
     }
@@ -87,9 +87,9 @@ export default function SearchResults() {
     const performSearch = async () => {
       setLoading(true);
       const matchingContext =
-        role === ROLES.CANDIDATE && profile
+        role === ROLES.PERSONAL && profile
           ? { userProfile: profile }
-          : role === ROLES.COMPANY && companyJobs.length
+          : isEmployerRole(role) && companyJobs.length
             ? { companyJobs }
             : null;
 

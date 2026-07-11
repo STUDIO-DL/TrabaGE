@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 import { applicationsService } from '../services/applications.service';
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewApplications } from '../constants/preview';
 import { supabase } from '../config/supabase';
 
@@ -24,7 +24,7 @@ export function useApplications() {
     }
 
     const { data, error: fetchError } =
-      role === ROLES.COMPANY
+      isEmployerRole(role)
         ? await applicationsService.getJobApplicants(user.id)
         : await applicationsService.getCandidateApplications(user.id);
 
@@ -44,7 +44,7 @@ export function useApplications() {
       event: '*',
       schema: 'public',
       table: 'applications',
-      ...(role === ROLES.CANDIDATE ? { filter: `candidate_id=eq.${user.id}` } : {}),
+      ...(role === ROLES.PERSONAL ? { filter: `candidate_id=eq.${user.id}` } : {}),
     };
 
     const channel = supabase

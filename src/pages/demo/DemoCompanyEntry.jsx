@@ -11,8 +11,8 @@ export default function DemoCompanyEntry() {
 
   useEffect(() => {
     clearPreviewMode();
-    enterPreviewModeAsRole(ROLES.COMPANY);
-    navigate(ROLE_HOME[ROLES.COMPANY], { replace: true });
+    enterPreviewModeAsRole(ROLES.BUSINESS);
+    navigate(ROLE_HOME[ROLES.BUSINESS], { replace: true });
   }, [enterPreviewModeAsRole, navigate]);
 
   return (

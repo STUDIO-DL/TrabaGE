@@ -27,7 +27,7 @@ export default function JobCard({
   if (!job) return null;
 
   const company = job.company_profiles;
-  const detailPath = `/candidate/jobs/${job.id}`;
+  const detailPath = `/personal/jobs/${job.id}`;
   const salary = job.salary != null || job.salary_negotiable
     ? formatSalary(job.salary, job.salary_negotiable)
     : null;

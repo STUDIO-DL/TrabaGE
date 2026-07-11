@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewApplicantProfile, getPreviewProfile, PREVIEW_USER } from '../constants/preview';
 
 export function useProfile(userId) {
@@ -25,7 +25,7 @@ export function useProfile(userId) {
           return;
         }
         if (userId === PREVIEW_USER.id) {
-          setProfile(getPreviewProfile(ROLES.COMPANY));
+          setProfile(getPreviewProfile(ROLES.BUSINESS));
           setError(null);
           setLoading(false);
           return;
@@ -41,7 +41,7 @@ export function useProfile(userId) {
     setLoading(true);
     setError(null);
 
-    const isCandidate = userId ? true : role !== ROLES.COMPANY;
+    const isCandidate = userId ? true : !isEmployerRole(role);
     const { data, error: fetchError } = isCandidate
       ? await profileService.getCandidateFullProfile(targetId)
       : await companyService.getCompanyProfile(targetId);

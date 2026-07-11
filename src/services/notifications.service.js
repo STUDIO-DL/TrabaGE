@@ -139,7 +139,7 @@ export const notificationsService = {
     const body = `La oferta "${jobTitle}" coincide con tu perfil.`;
     const data = {
       type: 'job_recommendation',
-      link: `/candidate/jobs/${jobId}`,
+      link: `/personal/jobs/${jobId}`,
       job_id: jobId,
     };
 

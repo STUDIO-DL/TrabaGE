@@ -4,14 +4,16 @@ import CompanyProfileLayout from '../../components/company/profile/CompanyProfil
 import Spinner from '../../components/ui/Spinner';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
+import { ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user, logout, isPreviewMode } = useAuth();
+  const { user, logout, isPreviewMode, role } = useAuth();
   const { profile, loading, refetch } = useProfile();
   const { showToast } = useNotificationContext();
+  const base = role || ROLES.BUSINESS;
 
   const handlePreviewAction = () => {
     showToast(GUEST_MODE_MESSAGE, 'info');
@@ -34,7 +36,7 @@ export default function Profile() {
         onPreviewAction={handlePreviewAction}
         onLogout={logout}
         onUploadComplete={refetch}
-        onOpenSettings={() => navigate('/company/settings')}
+        onOpenSettings={() => navigate(rolePath(base, '/settings'))}
       />
     </PageContainer>
   );

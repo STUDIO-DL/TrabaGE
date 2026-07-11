@@ -9,15 +9,15 @@ import { useAuth } from '../../hooks/useAuth';
 
 const ROLE_OPTIONS = [
   {
-    id: ROLES.CANDIDATE,
-    label: 'Soy candidato',
-    description: 'Explora ofertas de empleo, empresas y oportunidades.',
+    id: ROLES.PERSONAL,
+    label: 'Cuenta personal',
+    description: 'Explora ofertas de empleo, Business y oportunidades.',
     icon: User,
   },
   {
-    id: ROLES.COMPANY,
-    label: 'Soy empresa / institución',
-    description: 'Explora el panel de organización, publicaciones y candidatos.',
+    id: ROLES.BUSINESS,
+    label: 'Business / Organización',
+    description: 'Explora el panel, publicaciones y talento interesado.',
     icon: Building2,
   },
 ];

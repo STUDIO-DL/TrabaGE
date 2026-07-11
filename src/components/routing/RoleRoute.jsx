@@ -1,18 +1,25 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { ROLE_HOME, ROLE_SETUP } from '../../constants/roles';
+import { ROLE_HOME, ROLE_SETUP, normalizeRole } from '../../constants/roles';
 import { getPreviewRole, isPreviewActive } from '../../constants/preview';
 import Spinner from '../ui/Spinner';
 
 const ROLE_RESOLVE_TIMEOUT_MS = 4000;
 
-export default function RoleRoute({ role: requiredRole }) {
+/**
+ * @param {object} props
+ * @param {string} [props.role] - single required role
+ * @param {string[]} [props.roles] - any of these roles allowed (e.g. business + organization)
+ */
+export default function RoleRoute({ role: requiredRole, roles: requiredRoles }) {
   const { role, isPreviewMode, loading, isAuthenticated, refreshAuthState, setupComplete } =
     useAuth();
   const location = useLocation();
-  const previewActive = requiredRole === 'admin' ? false : isPreviewActive(isPreviewMode);
-  const effectiveRole = role ?? (previewActive ? getPreviewRole() : null);
+  const allowedRoles = requiredRoles ?? (requiredRole ? [requiredRole] : []);
+  const previewActive = allowedRoles.includes('admin') ? false : isPreviewActive(isPreviewMode);
+  const rawRole = role ?? (previewActive ? getPreviewRole() : null);
+  const effectiveRole = normalizeRole(rawRole) ?? rawRole;
   const [roleWaitExpired, setRoleWaitExpired] = useState(false);
 
   useEffect(() => {
@@ -49,18 +56,16 @@ export default function RoleRoute({ role: requiredRole }) {
     return <Navigate to="/login" replace />;
   }
 
-  if (effectiveRole !== requiredRole) {
-    if (requiredRole === 'admin') {
+  if (!allowedRoles.includes(effectiveRole)) {
+    if (allowedRoles.includes('admin')) {
       return <Navigate to="/login" replace />;
     }
     return <Navigate to={ROLE_HOME[effectiveRole] || '/login'} replace />;
   }
 
   // Gate users whose required profile data is incomplete into the setup
-  // assistant, so new Google/manual users are guided to finish before using the
-  // app. The setup route itself stays reachable to avoid a redirect loop, and
-  // preview/admin users are never gated.
-  const setupPath = ROLE_SETUP[requiredRole];
+  // assistant. Setup routes for business and organization both use CompanySetup.
+  const setupPath = ROLE_SETUP[effectiveRole];
   const onSetupPath = location.pathname.startsWith('/setup/');
   if (!previewActive && setupPath && !setupComplete && !onSetupPath) {
     return <Navigate to={setupPath} replace />;

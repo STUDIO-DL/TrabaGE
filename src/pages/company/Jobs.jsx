@@ -7,6 +7,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import { useAuth } from '../../hooks/useAuth';
+import { ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
 import { getJobTypeLabel } from '../../constants/jobTypes';
@@ -35,7 +36,8 @@ function jobSubtitle(job) {
 
 export default function CompanyJobs() {
   const navigate = useNavigate();
-  const { user, isPreviewMode } = useAuth();
+  const { user, isPreviewMode, role } = useAuth();
+  const base = role || ROLES.BUSINESS;
   const { showToast } = useNotificationContext();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -120,7 +122,7 @@ export default function CompanyJobs() {
               </Button>
             ))}
           </div>
-          <Link to="/company/jobs/create">
+          <Link to={rolePath(base, '/jobs/create')}>
             <Button size="sm">Crear oferta</Button>
           </Link>
         </div>
@@ -132,7 +134,7 @@ export default function CompanyJobs() {
             title="No hay ofertas en esta vista"
             description="Crea una nueva oferta o cambia el filtro para revisar tus publicaciones."
             actionLabel="Crear oferta"
-            onAction={() => navigate('/company/jobs/create')}
+            onAction={() => navigate(rolePath(base, '/jobs/create'))}
           />
         ) : (
           visibleJobs.map((job) => (
@@ -152,7 +154,7 @@ export default function CompanyJobs() {
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Link to={`/company/jobs/${job.id}/edit`}>
+                <Link to={rolePath(base, `/jobs/${job.id}/edit`)}>
                   <Button size="sm" variant="secondary">Editar</Button>
                 </Link>
                 {job.status !== 'active' && (

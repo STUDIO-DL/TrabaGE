@@ -5,6 +5,8 @@ import { getJobTypeLabel } from '../../../constants/jobTypes';
 import { getWorkModeLabel } from '../../../constants/workModes';
 import Button from '../../ui/Button';
 import DashboardSectionEmpty from './DashboardSectionEmpty';
+import { useAuth } from '../../../hooks/useAuth';
+import { ROLES, rolePath } from '../../../constants/roles';
 
 const STATUS_STYLES = {
   draft: 'bg-gray-400',
@@ -22,6 +24,8 @@ function getJobSubtitle(job) {
 }
 
 export default function DashboardJobsList({ jobs }) {
+  const { role } = useAuth();
+  const base = role || ROLES.BUSINESS;
   const isEmpty = jobs.length === 0;
 
   return (
@@ -29,7 +33,7 @@ export default function DashboardJobsList({ jobs }) {
       <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
         <h2 className="text-base font-semibold text-gray-900">Ofertas de trabajo</h2>
         <Link
-          to="/company/jobs"
+          to={rolePath(base, '/jobs')}
           className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
         >
           Ver todas
@@ -48,7 +52,7 @@ export default function DashboardJobsList({ jobs }) {
           {jobs.map((job) => (
             <li key={job.id}>
               <Link
-                to={`/company/jobs/${job.id}/edit`}
+                to={rolePath(base, `/jobs/${job.id}/edit`)}
                 className="flex items-center gap-3 px-5 py-4 transition hover:bg-gray-50"
               >
                 <span
@@ -70,7 +74,7 @@ export default function DashboardJobsList({ jobs }) {
       )}
 
       <div className="mt-auto border-t border-gray-100 p-4">
-        <Link to="/company/jobs">
+        <Link to={rolePath(base, '/jobs')}>
           <Button variant="secondary" fullWidth>
             Ver todas las ofertas
           </Button>

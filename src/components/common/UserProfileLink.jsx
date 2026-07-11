@@ -3,6 +3,7 @@ import UserAvatar from './UserAvatar';
 import Avatar from '../ui/Avatar';
 import { DEFAULT_COMPANY_LOGO } from '../../constants/images';
 import { getUserProfilePath } from '../../utils/profileRoutes';
+import { isEmployerAuthor } from '../../constants/authorTypes';
 
 const AVATAR_SIZE_CLASS = {
   sm: '!h-8 !w-8',
@@ -11,7 +12,7 @@ const AVATAR_SIZE_CLASS = {
 
 export default function UserProfileLink({
   userId,
-  userType = 'candidate',
+  userType = 'personal',
   name = '',
   avatar,
   headline,
@@ -30,7 +31,7 @@ export default function UserProfileLink({
   };
 
   const renderAvatar = () => {
-    if (userType === 'company') {
+    if (isEmployerAuthor(userType) || userType === 'institution' || userType === 'organization') {
       return (
         <Avatar
           src={avatar}

@@ -104,7 +104,7 @@ export const applicationsService = {
         metadata: {
           application_id: id,
           job_id: result.data.job_id,
-          link: '/candidate/applications',
+          link: '/personal/applications',
         },
       });
     }

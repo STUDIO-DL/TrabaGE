@@ -15,7 +15,7 @@ export default function JobsHeader() {
   const { showToast } = useNotificationContext();
   const { preferences, setMasterEnabled, status } = useNotificationPreferences(user?.id);
   const pushEnabled = preferences.push_enabled;
-  const settingsPath = '/candidate/settings/notifications';
+  const settingsPath = '/personal/settings/notifications';
 
   const handleBellClick = async (event) => {
     event.preventDefault();
@@ -45,7 +45,7 @@ export default function JobsHeader() {
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">Empleos</h1>
         <div className="flex items-center gap-1">
           <Link
-            to="/candidate/saved-jobs"
+            to="/personal/saved-jobs"
             className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
             aria-label="Empleos guardados"
           >

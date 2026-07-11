@@ -1,5 +1,6 @@
+import { isPersonalAuthor, isEmployerAuthor } from '../constants/authorTypes';
 import { supabase } from '../config/supabase';
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole } from '../constants/roles';
 import {
   FEED_CONTENT_TYPES,
   FEED_PAGE_SIZE,
@@ -46,7 +47,7 @@ async function fetchFeedPoolFallback(userId, role, { limit, offset }) {
   ];
 
   // Home feed only mixes social posts and informational news — never jobs.
-  if (role === ROLES.CANDIDATE || role === ROLES.COMPANY) {
+  if (role === ROLES.PERSONAL || isEmployerRole(role)) {
     queries.push(
       supabase
         .from('news_articles')
@@ -71,7 +72,7 @@ async function fetchFeedPoolFallback(userId, role, { limit, offset }) {
 
   const newsResult = results[1];
   if (newsResult?.data?.length) {
-    const newsScore = role === ROLES.CANDIDATE ? 15 : 14;
+    const newsScore = role === ROLES.PERSONAL ? 15 : 14;
     newsResult.data.forEach((article) => {
       items.push({
         item_key: `news:${article.id}`,
@@ -89,8 +90,8 @@ async function fetchFeedPoolFallback(userId, role, { limit, offset }) {
 async function enrichPosts(posts, user) {
   if (!posts?.length) return new Map();
 
-  const companyIds = [...new Set(posts.filter((p) => p.author_type === 'company').map((p) => p.author_id))];
-  const candidateIds = [...new Set(posts.filter((p) => p.author_type === 'candidate').map((p) => p.author_id))];
+  const companyIds = [...new Set(posts.filter((p) => isEmployerAuthor(p.author_type)).map((p) => p.author_id))];
+  const candidateIds = [...new Set(posts.filter((p) => isPersonalAuthor(p.author_type)).map((p) => p.author_id))];
 
   const [companiesResult, candidatesResult] = await Promise.all([
     companyIds.length
@@ -113,14 +114,14 @@ async function enrichPosts(posts, user) {
 
   posts.forEach((post) => {
     const isOwner = user?.id === post.author_id;
-    if (post.author_type === 'company') {
+    if (isEmployerAuthor(post.author_type)) {
       const company = companies.get(post.author_id);
       enriched.set(post.id, {
         ...post,
         author_name: company?.company_name ?? post.author_name,
         author_avatar: getCompanyLogoUrl(company?.logo_path) ?? post.author_avatar,
         author_company: company ?? null,
-        author_path: isOwner && user?.role === ROLES.COMPANY ? '/company/profile' : `/companies/${post.author_id}`,
+        author_path: isOwner && isEmployerRole(user?.role) ? '/business/profile' : `/companies/${post.author_id}`,
       });
       return;
     }
@@ -131,7 +132,7 @@ async function enrichPosts(posts, user) {
       author_name: candidate?.full_name ?? post.author_name,
       author_headline: candidate?.headline ?? post.author_headline,
       author_avatar: resolveUserAvatar(candidate?.avatar_path) ?? post.author_avatar,
-      author_path: isOwner && user?.role === ROLES.CANDIDATE ? '/candidate/profile' : `/profile/${post.author_id}`,
+      author_path: isOwner && user?.role === ROLES.PERSONAL ? '/personal/profile' : `/profile/${post.author_id}`,
     });
   });
 
@@ -246,11 +247,11 @@ async function buildCandidateRecommendationCards(profile, { limit = 3 } = {}) {
 async function buildFeedContext(userId, role) {
   if (!userId) return { profile: null, followedCompanyIds: [], followedInstitutionIds: [], companyJobs: [], institutionMode: false };
 
-  if (role === ROLES.CANDIDATE) {
+  if (role === ROLES.PERSONAL) {
     const [profileResult, followsCompanies, followsInstitutions] = await Promise.all([
       profileService.getCandidateFullProfile(userId),
-      followsService.getFollowing(userId, FOLLOWS_TARGET.COMPANY),
-      followsService.getFollowing(userId, FOLLOWS_TARGET.INSTITUTION),
+      followsService.getFollowing(userId, FOLLOWS_TARGET.BUSINESS),
+      followsService.getFollowing(userId, FOLLOWS_TARGET.ORGANIZATION),
     ]);
 
     const prefs = profileResult.data?.job_preferences;

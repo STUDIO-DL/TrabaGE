@@ -3,7 +3,14 @@ import { supabase } from '../config/supabase';
 import { authService } from '../services/auth.service';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
 import { clearOneSignalUserId, setOneSignalUserId } from '../config/onesignal';
-import { ROLE_HOME, ROLE_SETUP, ROLES } from '../constants/roles';
+import {
+  ROLE_HOME,
+  ROLE_SETUP,
+  ROLES,
+  isEmployerRole,
+  isPersonalRole,
+  normalizeRole,
+} from '../constants/roles';
 import {
   clearPreviewMode,
   getPreviewMode,
@@ -38,15 +45,19 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const fetchRoleAndSetup = useCallback(async (userId, userRole) => {
-    setRole(userRole);
+    const normalized = normalizeRole(userRole) ?? userRole;
+    setRole(normalized);
 
-    if (userRole === ROLES.CANDIDATE) {
+    if (isPersonalRole(normalized)) {
       const { data } = await profileService.getCandidateProfile(userId);
-      setSetupComplete(isProfileSetupComplete(ROLES.CANDIDATE, data));
-    } else if (userRole === ROLES.COMPANY) {
+      setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, data));
+    } else if (isEmployerRole(normalized)) {
       const { data } = await companyService.getCompanyProfile(userId);
-      setSetupComplete(isProfileSetupComplete(ROLES.COMPANY, data));
-    } else if (userRole === ROLES.ADMIN) {
+      const role =
+        normalizeRole(normalized, { companyType: data?.company_type }) ?? ROLES.BUSINESS;
+      setRole(role);
+      setSetupComplete(isProfileSetupComplete(role, data));
+    } else if (normalized === ROLES.ADMIN) {
       setSetupComplete(true);
     }
   }, []);
@@ -94,10 +105,15 @@ export function AuthProvider({ children }) {
 
     if (!userRole) {
       if (companyResult?.data?.user_id) {
-        userRole = ROLES.COMPANY;
+        userRole = normalizeRole(ROLES.BUSINESS, {
+          companyType: companyResult.data.company_type,
+        });
       } else if (candidateResult?.data?.user_id) {
-        userRole = ROLES.CANDIDATE;
+        userRole = ROLES.PERSONAL;
       }
+    } else {
+      userRole =
+        normalizeRole(userRole, { companyType: companyResult?.data?.company_type }) ?? userRole;
     }
 
     if (!roleResult?.data?.role && userRole && currentUser.id && userRole !== ROLES.ADMIN) {
@@ -106,10 +122,10 @@ export function AuthProvider({ children }) {
 
     setRole(userRole);
 
-    if (userRole === ROLES.CANDIDATE) {
-      setSetupComplete(isProfileSetupComplete(ROLES.CANDIDATE, candidateResult?.data));
-    } else if (userRole === ROLES.COMPANY) {
-      setSetupComplete(isProfileSetupComplete(ROLES.COMPANY, companyResult?.data));
+    if (isPersonalRole(userRole)) {
+      setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, candidateResult?.data));
+    } else if (isEmployerRole(userRole)) {
+      setSetupComplete(isProfileSetupComplete(userRole, companyResult?.data));
     } else if (userRole === ROLES.ADMIN) {
       setSetupComplete(true);
     } else {

@@ -27,6 +27,8 @@ import {
   hasCompanyDescription,
 } from '../../../utils/companyProfile';
 import { isCompanyVerified } from '../../../utils/companyVerification';
+import { useAuth } from '../../../hooks/useAuth';
+import { ROLES, rolePath } from '../../../constants/roles';
 
 function QuickStat({ icon, label, value }) {
   return (
@@ -77,6 +79,7 @@ export default function CompanyProfileHeader({
   canFollow = true,
   onToggleFollow,
 }) {
+  const { role } = useAuth();
   const logoInputRef = useRef(null);
   const coverInputId = 'company-cover-input';
   const name = getCompanyDisplayName(profile);
@@ -215,7 +218,7 @@ export default function CompanyProfileHeader({
                 </span>
               )
             ) : (
-              <Link to="/company/verification">
+              <Link to={rolePath(role || ROLES.BUSINESS, '/verification')}>
                 <CompanyVerificationStatus company={profile} profile />
               </Link>
             )}

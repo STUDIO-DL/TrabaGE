@@ -1,3 +1,4 @@
+import { isEmployerAuthor } from '../constants/authorTypes';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
@@ -12,7 +13,7 @@ import { resolveUserAvatar } from '../utils/resolveUserAvatar';
 async function enrichPost(post) {
   if (!post) return post;
 
-  if (post.author_type === 'company') {
+  if (isEmployerAuthor(post.author_type)) {
     const { data: company } = await supabase
       .from('company_profiles')
       .select('user_id, company_name, logo_path, is_verified, verification_status')

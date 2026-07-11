@@ -1,3 +1,4 @@
+import { isPersonalAuthor } from '../constants/authorTypes';
 export function filterPostsByQuery(posts, query) {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return posts;
@@ -7,7 +8,7 @@ export function filterPostsByQuery(posts, query) {
       post.content,
       post.author_name,
       post.author_headline,
-      post.author_type === 'candidate' ? 'candidato' : 'empresa',
+      isPersonalAuthor(post.author_type) ? 'persona' : 'negocio',
     ]
       .filter(Boolean)
       .join(' ')
@@ -19,7 +20,7 @@ export function filterPostsByQuery(posts, query) {
 
 export function filterCandidatePostsByQuery(posts, query) {
   const normalized = query.trim().toLowerCase();
-  const candidatePosts = posts.filter((post) => post.author_type === 'candidate');
+  const candidatePosts = posts.filter((post) => isPersonalAuthor(post.author_type));
   if (!normalized) return candidatePosts;
 
   return candidatePosts.filter((post) => {

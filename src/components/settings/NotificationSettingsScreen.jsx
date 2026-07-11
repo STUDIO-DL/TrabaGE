@@ -2,7 +2,7 @@ import PageContainer from '../layout/PageContainer';
 import NotificationPreferencesPanel from './NotificationPreferencesPanel';
 import { ROLES } from '../../constants/roles';
 
-export default function NotificationSettingsScreen({ accountType = ROLES.CANDIDATE }) {
+export default function NotificationSettingsScreen({ accountType = ROLES.PERSONAL }) {
   return (
     <PageContainer title="Notificaciones" backButton className="bg-app-surface">
       <div className="min-h-dvh bg-gradient-to-b from-white via-slate-50 to-slate-50 px-5 pb-28 pt-5 theme-transition">

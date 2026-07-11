@@ -14,6 +14,7 @@ import { CITIES } from '../../constants/cities';
 import { JOB_TYPES } from '../../constants/jobTypes';
 import { WORK_MODES } from '../../constants/workModes';
 import { useAuth } from '../../hooks/useAuth';
+import { ROLE_SETUP, ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
 import { companyService } from '../../services/company.service';
@@ -69,7 +70,8 @@ function parseCustomQuestions(value) {
 export default function PublishJob() {
   const navigate = useNavigate();
   const { jobId } = useParams();
-  const { user, isPreviewMode, setupComplete } = useAuth();
+  const { user, isPreviewMode, setupComplete, role } = useAuth();
+  const base = role || ROLES.BUSINESS;
   const { showToast } = useNotificationContext();
   const [form, setForm] = useState({
     title: '',
@@ -193,7 +195,7 @@ export default function PublishJob() {
           : 'Empleo publicado',
       'success',
     );
-    navigate('/company/jobs', { replace: true });
+    navigate(rolePath(base, '/jobs'), { replace: true });
   };
 
   const handleSubmit = (e) => {
@@ -215,9 +217,9 @@ export default function PublishJob() {
         <div className="p-md">
           <EmptyState
             title="Completa tu perfil para publicar"
-            description="Antes de publicar ofertas, completa los datos requeridos de tu empresa o institución."
+            description="Antes de publicar ofertas, completa los datos requeridos de tu Business u Organización."
           />
-          <Link to="/setup/company" className="mt-md block">
+          <Link to={ROLE_SETUP[role] || ROLE_SETUP[ROLES.BUSINESS]} className="mt-md block">
             <Button fullWidth className="btn-primary-mobile !rounded-btn-primary !py-0">
               Completar perfil
             </Button>

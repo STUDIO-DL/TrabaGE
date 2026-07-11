@@ -1,7 +1,8 @@
+import { isEmployerAuthor } from '../constants/authorTypes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { feedService } from '../services/feed.service';
 import { useAuth } from './useAuth';
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole } from '../constants/roles';
 import { FEED_CONTENT_TYPES, FEED_PAGE_SIZE } from '../constants/feedContentTypes';
 import { getPreviewPosts } from '../constants/preview';
 import { rankAndInterleaveFeed, dedupeFeedItems } from '../utils/feedRanking';
@@ -79,8 +80,8 @@ export function useIntelligentFeed({ authorId } = {}) {
           sort_at: post.created_at,
           payload: {
             ...post,
-            author_name: post.author_name ?? (role === ROLES.COMPANY ? 'Empresa demo' : 'Usuario'),
-            author_company: post.author_type === 'company'
+            author_name: post.author_name ?? (isEmployerRole(role) ? 'Empresa demo' : 'Usuario'),
+            author_company: isEmployerAuthor(post.author_type)
               ? { is_verified: false, verification_status: 'not_submitted' }
               : null,
           },
@@ -111,7 +112,7 @@ export function useIntelligentFeed({ authorId } = {}) {
 
       let rawItems = pool ?? [];
 
-      if (!append && role === ROLES.CANDIDATE && user?.id && !authorId) {
+      if (!append && role === ROLES.PERSONAL && user?.id && !authorId) {
         const recommendationCards = await feedService.buildCandidateRecommendationCards(context.profile, {
           limit: 3,
         });

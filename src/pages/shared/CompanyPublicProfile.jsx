@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ProfilePageShell from '../../components/profile/ProfilePageShell';
 import ProfileActionBar from '../../components/profile/ProfileActionBar';
@@ -8,7 +8,7 @@ import PageContainer from '../../components/layout/PageContainer';
 import { companyService } from '../../services/company.service';
 import { jobsService } from '../../services/jobs.service';
 import { getPreviewMediaUrls, getPreviewProfile, PREVIEW_USER } from '../../constants/preview';
-import { ROLES } from '../../constants/roles';
+import { ROLES, isEmployerRole } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { generateCompanyUrl } from '../../utils/generateShareUrl';
 import { hasCompanyActionableContact, openCompanyContact } from '../../utils/contact';
@@ -16,6 +16,7 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { useFollow } from '../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../services/follows.service';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { getOrgLabels, isOrganizationProfile } from '../../utils/orgLabels';
 
 export default function CompanyPublicProfile() {
   const { companyId } = useParams();
@@ -25,6 +26,13 @@ export default function CompanyPublicProfile() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const followTarget = useMemo(
+    () =>
+      isOrganizationProfile(profile) ? FOLLOWS_TARGET.ORGANIZATION : FOLLOWS_TARGET.BUSINESS,
+    [profile],
+  );
+  const orgLabels = getOrgLabels(profile);
+
   const {
     isFollowing,
     followerCount,
@@ -32,13 +40,13 @@ export default function CompanyPublicProfile() {
     toggleFollow,
     canFollow,
   } = useFollow({
-    targetType: FOLLOWS_TARGET.COMPANY,
+    targetType: followTarget,
     targetId: companyId,
-    enabled: Boolean(companyId) && !isPreviewMode,
+    enabled: Boolean(companyId) && !isPreviewMode && Boolean(profile),
   });
 
   const showFollowButton =
-    !isPreviewMode && user?.id !== companyId && role !== ROLES.COMPANY;
+    !isPreviewMode && user?.id !== companyId && !isEmployerRole(role);
 
   const showFollowersTab = role === ROLES.ADMIN;
 
@@ -46,7 +54,7 @@ export default function CompanyPublicProfile() {
     if (isPreviewMode && companyId === PREVIEW_USER.id) {
       const media = getPreviewMediaUrls();
       setProfile({
-        ...getPreviewProfile(ROLES.COMPANY),
+        ...getPreviewProfile(ROLES.BUSINESS),
         cover_url: media.cover_url,
         logo_path: media.logo_path,
       });
@@ -73,7 +81,7 @@ export default function CompanyPublicProfile() {
   const handleToggleFollow = async () => {
     const result = await toggleFollow();
     if (result?.needsAuth) {
-      showToast('Inicia sesión para seguir empresas', 'info');
+      showToast(orgLabels.followPrompt, 'info');
       return;
     }
     if (result?.error) {
@@ -92,11 +100,11 @@ export default function CompanyPublicProfile() {
   return (
     <PageContainer topBar={false} className="max-w-none">
       <ProfilePageShell
-        title="Perfil de empresa"
+        title={orgLabels.profile}
         backButton
         compactBack
         shareUrl={generateCompanyUrl(companyId)}
-        shareTitle={profile?.company_name || 'Empresa en TrabaGE'}
+        shareTitle={profile?.company_name || orgLabels.defaultName}
         reportTargetId={companyId}
         isOwn={false}
       >
@@ -110,6 +118,7 @@ export default function CompanyPublicProfile() {
           readOnly
           companyId={companyId}
           jobs={jobs}
+          targetType={followTarget}
           showFollowButton={showFollowButton || !isAuthenticated}
           isFollowing={isFollowing}
           followLoading={followLoading}

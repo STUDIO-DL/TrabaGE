@@ -5,7 +5,8 @@ import { companyService } from '../services/company.service';
 import { FOLLOWS_TARGET } from '../services/follows.service';
 import { storageService } from '../services/storage.service';
 import { postImagePath } from '../constants/storage';
-import { ROLES } from '../constants/roles';
+import { isEmployerRole, isOrganizationRole } from '../constants/roles';
+import { authorTypeFromRole } from '../constants/authorTypes';
 import { useAuth } from './useAuth';
 import { useNotificationContext } from '../context/NotificationContext';
 import { GUEST_MODE_MESSAGE } from '../utils/guestMode';
@@ -36,7 +37,7 @@ export function useCreatePost() {
 
     const { data: post, error } = await postsService.create({
       author_id: user.id,
-      author_type: role === ROLES.COMPANY ? 'company' : 'candidate',
+      author_type: authorTypeFromRole(role),
       content,
     });
 
@@ -72,13 +73,16 @@ export function useCreatePost() {
       await postsService.update(post.id, { post_image_path: path });
     }
 
-    if (role === ROLES.COMPANY) {
+    if (isEmployerRole(role)) {
       const { data: companyProfile } = await companyService.getCompanyProfile(user.id);
-      const companyName = companyProfile?.company_name?.trim() || 'Empresa';
+      const companyName = companyProfile?.company_name?.trim() || 'Business';
       const preview = content.trim().slice(0, 120);
+      const targetType = isOrganizationRole(role)
+        ? FOLLOWS_TARGET.ORGANIZATION
+        : FOLLOWS_TARGET.BUSINESS;
 
       await notificationsService.notifyFollowers({
-        targetType: FOLLOWS_TARGET.COMPANY,
+        targetType,
         targetId: user.id,
         type: 'new_post',
         title: `Nueva publicación de ${companyName}`,

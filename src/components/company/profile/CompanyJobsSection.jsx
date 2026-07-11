@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
 import { Briefcase, ChevronRight, MapPin, ICON_SIZES } from '../../../constants/icons';
 import { formatSalary } from '../../../utils/formatSalary';
+import { useAuth } from '../../../hooks/useAuth';
+import { ROLES, rolePath } from '../../../constants/roles';
 
 function CompanyJobItem({ job }) {
   return (
@@ -27,9 +29,10 @@ function CompanyJobItem({ job }) {
 }
 
 export default function CompanyJobsSection({ jobs = [], readOnly = false }) {
+  const { role } = useAuth();
   const activeJobs = jobs.filter((job) => job.status === 'active');
   const jobCount = activeJobs.length;
-  const manageLink = readOnly ? null : '/company/dashboard';
+  const manageLink = readOnly ? null : rolePath(role || ROLES.BUSINESS, '/dashboard');
 
   return (
     <section className="border-b border-gray-200 bg-white px-4 py-5">

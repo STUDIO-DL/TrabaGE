@@ -130,7 +130,7 @@ export default function AdminUsers() {
             onChange={(event) => handleRoleChange(row, event.target.value)}
             className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm"
           >
-            {[ROLES.CANDIDATE, ROLES.COMPANY, ROLES.ADMIN].map((role) => (
+            {[ROLES.PERSONAL, ROLES.BUSINESS, ROLES.ORGANIZATION, ROLES.ADMIN].map((role) => (
               <option key={role} value={role}>
                 {ROLE_LABELS[role]}
               </option>

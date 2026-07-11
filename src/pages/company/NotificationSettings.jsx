@@ -2,5 +2,5 @@ import NotificationSettingsScreen from '../../components/settings/NotificationSe
 import { ROLES } from '../../constants/roles';
 
 export default function CompanyNotificationSettings() {
-  return <NotificationSettingsScreen accountType={ROLES.COMPANY} />;
+  return <NotificationSettingsScreen accountType={ROLES.BUSINESS} />;
 }

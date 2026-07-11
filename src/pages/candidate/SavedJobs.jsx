@@ -34,7 +34,7 @@ export default function SavedJobs() {
             title="No tienes empleos guardados"
             description="Guarda ofertas para revisarlas y aplicar más tarde."
             actionLabel="Ver empleos"
-            onAction={() => navigate('/candidate/jobs')}
+            onAction={() => navigate('/personal/jobs')}
           />
         ) : (
           savedJobs.map((job) => (

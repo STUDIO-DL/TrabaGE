@@ -1,6 +1,6 @@
 import { supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
-import { ROLES } from '../constants/roles';
+import { ROLES, isEmployerRole, isPersonalRole, rolePath } from '../constants/roles';
 import {
   rankSearchCandidatesForCompany,
   rankSearchJobsForCandidate,
@@ -9,29 +9,37 @@ import {
 const RESULT_LIMIT = 8;
 const GLOBAL_SEARCH_LIMIT_PER_TYPE = 5;
 
+function normalizeResultType(type) {
+  if (type === 'candidate') return 'personal';
+  if (type === 'company') return 'business';
+  if (type === 'institution') return 'organization';
+  return type;
+}
+
 function roleAwareJobPath(jobId, user) {
-  return user?.role === ROLES.CANDIDATE ? `/candidate/jobs/${jobId}` : `/jobs/${jobId}`;
+  return isPersonalRole(user?.role) ? `/personal/jobs/${jobId}` : `/jobs/${jobId}`;
 }
 
 function roleAwareCandidatePath(userId, user) {
-  const isOwner = user?.role === ROLES.CANDIDATE && user?.id === userId;
-  return isOwner ? '/candidate/profile' : `/profile/${userId}`;
+  const isOwner = isPersonalRole(user?.role) && user?.id === userId;
+  return isOwner ? '/personal/profile' : `/profile/${userId}`;
 }
 
 function roleAwareCompanyPath(companyId, user) {
-  const isOwner = user?.role === ROLES.COMPANY && user?.id === companyId;
-  return isOwner ? '/company/profile' : `/companies/${companyId}`;
+  const isOwner = isEmployerRole(user?.role) && user?.id === companyId;
+  if (!isOwner) return `/companies/${companyId}`;
+  return rolePath(user.role === ROLES.ORGANIZATION ? ROLES.ORGANIZATION : ROLES.BUSINESS, '/profile');
 }
 
 function mapGlobalSearchRow(item, user) {
-  const type = item.result_type;
+  const type = normalizeResultType(item.result_type);
   let path = item.path;
 
   if (type === 'job') {
     path = roleAwareJobPath(item.result_id, user);
-  } else if (type === 'candidate') {
+  } else if (type === 'personal') {
     path = roleAwareCandidatePath(item.result_id, user);
-  } else if (type === 'company' || type === 'institution') {
+  } else if (type === 'business' || type === 'organization') {
     path = roleAwareCompanyPath(item.result_id, user);
   }
 
@@ -89,7 +97,7 @@ export const searchService = {
         data = rankSearchJobsForCandidate(data, jobsById, matchingContext.userProfile);
       }
     } else if (matchingContext?.companyJobs?.length) {
-      const candidateIds = data.filter((item) => item.type === 'candidate').map((item) => item.id);
+      const candidateIds = data.filter((item) => item.type === 'personal').map((item) => item.id);
       if (candidateIds.length) {
         const { data: candidates } = await supabase
           .from('candidate_profiles')

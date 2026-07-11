@@ -19,13 +19,13 @@ import { isCompanyVerified } from '../../../utils/companyVerification';
 import { getOrgLabels } from '../../../utils/orgLabels';
 
 const NAV_ITEMS_BASE = [
-  { to: '/company/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },
-  { to: '/company/jobs', label: 'Ofertas de trabajo', icon: Briefcase },
-  { to: '/company/applicants', label: 'Candidatos', icon: Users },
-  { to: '/company/feed', label: 'Publicaciones', icon: Newspaper },
-  { to: '/company/notifications', label: 'Notificaciones', icon: Bell },
-  { to: '/company/profile', labelKey: 'profile', icon: Building2 },
-  { to: '/company/settings', label: 'Configuración', icon: Settings },
+  { to: '/business/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },
+  { to: '/business/jobs', label: 'Ofertas de trabajo', icon: Briefcase },
+  { to: '/business/applicants', label: 'Candidatos', icon: Users },
+  { to: '/business/feed', label: 'Publicaciones', icon: Newspaper },
+  { to: '/business/notifications', label: 'Notificaciones', icon: Bell },
+  { to: '/business/profile', labelKey: 'profile', icon: Building2 },
+  { to: '/business/settings', label: 'Configuración', icon: Settings },
 ];
 
 function getSidebarCompanyLabel(profile, orgLabels) {
@@ -46,7 +46,7 @@ export default function CompanyDashboardSidebar({ profile }) {
   return (
     <aside className="hidden w-[260px] shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
       <div className="px-5 py-5">
-        <Link to="/company/dashboard" className="flex items-center gap-2.5">
+        <Link to="/business/dashboard" className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-600">
             <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="text-white" />
           </span>
@@ -115,7 +115,7 @@ export default function CompanyDashboardSidebar({ profile }) {
             <div>
               <p className="text-sm font-semibold text-gray-900">¿Necesitas ayuda?</p>
               <Link
-                to="/company/help"
+                to="/business/help"
                 className="mt-1 inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
               >
                 Contactar soporte

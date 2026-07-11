@@ -25,6 +25,7 @@ import { Save, ICON_SIZES } from '../../../constants/icons';
 import CompanyProfileView from './CompanyProfileView';
 import { useFollow } from '../../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
+import { getOrgLabels, isOrganizationProfile } from '../../../utils/orgLabels';
 
 const COMPANY_SIZE_OPTIONS = [
   '1-10',
@@ -536,16 +537,20 @@ export default function CompanyProfileLayout({
   };
 
   const readOnly = isPreviewMode;
+  const followTarget = isOrganizationProfile(profile)
+    ? FOLLOWS_TARGET.ORGANIZATION
+    : FOLLOWS_TARGET.BUSINESS;
+  const orgLabels = getOrgLabels(profile);
 
   const { followerCount } = useFollow({
-    targetType: FOLLOWS_TARGET.COMPANY,
+    targetType: followTarget,
     targetId: userId,
     enabled: Boolean(userId) && !isPreviewMode,
   });
 
   return (
     <ProfilePageShell
-      title="Perfil de empresa"
+      title={orgLabels.profile}
       backButton
       compactBack
       onShare={handleShare}

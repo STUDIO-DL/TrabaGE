@@ -190,7 +190,7 @@ export default function ApplyJob() {
         metadata: {
           job_id: jobId,
           candidate_id: user.id,
-          link: '/company/applicants',
+          link: '/business/applicants',
         },
       });
 
@@ -200,7 +200,7 @@ export default function ApplyJob() {
         body: notificationBody,
         data: {
           type: 'new_application',
-          link: '/company/applicants',
+          link: '/business/applicants',
           job_id: jobId,
           candidate_id: user.id,
         },
@@ -208,7 +208,7 @@ export default function ApplyJob() {
     }
 
     showToast('Aplicación enviada', 'success');
-    navigate('/candidate/applications', { replace: true });
+    navigate('/personal/applications', { replace: true });
   };
 
   if (jobLoading) {
