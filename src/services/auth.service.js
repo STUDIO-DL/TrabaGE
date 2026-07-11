@@ -6,9 +6,20 @@ const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
 const PENDING_ORG_KIND_KEY = 'pending_org_kind';
 const PENDING_ORG_DETAILS_KEY = 'pending_org_details';
+const OAUTH_INTENT_KEY = 'trabage_oauth_intent';
 const VALID_ACCOUNT_TYPES = [ROLES.CANDIDATE, ROLES.COMPANY];
 const VALID_STORED_ROLES = [ROLES.CANDIDATE, ROLES.COMPANY, ROLES.ADMIN];
 const NEW_OAUTH_USER_WINDOW_MS = 10 * 60 * 1000;
+/** First Google sign-in: created_at and last_sign_in_at are nearly identical. */
+const FIRST_SIGNIN_WINDOW_MS = 60 * 1000;
+
+export const OAUTH_INTENTS = {
+  LOGIN: 'login',
+  SIGNUP: 'signup',
+};
+
+export const GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE =
+  'No encontramos una cuenta asociada a este correo.\n\nSi todavía no tienes una cuenta en TrabaGE, puedes crear una utilizando "Crear cuenta".';
 
 function normalizeAccountType(accountType) {
   if (accountType === 'organization') return ROLES.COMPANY;
@@ -24,7 +35,6 @@ function normalizeStoredRole(role) {
 function toPendingAccountType(role) {
   return role === ROLES.COMPANY ? 'organization' : role;
 }
-
 
 function normalizeEmail(email) {
   return email.trim().toLowerCase();
@@ -125,6 +135,30 @@ function consumePendingAccountType() {
   return normalizeAccountType(pendingRole);
 }
 
+function peekPendingAccountType() {
+  const pendingRole =
+    localStorage.getItem(PENDING_ACCOUNT_TYPE_KEY) ??
+    localStorage.getItem(LEGACY_PENDING_ACCOUNT_TYPE_KEY);
+  return normalizeAccountType(pendingRole);
+}
+
+function saveOAuthIntent(intent) {
+  if (intent === OAUTH_INTENTS.LOGIN || intent === OAUTH_INTENTS.SIGNUP) {
+    sessionStorage.setItem(OAUTH_INTENT_KEY, intent);
+    return;
+  }
+  sessionStorage.removeItem(OAUTH_INTENT_KEY);
+}
+
+export function consumeOAuthIntent() {
+  const intent = sessionStorage.getItem(OAUTH_INTENT_KEY);
+  sessionStorage.removeItem(OAUTH_INTENT_KEY);
+  if (intent === OAUTH_INTENTS.LOGIN || intent === OAUTH_INTENTS.SIGNUP) return intent;
+  // Pending account type implies signup even if intent was lost across redirect.
+  if (peekPendingAccountType()) return OAUTH_INTENTS.SIGNUP;
+  return null;
+}
+
 async function getExistingProfileRole(userId) {
   const [candidateProfile, companyProfile] = await Promise.all([
     supabase.from('candidate_profiles').select('user_id').eq('user_id', userId).maybeSingle(),
@@ -139,6 +173,70 @@ async function getExistingProfileRole(userId) {
 function isRecentOAuthSignup(user) {
   if (!user?.created_at) return false;
   return Date.now() - new Date(user.created_at).getTime() < NEW_OAUTH_USER_WINDOW_MS;
+}
+
+/**
+ * True when this auth.users row was created by the current first sign-in
+ * (typical for a brand-new Google OAuth user that Supabase just inserted).
+ */
+export function isBrandNewAuthUser(user) {
+  if (!user?.created_at) return false;
+  const createdAt = new Date(user.created_at).getTime();
+  if (Number.isNaN(createdAt)) return false;
+
+  const lastSignInAt = user.last_sign_in_at
+    ? new Date(user.last_sign_in_at).getTime()
+    : Date.now();
+
+  if (Number.isNaN(lastSignInAt)) return false;
+
+  return Math.abs(lastSignInAt - createdAt) < FIRST_SIGNIN_WINDOW_MS;
+}
+
+/**
+ * A TrabaGE account exists when the user already has a profile, is admin,
+ * or is a returning auth user with a role (e.g. email signup before bootstrap).
+ * A brand-new OAuth user with only the DB trigger's default role is NOT registered.
+ */
+export async function isRegisteredTrabaGEAccount(user) {
+  if (!user?.id) return false;
+
+  const profileRole = await getExistingProfileRole(user.id);
+  if (profileRole) return true;
+
+  const { data: roleRow, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (error) return false;
+
+  const role = normalizeStoredRole(roleRow?.role);
+  if (role === ROLES.ADMIN) return true;
+
+  if (isBrandNewAuthUser(user)) return false;
+
+  return Boolean(role);
+}
+
+/**
+ * Removes the orphan auth session created by Google OAuth when the user tried
+ * to sign in without an existing TrabaGE account. Never leaves them logged in.
+ */
+export async function discardUnregisteredOAuthSession() {
+  try {
+    await supabase.rpc('delete_own_account');
+  } catch {
+    // Fall through to signOut even if cleanup RPC fails.
+  }
+  try {
+    await supabase.auth.signOut();
+  } catch {
+    // Ignore sign-out errors; navigation will still clear local UI state.
+  }
+  savePendingAccountType(null);
+  sessionStorage.removeItem(OAUTH_INTENT_KEY);
 }
 
 export async function setUserRole(_userId, role) {
@@ -161,6 +259,14 @@ export const authService = {
   consumePendingOrgKind,
 
   consumePendingOrgDetails,
+
+  setUserRole,
+
+  isRegisteredTrabaGEAccount,
+
+  discardUnregisteredOAuthSession,
+
+  consumeOAuthIntent,
 
   login: async (email, password) => {
     if (!isSupabaseConfigured) {
@@ -259,7 +365,10 @@ export const authService = {
       return configError();
     }
 
+    // Login must never carry a pending account type — that would create/upgrade
+    // an account. Intent is stored so the callback can reject brand-new users.
     savePendingAccountType(null);
+    saveOAuthIntent(OAUTH_INTENTS.LOGIN);
 
     const result = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -272,7 +381,7 @@ export const authService = {
     });
 
     if (result.error) {
-      consumePendingAccountType();
+      sessionStorage.removeItem(OAUTH_INTENT_KEY);
     }
 
     return result;
@@ -285,6 +394,7 @@ export const authService = {
 
     const normalizedRole = normalizeAccountType(accountKind) ?? ROLES.CANDIDATE;
     savePendingAccountType(accountKind);
+    saveOAuthIntent(OAUTH_INTENTS.SIGNUP);
 
     const result = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -302,6 +412,7 @@ export const authService = {
 
     if (result.error) {
       consumePendingAccountType();
+      sessionStorage.removeItem(OAUTH_INTENT_KEY);
     }
 
     return result;

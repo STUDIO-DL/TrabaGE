@@ -16,7 +16,7 @@ export async function resolvePostAuthRedirect(userId, knownRole = null) {
     userRole = roleData?.role;
   }
 
-  if (!userRole) return '/register';
+  if (!userRole) return '/login';
   if (userRole === ROLES.ADMIN) return ROLE_HOME[ROLES.ADMIN];
 
   if (userRole === ROLES.CANDIDATE) {
@@ -33,5 +33,5 @@ export async function resolvePostAuthRedirect(userId, knownRole = null) {
       : ROLE_SETUP[ROLES.COMPANY];
   }
 
-  return ROLE_HOME[userRole] || '/register';
+  return ROLE_HOME[userRole] || '/login';
 }

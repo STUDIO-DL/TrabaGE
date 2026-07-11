@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, Eye, EyeOff, Lock, Mail, MapPin } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
+import Spinner from '../../components/ui/Spinner';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import AccountTypeCards from '../../components/auth/AccountTypeCards';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
@@ -153,7 +154,16 @@ function RegisterHeader({ subtitle }) {
 export default function Register() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { register, user, isAuthenticated, refreshAuthState } = useAuth();
+  const {
+    register,
+    user,
+    isAuthenticated,
+    isPreviewMode,
+    role,
+    getHomePath,
+    loading: authLoading,
+    refreshAuthState,
+  } = useAuth();
   const fromOAuth = location.state?.fromOAuth === true;
   const oauthCompletion = fromOAuth && isAuthenticated && Boolean(user?.id);
 
@@ -230,7 +240,7 @@ export default function Register() {
     await bootstrapProfile({ user, role });
     await refreshAuthState();
     const redirectTo = await resolvePostAuthRedirect(user.id, role);
-    navigate(redirectTo, { replace: true });
+    navigate(redirectTo || '/', { replace: true });
     setLoading(false);
   };
 
@@ -328,6 +338,20 @@ export default function Register() {
         </div>
       </div>
     );
+  }
+
+  // Already signed-in users should never see the registration form after login.
+  if (authLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isAuthenticated && !isPreviewMode && role && !oauthCompletion) {
+    const home = getHomePath();
+    if (home) return <Navigate to={home} replace />;
   }
 
   const headerSubtitle = oauthCompletion
@@ -516,7 +540,10 @@ export default function Register() {
                   </div>
                 </div>
 
-                <GoogleAuthButton onClick={handleGoogleRegister} />
+                <GoogleAuthButton
+                  onClick={handleGoogleRegister}
+                  label="Continuar con Google"
+                />
 
                 <p className="mt-5 text-center text-sm text-slate-500">
                   ¿Ya tienes cuenta?{' '}

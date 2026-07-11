@@ -37,11 +37,11 @@ export function GoogleIcon({ className = 'h-5 w-5' }) {
   );
 }
 
-export function GoogleAuthButton({ onClick }) {
+export function GoogleAuthButton({ onClick, label = 'Continuar con Google' }) {
   return (
     <SocialAuthButton
       icon={<GoogleIcon />}
-      label="Continuar con Google"
+      label={label}
       onClick={onClick}
     />
   );

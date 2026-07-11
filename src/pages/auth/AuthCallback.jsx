@@ -3,10 +3,15 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import Spinner from '../../components/ui/Spinner';
 import { clearPreviewMode } from '../../constants/preview';
-import { ROLES } from '../../constants/roles';
-import { authService } from '../../services/auth.service';
-import { bootstrapProfile } from '../../services/profileBootstrap';
-import { resolvePostAuthRedirect } from '../../utils/resolvePostAuthRedirect';
+import {
+  authService,
+  consumeOAuthIntent,
+  discardUnregisteredOAuthSession,
+  GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+  isRegisteredTrabaGEAccount,
+  OAUTH_INTENTS,
+} from '../../services/auth.service';
+import { completePostAuthFlow } from '../../services/authFlow';
 import { mapAuthError } from '../../utils/errors';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -15,7 +20,7 @@ const RETRY_MS = 300;
 
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const { refreshAuthState } = useAuth();
+  const { refreshAuthState, logout } = useAuth();
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -38,7 +43,7 @@ export default function AuthCallback() {
       const redirectFromSession = async (session, event = null) => {
         if (!session?.user?.id || cancelled || resolved) return false;
         // Claim the resolution up front so the onAuthStateChange handler and
-        // the polling loop can't both run resolvePostAuthRedirect / navigate.
+        // the polling loop can't both run completePostAuthFlow / navigate.
         resolved = true;
 
         if (isPasswordRecovery || event === 'PASSWORD_RECOVERY') {
@@ -48,40 +53,63 @@ export default function AuthCallback() {
           return true;
         }
 
-        const { data: accountTypeResult, error: accountTypeError } =
-          await authService.applyPendingAccountType(session.user);
+        const oauthIntent = consumeOAuthIntent();
 
-        if (accountTypeError) {
-          setError(mapAuthError(accountTypeError));
+        // CASO 1 — Iniciar sesión con Google: never create an account.
+        // Supabase OAuth inserts auth.users for unknown Google emails; we detect
+        // that orphan and discard it before any profile bootstrap.
+        if (oauthIntent === OAUTH_INTENTS.LOGIN) {
+          const registered = await isRegisteredTrabaGEAccount(session.user);
+          if (!registered) {
+            await discardUnregisteredOAuthSession();
+            await logout();
+            if (cancelled) return true;
+            navigate('/login', {
+              replace: true,
+              state: {
+                googleAccountMissing: true,
+                googleAccountMissingMessage: GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+              },
+            });
+            return true;
+          }
+        }
+
+        const {
+          error: flowError,
+          needsAccountTypeSelection,
+          redirectTo,
+        } = await completePostAuthFlow(session.user);
+
+        if (flowError) {
+          setError(mapAuthError(flowError));
           return true;
         }
 
-        // Safety net only: a brand-new user who reached OAuth WITHOUT a pending
-        // account-type selection (e.g. "login with Google" of a new user) picks
-        // their account type on /register. Signups from the register form always
-        // carry the pending type, so they skip this screen entirely.
-        if (accountTypeResult?.needsAccountTypeSelection) {
+        // Signup safety net only: OAuth without a pending account type.
+        // Login of an unregistered user never reaches here (handled above).
+        if (needsAccountTypeSelection) {
           if (cancelled) return true;
+          if (oauthIntent === OAUTH_INTENTS.LOGIN) {
+            await discardUnregisteredOAuthSession();
+            await logout();
+            navigate('/login', {
+              replace: true,
+              state: {
+                googleAccountMissing: true,
+                googleAccountMissingMessage: GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+              },
+            });
+            return true;
+          }
           navigate('/register', { replace: true, state: { fromOAuth: true } });
           return true;
         }
 
-        const role = accountTypeResult?.role ?? null;
-
-        // Shared profile-creation path for BOTH manual (verified) and Google
-        // sign-ups: ensure the correct profile exists and prefill known data
-        // (Google name/photo, city, org details). Role is already applied above,
-        // which the profile INSERT policies require.
-        if (role && role !== ROLES.ADMIN) {
-          await bootstrapProfile({ user: session.user, role });
-        }
-
-        const redirectTo = await resolvePostAuthRedirect(session.user.id, role);
-
         await refreshAuthState();
 
         if (cancelled) return true;
-        navigate(redirectTo, { replace: true });
+        navigate(redirectTo || '/', { replace: true });
         return true;
       };
 
@@ -131,7 +159,7 @@ export default function AuthCallback() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, refreshAuthState]);
+  }, [navigate, refreshAuthState, logout]);
 
   if (error) {
     return (

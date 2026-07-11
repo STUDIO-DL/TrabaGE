@@ -1,14 +1,15 @@
-import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
+import Spinner from '../../components/ui/Spinner';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import { LegalFooterLinks } from '../../components/legal/LegalLinks';
 import { clearPreviewMode } from '../../constants/preview';
 import { useAuth } from '../../hooks/useAuth';
-import { authService } from '../../services/auth.service';
+import { authService, GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
 
 function LoginDecorations() {
@@ -89,6 +90,32 @@ function LoginDecorations() {
   );
 }
 
+function GoogleAccountMissingPanel({ message, onDismiss }) {
+  return (
+    <div
+      role="status"
+      className="login-fade-in-delayed rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left"
+    >
+      <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">{message}</p>
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        <Link
+          to="/register"
+          className="inline-flex flex-1 items-center justify-center rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+        >
+          Crear cuenta
+        </Link>
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+        >
+          Volver al inicio de sesión
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function LoginScreen({
   email,
   setEmail,
@@ -101,6 +128,9 @@ function LoginScreen({
   onSubmit,
   onExplore,
   onGoogleLogin,
+  googleAccountMissing,
+  googleAccountMissingMessage,
+  onDismissGoogleMissing,
 }) {
   return (
     <div className="relative min-h-dvh w-full overflow-hidden bg-gradient-to-b from-[#EFF6FF] via-white to-[#EFF6FF]">
@@ -129,126 +159,139 @@ function LoginScreen({
 
           {/* Card */}
           <div className="login-fade-in-delayed mt-7 rounded-3xl bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.10)] sm:p-7">
-            <form onSubmit={onSubmit} className="space-y-4" autoComplete="off">
-              <div>
-                <label
-                  htmlFor="login-email"
-                className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900"
-                >
-                  <Mail className="h-4 w-4 text-primary-600" aria-hidden />
-                  Correo electrónico
-                </label>
-                <input
-                  id="login-email"
-                  type="email"
-                  name="trabage-email"
-                  autoComplete="email"
-                  required
-                  placeholder="ejemplo@correo.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
-                />
-              </div>
+            {googleAccountMissing ? (
+              <GoogleAccountMissingPanel
+                message={googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE}
+                onDismiss={onDismissGoogleMissing}
+              />
+            ) : (
+              <>
+                <form onSubmit={onSubmit} className="space-y-4" autoComplete="off">
+                  <div>
+                    <label
+                      htmlFor="login-email"
+                      className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900"
+                    >
+                      <Mail className="h-4 w-4 text-primary-600" aria-hidden />
+                      Correo electrónico
+                    </label>
+                    <input
+                      id="login-email"
+                      type="email"
+                      name="trabage-email"
+                      autoComplete="email"
+                      required
+                      placeholder="ejemplo@correo.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
+                    />
+                  </div>
 
-              <div>
-                <label
-                  htmlFor="login-password"
-                className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900"
-                >
-                  <Lock className="h-4 w-4 text-primary-600" aria-hidden />
-                  Contraseña
-                </label>
-                <div className="relative">
-                  <input
-                    id="login-password"
-                    type={showPassword ? 'text' : 'password'}
-                    name="trabage-password"
-                    autoComplete="current-password"
-                    required
-                    placeholder="Ingresa tu contraseña"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
+                  <div>
+                    <label
+                      htmlFor="login-password"
+                      className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900"
+                    >
+                      <Lock className="h-4 w-4 text-primary-600" aria-hidden />
+                      Contraseña
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="login-password"
+                        type={showPassword ? 'text' : 'password'}
+                        name="trabage-password"
+                        autoComplete="current-password"
+                        required
+                        placeholder="Ingresa tu contraseña"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-slate-400 transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                        aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+                        ) : (
+                          <Eye className="h-[1.15rem] w-[1.15rem]" aria-hidden />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Link
+                      to="/forgot-password"
+                      className="text-sm font-medium text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Link>
+                  </div>
+
+                  {error && (
+                    <p
+                      role="alert"
+                      className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                    >
+                      {error}
+                    </p>
+                  )}
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    loading={loading}
+                    className="relative !rounded-xl py-3.5 text-base font-semibold"
+                  >
+                    Iniciar sesión
+                  </Button>
+                </form>
+
+                {/* Divider */}
+                <div className="relative my-5">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-slate-200" />
+                  </div>
+                  <div className="relative flex justify-center text-xs font-medium text-slate-500">
+                    <span className="bg-white px-3">o</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <GoogleAuthButton
+                    onClick={onGoogleLogin}
+                    label="Iniciar sesión con Google"
                   />
+
                   <button
                     type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-slate-400 transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
-                    aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    onClick={onExplore}
+                    className="flex h-btn-secondary w-full items-center justify-center gap-3 rounded-xl bg-primary-50 px-md text-small font-semibold text-primary-700 transition hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-                    ) : (
-                      <Eye className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-                    )}
+                    <User className="h-5 w-5" aria-hidden />
+                    <span>Explorar como invitado</span>
                   </button>
                 </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Link
-                  to="/forgot-password"
-                  className="text-sm font-medium text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-                >
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </div>
-
-              {error && (
-                <p
-                  role="alert"
-                  className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-                >
-                  {error}
-                </p>
-              )}
-
-              <Button
-                type="submit"
-                fullWidth
-                loading={loading}
-                className="relative !rounded-xl py-3.5 text-base font-semibold"
-              >
-                Iniciar sesión
-
-              </Button>
-            </form>
-
-            {/* Divider */}
-            <div className="relative my-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-xs font-medium text-slate-500">
-                <span className="bg-white px-3">o</span>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <GoogleAuthButton onClick={onGoogleLogin} />
-
-              <button
-                type="button"
-                onClick={onExplore}
-                className="flex h-btn-secondary w-full items-center justify-center gap-3 rounded-xl bg-primary-50 px-md text-small font-semibold text-primary-700 transition hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-              >
-                <User className="h-5 w-5" aria-hidden />
-                <span>Explorar como invitado</span>
-              </button>
-            </div>
+              </>
+            )}
           </div>
 
           {/* Crear cuenta */}
-          <p className="mt-6 text-center text-sm text-slate-500">
-            ¿No tienes cuenta?{' '}
-            <Link
-              to="/register"
-              className="font-bold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-            >
-              Crear cuenta
-            </Link>
-          </p>
+          {!googleAccountMissing ? (
+            <p className="mt-6 text-center text-sm text-slate-500">
+              ¿No tienes cuenta?{' '}
+              <Link
+                to="/register"
+                className="font-bold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+              >
+                Crear cuenta
+              </Link>
+            </p>
+          ) : null}
         </div>
 
         {/* Footer */}
@@ -270,12 +313,37 @@ function LoginScreen({
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login, enterPreviewMode, isAuthenticated, isPreviewMode, role, getHomePath } = useAuth();
+  const location = useLocation();
+  const {
+    login,
+    enterPreviewMode,
+    isAuthenticated,
+    isPreviewMode,
+    role,
+    getHomePath,
+    loading: authLoading,
+  } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleAccountMissing, setGoogleAccountMissing] = useState(
+    () => location.state?.googleAccountMissing === true,
+  );
+  const [googleAccountMissingMessage, setGoogleAccountMissingMessage] = useState(
+    () => location.state?.googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+  );
+
+  useEffect(() => {
+    if (location.state?.googleAccountMissing) {
+      setGoogleAccountMissing(true);
+      setGoogleAccountMissingMessage(
+        location.state.googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+      );
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   const handleExplore = () => {
     enterPreviewMode();
@@ -314,10 +382,31 @@ export default function Login() {
     await submitLogin(email, password);
   };
 
-  // Un usuario con sesión real (no invitado/preview) que llega a /login se
-  // redirige directamente a su inicio en lugar de mostrarle el formulario.
-  if (isAuthenticated && !isPreviewMode) {
-    return <Navigate to={role ? getHomePath() : '/register'} replace />;
+  const handleDismissGoogleMissing = () => {
+    setGoogleAccountMissing(false);
+  };
+
+  // While session/role hydrate, keep a quiet loader — never flash /register.
+  if (authLoading) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  // Authenticated users with a resolved role go straight home.
+  if (isAuthenticated && !isPreviewMode && role) {
+    return <Navigate to={getHomePath() || '/'} replace />;
+  }
+
+  // Session present but role still resolving — avoid the register flicker.
+  if (isAuthenticated && !isPreviewMode && !role) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
   }
 
   return (
@@ -333,6 +422,9 @@ export default function Login() {
       onSubmit={handleSubmit}
       onExplore={handleExplore}
       onGoogleLogin={handleGoogleLogin}
+      googleAccountMissing={googleAccountMissing}
+      googleAccountMissingMessage={googleAccountMissingMessage}
+      onDismissGoogleMissing={handleDismissGoogleMissing}
     />
   );
 }

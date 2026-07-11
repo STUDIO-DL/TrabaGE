@@ -20,7 +20,7 @@ export default function SetPassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = location.state?.redirectTo || getHomePath();
+  const redirectTo = location.state?.redirectTo || getHomePath() || '/';
   const requiresCurrentPassword = location.state?.passwordRecovery !== true;
 
   if (!isAuthenticated || isPreviewMode) {

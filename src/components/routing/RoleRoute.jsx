@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { ROLE_HOME, ROLE_SETUP } from '../../constants/roles';
 import { getPreviewRole, isPreviewActive } from '../../constants/preview';
 import Spinner from '../ui/Spinner';
+
+const ROLE_RESOLVE_TIMEOUT_MS = 4000;
 
 export default function RoleRoute({ role: requiredRole }) {
   const { role, isPreviewMode, loading, isAuthenticated, refreshAuthState, setupComplete } =
@@ -11,11 +13,21 @@ export default function RoleRoute({ role: requiredRole }) {
   const location = useLocation();
   const previewActive = requiredRole === 'admin' ? false : isPreviewActive(isPreviewMode);
   const effectiveRole = role ?? (previewActive ? getPreviewRole() : null);
+  const [roleWaitExpired, setRoleWaitExpired] = useState(false);
 
   useEffect(() => {
     if (previewActive || loading || !isAuthenticated || effectiveRole) return;
     void refreshAuthState();
   }, [previewActive, loading, isAuthenticated, effectiveRole, refreshAuthState]);
+
+  useEffect(() => {
+    if (previewActive || loading || !isAuthenticated || effectiveRole) {
+      setRoleWaitExpired(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setRoleWaitExpired(true), ROLE_RESOLVE_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [previewActive, loading, isAuthenticated, effectiveRole]);
 
   if (loading) {
     return (
@@ -25,16 +37,23 @@ export default function RoleRoute({ role: requiredRole }) {
     );
   }
 
+  // Keep a quiet loader while role hydrates — never flash /register mid-login.
   if (!previewActive && isAuthenticated && !effectiveRole) {
-    return <Navigate to="/register" replace state={{ fromOAuth: true }} />;
+    if (!roleWaitExpired) {
+      return (
+        <div className="flex min-h-dvh items-center justify-center">
+          <Spinner size="lg" />
+        </div>
+      );
+    }
+    return <Navigate to="/login" replace />;
   }
 
   if (effectiveRole !== requiredRole) {
     if (requiredRole === 'admin') {
       return <Navigate to="/login" replace />;
     }
-    const fallback = previewActive || isAuthenticated ? '/register' : '/login';
-    return <Navigate to={ROLE_HOME[effectiveRole] || fallback} replace />;
+    return <Navigate to={ROLE_HOME[effectiveRole] || '/login'} replace />;
   }
 
   // Gate users whose required profile data is incomplete into the setup

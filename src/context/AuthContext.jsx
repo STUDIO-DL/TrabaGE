@@ -273,7 +273,7 @@ export function AuthProvider({ children }) {
     // or complete-profile assistant, never an extra account-type screen).
     const previewActive = isPreviewMode || getPreviewMode();
     const activeRole = role ?? (previewActive ? getPreviewRole() : null);
-    if (!activeRole) return '/register';
+    if (!activeRole) return null;
     if (!previewActive && ROLE_SETUP[activeRole] && !setupComplete) {
       return ROLE_SETUP[activeRole];
     }

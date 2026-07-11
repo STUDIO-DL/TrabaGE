@@ -10,16 +10,27 @@ import { useAuth } from '../hooks/useAuth';
 // espera además a que termine la restauración de la sesión (loading === false),
 // de modo que un usuario con sesión válida vaya directo a su inicio.
 const MIN_SPLASH_MS = 1800;
+const ROLE_WAIT_MS = 4000;
 
 export default function SplashScreen() {
   const navigate = useNavigate();
-  const { isAuthenticated, role, getHomePath, loading } = useAuth();
+  const { isAuthenticated, role, getHomePath, loading, logout } = useAuth();
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [roleWaitExpired, setRoleWaitExpired] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setMinTimeElapsed(true), MIN_SPLASH_MS);
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (loading || !minTimeElapsed || !isAuthenticated || role) {
+      setRoleWaitExpired(false);
+      return undefined;
+    }
+    const timer = setTimeout(() => setRoleWaitExpired(true), ROLE_WAIT_MS);
+    return () => clearTimeout(timer);
+  }, [loading, minTimeElapsed, isAuthenticated, role]);
 
   useEffect(() => {
     // No decidimos el destino hasta que la sesión de Supabase haya terminado de
@@ -28,17 +39,33 @@ export default function SplashScreen() {
     if (loading || !minTimeElapsed) return;
 
     if (isAuthenticated) {
-      const destination = role ? getHomePath() : '/register';
-      navigate(destination, { replace: true });
+      // Wait for role hydration on the splash itself — never flash /register
+      // as an intermediate screen while the profile/role is still loading.
+      if (!role) {
+        if (!roleWaitExpired) return;
+        void logout().then(() => navigate('/login', { replace: true }));
+        return;
+      }
+      const home = getHomePath();
+      navigate(home || '/login', { replace: true });
       return;
     }
 
     // Para un usuario no autenticado, comprobamos si ya ha visto el onboarding.
     // Si no lo ha visto, le llevamos a la nueva ruta `/onboarding`.
     // Si ya lo vio, le llevamos directamente a la pantalla de login.
-    const destination = getOnboardingComplete() ? '/login' : '/onboarding'; 
+    const destination = getOnboardingComplete() ? '/login' : '/onboarding';
     navigate(destination, { replace: true });
-  }, [loading, minTimeElapsed, isAuthenticated, role, getHomePath, navigate]);
+  }, [
+    loading,
+    minTimeElapsed,
+    isAuthenticated,
+    role,
+    roleWaitExpired,
+    getHomePath,
+    navigate,
+    logout,
+  ]);
 
   return (
     <MobileScreenLayout
