@@ -42,14 +42,19 @@ export function useProfile(userId) {
     setError(null);
 
     const isCandidate = userId ? true : !isEmployerRole(role);
+    const viewingOtherCandidate = Boolean(userId) && userId !== user?.id;
     const { data, error: fetchError } = isCandidate
-      ? await profileService.getCandidateFullProfile(targetId)
-      : await companyService.getCompanyProfile(targetId);
+      ? viewingOtherCandidate
+        ? await profileService.getPublicCandidateFullProfile(targetId)
+        : await profileService.getCandidateFullProfile(targetId)
+      : userId && userId !== user?.id
+        ? await companyService.getPublicProfile(targetId)
+        : await companyService.getCompanyProfile(targetId);
 
     setProfile(data);
     setError(fetchError?.message ?? null);
     setLoading(false);
-  }, [targetId, role, userId, isPreviewMode]);
+  }, [targetId, role, userId, user?.id, isPreviewMode]);
 
   useEffect(() => {
     fetchProfile();

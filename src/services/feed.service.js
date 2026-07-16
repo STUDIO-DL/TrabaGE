@@ -102,7 +102,7 @@ async function enrichPosts(posts, user) {
       : Promise.resolve({ data: [] }),
     candidateIds.length
       ? supabase
-          .from('candidate_profiles')
+          .from('candidate_profiles_public')
           .select('user_id, full_name, headline, avatar_path')
           .in('user_id', candidateIds)
       : Promise.resolve({ data: [] }),
@@ -155,8 +155,8 @@ async function enrichRecommendationCards(items) {
   const [candidatesResult, companiesResult, institutionsResult] = await Promise.all([
     candidateIds.length
       ? supabase
-          .from('candidate_profiles')
-          .select('user_id, full_name, headline, avatar_path, city, skills(name)')
+          .from('candidate_profiles_public')
+          .select('user_id, full_name, headline, avatar_path, city')
           .in('user_id', candidateIds)
       : Promise.resolve({ data: [] }),
     companyIds.length

@@ -33,7 +33,7 @@ async function enrichPosts(posts, user) {
       : Promise.resolve({ data: [] }),
     candidateIds.length
       ? supabase
-          .from('candidate_profiles')
+          .from('candidate_profiles_public')
           .select('user_id, full_name, headline, avatar_path')
           .in('user_id', candidateIds)
       : Promise.resolve({ data: [] }),

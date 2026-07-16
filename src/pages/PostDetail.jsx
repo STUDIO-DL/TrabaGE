@@ -29,7 +29,7 @@ async function enrichPost(post) {
   }
 
   const { data: candidate } = await supabase
-    .from('candidate_profiles')
+    .from('candidate_profiles_public')
     .select('user_id, full_name, headline, avatar_path')
     .eq('user_id', post.author_id)
     .maybeSingle();

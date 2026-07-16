@@ -1,8 +1,35 @@
 import { supabase } from '../config/supabase';
 import { normalizeSkillName } from '../utils/normalizeSkill';
 
+/** Never request onesignal_player_id — column is revoked for clients. */
+export const CANDIDATE_PROFILE_COLUMNS = [
+  'user_id',
+  'full_name',
+  'headline',
+  'about',
+  'city',
+  'province',
+  'country',
+  'avatar_path',
+  'years_experience',
+  'contact_email',
+  'contact_whatsapp',
+  'phone_number',
+  'website_url',
+  'linkedin_url',
+  'cv_path',
+  'cv_name',
+  'cover_letter',
+  'job_preferences',
+  'expected_salary',
+  'setup_complete',
+  'is_active',
+  'created_at',
+  'updated_at',
+].join(', ');
+
 const FULL_PROFILE_SELECT = `
-  *,
+  ${CANDIDATE_PROFILE_COLUMNS},
   education(*),
   experience(*),
   certifications(*),
@@ -12,42 +39,78 @@ const FULL_PROFILE_SELECT = `
   languages(*)
 `;
 
+const PUBLIC_PROFILE_SELECT = `
+  user_id, full_name, headline, about, city, province, country, avatar_path,
+  years_experience, contact_email, contact_whatsapp, setup_complete, is_active,
+  created_at, updated_at
+`;
+
+async function attachCandidateSections(profile) {
+  if (!profile?.user_id) return profile;
+
+  const userId = profile.user_id;
+  const [education, experience, certifications, skills, candidate_links, services, languages] =
+    await Promise.all([
+      supabase.from('education').select('*').eq('user_id', userId),
+      supabase.from('experience').select('*').eq('user_id', userId),
+      supabase.from('certifications').select('*').eq('user_id', userId),
+      supabase.from('skills').select('*').eq('user_id', userId),
+      supabase.from('candidate_links').select('*').eq('user_id', userId),
+      supabase.from('services').select('*').eq('user_id', userId),
+      supabase.from('languages').select('*').eq('user_id', userId),
+    ]);
+
+  return {
+    ...profile,
+    education: education.data ?? [],
+    experience: experience.data ?? [],
+    certifications: certifications.data ?? [],
+    skills: skills.data ?? [],
+    candidate_links: candidate_links.data ?? [],
+    services: services.data ?? [],
+    languages: languages.data ?? [],
+  };
+}
+
 export const profileService = {
   getCandidateProfile: (userId) =>
-    supabase.from('candidate_profiles').select('*').eq('user_id', userId).maybeSingle(),
-
-  upsertCandidateProfile: (data) =>
     supabase
       .from('candidate_profiles')
-      .upsert(data, { onConflict: 'user_id' })
-      .select('*')
-      .maybeSingle(),
-
-  updateCandidateProfile: (userId, data) =>
-    supabase
-      .from('candidate_profiles')
-      .update(data)
+      .select(CANDIDATE_PROFILE_COLUMNS)
       .eq('user_id', userId)
-      .select('*')
       .maybeSingle(),
 
-  updateOneSignalPlayerId: async (userId, playerId) => {
-    const candidateResult = await supabase
+  /** Public directory read — no OneSignal, CV paths, or private internals. */
+  getPublicCandidateProfile: (userId) =>
+    supabase
+      .from('candidate_profiles_public')
+      .select(PUBLIC_PROFILE_SELECT)
+      .eq('user_id', userId)
+      .maybeSingle(),
+
+  upsertCandidateProfile: (data) => {
+    const safeData = { ...(data ?? {}) };
+    delete safeData.onesignal_player_id;
+    return supabase
       .from('candidate_profiles')
-      .update({ onesignal_player_id: playerId })
-      .eq('user_id', userId);
-
-    if (!candidateResult.error) {
-      const companyResult = await supabase
-        .from('company_profiles')
-        .update({ onesignal_player_id: playerId })
-        .eq('user_id', userId);
-
-      return companyResult.error ? candidateResult : companyResult;
-    }
-
-    return candidateResult;
+      .upsert(safeData, { onConflict: 'user_id' })
+      .select(CANDIDATE_PROFILE_COLUMNS)
+      .maybeSingle();
   },
+
+  updateCandidateProfile: (userId, data) => {
+    const safeData = { ...(data ?? {}) };
+    delete safeData.onesignal_player_id;
+    return supabase
+      .from('candidate_profiles')
+      .update(safeData)
+      .eq('user_id', userId)
+      .select(CANDIDATE_PROFILE_COLUMNS)
+      .maybeSingle();
+  },
+
+  updateOneSignalPlayerId: async (_userId, playerId) =>
+    supabase.rpc('set_onesignal_player_id', { p_player_id: playerId ?? '' }),
 
   getCandidateFullProfile: (userId) =>
     supabase
@@ -55,6 +118,19 @@ export const profileService = {
       .select(FULL_PROFILE_SELECT)
       .eq('user_id', userId)
       .maybeSingle(),
+
+  getPublicCandidateFullProfile: async (userId) => {
+    const { data, error } = await supabase
+      .from('candidate_profiles_public')
+      .select(PUBLIC_PROFILE_SELECT)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error || !data) return { data, error };
+
+    const full = await attachCandidateSections(data);
+    return { data: full, error: null };
+  },
 
   addEducation: (data) => supabase.from('education').insert(data).select('*').maybeSingle(),
   updateEducation: (id, data) => supabase.from('education').update(data).eq('id', id).select('*').maybeSingle(),

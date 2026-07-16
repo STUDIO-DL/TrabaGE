@@ -99,12 +99,64 @@ export const searchService = {
     } else if (matchingContext?.companyJobs?.length) {
       const candidateIds = data.filter((item) => item.type === 'personal').map((item) => item.id);
       if (candidateIds.length) {
-        const { data: candidates } = await supabase
-          .from('candidate_profiles')
-          .select('user_id, full_name, headline, about, city, province, country, years_experience, expected_salary, job_preferences, skills(name), experience(position, company, description, start_date, end_date), education(institution, program, specialty, grade), languages(language, level), certifications(id), candidate_links(id)')
-          .in('user_id', candidateIds);
+        const [
+          { data: candidates },
+          { data: skills },
+          { data: experience },
+          { data: education },
+          { data: languages },
+          { data: certifications },
+          { data: candidateLinks },
+        ] = await Promise.all([
+          supabase
+            .from('candidate_profiles_public')
+            .select('user_id, full_name, headline, about, city, province, country, years_experience')
+            .in('user_id', candidateIds),
+          supabase.from('skills').select('user_id, name').in('user_id', candidateIds),
+          supabase
+            .from('experience')
+            .select('user_id, position, company, description, start_date, end_date')
+            .in('user_id', candidateIds),
+          supabase
+            .from('education')
+            .select('user_id, institution, program, specialty, grade')
+            .in('user_id', candidateIds),
+          supabase.from('languages').select('user_id, language, level').in('user_id', candidateIds),
+          supabase.from('certifications').select('user_id, id').in('user_id', candidateIds),
+          supabase.from('candidate_links').select('user_id, id').in('user_id', candidateIds),
+        ]);
 
-        const candidatesById = new Map((candidates ?? []).map((row) => [row.user_id, row]));
+        const groupByUser = (rows, mapFn) => {
+          const map = new Map();
+          (rows ?? []).forEach((row) => {
+            const list = map.get(row.user_id) ?? [];
+            list.push(mapFn ? mapFn(row) : row);
+            map.set(row.user_id, list);
+          });
+          return map;
+        };
+
+        const skillsByUser = groupByUser(skills, (row) => ({ name: row.name }));
+        const experienceByUser = groupByUser(experience);
+        const educationByUser = groupByUser(education);
+        const languagesByUser = groupByUser(languages);
+        const certificationsByUser = groupByUser(certifications, (row) => ({ id: row.id }));
+        const linksByUser = groupByUser(candidateLinks, (row) => ({ id: row.id }));
+
+        const candidatesById = new Map(
+          (candidates ?? []).map((row) => [
+            row.user_id,
+            {
+              ...row,
+              skills: skillsByUser.get(row.user_id) ?? [],
+              experience: experienceByUser.get(row.user_id) ?? [],
+              education: educationByUser.get(row.user_id) ?? [],
+              languages: languagesByUser.get(row.user_id) ?? [],
+              certifications: certificationsByUser.get(row.user_id) ?? [],
+              candidate_links: linksByUser.get(row.user_id) ?? [],
+            },
+          ]),
+        );
         data = rankSearchCandidatesForCompany(data, candidatesById, matchingContext.companyJobs);
       }
     }

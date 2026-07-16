@@ -3,7 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ?? 'https://trabage.org',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-matching-recalc-secret',
   Vary: 'Origin',
 };
 
@@ -39,16 +40,32 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const recalcSecret = Deno.env.get('MATCHING_RECALC_SECRET')?.trim() ?? '';
 
   if (!supabaseUrl || !serviceKey) {
     return jsonResponse({ error: 'Supabase no configurado' }, 500);
   }
 
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const bearer = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  const headerSecret = req.headers.get('x-matching-recalc-secret')?.trim() ?? '';
+
+  const authorizedByServiceRole = Boolean(serviceKey) && bearer === serviceKey;
+  const authorizedBySecret = Boolean(recalcSecret) && (
+    headerSecret === recalcSecret || bearer === recalcSecret
+  );
+
+  if (!authorizedByServiceRole && !authorizedBySecret) {
+    return jsonResponse({ error: 'No autorizado' }, 401);
+  }
+
   const supabase = createClient(supabaseUrl, serviceKey);
   const { limit = 25 } = await req.json().catch(() => ({ limit: 25 }));
 
+  const safeLimit = Math.min(Math.max(Number(limit) || 25, 1), 100);
+
   const { data: events, error: claimError } = await supabase.rpc('claim_recommendation_recalc_batch', {
-    p_limit: limit,
+    p_limit: safeLimit,
   });
 
   if (claimError) {

@@ -1,7 +1,35 @@
 import { supabase } from '../config/supabase';
 import { normalizeJobPreferences } from '../constants/jobPreferences';
 
-const COMPANY_PROFILE_SELECT = '*, company_services(*)';
+/** Never request onesignal_player_id — column is revoked for clients. */
+const COMPANY_PROFILE_COLUMNS = [
+  'user_id',
+  'company_name',
+  'company_type',
+  'sector',
+  'description',
+  'city',
+  'country',
+  'address',
+  'website',
+  'founded_year',
+  'company_size',
+  'logo_path',
+  'cover_path',
+  'contact_email',
+  'contact_phone',
+  'contact_whatsapp',
+  'social_links',
+  'is_verified',
+  'verification_status',
+  'verified_status',
+  'setup_complete',
+  'is_active',
+  'created_at',
+  'updated_at',
+].join(', ');
+
+const COMPANY_PROFILE_SELECT = `${COMPANY_PROFILE_COLUMNS}, company_services(*)`;
 
 function tokenize(value) {
   return String(value ?? '')
@@ -60,7 +88,7 @@ async function fetchCompanyProfile(userId) {
   if (result.error?.code === 'PGRST200') {
     const fallback = await supabase
       .from('company_profiles')
-      .select('*')
+      .select(COMPANY_PROFILE_COLUMNS)
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -80,10 +108,12 @@ export const companyService = {
   getCompanyProfile: (userId) => fetchCompanyProfile(userId),
 
   upsertCompanyProfile: async (data) => {
+    const safeData = { ...(data ?? {}) };
+    delete safeData.onesignal_player_id;
     const result = await supabase
       .from('company_profiles')
-      .upsert(data, { onConflict: 'user_id' })
-      .select('*')
+      .upsert(safeData, { onConflict: 'user_id' })
+      .select(COMPANY_PROFILE_COLUMNS)
       .maybeSingle();
 
     return {
@@ -92,7 +122,37 @@ export const companyService = {
     };
   },
 
-  getPublicProfile: (userId) => fetchCompanyProfile(userId),
+  getPublicProfile: async (userId) => {
+    const publicResult = await supabase
+      .from('company_profiles_public')
+      .select(COMPANY_PROFILE_COLUMNS)
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (publicResult.error?.code === 'PGRST205' || publicResult.error?.code === '42P01') {
+      return fetchCompanyProfile(userId);
+    }
+
+    if (publicResult.error || !publicResult.data) {
+      return {
+        ...publicResult,
+        data: normalizeCompanyProfile(publicResult.data),
+      };
+    }
+
+    const servicesResult = await supabase
+      .from('company_services')
+      .select('*')
+      .eq('company_id', userId);
+
+    return {
+      data: normalizeCompanyProfile({
+        ...publicResult.data,
+        company_services: servicesResult.data ?? [],
+      }),
+      error: servicesResult.error,
+    };
+  },
   addCompanyService: (data) =>
     supabase.from('company_services').insert(data).select('*').maybeSingle(),
 
