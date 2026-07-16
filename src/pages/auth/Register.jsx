@@ -25,6 +25,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
 import { mapAuthError } from '../../utils/errors';
+import { getErrorMessage } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
 const fieldClassName =
@@ -201,7 +202,7 @@ export default function Register() {
     setError('');
 
     if (!accountKind) {
-      setError('Selecciona un tipo de cuenta.');
+      setError(getErrorMessage('selectAccountType'));
       return;
     }
 
@@ -217,7 +218,7 @@ export default function Register() {
     e.preventDefault();
 
     if (!accountKind) {
-      setError('Selecciona un tipo de cuenta.');
+      setError(getErrorMessage('selectAccountType'));
       return;
     }
 
@@ -236,7 +237,7 @@ export default function Register() {
     }
 
     if (needsAccountTypeSelection) {
-      setError('No se pudo completar el registro. Inténtalo de nuevo.');
+      setError(getErrorMessage('registerFailed'));
       setLoading(false);
       return;
     }
@@ -250,7 +251,7 @@ export default function Register() {
     e.preventDefault();
 
     if (!accountKind) {
-      setError('Selecciona un tipo de cuenta.');
+      setError(getErrorMessage('selectAccountType'));
       return;
     }
 
@@ -259,14 +260,14 @@ export default function Register() {
       if (field.required) {
         const value = typeValues[field.key];
         if (!value || !String(value).trim()) {
-          setError(field.requiredMessage);
+          setError(getErrorMessage(field.errorKey));
           return;
         }
       }
     }
 
     if (!email.trim()) {
-      setError('Introduce tu correo electrónico.');
+      setError(getErrorMessage('enterEmail'));
       return;
     }
 
@@ -277,17 +278,17 @@ export default function Register() {
     }
 
     if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError(getErrorMessage('passwordsMismatch'));
       return;
     }
 
     if (!city.trim()) {
-      setError('Selecciona tu ciudad.');
+      setError(getErrorMessage('selectCity'));
       return;
     }
 
     if (!acceptedTerms) {
-      setError('Debes aceptar los términos y la política de privacidad.');
+      setError(getErrorMessage('acceptTerms'));
       return;
     }
 

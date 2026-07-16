@@ -12,8 +12,8 @@ import { useAuth } from '../../hooks/useAuth';
 import useEmailVerificationResend from '../../hooks/useEmailVerificationResend';
 import {
   authService,
-  EMAIL_NOT_VERIFIED_MESSAGE,
-  GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+  getEmailNotVerifiedMessage,
+  getGoogleLoginNoAccountMessage,
   isEmailNotVerifiedError,
 } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
@@ -132,7 +132,7 @@ function EmailVerificationPanel({ email, onBack }) {
       <MailCheck className="mx-auto h-12 w-12 text-primary-600" aria-hidden />
       <h2 className="mt-4 text-lg font-bold text-slate-900">Verifica tu correo electrónico</h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-600">
-        {EMAIL_NOT_VERIFIED_MESSAGE}
+        {getEmailNotVerifiedMessage()}
       </p>
       {email ? <p className="mt-2 break-all text-sm font-semibold text-primary-600">{email}</p> : null}
       {message ? (
@@ -218,7 +218,7 @@ function LoginScreen({
               <EmailVerificationPanel email={email} onBack={onDismissEmailVerification} />
             ) : googleAccountMissing ? (
               <GoogleAccountMissingPanel
-                message={googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE}
+                message={googleAccountMissingMessage || getGoogleLoginNoAccountMessage()}
                 onDismiss={onDismissGoogleMissing}
               />
             ) : (
@@ -397,7 +397,7 @@ export default function Login() {
     () => location.state?.googleAccountMissing === true,
   );
   const [googleAccountMissingMessage, setGoogleAccountMissingMessage] = useState(
-    () => location.state?.googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+    () => location.state?.googleAccountMissingMessage || getGoogleLoginNoAccountMessage(),
   );
   const [emailVerificationRequired, setEmailVerificationRequired] = useState(
     () => location.state?.emailVerificationRequired === true,
@@ -410,7 +410,7 @@ export default function Login() {
     if (location.state?.googleAccountMissing) {
       setGoogleAccountMissing(true);
       setGoogleAccountMissingMessage(
-        location.state.googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+        location.state.googleAccountMissingMessage || getGoogleLoginNoAccountMessage(),
       );
       navigate(location.pathname, { replace: true, state: {} });
     }

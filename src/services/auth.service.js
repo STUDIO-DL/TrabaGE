@@ -12,6 +12,7 @@ import {
   normalizeRole,
   ROLES,
 } from '../constants/roles';
+import { getErrorMessage } from '../utils/i18n';
 
 const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
@@ -29,11 +30,13 @@ export const OAUTH_INTENTS = {
   SIGNUP: 'signup',
 };
 
-export const GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE =
-  'No encontramos una cuenta asociada a este correo.\n\nSi todavía no tienes una cuenta en TrabaGE, puedes crear una utilizando "Crear cuenta".';
+export function getGoogleLoginNoAccountMessage() {
+  return getErrorMessage('googleLoginNoAccount');
+}
 
-export const EMAIL_NOT_VERIFIED_MESSAGE =
-  'Tu correo electrónico aún no ha sido verificado. Revisa tu bandeja de entrada y activa tu cuenta antes de iniciar sesión.';
+export function getEmailNotVerifiedMessage() {
+  return getErrorMessage('emailNotConfirmed');
+}
 
 export function isEmailVerified(user) {
   return Boolean(user?.email_confirmed_at);
@@ -312,7 +315,7 @@ export const authService = {
     if (isEmailNotVerifiedError(result.error)) {
       return {
         data: { user: null, session: null },
-        error: { code: 'email_not_confirmed', message: EMAIL_NOT_VERIFIED_MESSAGE },
+        error: { code: 'email_not_confirmed', message: getEmailNotVerifiedMessage() },
       };
     }
 
@@ -320,7 +323,7 @@ export const authService = {
       await supabase.auth.signOut({ scope: 'local' });
       return {
         data: { user: null, session: null },
-        error: { code: 'email_not_confirmed', message: EMAIL_NOT_VERIFIED_MESSAGE },
+        error: { code: 'email_not_confirmed', message: getEmailNotVerifiedMessage() },
       };
     }
 

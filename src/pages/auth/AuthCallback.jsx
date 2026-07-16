@@ -7,12 +7,13 @@ import {
   authService,
   consumeOAuthIntent,
   discardUnregisteredOAuthSession,
-  GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+  getGoogleLoginNoAccountMessage,
   isRegisteredTrabaGEAccount,
   OAUTH_INTENTS,
 } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
-import { mapAuthError } from '../../utils/errors';
+import { mapAuthError, isExpiredVerificationUserMessage } from '../../utils/errors';
+import { getErrorMessage } from '../../utils/i18n';
 import { useAuth } from '../../hooks/useAuth';
 
 const MAX_ATTEMPTS = 15;
@@ -57,7 +58,7 @@ export default function AuthCallback() {
       if (oauthError) {
         const decoded = decodeURIComponent(oauthError.replace(/\+/g, ' '));
         if (isExpiredLinkError(decoded)) {
-          setError('El enlace ha expirado o ya no es válido.');
+          setError(getErrorMessage('expiredVerificationLink'));
         } else {
           setError(mapAuthError({ message: decoded }));
         }
@@ -87,7 +88,7 @@ export default function AuthCallback() {
               replace: true,
               state: {
                 googleAccountMissing: true,
-                googleAccountMissingMessage: GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+                googleAccountMissingMessage: getGoogleLoginNoAccountMessage(),
               },
             });
             return true;
@@ -117,7 +118,7 @@ export default function AuthCallback() {
               replace: true,
               state: {
                 googleAccountMissing: true,
-                googleAccountMissingMessage: GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+                googleAccountMissingMessage: getGoogleLoginNoAccountMessage(),
               },
             });
             return true;
@@ -174,7 +175,7 @@ export default function AuthCallback() {
       subscription.unsubscribe();
 
       if (!cancelled) {
-        setError('No se pudo completar la autenticación. Inténtalo de nuevo.');
+        setError(getErrorMessage('authIncomplete'));
       }
     };
 
@@ -186,7 +187,7 @@ export default function AuthCallback() {
   }, [navigate, refreshAuthState, logout]);
 
   if (error) {
-    const isExpired = error.includes('expirado') || error.includes('válido');
+    const isExpired = isExpiredVerificationUserMessage(error);
 
     return (
       <div className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center px-6 py-10 text-center">

@@ -1,3 +1,5 @@
+import { getErrorMessage } from './i18n';
+
 const INTERNAL_ERROR_PATTERNS = [
   /cannot coerce.*single json object/i,
   /json object requested.*multiple \(or no\) rows/i,
@@ -16,7 +18,7 @@ const INTERNAL_ERROR_PATTERNS = [
   /jwt/i,
 ];
 
-export function getSupabaseErrorMessage(error, fallback = 'No se pudo completar la acción. Inténtalo de nuevo.') {
+export function getSupabaseErrorMessage(error, fallback = getErrorMessage('supabaseFallback')) {
   const message = error?.message || '';
 
   if (!message) return fallback;

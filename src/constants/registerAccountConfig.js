@@ -58,7 +58,7 @@ export const REGISTER_ACCOUNT_CONFIG = {
         icon: User,
         autoComplete: 'name',
         required: true,
-        requiredMessage: 'Introduce tu nombre completo.',
+        errorKey: 'registerFullNameRequired',
       },
     ],
     buildMetadata: (values, common) => ({
@@ -79,7 +79,7 @@ export const REGISTER_ACCOUNT_CONFIG = {
         icon: Building2,
         autoComplete: 'organization',
         required: true,
-        requiredMessage: 'Introduce el nombre del negocio.',
+        errorKey: 'registerBusinessNameRequired',
       },
       {
         key: 'sector',
@@ -112,7 +112,7 @@ export const REGISTER_ACCOUNT_CONFIG = {
         icon: Landmark,
         autoComplete: 'organization',
         required: true,
-        requiredMessage: 'Introduce el nombre de la organización.',
+        errorKey: 'registerOrgNameRequired',
       },
       {
         key: 'organizationType',
@@ -122,7 +122,7 @@ export const REGISTER_ACCOUNT_CONFIG = {
         icon: GraduationCap,
         options: ORGANIZATION_TYPE_OPTIONS,
         required: true,
-        requiredMessage: 'Selecciona el tipo de organización.',
+        errorKey: 'registerOrgTypeRequired',
       },
     ],
     buildMetadata: (values, common) => ({

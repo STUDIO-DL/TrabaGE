@@ -1,4 +1,4 @@
-import { STRONG_PASSWORD_MESSAGE } from './passwordValidation';
+import { getErrorMessage, isErrorMessage } from './i18n';
 
 export const AUTH_ERROR_CODES = {
   EMAIL_NOT_CONFIRMED: 'email_not_confirmed',
@@ -42,32 +42,32 @@ export function mapAuthError(error) {
   const code = error?.code?.toLowerCase?.() || '';
 
   if (message.includes('invalid login credentials') || code === 'invalid_credentials') {
-    return 'Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.';
+    return getErrorMessage('invalidCredentials');
   }
   if (isEmailNotConfirmedError(message, code)) {
-    return 'Tu correo electrónico aún no ha sido verificado. Revisa tu bandeja de entrada y activa tu cuenta antes de iniciar sesión.';
+    return getErrorMessage('emailNotConfirmed');
   }
   if (
     message.includes('user already registered') ||
     message.includes('already been registered') ||
     message.includes('already exists')
   ) {
-    return 'Ya existe una cuenta registrada con este correo electrónico.';
+    return getErrorMessage('userAlreadyRegistered');
   }
   if (isPasswordValidationError(message, code)) {
-    return STRONG_PASSWORD_MESSAGE;
+    return getErrorMessage('strongPassword');
   }
   if (message.includes('unable to validate email address') || message.includes('invalid email')) {
-    return 'El formato del correo electrónico no es válido.';
+    return getErrorMessage('invalidEmail');
   }
   if (message.includes('failed to fetch') || message.includes('network error')) {
-    return 'No se pudo conectar con el servidor. Comprueba tu conexión a internet e inténtalo de nuevo.';
+    return getErrorMessage('networkError');
   }
   if (message.includes('signup is disabled') || message.includes('signups not allowed')) {
-    return 'El registro de nuevas cuentas no está disponible en este momento.';
+    return getErrorMessage('signupDisabled');
   }
   if (code === 'email_confirmation_disabled') {
-    return 'No se pudo iniciar la verificación del correo. Contacta con soporte.';
+    return getErrorMessage('emailConfirmationDisabled');
   }
   if (
     message.includes('rate limit') ||
@@ -75,32 +75,36 @@ export function mapAuthError(error) {
     message.includes('email rate limit') ||
     message.includes('over_email_send_rate_limit')
   ) {
-    return 'Has realizado demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+    return getErrorMessage('rateLimit');
   }
   if (isExpiredVerificationLink(message)) {
-    return 'El enlace de verificación ha expirado o ya no es válido. Solicita uno nuevo.';
+    return getErrorMessage('expiredVerificationLink');
   }
   if (isOAuthCancelled(message)) {
-    return 'Inicio de sesión con Google cancelado. Inténtalo de nuevo cuando quieras.';
+    return getErrorMessage('oauthCancelled');
   }
   if (message.includes('oauth') && !message.includes('provider')) {
-    return 'No se pudo completar el inicio de sesión con Google. Inténtalo de nuevo.';
+    return getErrorMessage('oauthFailed');
   }
   if (message.includes('user banned') || message.includes('banned')) {
-    return 'Esta cuenta no está disponible. Contacta con soporte si crees que es un error.';
+    return getErrorMessage('userBanned');
   }
   if (message.includes('session missing') || message.includes('auth session missing')) {
-    return 'Tu sesión ha expirado. Vuelve a iniciar sesión.';
+    return getErrorMessage('sessionExpired');
   }
   if (message.includes('smtp') || message.includes('error sending confirmation email')) {
-    return 'No se pudo enviar el correo en este momento. Inténtalo de nuevo más tarde.';
+    return getErrorMessage('smtpError');
   }
 
-  return 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde.';
+  return getErrorMessage('unexpected');
 }
 
 export function isUnverifiedEmailError(error) {
   const message = error?.message?.toLowerCase() || '';
   const code = error?.code?.toLowerCase?.() || '';
   return isEmailNotConfirmedError(message, code);
+}
+
+export function isExpiredVerificationUserMessage(text) {
+  return isErrorMessage('expiredVerificationLink', text);
 }

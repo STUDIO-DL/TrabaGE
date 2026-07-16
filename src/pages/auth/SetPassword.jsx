@@ -8,6 +8,7 @@ import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
+import { getErrorMessage, t } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
 export default function SetPassword() {
@@ -31,7 +32,7 @@ export default function SetPassword() {
     event.preventDefault();
 
     if (requiresCurrentPassword && !currentPassword.trim()) {
-      setError('Introduce tu contraseña actual.');
+      setError(getErrorMessage('enterCurrentPassword'));
       return;
     }
 
@@ -42,17 +43,17 @@ export default function SetPassword() {
     }
 
     if (currentPassword && currentPassword === newPassword) {
-      setError('La nueva contraseña debe ser diferente de la contraseña actual.');
+      setError(getErrorMessage('passwordMustDiffer'));
       return;
     }
 
     if (newPassword !== confirmNewPassword) {
-      setError('Las contraseñas no coinciden.');
+      setError(getErrorMessage('passwordsMismatch'));
       return;
     }
 
     if (requiresCurrentPassword && !user?.email) {
-      setError('No se pudo verificar el correo de tu cuenta. Vuelve a iniciar sesión.');
+      setError(getErrorMessage('cannotVerifyEmail'));
       return;
     }
 
@@ -63,7 +64,7 @@ export default function SetPassword() {
       ? await authService.changePasswordWithCurrent(user.email, currentPassword, newPassword)
       : await authService.setPassword(newPassword);
     if (passwordError) {
-      setError(mapAuthError(passwordError) || 'No se pudo guardar la contraseña.');
+      setError(mapAuthError(passwordError) || getErrorMessage('passwordSaveFailed'));
       setLoading(false);
       return;
     }
@@ -123,7 +124,7 @@ export default function SetPassword() {
           required
         />
         <p className="text-xs text-gray-500">
-          Mínimo 10 caracteres con mayúscula, minúscula, número y símbolo.
+          {t('auth.passwordHint')}
         </p>
         <Input
           label="Confirmar contraseña nueva"
