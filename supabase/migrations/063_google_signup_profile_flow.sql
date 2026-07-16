@@ -1,7 +1,7 @@
 -- =============================================
 -- 063_google_signup_profile_flow.sql
 --
--- STATUS: NEEDS TO BE APPLIED (not auto-run by the app).
+-- STATUS: Applied on remote (migration 063 recorded in supabase_migrations.schema_migrations).
 --
 -- Google/manual sign-up profile flow hardening. The app already enforces all of
 -- the below client-side (shared profile bootstrap + setup gate + publish guard);
