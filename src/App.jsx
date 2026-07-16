@@ -4,11 +4,13 @@ import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/routing/ProtectedRoute';
+import GuestOnlyRoute from './components/routing/GuestOnlyRoute';
 import RoleRoute from './components/routing/RoleRoute';
 import GuestBar from './components/common/GuestBar';
 import InstallPrompt from './components/common/InstallPrompt';
 import { ToastContainer } from './components/ui/Toast';
 import { useNotificationContext } from './context/NotificationContext';
+import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
 import { ROLES } from './constants/roles';
 
 const SplashScreen = lazy(() => import('./pages/SplashScreen'));
@@ -18,6 +20,7 @@ const Login = lazy(() => import('./pages/auth/Login'));
 const Explore = lazy(() => import('./pages/auth/Explore'));
 const Register = lazy(() => import('./pages/auth/Register'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
 const SetPassword = lazy(() => import('./pages/auth/SetPassword'));
 const CandidateSetup = lazy(() => import('./pages/setup/CandidateSetup'));
 const CompanySetup = lazy(() => import('./pages/setup/CompanySetup'));
@@ -122,17 +125,20 @@ function AppRoutes() {
     <>
       <GuestBar />
       <InstallPrompt />
-      <Suspense fallback={null}>
+      <Suspense fallback={<AuthLoadingScreen />}>
         <Routes>
             <Route path="/" element={<SplashScreen />} />
             <Route path="/onboarding" element={<OnboardingFlow />} />
-            <Route path="/login" element={<Login />} />
+            <Route element={<GuestOnlyRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+            </Route>
+            <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/account-type" element={<Navigate to="/register" replace />} />
             <Route path="/register-method" element={<Navigate to="/register" replace />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/demo/company" element={<DemoCompanyEntry />} />
             <Route path="/jobs/:id" element={<JobDetail />} />
 

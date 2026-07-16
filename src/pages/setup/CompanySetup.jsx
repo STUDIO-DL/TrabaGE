@@ -10,6 +10,10 @@ import { CITIES } from '../../constants/cities';
 import { ACCOUNT_KINDS } from '../../constants/accountKinds';
 import { SECTORS } from '../../constants/sectors';
 import { ROLE_HOME, ROLES } from '../../constants/roles';
+import {
+  ORGANIZATION_TYPE_OPTIONS,
+  organizationTypeToCompanyType,
+} from '../../constants/registerAccountConfig';
 import { useAuth } from '../../hooks/useAuth';
 import { consumePendingOrgDetails, consumePendingOrgKind } from '../../services/auth.service';
 import { companyService } from '../../services/company.service';
@@ -31,6 +35,7 @@ export default function CompanySetup() {
     description: '',
     city: '',
     company_type: '',
+    organizationType: '',
   });
   const [initializing, setInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -47,13 +52,18 @@ export default function CompanySetup() {
 
     companyService.getCompanyProfile(user.id).then(({ data }) => {
       if (!mounted) return;
+      const companyType =
+        data?.company_type || pendingOrgDetails.company_type || getDefaultCompanyType(pendingOrgKind);
+      const organizationType =
+        ORGANIZATION_TYPE_OPTIONS.find((option) => option.companyType === companyType)?.value || '';
+
       setForm({
         company_name: data?.company_name || pendingOrgDetails.company_name || '',
         sector: data?.sector || pendingOrgDetails.sector || '',
         description: data?.description || '',
         city: data?.city || '',
-        company_type:
-          data?.company_type || pendingOrgDetails.company_type || getDefaultCompanyType(pendingOrgKind),
+        company_type: companyType,
+        organizationType,
       });
       setInitializing(false);
     });
@@ -65,6 +75,7 @@ export default function CompanySetup() {
 
   const orgLabels = getOrgLabels({ company_type: form.company_type });
   const isInstitution = orgLabels.entity === 'institución';
+  const isOrganizationAccount = role === ROLES.ORGANIZATION;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -81,7 +92,7 @@ export default function CompanySetup() {
     if (getCompanyRequiredMissing(trimmed).length > 0) {
       setError(
         isInstitution
-          ? 'Completa el nombre, la ciudad y la descripción de tu institución.'
+          ? 'Completa el nombre, el tipo, la ciudad y la descripción de tu institución.'
           : 'Completa el nombre, el sector, la ciudad y la descripción de tu empresa.',
       );
       return;
@@ -132,7 +143,37 @@ export default function CompanySetup() {
           onChange={(e) => setForm({ ...form, company_name: e.target.value })}
           required
         />
-        <Select label="Sector" value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })} required={!isInstitution} options={[{ value: '', label: 'Seleccionar' }, ...SECTORS.map((s) => ({ value: s, label: s }))]} />
+        {isOrganizationAccount ? (
+          <Select
+            label="Tipo de organización"
+            value={form.organizationType}
+            onChange={(e) => {
+              const nextType = e.target.value;
+              setForm({
+                ...form,
+                organizationType: nextType,
+                company_type: nextType ? organizationTypeToCompanyType(nextType) : form.company_type,
+              });
+            }}
+            required
+            options={[
+              { value: '', label: 'Seleccionar' },
+              ...ORGANIZATION_TYPE_OPTIONS.map((option) => ({
+                value: option.value,
+                label: option.label,
+              })),
+            ]}
+          />
+        ) : null}
+        {!isInstitution ? (
+          <Select
+            label="Sector"
+            value={form.sector}
+            onChange={(e) => setForm({ ...form, sector: e.target.value })}
+            required
+            options={[{ value: '', label: 'Seleccionar' }, ...SECTORS.map((s) => ({ value: s, label: s }))]}
+          />
+        ) : null}
         <Textarea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
         <Select label="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]} />
       </form>

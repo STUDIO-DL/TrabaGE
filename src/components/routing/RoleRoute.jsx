@@ -3,9 +3,9 @@ import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { ROLE_HOME, ROLE_SETUP, normalizeRole } from '../../constants/roles';
 import { getPreviewRole, isPreviewActive } from '../../constants/preview';
-import Spinner from '../ui/Spinner';
+import AuthLoadingScreen from '../auth/AuthLoadingScreen';
 
-const ROLE_RESOLVE_TIMEOUT_MS = 4000;
+const ROLE_RESOLVE_TIMEOUT_MS = 8000;
 
 /**
  * @param {object} props
@@ -37,21 +37,13 @@ export default function RoleRoute({ role: requiredRole, roles: requiredRoles }) 
   }, [previewActive, loading, isAuthenticated, effectiveRole]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
 
   // Keep a quiet loader while role hydrates — never flash /register mid-login.
   if (!previewActive && isAuthenticated && !effectiveRole) {
     if (!roleWaitExpired) {
-      return (
-        <div className="flex min-h-dvh items-center justify-center">
-          <Spinner size="lg" />
-        </div>
-      );
+      return <AuthLoadingScreen />;
     }
     return <Navigate to="/login" replace />;
   }

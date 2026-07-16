@@ -3,7 +3,6 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
-import Spinner from '../../components/ui/Spinner';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
@@ -11,7 +10,9 @@ import { LegalFooterLinks } from '../../components/legal/LegalLinks';
 import { clearPreviewMode } from '../../constants/preview';
 import { useAuth } from '../../hooks/useAuth';
 import { authService, GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE } from '../../services/auth.service';
-import { mapAuthError } from '../../utils/errors';
+import { mapAuthError, isUnverifiedEmailError } from '../../utils/errors';
+import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
+import { useResendCooldown } from '../../hooks/useResendCooldown';
 
 function LoginDecorations() {
   return (
@@ -91,6 +92,83 @@ function LoginDecorations() {
   );
 }
 
+function UnverifiedEmailPanel({ email, onDismiss }) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const storageKey = normalizedEmail ? `trabage_verify_cooldown_${normalizedEmail}` : null;
+  const { cooldown, canResend, startCooldown } = useResendCooldown(storageKey);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleResend = async () => {
+    if (!canResend || !normalizedEmail) return;
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    const { error: resendError } = await authService.resendVerificationEmail(normalizedEmail);
+    if (resendError) {
+      setError(mapAuthError(resendError));
+    } else {
+      setMessage('Hemos enviado un nuevo enlace de verificación.');
+      startCooldown();
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div
+      role="status"
+      className="login-fade-in-delayed rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4 text-left"
+    >
+      <p className="text-sm leading-relaxed text-slate-700">
+        Debes verificar tu correo electrónico antes de iniciar sesión.
+        {normalizedEmail ? (
+          <>
+            {' '}
+            Revisa <span className="font-semibold">{normalizedEmail}</span> o solicita un nuevo
+            enlace.
+          </>
+        ) : null}
+      </p>
+
+      {message ? (
+        <p className="mt-3 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+          {message}
+        </p>
+      ) : null}
+
+      {error ? (
+        <p role="alert" className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+        {normalizedEmail ? (
+          <Button
+            type="button"
+            fullWidth
+            loading={loading}
+            disabled={!canResend}
+            onClick={handleResend}
+            className="relative !rounded-xl py-3 text-sm font-semibold"
+          >
+            {canResend ? 'Reenviar correo' : `Reenviar en ${cooldown}s`}
+          </Button>
+        ) : null}
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          Volver
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function GoogleAccountMissingPanel({ message, onDismiss }) {
   return (
     <div
@@ -132,6 +210,8 @@ function LoginScreen({
   googleAccountMissing,
   googleAccountMissingMessage,
   onDismissGoogleMissing,
+  unverifiedEmail,
+  onDismissUnverified,
 }) {
   return (
     <div className="relative min-h-dvh w-full overflow-hidden bg-gradient-to-b from-[#EFF6FF] via-white to-[#EFF6FF]">
@@ -165,6 +245,8 @@ function LoginScreen({
                 message={googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE}
                 onDismiss={onDismissGoogleMissing}
               />
+            ) : unverifiedEmail ? (
+              <UnverifiedEmailPanel email={unverifiedEmail} onDismiss={onDismissUnverified} />
             ) : (
               <>
                 <form onSubmit={onSubmit} className="space-y-4" autoComplete="off">
@@ -282,7 +364,7 @@ function LoginScreen({
           </div>
 
           {/* Crear cuenta */}
-          {!googleAccountMissing ? (
+          {!googleAccountMissing && !unverifiedEmail ? (
             <p className="mt-6 text-center text-sm text-slate-500">
               ¿No tienes cuenta?{' '}
               <Link
@@ -338,6 +420,7 @@ export default function Login() {
   const [googleAccountMissingMessage, setGoogleAccountMissingMessage] = useState(
     () => location.state?.googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
   );
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
 
   useEffect(() => {
     if (location.state?.googleAccountMissing) {
@@ -357,11 +440,16 @@ export default function Login() {
   const submitLogin = async (loginEmail, loginPassword) => {
     setLoading(true);
     setError('');
+    setUnverifiedEmail('');
     clearPreviewMode();
 
     const { error: loginError, redirectTo } = await login(loginEmail, loginPassword);
     if (loginError) {
-      setError(mapAuthError(loginError));
+      if (isUnverifiedEmailError(loginError)) {
+        setUnverifiedEmail(loginEmail);
+      } else {
+        setError(mapAuthError(loginError));
+      }
       setLoading(false);
       return false;
     }
@@ -391,12 +479,12 @@ export default function Login() {
   };
 
   // While session/role hydrate, keep a quiet loader — never flash /register.
+  const handleDismissUnverified = () => {
+    setUnverifiedEmail('');
+  };
+
   if (authLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
 
   // Authenticated users with a resolved role go straight home.
@@ -406,11 +494,7 @@ export default function Login() {
 
   // Session present but role still resolving — avoid the register flicker.
   if (isAuthenticated && !isPreviewMode && !role) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
 
   return (
@@ -429,6 +513,8 @@ export default function Login() {
       googleAccountMissing={googleAccountMissing}
       googleAccountMissingMessage={googleAccountMissingMessage}
       onDismissGoogleMissing={handleDismissGoogleMissing}
+      unverifiedEmail={unverifiedEmail}
+      onDismissUnverified={handleDismissUnverified}
     />
   );
 }

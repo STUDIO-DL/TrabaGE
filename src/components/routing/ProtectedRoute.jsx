@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import Spinner from '../ui/Spinner';
+import AuthLoadingScreen from '../auth/AuthLoadingScreen';
 import { getPreviewMode } from '../../constants/preview';
 
 export default function ProtectedRoute() {
@@ -9,11 +9,7 @@ export default function ProtectedRoute() {
   const previewActive = getPreviewMode();
 
   if (loading && !previewActive) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
 
   if (!isAuthenticated && !previewActive) {

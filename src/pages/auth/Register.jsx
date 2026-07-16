@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, Eye, EyeOff, Lock, Mail, MapPin } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
-import Spinner from '../../components/ui/Spinner';
+import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import AccountTypeCards from '../../components/auth/AccountTypeCards';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
@@ -23,8 +23,7 @@ import { clearPreviewMode } from '../../constants/preview';
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
-import { bootstrapProfile } from '../../services/profileBootstrap';
-import { resolvePostAuthRedirect } from '../../utils/resolvePostAuthRedirect';
+import { completePostAuthFlow } from '../../services/authFlow';
 import { mapAuthError } from '../../utils/errors';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
@@ -185,7 +184,6 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const config = getRegisterConfig(accountKind);
 
@@ -226,21 +224,24 @@ export default function Register() {
     setLoading(true);
     setError('');
 
-    const role = accountKindToRole(accountKind);
-    authService.rememberAccountKind(accountKind);
-    const { error: roleError } = await authService.setUserRole(user.id, role);
+    authService.rememberPendingAccountType(accountKind);
 
-    if (roleError) {
-      setError(mapAuthError(roleError));
+    const { error: flowError, needsAccountTypeSelection, redirectTo } =
+      await completePostAuthFlow(user);
+
+    if (flowError) {
+      setError(mapAuthError(flowError));
       setLoading(false);
       return;
     }
 
-    // Same shared bootstrap + gated routing as the auth callback so this
-    // fallback lands the user on their dashboard or the setup assistant.
-    await bootstrapProfile({ user, role });
+    if (needsAccountTypeSelection) {
+      setError('No se pudo completar el registro. Inténtalo de nuevo.');
+      setLoading(false);
+      return;
+    }
+
     await refreshAuthState();
-    const redirectTo = await resolvePostAuthRedirect(user.id, role);
     navigate(redirectTo || '/', { replace: true });
     setLoading(false);
   };
@@ -309,48 +310,12 @@ export default function Register() {
       return;
     }
 
-    setSuccess(true);
     setLoading(false);
+    navigate('/verify-email', { replace: true, state: { email: email.trim().toLowerCase() } });
   };
 
-  if (success) {
-    return (
-      <div className="min-h-dvh bg-[#ECEEF1]">
-        <div
-          className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center justify-center px-5 py-10 text-center sm:px-6"
-          style={{
-            paddingTop: 'max(2.5rem, env(safe-area-inset-top))',
-            paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
-          }}
-        >
-          <RegisterHeader subtitle="Revisa tu correo para activar tu cuenta." />
-          <div className="login-fade-in mt-8 w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.08)] sm:p-7">
-            <p className="text-sm leading-relaxed text-slate-600">
-              Hemos enviado un enlace de verificación a tu correo electrónico. Verifica tu cuenta para
-              acceder a TrabaGE.
-            </p>
-            <Link
-              to="/login"
-              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-primary-600 px-4 py-3.5 text-base font-semibold text-white transition hover:bg-primary-700"
-            >
-              He verificado mi correo
-            </Link>
-          </div>
-          <div className="mt-8 flex justify-center">
-            <ZarrelCredit variant="developed" />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Already signed-in users should never see the registration form after login.
   if (authLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
 
   if (isAuthenticated && !isPreviewMode && role && !oauthCompletion) {

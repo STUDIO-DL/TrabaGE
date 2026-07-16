@@ -291,10 +291,41 @@ export const authService = {
       return configError();
     }
 
-    return supabase.auth.signInWithPassword({
+    const result = await supabase.auth.signInWithPassword({
       email: normalizeEmail(email),
       password: normalizePassword(password),
     });
+
+    if (result.error) return result;
+
+    const user = result.data?.user;
+    if (user && !user.email_confirmed_at) {
+      await supabase.auth.signOut();
+      return {
+        data: { session: null, user: null },
+        error: { message: 'Email not confirmed' },
+      };
+    }
+
+    return result;
+  },
+
+  resendVerificationEmail: (email) => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    return supabase.auth.resend({
+      type: 'signup',
+      email: normalizeEmail(email),
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  },
+
+  rememberPendingAccountType(accountKind) {
+    savePendingAccountType(accountKind);
   },
 
   register: async (email, password, role, metadata = {}) => {
@@ -311,6 +342,9 @@ export const authService = {
 
     if (metadata.accountKind) {
       savePendingOrgKind(metadata.accountKind);
+      savePendingAccountType(metadata.accountKind);
+    } else if (role) {
+      savePendingAccountType(role);
     }
 
     // Persist org-only profile details (never personal data) so CompanySetup

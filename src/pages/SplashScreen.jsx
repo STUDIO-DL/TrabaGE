@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ZarrelCredit from '../components/branding/ZarrelCredit';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
@@ -11,13 +11,14 @@ import { useAuth } from '../hooks/useAuth';
 // espera además a que termine la restauración de la sesión (loading === false),
 // de modo que un usuario con sesión válida vaya directo a su inicio.
 const MIN_SPLASH_MS = 1800;
-const ROLE_WAIT_MS = 4000;
+const ROLE_WAIT_MS = 8000;
 
 export default function SplashScreen() {
   const navigate = useNavigate();
-  const { isAuthenticated, role, getHomePath, loading, logout } = useAuth();
+  const { isAuthenticated, role, getHomePath, loading, logout, refreshAuthState } = useAuth();
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   const [roleWaitExpired, setRoleWaitExpired] = useState(false);
+  const roleRetryRef = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setMinTimeElapsed(true), MIN_SPLASH_MS);
@@ -34,6 +35,10 @@ export default function SplashScreen() {
   }, [loading, minTimeElapsed, isAuthenticated, role]);
 
   useEffect(() => {
+    if (role) roleRetryRef.current = false;
+  }, [role]);
+
+  useEffect(() => {
     // No decidimos el destino hasta que la sesión de Supabase haya terminado de
     // restaurarse (loading) y haya pasado el tiempo mínimo de splash. Así se
     // evita mandar a /login a un usuario que en realidad sí tiene sesión.
@@ -44,6 +49,12 @@ export default function SplashScreen() {
       // as an intermediate screen while the profile/role is still loading.
       if (!role) {
         if (!roleWaitExpired) return;
+        if (!roleRetryRef.current) {
+          roleRetryRef.current = true;
+          setRoleWaitExpired(false);
+          void refreshAuthState();
+          return;
+        }
         void logout().then(() => navigate('/login', { replace: true }));
         return;
       }
@@ -66,6 +77,7 @@ export default function SplashScreen() {
     getHomePath,
     navigate,
     logout,
+    refreshAuthState,
   ]);
 
   return (
