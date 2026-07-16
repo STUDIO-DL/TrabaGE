@@ -7,7 +7,7 @@ import PageContainer from '../../components/layout/PageContainer';
 import { companyService } from '../../services/company.service';
 import { jobsService } from '../../services/jobs.service';
 import { getPreviewMediaUrls, getPreviewProfile, PREVIEW_USER } from '../../constants/preview';
-import { isEmployerRole } from '../../constants/roles';
+import { isEmployerRole, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { generateCompanyUrl } from '../../utils/generateShareUrl';
 import { hasCompanyActionableContact, openCompanyContact } from '../../utils/contact';

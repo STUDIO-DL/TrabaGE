@@ -1,7 +1,14 @@
 import { supabase } from '../config/supabase';
+import { isEmployerRole, isPersonalRole } from '../constants/roles';
 import { verificationService } from './verification.service';
 import { profileService } from './profile.service';
 import { companyService } from './company.service';
+
+function roleRegistrationLabel(role) {
+  if (isEmployerRole(role)) return 'empresa';
+  if (isPersonalRole(role)) return 'candidato';
+  return 'usuario';
+}
 
 export const adminService = {
   getDashboardStats: async () => {
@@ -16,7 +23,7 @@ export const adminService = {
       reportsRes,
     ] = await Promise.all([
       supabase.from('user_roles').select('user_id', { count: 'exact', head: true }),
-      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }).eq('role', 'candidate'),
+      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }).eq('role', 'personal'),
       supabase.from('company_profiles').select('user_id', { count: 'exact', head: true }),
       supabase.from('user_roles').select('user_id', { count: 'exact', head: true }).eq('role', 'admin'),
       supabase
@@ -109,7 +116,7 @@ export const adminService = {
       ...(users.data ?? []).map((item) => ({
         id: `user-${item.user_id}`,
         type: 'new_user',
-        label: `Nuevo ${item.role === 'company' ? 'registro de empresa' : 'candidato'}`,
+        label: `Nuevo registro de ${roleRegistrationLabel(item.role)}`,
         created_at: item.created_at,
       })),
       ...(companies.data ?? []).map((item) => ({
@@ -143,10 +150,9 @@ export const adminService = {
   // A missing profile row (user never completed setup) is NOT treated as an error:
   // we return { data: null, exists: false } so the UI can still show core data.
   getUserDetail: async (userId, role) => {
-    const { data, error } =
-      role === 'company'
-        ? await companyService.getCompanyProfile(userId)
-        : await profileService.getCandidateFullProfile(userId);
+    const { data, error } = isEmployerRole(role)
+      ? await companyService.getCompanyProfile(userId)
+      : await profileService.getCandidateFullProfile(userId);
 
     if (error?.code === 'PGRST116') {
       return { data: null, error: null, exists: false };
@@ -271,10 +277,10 @@ export const adminService = {
 
     const authors = {};
     (candidates.data ?? []).forEach((profile) => {
-      authors[profile.user_id] = { name: profile.full_name, avatar: profile.avatar_path, type: 'candidate' };
+      authors[profile.user_id] = { name: profile.full_name, avatar: profile.avatar_path, type: 'personal' };
     });
     (companies.data ?? []).forEach((profile) => {
-      authors[profile.user_id] = { name: profile.company_name, avatar: profile.logo_path, type: 'company' };
+      authors[profile.user_id] = { name: profile.company_name, avatar: profile.logo_path, type: 'business' };
     });
 
     return {
@@ -399,7 +405,7 @@ export const adminService = {
       ...(users.data ?? []).map((item) => ({
         id: `user-${item.user_id}`,
         title: 'Nuevo usuario',
-        body: `Registro de ${item.role === 'company' ? 'empresa' : 'candidato'}`,
+        body: `Registro de ${roleRegistrationLabel(item.role)}`,
         created_at: item.created_at,
       })),
       ...(companies.data ?? []).map((item) => ({
