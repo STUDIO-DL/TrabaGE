@@ -24,24 +24,17 @@ export function SkeletonText({ lines = 1, className = '' }) {
 export function JobCardSkeleton() {
   return (
     <article
-      className="rounded-radius-md border border-app-border bg-app-card p-space-md shadow-elevation-1"
+      className="rounded-radius-md border border-app-border bg-app-surface p-3 shadow-elevation-1"
       aria-hidden="true"
     >
-      <div className="flex gap-space-md">
-        <Skeleton className="h-10 w-10 shrink-0 rounded-radius-md" />
-        <div className="min-w-0 flex-1">
+      <div className="flex items-start gap-3">
+        <Skeleton className="h-10 w-10 shrink-0 rounded-radius-sm" />
+        <div className="min-w-0 flex-1 space-y-1">
           <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="mt-space-sm h-3.5 w-1/2" />
-          <Skeleton className="mt-space-sm h-3 w-1/3" />
-          <div className="mt-space-sm flex gap-space-sm">
-            <Skeleton className="h-5 w-16 rounded-radius-sm" />
-            <Skeleton className="h-5 w-20 rounded-radius-sm" />
-          </div>
-          <div className="mt-space-md flex items-center justify-between">
-            <Skeleton className="h-3 w-20" />
-            <Skeleton className="h-7 w-24 rounded-radius-md" />
-          </div>
+          <Skeleton className="h-3 w-1/2" />
+          <Skeleton className="h-3 w-2/5" />
         </div>
+        <Skeleton className="h-8 w-8 shrink-0 rounded-radius-sm" />
       </div>
     </article>
   );

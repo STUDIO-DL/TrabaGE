@@ -25,7 +25,9 @@ function CompanyJobItem({ job }) {
               {job.city}
             </span>
           )}
-          {job.salary != null && <span>{formatSalary(job.salary)}</span>}
+          {(job.salary || job.salary_negotiable) && (
+            <span>{formatSalary(job.salary, job.salary_negotiable)}</span>
+          )}
         </div>
       </div>
       <AppIcon icon={ChevronRight} size={ICON_SIZES.md} className="shrink-0 text-app-subtle" />

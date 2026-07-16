@@ -1,22 +1,29 @@
 import { Link } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import ContentActionMenu from '../common/ContentActionMenu';
-import {
-  Bookmark,
-  Clock,
-  MapPin,
-  ICON_SIZES,
-} from '../../constants/icons';
+import { Bookmark, ICON_SIZES } from '../../constants/icons';
 import AppAvatar from '../common/AppAvatar';
-import Chip from '../ui/Chip';
 import CompanyNameWithBadge from '../company/CompanyNameWithBadge';
 import { avatarTypeFromCompanyProfile } from '../../constants/avatarDefaults';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
-import { formatSalary } from '../../utils/formatSalary';
-import TimeAgo from '../common/TimeAgo';
 import { getWorkModeLabel } from '../../constants/workModes';
-import { getJobTypeLabel } from '../../constants/jobTypes';
+
+function JobLocationLine({ city, workMode }) {
+  if (!city && !workMode) return null;
+
+  const modeLabel = workMode ? getWorkModeLabel(workMode) : null;
+
+  return (
+    <p className="truncate text-caption leading-tight text-app-subtle">
+      {city && <span>{city}</span>}
+      {city && modeLabel && <span>{' '}</span>}
+      {modeLabel && (
+        <span className="text-primary-600 dark:text-primary-400">({modeLabel})</span>
+      )}
+    </p>
+  );
+}
 
 export default function JobCard({
   job,
@@ -29,13 +36,10 @@ export default function JobCard({
   const company = job.company_profiles;
   const avatarType = avatarTypeFromCompanyProfile(company);
   const detailPath = `/personal/jobs/${job.id}`;
-  const salary = job.salary != null || job.salary_negotiable
-    ? formatSalary(job.salary, job.salary_negotiable)
-    : null;
 
   return (
-    <article className="rounded-radius-md border border-app-border bg-app-card p-space-md shadow-elevation-1 transition-colors duration-fast ease-out hover:border-app-muted/50">
-      <div className="flex gap-space-md">
+    <article className="rounded-radius-md border border-app-border bg-app-surface p-3 shadow-elevation-1 transition-colors duration-fast ease-out hover:border-primary-200/70 hover:bg-primary-50/30 dark:hover:bg-primary-950/20">
+      <div className="flex items-start gap-3">
         <Link to={detailPath} className="shrink-0" aria-label={`Ver ${job.title}`}>
           <AppAvatar
             type={avatarType}
@@ -44,80 +48,49 @@ export default function JobCard({
             alt={company?.company_name}
             size="md"
             variant="rounded"
-            className="!rounded-radius-md"
+            className="!rounded-radius-sm"
           />
         </Link>
 
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-space-sm">
-            <Link to={detailPath} className="min-w-0 flex-1">
-              <h3 className="line-clamp-2 text-button leading-snug text-app-text">
-                {job.title}
-              </h3>
-            </Link>
-            <div className="-mr-1 -mt-1 flex shrink-0 items-center">
-              <ContentActionMenu
-                shareUrl={generateJobUrl(job.id)}
-                shareTitle={company?.company_name ? `${job.title} - ${company.company_name}` : job.title}
-                shareText="Encontré esta oferta de empleo en TrabaGE."
-                targetType={REPORT_TARGET_TYPES.JOB}
-                targetId={job.id}
-              />
-              <button
-                type="button"
-                onClick={onSaveToggle}
-                disabled={!onSaveToggle || saving}
-                className="rounded-radius-sm p-space-sm text-app-subtle transition-colors duration-fast hover:bg-app-surface hover:text-app-muted disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}
-                aria-pressed={saved}
-              >
-                <AppIcon
-                  icon={Bookmark}
-                  size={ICON_SIZES.md}
-                  className={saved ? 'fill-current text-primary-600' : ''}
-                />
-              </button>
-            </div>
-          </div>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          <Link to={detailPath} className="block min-w-0">
+            <h3 className="truncate text-body-small font-semibold leading-tight text-app-text">
+              {job.title}
+            </h3>
+          </Link>
 
           <CompanyNameWithBadge
             company={company}
             userId={job.company_id}
-            nameClassName="text-body-small text-app-muted truncate"
-            className="mt-0.5 max-w-full"
+            nameClassName="text-caption leading-tight text-app-muted truncate"
+            className="max-w-full"
           />
 
-          {job.city && (
-            <p className="mt-space-xs flex items-center gap-space-xs text-caption text-app-muted">
-              <AppIcon icon={MapPin} size={ICON_SIZES.sm} className="shrink-0" />
-              <span className="truncate">{job.city}</span>
-            </p>
-          )}
+          <JobLocationLine city={job.city} workMode={job.work_mode} />
+        </div>
 
-          {(job.work_mode || job.job_type || salary) && (
-            <div className="mt-space-sm flex flex-wrap items-center gap-space-sm">
-              {job.work_mode && <Chip variant="default">{getWorkModeLabel(job.work_mode)}</Chip>}
-              {job.job_type && <Chip variant="default">{getJobTypeLabel(job.job_type)}</Chip>}
-              {salary && <Chip variant="primary">{salary}</Chip>}
-            </div>
-          )}
-
-          <div className="mt-space-md flex items-center justify-between gap-space-sm">
-            {job.created_at ? (
-              <span className="flex items-center gap-space-xs text-caption text-app-subtle">
-                <AppIcon icon={Clock} size={ICON_SIZES.sm} className="shrink-0" />
-                <TimeAgo date={job.created_at} className="truncate" />
-              </span>
-            ) : (
-              <span />
-            )}
-            <Link
-              to={detailPath}
-              className="shrink-0 rounded-radius-sm bg-primary-600 px-space-md py-space-sm text-caption font-semibold text-white transition-colors duration-fast hover:bg-primary-700"
-            >
-              Ver detalles
-            </Link>
-          </div>
+        <div className="-mr-1 -mt-0.5 flex shrink-0 items-center">
+          <ContentActionMenu
+            shareUrl={generateJobUrl(job.id)}
+            shareTitle={company?.company_name ? `${job.title} - ${company.company_name}` : job.title}
+            shareText="Encontré esta oferta de empleo en TrabaGE."
+            targetType={REPORT_TARGET_TYPES.JOB}
+            targetId={job.id}
+          />
+          <button
+            type="button"
+            onClick={onSaveToggle}
+            disabled={!onSaveToggle || saving}
+            className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-sm text-app-subtle transition-colors duration-fast hover:bg-primary-50/60 hover:text-app-muted disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-primary-950/30"
+            aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}
+            aria-pressed={saved}
+          >
+            <AppIcon
+              icon={Bookmark}
+              size={ICON_SIZES.md}
+              className={saved ? 'fill-current text-primary-600' : ''}
+            />
+          </button>
         </div>
       </div>
     </article>

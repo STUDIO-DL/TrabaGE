@@ -36,7 +36,7 @@ function buildJobPayload(form, companyId, status) {
     description: form.description.trim(),
     requirements: JSON.stringify(requirements),
     benefits,
-    salary: form.salaryNegotiable ? null : form.salary.trim() || null,
+    salary: form.salary.trim() || null,
     salary_negotiable: form.salaryNegotiable,
     city: form.city,
     job_type: form.job_type,
@@ -285,23 +285,43 @@ export default function PublishJob() {
 
         <Card padding="md" className="space-y-4">
           <h2 className="text-base font-semibold text-gray-900">Salario</h2>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
-            <input
-              type="checkbox"
-              checked={form.salaryNegotiable}
-              onChange={(e) => setField('salaryNegotiable', e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-primary-600"
-            />
-            Salario negociable
-          </label>
-          {!form.salaryNegotiable && (
-            <Input
-              label="Salario (opcional)"
-              value={form.salary}
-              onChange={(e) => setField('salary', e.target.value)}
-              placeholder="Ej. 500.000 - 800.000 XAF"
-            />
-          )}
+          <Input
+            label="Importe (opcional)"
+            value={form.salary}
+            onChange={(e) => setField('salary', e.target.value)}
+            placeholder="Ej. 500.000 - 800.000 XAF"
+            hint="Indica el salario estimado en XAF. Puedes combinarlo con la opción negociable."
+          />
+          <div className="flex items-center justify-between gap-3 rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
+            <div className="min-w-0">
+              <p className="text-body-small font-medium text-app-text">Salario negociable</p>
+              <p className="text-caption text-app-subtle">
+                Indica que la remuneración puede acordarse con el candidato
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.salaryNegotiable}
+              aria-label="Salario negociable"
+              onClick={() => setField('salaryNegotiable', !form.salaryNegotiable)}
+              className={[
+                'relative h-7 w-12 shrink-0 rounded-full p-0.5 transition-all duration-200 ease-out',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2',
+                form.salaryNegotiable
+                  ? 'bg-primary-600 shadow-[0_8px_18px_rgba(37,99,235,0.24)]'
+                  : 'bg-slate-200',
+                'active:scale-95',
+              ].join(' ')}
+            >
+              <span
+                className={[
+                  'block h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out',
+                  form.salaryNegotiable ? 'translate-x-5' : 'translate-x-0',
+                ].join(' ')}
+              />
+            </button>
+          </div>
         </Card>
 
         <Card padding="md" className="space-y-4">
