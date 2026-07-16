@@ -32,3 +32,4 @@ scripts/admins.local.json
 # PWA
 sw.js
 workbox-*.js
+trabage/website.html
