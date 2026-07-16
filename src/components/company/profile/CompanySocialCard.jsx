@@ -19,10 +19,10 @@ function SocialIcon({ children, label, href }) {
   const content = (
     <span
       className={[
-        'flex h-10 w-10 items-center justify-center rounded-xl transition-colors',
+        'inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-md transition-colors duration-fast',
         active
           ? 'bg-primary-100 text-primary-600'
-          : 'bg-primary-50 text-primary-300',
+          : 'bg-app-surface text-app-subtle',
       ].join(' ')}
       title={label}
     >
@@ -83,48 +83,49 @@ export default function CompanySocialCard({ profile, readOnly = false, onAddSoci
   const links = profile?.social_links ?? {};
   const hasLinks = Object.values(links).some(Boolean);
 
+  if (readOnly && !hasLinks) return null;
+
   return (
-    <Card padding="lg" shadow={false} className={premiumCardClass}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <Card padding="md" shadow={false} className={premiumCardClass}>
+      <div className="flex flex-col gap-space-base sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <SectionTitle>Redes sociales</SectionTitle>
-          <p className="mt-2 text-sm text-gray-500">
-            {readOnly
-              ? 'Enlaces a las redes sociales de la empresa.'
-              : 'Agrega tus redes sociales para aumentar la visibilidad de tu empresa.'}
-          </p>
+          {readOnly && !hasLinks && (
+            <p className="mt-space-sm text-body-small text-app-muted">
+              No hay redes sociales configuradas.
+            </p>
+          )}
           {!readOnly && (
             <Button
               variant="secondary"
               size="sm"
-              className="mt-4 border-primary-200 text-primary-700 hover:bg-primary-50"
+              className="mt-space-base"
               onClick={onAddSocial}
             >
-              + Agregar redes sociales
+              {hasLinks ? 'Editar redes' : 'Agregar redes sociales'}
             </Button>
-          )}
-          {readOnly && !hasLinks && (
-            <p className="mt-3 text-sm text-gray-400">No hay redes sociales configuradas.</p>
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 sm:max-w-[220px] sm:justify-end">
-          <SocialIcon label="LinkedIn" href={links.linkedin}>
-            <LinkedinIcon className="h-5 w-5" />
-          </SocialIcon>
-          <SocialIcon label="Facebook" href={links.facebook}>
-            <FacebookIcon className="h-5 w-5" />
-          </SocialIcon>
-          <SocialIcon label="Instagram" href={links.instagram}>
-            <InstagramIcon className="h-5 w-5" />
-          </SocialIcon>
-          <SocialIcon label="X" href={links.x}>
-            <XIcon className="h-5 w-5" />
-          </SocialIcon>
-          <SocialIcon label="YouTube" href={links.youtube}>
-            <YoutubeIcon className="h-5 w-5" />
-          </SocialIcon>
-        </div>
+        {(hasLinks || !readOnly) && (
+          <div className="flex flex-wrap gap-space-sm">
+            <SocialIcon label="LinkedIn" href={links.linkedin}>
+              <LinkedinIcon className="h-5 w-5" />
+            </SocialIcon>
+            <SocialIcon label="Facebook" href={links.facebook}>
+              <FacebookIcon className="h-5 w-5" />
+            </SocialIcon>
+            <SocialIcon label="Instagram" href={links.instagram}>
+              <InstagramIcon className="h-5 w-5" />
+            </SocialIcon>
+            <SocialIcon label="X" href={links.x}>
+              <XIcon className="h-5 w-5" />
+            </SocialIcon>
+            <SocialIcon label="YouTube" href={links.youtube}>
+              <YoutubeIcon className="h-5 w-5" />
+            </SocialIcon>
+          </div>
+        )}
       </div>
     </Card>
   );

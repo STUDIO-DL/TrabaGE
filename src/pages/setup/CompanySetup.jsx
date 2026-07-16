@@ -129,14 +129,14 @@ export default function CompanySetup() {
       title={`Configura tu ${orgLabels.entity}`}
       footer={
         <>
-          {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
-          <Button type="submit" form="company-setup-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+          {error ? <p className="mb-space-sm text-body-small text-error-600">{error}</p> : null}
+          <Button type="submit" form="company-setup-form" fullWidth loading={loading} size="lg">
             Continuar
           </Button>
         </>
       }
     >
-      <form id="company-setup-form" onSubmit={handleSubmit} className="space-y-md p-md">
+      <form id="company-setup-form" onSubmit={handleSubmit} className="space-y-space-base p-space-base">
         <Input
           label={`Nombre de la ${orgLabels.entity}`}
           value={form.company_name}

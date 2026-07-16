@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import ZarrelCredit from '../branding/ZarrelCredit';
+import LogoutConfirmModal from '../profile/modals/LogoutConfirmModal';
 import { ICON_SIZES } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { ADMIN_LOGOUT_ITEM, ADMIN_NAV_ITEMS } from './adminNav';
@@ -36,6 +38,16 @@ function NavItem({ to, label, icon, end, onNavigate }) {
 
 export default function AdminSidebar({ onNavigate, className = '' }) {
   const { logout } = useAuth();
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
+
+  const confirmLogout = async () => {
+    setLogoutLoading(true);
+    onNavigate?.();
+    await logout();
+    setLogoutLoading(false);
+    setLogoutOpen(false);
+  };
 
   return (
     <aside
@@ -60,10 +72,7 @@ export default function AdminSidebar({ onNavigate, className = '' }) {
       <div className="border-t border-slate-800 p-3">
         <button
           type="button"
-          onClick={() => {
-            onNavigate?.();
-            logout();
-          }}
+          onClick={() => setLogoutOpen(true)}
           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
         >
           <AppIcon icon={ADMIN_LOGOUT_ITEM.icon} size={ICON_SIZES.default} className="text-slate-400" />
@@ -77,6 +86,13 @@ export default function AdminSidebar({ onNavigate, className = '' }) {
           />
         </div>
       </div>
+
+      <LogoutConfirmModal
+        isOpen={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={confirmLogout}
+        loading={logoutLoading}
+      />
     </aside>
   );
 }

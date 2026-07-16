@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from '
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { KeyboardProvider } from './context/KeyboardContext';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import GuestOnlyRoute from './components/routing/GuestOnlyRoute';
 import RoleRoute from './components/routing/RoleRoute';
@@ -239,10 +240,12 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
-          <NotificationProvider>
-            <AppToasts />
-            <AppRoutes />
-          </NotificationProvider>
+          <KeyboardProvider>
+            <NotificationProvider>
+              <AppToasts />
+              <AppRoutes />
+            </NotificationProvider>
+          </KeyboardProvider>
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>

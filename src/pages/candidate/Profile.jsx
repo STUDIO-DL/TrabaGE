@@ -5,7 +5,6 @@ import CandidateProfileLayout from '../../components/profile/CandidateProfileLay
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import AboutSection from '../../components/profile/AboutSection';
 import ContactSection from '../../components/profile/ContactSection';
-import NotificationPreferencesSection from '../../components/profile/NotificationPreferencesSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
@@ -18,7 +17,6 @@ import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import CertificationModal from '../../components/profile/modals/CertificationModal';
 import LanguageModal from '../../components/profile/modals/LanguageModal';
-import DeleteAccountModal from '../../components/profile/modals/DeleteAccountModal';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
@@ -26,11 +24,10 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { validateFile } from '../../utils/validateFile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
 import { shareContent, getShareDescription } from '../../utils/shareContent';
-import { authService } from '../../services/auth.service';
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user, logout, isPreviewMode } = useAuth();
+  const { user, isPreviewMode } = useAuth();
   const { showToast } = useNotificationContext();
   const {
     profile,
@@ -59,7 +56,6 @@ export default function Profile() {
     deleteCandidateLink,
   } = useCandidateProfile();
 
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
   const [certOpen, setCertOpen] = useState(false);
@@ -72,8 +68,6 @@ export default function Profile() {
   const [savingField, setSavingField] = useState(null);
   const [aboutSaving, setAboutSaving] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
-  const [preferencesSaving, setPreferencesSaving] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [cvLoading, setCvLoading] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
@@ -103,36 +97,6 @@ export default function Profile() {
     const { error } = await updateBasicInfo(data);
     setContactSaving(false);
     showToast(error ? error.message : 'Contacto guardado', error ? 'error' : 'success');
-  };
-
-  const handleSavePreferences = async (jobPreferences) => {
-    setPreferencesSaving(true);
-    const { error } = await updateBasicInfo({ job_preferences: jobPreferences });
-    setPreferencesSaving(false);
-    showToast(
-      error ? error.message : 'Preferencias guardadas',
-      error ? 'error' : 'success',
-    );
-  };
-
-  const handleSaveNotificationSettings = async (settings) => {
-    const { error } = await updateBasicInfo(settings);
-    if (error) {
-      showToast(error.message, 'error');
-    }
-    return { error };
-  };
-
-  const handleDeleteAccount = async () => {
-    setDeleteLoading(true);
-    const { error } = await authService.deleteAccount();
-    setDeleteLoading(false);
-    if (error) {
-      showToast(error.message, 'error');
-      return;
-    }
-    showToast('Cuenta eliminada', 'success');
-    await logout();
   };
 
   const handleAvatar = async (file) => {
@@ -234,7 +198,6 @@ export default function Profile() {
   return (
     <PageContainer topBar={false} className="max-w-none">
       <CandidateProfileLayout
-        title="Mi perfil"
         backButton={false}
         profile={profile}
         email={user?.email}
@@ -243,8 +206,6 @@ export default function Profile() {
         avatarLoading={avatarLoading}
         onShare={handleShare}
         onSettings={canEdit ? () => navigate('/personal/settings') : undefined}
-        onLogout={canEdit ? logout : undefined}
-        onDeleteAccount={canEdit ? () => setDeleteOpen(true) : undefined}
         onSaveField={canEdit ? handleSaveField : undefined}
         savingField={savingField}
         sidebar={
@@ -276,14 +237,6 @@ export default function Profile() {
           isOwn={canEdit}
           onSave={handleSaveContact}
           loading={contactSaving}
-        />
-
-        <NotificationPreferencesSection
-          profile={profile}
-          isOwn={canEdit}
-          onSavePreferences={handleSavePreferences}
-          onSaveNotificationSettings={handleSaveNotificationSettings}
-          loading={preferencesSaving}
         />
 
         <EducationSection
@@ -370,13 +323,6 @@ export default function Profile() {
 
       </CandidateProfileLayout>
 
-      <DeleteAccountModal
-        isOpen={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDeleteAccount}
-        loading={deleteLoading}
-        email={user?.email}
-      />
       <ExperienceModal
         isOpen={experienceOpen}
         onClose={() => setExperienceOpen(false)}

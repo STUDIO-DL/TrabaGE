@@ -14,18 +14,21 @@ import {
   Users,
   ICON_SIZES,
 } from '../../../constants/icons';
-import { getCompanyLogoUrl } from '../../../constants/images';
+import AppAvatar from '../../common/AppAvatar';
+import { avatarTypeFromCompanyProfile } from '../../../constants/avatarDefaults';
 import { isCompanyVerified } from '../../../utils/companyVerification';
 import { getOrgLabels } from '../../../utils/orgLabels';
+import { useAuth } from '../../../hooks/useAuth';
+import { ROLES, rolePath } from '../../../constants/roles';
 
-const NAV_ITEMS_BASE = [
-  { to: '/business/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },
-  { to: '/business/jobs', label: 'Ofertas de trabajo', icon: Briefcase },
-  { to: '/business/applicants', label: 'Candidatos', icon: Users },
-  { to: '/business/feed', label: 'Publicaciones', icon: Newspaper },
-  { to: '/business/notifications', label: 'Notificaciones', icon: Bell },
-  { to: '/business/profile', labelKey: 'profile', icon: Building2 },
-  { to: '/business/settings', label: 'Configuración', icon: Settings },
+const NAV_ITEM_DEFS = [
+  { suffix: '/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },
+  { suffix: '/jobs', label: 'Ofertas de trabajo', icon: Briefcase },
+  { suffix: '/applicants', label: 'Candidatos', icon: Users },
+  { suffix: '/feed', label: 'Publicaciones', icon: Newspaper },
+  { suffix: '/notifications', label: 'Notificaciones', icon: Bell },
+  { suffix: '/profile', labelKey: 'profile', icon: Building2 },
+  { suffix: '/settings', label: 'Configuración', icon: Settings },
 ];
 
 function getSidebarCompanyLabel(profile, orgLabels) {
@@ -34,19 +37,22 @@ function getSidebarCompanyLabel(profile, orgLabels) {
 }
 
 export default function CompanyDashboardSidebar({ profile }) {
+  const { role } = useAuth();
+  const base = role || ROLES.BUSINESS;
   const orgLabels = getOrgLabels(profile);
   const companyLabel = getSidebarCompanyLabel(profile, orgLabels);
-  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
+  const avatarType = avatarTypeFromCompanyProfile(profile);
   const verified = isCompanyVerified(profile);
-  const navItems = NAV_ITEMS_BASE.map((item) => ({
+  const navItems = NAV_ITEM_DEFS.map((item) => ({
     ...item,
+    to: rolePath(base, item.suffix),
     label: item.labelKey ? orgLabels[item.labelKey] : item.label,
   }));
 
   return (
     <aside className="hidden w-[260px] shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
       <div className="px-5 py-5">
-        <Link to="/business/dashboard" className="flex items-center gap-2.5">
+        <Link to={rolePath(base, '/dashboard')} className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-600">
             <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="text-white" />
           </span>
@@ -57,10 +63,14 @@ export default function CompanyDashboardSidebar({ profile }) {
       <div className="px-4 pb-4">
         <div className="rounded-2xl border border-primary-100 bg-primary-50/50 p-3">
           <div className="flex items-center gap-3">
-            <img
-              src={logoSrc}
-              alt=""
-              className="h-11 w-11 rounded-xl object-cover ring-2 ring-white"
+            <AppAvatar
+              type={avatarType}
+              src={profile?.logo_path}
+              name={companyLabel}
+              alt={companyLabel}
+              size="md"
+              variant="rounded"
+              className="h-11 w-11 ring-2 ring-white"
             />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-gray-900">{companyLabel}</p>
@@ -115,7 +125,7 @@ export default function CompanyDashboardSidebar({ profile }) {
             <div>
               <p className="text-sm font-semibold text-gray-900">¿Necesitas ayuda?</p>
               <Link
-                to="/business/help"
+                to={rolePath(base, '/help')}
                 className="mt-1 inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
               >
                 Contactar soporte

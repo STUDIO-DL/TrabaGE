@@ -92,7 +92,7 @@ export default function Feed() {
           <EmptyState
             image={NoPosts}
             title="No hay contenido"
-            description="Tu feed mostrará publicaciones, noticias del sector y candidatos recomendados."
+            description="Publicaciones, noticias del sector y candidatos recomendados aparecerán aquí."
           />
         ) : (
           items.map((item, index) => {

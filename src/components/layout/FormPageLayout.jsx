@@ -1,5 +1,7 @@
 import TopBar from './TopBar';
 import BottomNav from './BottomNav';
+import KeyboardAwareFooter from './KeyboardAwareFooter';
+import { useKeyboard } from '../../hooks/useKeyboard';
 
 /**
  * App form pages with scrollable body and sticky footer CTA (Save, Apply, Publish, etc.).
@@ -14,6 +16,9 @@ export default function FormPageLayout({
   className = '',
   contentClassName = '',
 }) {
+  const showTopBar = title || backButton || actions;
+  const { keyboardOffset } = useKeyboard();
+
   return (
     <div
       className={[
@@ -22,9 +27,11 @@ export default function FormPageLayout({
       ]
         .filter(Boolean)
         .join(' ')}
-      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
+      style={{ paddingTop: showTopBar ? undefined : 'env(safe-area-inset-top, 0px)' }}
     >
-      {title ? <TopBar title={title} backButton={backButton} actions={actions} /> : null}
+      {showTopBar ? (
+        <TopBar title={title} backButton={backButton} actions={actions} />
+      ) : null}
 
       <main
         className={['min-h-0 flex-1 overflow-y-auto overscroll-contain', contentClassName]
@@ -35,16 +42,19 @@ export default function FormPageLayout({
       </main>
 
       {footer ? (
-        <footer
-          className="shrink-0 border-t border-app-border bg-app-card p-space-base"
-          style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))' }}
-        >
+        <KeyboardAwareFooter className="border-t border-app-border bg-app-card p-space-base">
           {footer}
-        </footer>
+        </KeyboardAwareFooter>
       ) : null}
 
       {bottomNav ? (
-        <div className="shrink-0 pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))]" aria-hidden />
+        <div
+          className="shrink-0"
+          style={{
+            paddingBottom: `calc(4.5rem + env(safe-area-inset-bottom, 0px) + ${keyboardOffset}px)`,
+          }}
+          aria-hidden
+        />
       ) : null}
       {bottomNav ? <BottomNav /> : null}
     </div>

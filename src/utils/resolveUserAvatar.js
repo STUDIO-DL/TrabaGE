@@ -1,11 +1,12 @@
-import DefaultUserAvatar from '../assets/default-user-avatar.png';
-import { resolveAvatarUrl } from './storagePaths';
+import {
+  AvatarType,
+  DEFAULT_USER_AVATAR,
+  resolveAvatarSrc,
+} from '../constants/avatarDefaults';
 
-export { default as DefaultUserAvatar } from '../assets/default-user-avatar.png';
+export { DEFAULT_USER_AVATAR };
 
+/** @deprecated Use resolveAvatarSrc(AvatarType.PERSONAL, avatarPath) from avatarDefaults. */
 export function resolveUserAvatar(avatarPath) {
-  const resolved = resolveAvatarUrl(avatarPath);
-  if (resolved) return resolved;
-  if (typeof avatarPath === 'string' && avatarPath.trim().startsWith('http')) return avatarPath.trim();
-  return DefaultUserAvatar;
+  return resolveAvatarSrc(AvatarType.PERSONAL, avatarPath);
 }

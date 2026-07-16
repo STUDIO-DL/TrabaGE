@@ -6,7 +6,11 @@ import Input from '../ui/Input';
 import Spinner from '../ui/Spinner';
 import AdminStatusBadge from './AdminStatusBadge';
 import { adminService } from '../../services/admin.service';
-import { resolveUserAvatar } from '../../utils/resolveUserAvatar';
+import AppAvatar from '../common/AppAvatar';
+import {
+  AvatarType,
+  avatarTypeFromRole,
+} from '../../constants/avatarDefaults';
 import { formatDate } from '../../utils/formatDate';
 import { ROLE_LABELS } from '../../constants/roles';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -34,7 +38,8 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
     contact_email: '',
   });
 
-  const isCompany = user?.role === 'company';
+  const isCompany =
+    user?.role === 'company' || user?.role === 'business' || user?.role === 'organization';
 
   useEffect(() => {
     if (!isOpen || !user) return;
@@ -66,16 +71,18 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
 
   const displayName =
     detail?.full_name || detail?.company_name || user.full_name || user.company_name || 'Usuario';
-  const avatarSrc = resolveUserAvatar(
+  const avatarType = isCompany
+    ? avatarTypeFromRole(user.role, { companyType: detail?.company_type ?? user.company_type })
+    : AvatarType.PERSONAL;
+  const avatarPath =
     detail?.avatar_path ||
-      detail?.logo_path ||
-      detail?.avatar_url ||
-      detail?.logo_url ||
-      user.avatar_path ||
-      user.logo_path ||
-      user.avatar_url ||
-      user.logo_url,
-  );
+    detail?.logo_path ||
+    detail?.avatar_url ||
+    detail?.logo_url ||
+    user.avatar_path ||
+    user.logo_path ||
+    user.avatar_url ||
+    user.logo_url;
 
   const openFullProfile = () => {
     const path = isCompany ? `/companies/${user.user_id}` : `/profile/${user.user_id}`;
@@ -113,7 +120,15 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
     <Modal isOpen={isOpen} onClose={onClose} title="Detalle del usuario">
       <div className="space-y-5">
         <div className="flex items-center gap-3">
-          <img src={avatarSrc} alt="" className="h-14 w-14 rounded-full object-cover" />
+          <AppAvatar
+            type={avatarType}
+            src={avatarPath}
+            name={displayName}
+            alt={displayName}
+            size="lg"
+            variant={isCompany ? 'rounded' : 'circular'}
+            className="h-14 w-14"
+          />
           <div className="min-w-0">
             <p className="truncate text-base font-semibold text-gray-900">{displayName}</p>
             <div className="mt-1 flex flex-wrap items-center gap-2">

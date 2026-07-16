@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import ProfilePageShell from '../../profile/ProfilePageShell';
-import DeleteAccountModal from '../../profile/modals/DeleteAccountModal';
 import AppIcon from '../../common/AppIcon';
 import Button from '../../ui/Button';
 import Input from '../../ui/Input';
@@ -10,7 +9,6 @@ import Textarea from '../../ui/Textarea';
 import { generateCompanyUrl } from '../../../utils/generateShareUrl';
 import { shareContent, getShareDescription } from '../../../utils/shareContent';
 import { useNotificationContext } from '../../../context/NotificationContext';
-import { authService } from '../../../services/auth.service';
 import { companyService } from '../../../services/company.service';
 import { storageService } from '../../../services/storage.service';
 import { jobsService } from '../../../services/jobs.service';
@@ -25,7 +23,7 @@ import { Save, ICON_SIZES } from '../../../constants/icons';
 import CompanyProfileView from './CompanyProfileView';
 import { useFollow } from '../../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
-import { getOrgLabels, isOrganizationProfile } from '../../../utils/orgLabels';
+import { isOrganizationProfile } from '../../../utils/orgLabels';
 
 const COMPANY_SIZE_OPTIONS = [
   '1-10',
@@ -300,7 +298,6 @@ export default function CompanyProfileLayout({
   userId,
   isPreviewMode,
   onPreviewAction,
-  onLogout,
   onUploadComplete,
   onOpenSettings,
 }) {
@@ -310,9 +307,7 @@ export default function CompanyProfileLayout({
   const [coverLoading, setCoverLoading] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editMode, setEditMode] = useState(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [previewMedia, setPreviewMedia] = useState({ cover: null, logo: null });
   const [previewServices] = useState(null);
   const [previewContact] = useState(null);
@@ -522,25 +517,10 @@ export default function CompanyProfileLayout({
     onUploadComplete?.();
   };
 
-  const handleDeleteAccount = async () => {
-    setDeleteLoading(true);
-    const { error } = await authService.deleteAccount();
-    setDeleteLoading(false);
-
-    if (error) {
-      showToast(getSupabaseErrorMessage(error), 'error');
-      return;
-    }
-
-    showToast('Cuenta eliminada', 'success');
-    await onLogout?.();
-  };
-
   const readOnly = isPreviewMode;
   const followTarget = isOrganizationProfile(profile)
     ? FOLLOWS_TARGET.ORGANIZATION
     : FOLLOWS_TARGET.BUSINESS;
-  const orgLabels = getOrgLabels(profile);
 
   const { followerCount } = useFollow({
     targetType: followTarget,
@@ -550,20 +530,17 @@ export default function CompanyProfileLayout({
 
   return (
     <ProfilePageShell
-      title={orgLabels.profile}
-      backButton
-      compactBack
+      backButton={false}
       onShare={handleShare}
       isOwn={!readOnly}
       onSettings={readOnly ? undefined : onOpenSettings}
-      onLogout={readOnly ? undefined : onLogout}
-      onDeleteAccount={readOnly ? undefined : () => setDeleteOpen(true)}
     >
       <CompanyProfileView
         profile={displayProfile}
         companyId={userId}
         jobs={jobs}
         readOnly={readOnly}
+        isOwn={!readOnly}
         onEditName={readOnly ? undefined : () => openEdit('name')}
         onEditAbout={readOnly ? undefined : () => openEdit('about')}
         onEditDetails={readOnly ? undefined : () => openEdit('details')}
@@ -576,7 +553,6 @@ export default function CompanyProfileLayout({
         logoLoading={logoLoading}
         coverLoading={coverLoading}
         followerCount={followerCount}
-        showFollowersTab={!readOnly}
       />
       <CompanyEditModal
         mode={editMode}
@@ -584,12 +560,6 @@ export default function CompanyProfileLayout({
         loading={profileSaving}
         onClose={() => setEditMode(null)}
         onSave={handleSaveProfile}
-      />
-      <DeleteAccountModal
-        isOpen={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        onConfirm={handleDeleteAccount}
-        loading={deleteLoading}
       />
     </ProfilePageShell>
   );

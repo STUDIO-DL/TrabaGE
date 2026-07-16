@@ -88,7 +88,7 @@ export default function NotificationItem({
             event.stopPropagation();
             onDelete(notification);
           }}
-          className="shrink-0 rounded-radius-sm p-space-sm text-app-subtle opacity-0 transition-opacity duration-fast hover:bg-error-50 hover:text-error-600 focus:opacity-100 group-hover:opacity-100"
+          className="shrink-0 rounded-radius-sm p-space-sm text-app-subtle opacity-70 transition-opacity duration-fast ease-out hover:bg-error-50 hover:text-error-600 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
           aria-label="Eliminar notificación"
         >
           <AppIcon icon={Trash2} size={ICON_SIZES.sm} />

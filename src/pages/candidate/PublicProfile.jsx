@@ -42,8 +42,7 @@ export default function PublicProfile() {
   return (
     <PageContainer topBar={false} bottomNav={false} className="max-w-none !pb-0">
       <CandidateProfileLayout
-        title="Perfil del candidato"
-        profile={profile}
+        backButton
         shareUrl={generateProfileUrl(userId)}
         shareTitle={profile.full_name || 'Perfil en TrabaGE'}
         reportTargetId={userId}

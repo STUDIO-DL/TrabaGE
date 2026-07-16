@@ -90,14 +90,14 @@ export default function CompanyContactSection({
   const whatsappDigits = profile?.contact_whatsapp?.replace(/\D/g, '');
 
   return (
-    <section className="border-b border-gray-200 bg-white px-4 py-5">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50">
+    <section className="px-space-base py-space-base">
+      <div className="mb-space-base flex items-center gap-space-sm">
+        <span className="flex h-8 w-8 items-center justify-center rounded-radius-md bg-primary-50">
           <AppIcon icon={Headphones} size={ICON_SIZES.default} className="text-primary-600" />
         </span>
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Contacto / Representante</h3>
-          <p className="text-xs text-gray-500">Opcional · RR.HH. o persona de referencia</p>
+          <h3 className="text-body font-semibold text-app-text">Contacto</h3>
+          <p className="text-caption text-app-muted">Persona de referencia</p>
         </div>
       </div>
 

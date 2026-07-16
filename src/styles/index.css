@@ -40,6 +40,9 @@
 
     /* Layout */
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --keyboard-height: 0px;
+    --keyboard-offset: 0px;
+    --keyboard-gap: 14px;
     --page-padding-x: 16px;
     --page-padding-y: 16px;
     --section-gap: 24px;
@@ -93,6 +96,14 @@
     min-height: 100dvh;
   }
 
+  input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']),
+  textarea,
+  select {
+    scroll-margin-bottom: calc(
+      var(--keyboard-height, 0px) + var(--keyboard-gap, 14px) + var(--safe-area-bottom)
+    );
+  }
+
   ::selection {
     background: rgba(37, 99, 235, 0.22);
   }
@@ -100,8 +111,9 @@
 
 @layer components {
   .page-shell {
-    @apply min-h-dvh pb-20;
-    padding-bottom: calc(5rem + var(--safe-area-bottom));
+    @apply min-h-dvh;
+    padding-bottom: calc(5rem + var(--safe-area-bottom) + var(--keyboard-offset, 0px));
+    transition: padding-bottom var(--motion-normal) var(--ease-out);
   }
 
   .page-pad {
@@ -254,6 +266,25 @@
 }
 
 @layer utilities {
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .keyboard-aware-footer {
+    transition: padding-bottom var(--motion-normal) var(--ease-out),
+      bottom var(--motion-normal) var(--ease-out),
+      max-height var(--motion-normal) var(--ease-out);
+  }
+
+  html[data-keyboard-open='true'] .keyboard-scroll-host {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   .theme-transition,
   .theme-transition * {
     transition-property: background-color, border-color, color, fill, stroke, box-shadow, opacity, transform;

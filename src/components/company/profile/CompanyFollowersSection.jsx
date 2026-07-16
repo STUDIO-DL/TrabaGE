@@ -3,7 +3,6 @@ import UserProfileLink from '../../common/UserProfileLink';
 import Button from '../../ui/Button';
 import Spinner from '../../ui/Spinner';
 import { followsService } from '../../../services/follows.service';
-import { resolveUserAvatar } from '../../../utils/resolveUserAvatar';
 import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
 
 const PAGE_SIZE = 20;
@@ -76,7 +75,7 @@ export default function CompanyFollowersSection({ targetType, targetId, visible 
               <UserProfileLink
                 userId={follower.user_id}
                 name={follower.full_name}
-                avatar={resolveUserAvatar(follower.avatar_path)}
+                avatar={follower.avatar_path}
                 headline={follower.headline?.trim() || 'Candidato'}
                 layout="row"
                 className="py-3"

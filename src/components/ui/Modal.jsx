@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import AppIcon from '../common/AppIcon';
 import { X, ICON_SIZES } from '../../constants/icons';
 import useAnimatedPresence from '../../hooks/useAnimatedPresence';
+import { useKeyboard } from '../../hooks/useKeyboard';
 
 /**
  * Dialog — mobile: bottom sheet feel; sm+: centered modal.
@@ -17,6 +18,7 @@ export default function Modal({
   size = 'md',
 }) {
   const { mounted, exiting } = useAnimatedPresence(isOpen, 200);
+  const { keyboardHeight, keyboardGap, isKeyboardVisible } = useKeyboard();
 
   useEffect(() => {
     if (!mounted || exiting) return undefined;
@@ -50,6 +52,14 @@ export default function Modal({
     ? 'animate-[overlayFadeOut_var(--motion-fast)_var(--ease-out)_forwards]'
     : 'animate-[overlayFadeIn_var(--motion-fast)_var(--ease-out)]';
 
+  const panelPaddingBottom = isKeyboardVisible
+    ? `calc(${keyboardHeight}px + ${keyboardGap}px + env(safe-area-inset-bottom, 0px))`
+    : 'max(1.5rem, env(safe-area-inset-bottom, 0px))';
+
+  const panelMaxHeight = isKeyboardVisible
+    ? `calc(100dvh - ${keyboardHeight}px - ${keyboardGap}px)`
+    : '90dvh';
+
   return createPortal(
     <div
       className={[
@@ -68,13 +78,16 @@ export default function Modal({
       />
       <div
         className={[
-          'relative z-10 w-full overflow-y-auto bg-app-card p-space-xl text-app-text shadow-elevation-4',
-          'max-h-[90dvh]',
+          'relative z-10 w-full overflow-y-auto bg-app-card p-space-xl text-app-text shadow-elevation-4 keyboard-aware-footer',
           panelMotion,
           isSheet
             ? 'rounded-t-radius-xl'
             : `rounded-t-radius-xl sm:rounded-radius-xl ${maxWidth}`,
         ].join(' ')}
+        style={{
+          maxHeight: panelMaxHeight,
+          paddingBottom: panelPaddingBottom,
+        }}
       >
         {isSheet && (
           <div className="mb-space-md flex justify-center" aria-hidden>

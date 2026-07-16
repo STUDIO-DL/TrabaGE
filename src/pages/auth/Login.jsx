@@ -1,12 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, MailCheck, ShieldCheck, User } from 'lucide-react';
 
+import AppIcon from '../../components/common/AppIcon';
 import Button from '../../components/ui/Button';
+import Input from '../../components/ui/Input';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
 import { LegalFooterLinks } from '../../components/legal/LegalLinks';
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  MailCheck,
+  ShieldCheck,
+  User,
+  ICON_SIZES,
+} from '../../constants/icons';
 import { clearPreviewMode } from '../../constants/preview';
 import { useAuth } from '../../hooks/useAuth';
 import useEmailVerificationResend from '../../hooks/useEmailVerificationResend';
@@ -18,6 +29,11 @@ import {
 } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
 import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
+
+const AUTH_ALERT_SUCCESS =
+  'rounded-radius-md border border-success-200 bg-success-50 px-space-md py-space-sm text-body-small text-success-700';
+const AUTH_ALERT_ERROR =
+  'rounded-radius-md border border-error-200 bg-error-50 px-space-md py-space-sm text-body-small text-error-700';
 
 function LoginDecorations() {
   return (
@@ -101,23 +117,18 @@ function GoogleAccountMissingPanel({ message, onDismiss }) {
   return (
     <div
       role="status"
-      className="login-fade-in-delayed rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left"
+      className="login-fade-in-delayed rounded-radius-xl border border-app-border bg-app-surface px-space-base py-space-base text-left"
     >
-      <p className="whitespace-pre-line text-sm leading-relaxed text-slate-700">{message}</p>
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-        <Link
-          to="/register"
-          className="inline-flex flex-1 items-center justify-center rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-        >
-          Crear cuenta
+      <p className="whitespace-pre-line text-body-small leading-relaxed text-app-muted">{message}</p>
+      <div className="mt-space-base flex flex-col gap-space-sm sm:flex-row">
+        <Link to="/register" className="flex-1">
+          <Button fullWidth size="md" className="!rounded-radius-md">
+            Crear cuenta
+          </Button>
         </Link>
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="inline-flex flex-1 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-        >
+        <Button variant="secondary" fullWidth size="md" className="!rounded-radius-md" onClick={onDismiss}>
           Volver al inicio de sesión
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -129,40 +140,37 @@ function EmailVerificationPanel({ email, onBack }) {
 
   return (
     <div className="login-fade-in-delayed text-center">
-      <MailCheck className="mx-auto h-12 w-12 text-primary-600" aria-hidden />
-      <h2 className="mt-4 text-lg font-bold text-slate-900">Verifica tu correo electrónico</h2>
-      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+      <AppIcon icon={MailCheck} size={ICON_SIZES.xl} className="mx-auto text-primary-600" aria-hidden />
+      <h2 className="mt-space-base text-title text-app-text">Verifica tu correo electrónico</h2>
+      <p className="mt-space-sm text-body-small leading-relaxed text-app-muted">
         {getEmailNotVerifiedMessage()}
       </p>
-      {email ? <p className="mt-2 break-all text-sm font-semibold text-primary-600">{email}</p> : null}
+      {email ? <p className="mt-space-sm break-all text-body-small font-semibold text-primary-600">{email}</p> : null}
       {message ? (
-        <p role="status" className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+        <p role="status" className={`mt-space-base ${AUTH_ALERT_SUCCESS}`}>
           {message}
         </p>
       ) : null}
       {error ? (
-        <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className={`mt-space-base ${AUTH_ALERT_ERROR}`}>
           {error}
         </p>
       ) : null}
-      <div className="mt-5 space-y-3">
+      <div className="mt-space-lg space-y-space-md">
         <Button
           type="button"
           fullWidth
           loading={sending}
           disabled={!canResend}
           onClick={resend}
-          className="!rounded-xl"
+          size="lg"
+          className="!rounded-radius-md"
         >
           {remaining > 0 ? `Reenviar correo en ${remaining}s` : 'Reenviar correo'}
         </Button>
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
+        <Button variant="secondary" type="button" fullWidth size="lg" className="!rounded-radius-md" onClick={onBack}>
           Volver
-        </button>
+        </Button>
       </div>
     </div>
   );
@@ -188,32 +196,29 @@ function LoginScreen({
   verificationSuccess,
 }) {
   return (
-    <div className="relative min-h-dvh w-full overflow-hidden bg-gradient-to-b from-[#EFF6FF] via-white to-[#EFF6FF]">
+    <div className="keyboard-scroll-host relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-gradient-to-b from-primary-50 via-app-card to-primary-50">
       <LoginDecorations />
 
       <div
-        className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 py-10 sm:px-6"
+        className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col px-space-lg py-space-3xl sm:px-space-xl"
         style={{
           paddingTop: 'max(2.5rem, env(safe-area-inset-top))',
           paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
         }}
       >
         <div className="login-fade-in flex flex-1 flex-col justify-center">
-          {/* Wordmark */}
           <div className="flex justify-center">
             <TrabaGEWordmark className="h-10 w-auto" />
           </div>
 
-          {/* Heading + subtitle */}
-          <div className="mt-6 text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-[#0F172A]">Bienvenido</h1>
-            <p className="mx-auto mt-2 max-w-xs text-sm leading-relaxed text-[#64748B]">
+          <div className="mt-space-xl text-center">
+            <h1 className="text-heading-m text-app-text">Bienvenido</h1>
+            <p className="mx-auto mt-space-sm max-w-xs text-body-small leading-relaxed text-app-muted">
               Conecta con oportunidades, empresas y clientes desde un solo lugar.
             </p>
           </div>
 
-          {/* Card */}
-          <div className="login-fade-in-delayed mt-7 rounded-3xl bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.10)] sm:p-7">
+          <div className="login-card login-fade-in-delayed mt-space-xl p-space-xl sm:p-space-2xl">
             {emailVerificationRequired ? (
               <EmailVerificationPanel email={email} onBack={onDismissEmailVerification} />
             ) : googleAccountMissing ? (
@@ -224,38 +229,34 @@ function LoginScreen({
             ) : (
               <>
                 {verificationSuccess ? (
-                  <p role="status" className="mb-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                  <p role="status" className={`mb-space-base ${AUTH_ALERT_SUCCESS}`}>
                     Tu correo ha sido verificado correctamente. Ya puedes iniciar sesión.
                   </p>
                 ) : null}
-                <form onSubmit={onSubmit} className="space-y-4" autoComplete="off">
-                  <div>
-                    <label
-                      htmlFor="login-email"
-                      className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900"
-                    >
-                      <Mail className="h-4 w-4 text-primary-600" aria-hidden />
-                      Correo electrónico
-                    </label>
-                    <input
-                      id="login-email"
-                      type="email"
-                      name="trabage-email"
-                      autoComplete="email"
-                      required
-                      placeholder="ejemplo@correo.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
-                    />
-                  </div>
+                <form onSubmit={onSubmit} className="space-y-space-base" autoComplete="off">
+                  <Input
+                    id="login-email"
+                    label={
+                      <span className="inline-flex items-center gap-space-sm">
+                        <AppIcon icon={Mail} size={ICON_SIZES.sm} className="text-primary-600" aria-hidden />
+                        Correo electrónico
+                      </span>
+                    }
+                    type="email"
+                    name="trabage-email"
+                    autoComplete="email"
+                    required
+                    placeholder="ejemplo@correo.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
 
                   <div>
                     <label
                       htmlFor="login-password"
-                      className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-900"
+                      className="mb-space-sm flex items-center gap-space-sm text-label font-semibold text-app-text"
                     >
-                      <Lock className="h-4 w-4 text-primary-600" aria-hidden />
+                      <AppIcon icon={Lock} size={ICON_SIZES.sm} className="text-primary-600" aria-hidden />
                       Contraseña
                     </label>
                     <div className="relative">
@@ -268,19 +269,15 @@ function LoginScreen({
                         placeholder="Ingresa tu contraseña"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 pr-12 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 md:text-sm"
+                        className="h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base py-space-sm pr-12 text-body-small text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                       />
                       <button
                         type="button"
                         onClick={() => setShowPassword((prev) => !prev)}
-                        className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-slate-400 transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+                        className="absolute right-space-md top-1/2 -translate-y-1/2 rounded-radius-sm p-space-xs text-app-subtle transition-colors duration-fast ease-out hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
                         aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                       >
-                        {showPassword ? (
-                          <EyeOff className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-                        ) : (
-                          <Eye className="h-[1.15rem] w-[1.15rem]" aria-hidden />
-                        )}
+                        <AppIcon icon={showPassword ? EyeOff : Eye} size={ICON_SIZES.md} aria-hidden />
                       </button>
                     </div>
                   </div>
@@ -288,67 +285,60 @@ function LoginScreen({
                   <div className="flex justify-end">
                     <Link
                       to="/forgot-password"
-                      className="text-sm font-medium text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                      className="text-body-small font-medium text-primary-600 transition-colors duration-fast ease-out hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                     >
                       ¿Olvidaste tu contraseña?
                     </Link>
                   </div>
 
                   {error && (
-                    <p
-                      role="alert"
-                      className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-                    >
+                    <p role="alert" className={AUTH_ALERT_ERROR}>
                       {error}
                     </p>
                   )}
 
-                  <Button
-                    type="submit"
-                    fullWidth
-                    loading={loading}
-                    className="relative !rounded-xl py-3.5 text-base font-semibold"
-                  >
+                  <Button type="submit" fullWidth loading={loading} size="lg" className="!rounded-radius-md">
                     Iniciar sesión
                   </Button>
                 </form>
 
-                {/* Divider */}
-                <div className="relative my-5">
+                <div className="relative my-space-lg">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200" />
+                    <div className="w-full border-t border-app-border" />
                   </div>
-                  <div className="relative flex justify-center text-xs font-medium text-slate-500">
-                    <span className="bg-white px-3">o</span>
+                  <div className="relative flex justify-center text-caption font-medium text-app-subtle">
+                    <span className="bg-app-card px-space-md">o</span>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-space-md">
                   <GoogleAuthButton
                     onClick={onGoogleLogin}
                     label="Iniciar sesión con Google"
                   />
 
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    fullWidth
+                    size="lg"
                     onClick={onExplore}
-                    className="flex h-btn-secondary w-full items-center justify-center gap-3 rounded-xl bg-primary-50 px-md text-small font-semibold text-primary-700 transition hover:bg-primary-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                    className="!rounded-radius-md !bg-primary-50 !text-primary-700 hover:!bg-primary-100"
                   >
-                    <User className="h-5 w-5" aria-hidden />
-                    <span>Explorar como invitado</span>
-                  </button>
+                    <AppIcon icon={User} size={ICON_SIZES.md} aria-hidden />
+                    Explorar como invitado
+                  </Button>
                 </div>
               </>
             )}
           </div>
 
-          {/* Crear cuenta */}
           {!googleAccountMissing && !emailVerificationRequired ? (
-            <p className="mt-6 text-center text-sm text-slate-500">
+            <p className="mt-space-xl text-center text-body-small text-app-subtle">
               ¿No tienes cuenta?{' '}
               <Link
                 to="/register"
-                className="font-bold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                className="font-bold text-primary-600 transition-colors duration-fast ease-out hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
               >
                 Crear cuenta
               </Link>
@@ -356,18 +346,17 @@ function LoginScreen({
           ) : null}
         </div>
 
-        {/* Footer */}
-        <div className="mt-8 space-y-4">
+        <div className="mt-space-2xl space-y-space-base">
           <LegalFooterLinks />
-          <div className="flex items-start justify-center gap-2 text-center">
-            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary-600" aria-hidden />
-            <p className="text-xs leading-relaxed text-slate-500">
+          <div className="flex items-start justify-center gap-space-sm text-center">
+            <AppIcon icon={ShieldCheck} size={ICON_SIZES.sm} className="mt-0.5 shrink-0 text-primary-600" aria-hidden />
+            <p className="text-caption leading-relaxed text-app-subtle">
               Seguro, confiable y hecho para ti.
               <br />
               TrabaGE es tu plataforma de oportunidades.
             </p>
           </div>
-          <div className="flex justify-center pt-1">
+          <div className="flex justify-center pt-space-xs">
             <ZarrelCredit variant="developed" />
           </div>
         </div>

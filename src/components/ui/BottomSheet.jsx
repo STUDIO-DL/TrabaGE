@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import AppIcon from '../common/AppIcon';
 import { X, ICON_SIZES } from '../../constants/icons';
 import useAnimatedPresence from '../../hooks/useAnimatedPresence';
+import { useKeyboard } from '../../hooks/useKeyboard';
 
 /**
  * Bottom sheet — mobile-first overlay anchored to the bottom edge.
@@ -15,6 +16,7 @@ export default function BottomSheet({
   className = '',
 }) {
   const { mounted, exiting } = useAnimatedPresence(isOpen, 200);
+  const { keyboardHeight, keyboardGap, isKeyboardVisible } = useKeyboard();
 
   useEffect(() => {
     if (!mounted || exiting) return undefined;
@@ -42,6 +44,14 @@ export default function BottomSheet({
     ? 'animate-[overlayFadeOut_var(--motion-fast)_var(--ease-out)_forwards]'
     : 'animate-[overlayFadeIn_var(--motion-fast)_var(--ease-out)]';
 
+  const panelPaddingBottom = isKeyboardVisible
+    ? `calc(${keyboardHeight}px + ${keyboardGap}px + env(safe-area-inset-bottom, 0px))`
+    : 'max(1.5rem, env(safe-area-inset-bottom, 0px))';
+
+  const panelMaxHeight = isKeyboardVisible
+    ? `calc(100dvh - ${keyboardHeight}px - ${keyboardGap}px)`
+    : '85dvh';
+
   return createPortal(
     <div className="fixed inset-0 z-modal flex items-end justify-center" role="dialog" aria-modal="true">
       <button
@@ -52,12 +62,15 @@ export default function BottomSheet({
       />
       <div
         className={[
-          'relative z-10 w-full max-w-lg rounded-t-radius-xl bg-app-card p-space-xl text-app-text shadow-elevation-4',
-          'max-h-[85dvh] overflow-y-auto',
+          'relative z-10 w-full max-w-lg rounded-t-radius-xl bg-app-card p-space-xl text-app-text shadow-elevation-4 keyboard-aware-footer',
+          'overflow-y-auto',
           panelMotion,
           className,
         ].join(' ')}
-        style={{ paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 0px))' }}
+        style={{
+          maxHeight: panelMaxHeight,
+          paddingBottom: panelPaddingBottom,
+        }}
       >
         <div className="mb-space-md flex justify-center" aria-hidden>
           <span className="h-1 w-10 rounded-radius-circular bg-app-border" />

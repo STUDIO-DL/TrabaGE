@@ -1,3 +1,5 @@
+import KeyboardAwareFooter from './KeyboardAwareFooter';
+
 /**
  * Mobile-first full-viewport layout: Header | scrollable Content | sticky Footer CTA.
  * Uses design-system safe areas, page padding tokens, and app surface colors.
@@ -45,16 +47,16 @@ export default function MobileScreenLayout({
       </main>
 
       {footer ? (
-        <footer
+        <KeyboardAwareFooter
           className={[
-            'shrink-0 border-t border-app-border bg-app-card px-space-base pb-space-base pt-space-sm',
+            'border-t border-app-border bg-app-card px-space-base pt-space-sm',
             footerClassName,
           ]
             .filter(Boolean)
             .join(' ')}
         >
           {footer}
-        </footer>
+        </KeyboardAwareFooter>
       ) : null}
     </div>
   );

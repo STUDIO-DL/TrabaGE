@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../layout/PageContainer';
+import TopBar from '../layout/TopBar';
 import NotificationItem from './NotificationItem';
 import EmptyState from '../common/EmptyState';
 import { NotificationListSkeleton } from '../common/Skeleton';
@@ -20,7 +21,7 @@ import {
   getNotificationLink,
 } from '../../utils/notificationCategories';
 
-const EMPTY_COPY = {
+const CANDIDATE_EMPTY_COPY = {
   [NOTIFICATION_CATEGORY.ALL]: {
     title: 'No tienes notificaciones',
     description: 'Cuando recibas notificaciones importantes, las verás aquí.',
@@ -32,6 +33,21 @@ const EMPTY_COPY = {
   [NOTIFICATION_CATEGORY.POSTS]: {
     title: 'Sin notificaciones de posts',
     description: 'Aquí verás publicaciones de las empresas e instituciones que sigues.',
+  },
+};
+
+const EMPLOYER_EMPTY_COPY = {
+  [NOTIFICATION_CATEGORY.ALL]: {
+    title: 'Estás al día',
+    description: 'Te avisaremos de postulaciones, interacciones y novedades de tus publicaciones.',
+  },
+  [NOTIFICATION_CATEGORY.JOBS]: {
+    title: 'Sin novedades',
+    description: 'Aquí verás nuevas postulaciones y cambios en el estado de tus ofertas.',
+  },
+  [NOTIFICATION_CATEGORY.POSTS]: {
+    title: 'Sin actualizaciones',
+    description: 'Las interacciones y novedades de tus publicaciones aparecerán aquí.',
   },
 };
 
@@ -109,17 +125,21 @@ export default function NotificationsView({ role = 'candidate' }) {
     );
   };
 
-  const emptyCopy = EMPTY_COPY[activeFilter] ?? EMPTY_COPY[NOTIFICATION_CATEGORY.ALL];
+  const emptyCopyByRole = role === 'company' ? EMPLOYER_EMPTY_COPY : CANDIDATE_EMPTY_COPY;
+  const emptyCopy = emptyCopyByRole[activeFilter] ?? emptyCopyByRole[NOTIFICATION_CATEGORY.ALL];
 
   return (
     <PageContainer
-      title="Notificaciones"
-      actions={
-        hasUnread && (
-          <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-            Marcar todo
-          </Button>
-        )
+      topBar={
+        <TopBar
+          actions={
+            hasUnread ? (
+              <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+                Marcar todo leído
+              </Button>
+            ) : null
+          }
+        />
       }
     >
       {/* Segmented filter chips — horizontally scrollable, no scrollbar clutter */}

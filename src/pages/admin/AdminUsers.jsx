@@ -7,7 +7,11 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
-import { resolveUserAvatar } from '../../utils/resolveUserAvatar';
+import AppAvatar from '../../components/common/AppAvatar';
+import {
+  AvatarType,
+  avatarTypeFromRole,
+} from '../../constants/avatarDefaults';
 import { formatDate } from '../../utils/formatDate';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { ROLE_LABELS, ROLES } from '../../constants/roles';
@@ -106,13 +110,28 @@ export default function AdminUsers() {
       {
         key: 'avatar',
         label: 'Avatar',
-        render: (row) => (
-          <img
-            src={resolveUserAvatar(row.avatar_path || row.logo_path || row.avatar_url || row.logo_url)}
-            alt=""
-            className="h-9 w-9 rounded-full object-cover"
-          />
-        ),
+        render: (row) => {
+          const isCompany = row.role === 'company' || row.role === 'business' || row.role === 'organization';
+          const avatarType = isCompany
+            ? avatarTypeFromRole(row.role, { companyType: row.company_type })
+            : AvatarType.PERSONAL;
+
+          return (
+            <AppAvatar
+              type={avatarType}
+              src={
+                isCompany
+                  ? row.logo_path || row.logo_url
+                  : row.avatar_path || row.avatar_url
+              }
+              name={row.full_name || row.company_name}
+              alt={row.full_name || row.company_name}
+              size="sm"
+              variant={isCompany ? 'rounded' : 'circular'}
+              className="h-9 w-9"
+            />
+          );
+        },
       },
       {
         key: 'name',

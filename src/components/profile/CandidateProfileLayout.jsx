@@ -17,8 +17,6 @@ export default function CandidateProfileLayout({
   shareTitle,
   reportTargetId,
   onSettings,
-  onLogout,
-  onDeleteAccount,
   onSaveField,
   savingField,
   onContact,
@@ -38,8 +36,6 @@ export default function CandidateProfileLayout({
       reportTargetId={reportTargetId}
       isOwn={isOwn}
       onSettings={onSettings}
-      onLogout={onLogout}
-      onDeleteAccount={onDeleteAccount}
     >
       <ProfileHero
         profile={profile}
@@ -52,7 +48,7 @@ export default function CandidateProfileLayout({
       <ProfileActionBar
         isOwn={isOwn}
         onContact={onContact}
-        disabled={!hasCandidateContact(profile)}
+        contactDisabled={!hasCandidateContact(profile)}
       />
       <div className="mx-auto max-w-5xl px-4 py-6">
         <div

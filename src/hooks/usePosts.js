@@ -3,10 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { postsService } from '../services/posts.service';
 import { supabase } from '../config/supabase';
 import { useAuth } from './useAuth';
-import { ROLES, isEmployerRole } from '../constants/roles';
+import { ROLES, isEmployerRole, rolePath } from '../constants/roles';
 import { getPreviewPosts } from '../constants/preview';
-import { getCompanyLogoUrl } from '../constants/images';
-import { resolveUserAvatar } from '../utils/resolveUserAvatar';
+import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { extractUserKeywords, calculateJobMatch } from '../utils/calculateJobMatch';
 import { jobsService } from '../services/jobs.service';
 
@@ -28,7 +27,7 @@ async function enrichPosts(posts, user) {
     companyIds.length
       ? supabase
           .from('company_profiles')
-          .select('user_id, company_name, logo_path, is_verified, verification_status')
+          .select('user_id, company_name, logo_path, is_verified, verification_status, company_type')
           .in('user_id', companyIds)
       : Promise.resolve({ data: [] }),
     candidateIds.length
@@ -51,9 +50,13 @@ async function enrichPosts(posts, user) {
       return {
         ...post,
         author_name: company?.company_name ?? post.author_name,
-        author_avatar: getCompanyLogoUrl(company?.logo_path) ?? post.author_avatar,
+        author_avatar: resolveAuthorAvatar(post.author_type, {
+          logoPath: company?.logo_path,
+          companyType: company?.company_type,
+          profile: company,
+        }) ?? post.author_avatar,
         author_company: company ?? null,
-        author_path: isCompanyOwner ? '/business/profile' : `/companies/${post.author_id}`,
+        author_path: isCompanyOwner ? rolePath(user?.role, '/profile') : `/companies/${post.author_id}`,
       };
     }
 
@@ -63,7 +66,9 @@ async function enrichPosts(posts, user) {
       ...post,
       author_name: candidate?.full_name ?? post.author_name,
       author_headline: candidate?.headline ?? post.author_headline,
-      author_avatar: resolveUserAvatar(candidate?.avatar_path) ?? post.author_avatar,
+      author_avatar: resolveAuthorAvatar(post.author_type, {
+        avatarPath: candidate?.avatar_path,
+      }) ?? post.author_avatar,
       author_path: isCandidateOwner ? '/personal/profile' : `/profile/${post.author_id}`,
     };
   });

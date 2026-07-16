@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ProfilePageShell from '../../components/profile/ProfilePageShell';
-import ProfileActionBar from '../../components/profile/ProfileActionBar';
 import CompanyProfileView from '../../components/company/profile/CompanyProfileView';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import PageContainer from '../../components/layout/PageContainer';
 import { companyService } from '../../services/company.service';
 import { jobsService } from '../../services/jobs.service';
 import { getPreviewMediaUrls, getPreviewProfile, PREVIEW_USER } from '../../constants/preview';
-import { ROLES, isEmployerRole } from '../../constants/roles';
+import { isEmployerRole } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { generateCompanyUrl } from '../../utils/generateShareUrl';
 import { hasCompanyActionableContact, openCompanyContact } from '../../utils/contact';
@@ -25,6 +24,7 @@ export default function CompanyPublicProfile() {
   const [profile, setProfile] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
   const followTarget = useMemo(
     () =>
@@ -48,8 +48,6 @@ export default function CompanyPublicProfile() {
   const showFollowButton =
     !isPreviewMode && user?.id !== companyId && !isEmployerRole(role);
 
-  const showFollowersTab = role === ROLES.ADMIN;
-
   useEffect(() => {
     if (isPreviewMode && companyId === PREVIEW_USER.id) {
       const media = getPreviewMediaUrls();
@@ -60,15 +58,26 @@ export default function CompanyPublicProfile() {
       });
       setJobs([]);
       setLoading(false);
+      setNotFound(false);
       return;
     }
+
+    setLoading(true);
+    setNotFound(false);
 
     Promise.all([
       companyService.getPublicProfile(companyId),
       jobsService.getCompanyJobs(companyId),
     ]).then(([profileResult, jobsResult]) => {
-      setProfile(profileResult.data);
-      setJobs(jobsResult.data ?? []);
+      if (!profileResult.data) {
+        setProfile(null);
+        setJobs([]);
+        setNotFound(true);
+      } else {
+        setProfile(profileResult.data);
+        setJobs(jobsResult.data ?? []);
+        setNotFound(false);
+      }
       setLoading(false);
     });
   }, [companyId, isPreviewMode]);
@@ -97,35 +106,44 @@ export default function CompanyPublicProfile() {
     );
   }
 
+  if (notFound || !profile) {
+    return (
+      <PageContainer topBar={false} className="max-w-none">
+        <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-12 text-center">
+          <p className="text-lg font-semibold text-app-text">{orgLabels.notFound}</p>
+          <p className="mt-2 max-w-sm text-sm text-app-muted">
+            Es posible que el enlace no sea correcto o que el perfil ya no esté disponible.
+          </p>
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer topBar={false} className="max-w-none">
       <ProfilePageShell
-        title={orgLabels.profile}
         backButton
-        compactBack
         shareUrl={generateCompanyUrl(companyId)}
         shareTitle={profile?.company_name || orgLabels.defaultName}
         reportTargetId={companyId}
         isOwn={false}
       >
-        <ProfileActionBar
-          onContact={handleContact}
-          disabled={!hasCompanyActionableContact(profile)}
-          label="Contactar"
-        />
         <CompanyProfileView
           profile={profile}
           readOnly
           companyId={companyId}
           jobs={jobs}
-          targetType={followTarget}
           showFollowButton={showFollowButton || !isAuthenticated}
           isFollowing={isFollowing}
           followLoading={followLoading}
           canFollow={canFollow || !isAuthenticated}
           onToggleFollow={handleToggleFollow}
+          onContact={handleContact}
+          contactDisabled={!hasCompanyActionableContact(profile)}
+          shareUrl={generateCompanyUrl(companyId)}
+          shareTitle={profile?.company_name || orgLabels.defaultName}
+          reportTargetId={companyId}
           followerCount={followerCount}
-          showFollowersTab={showFollowersTab}
         />
       </ProfilePageShell>
     </PageContainer>

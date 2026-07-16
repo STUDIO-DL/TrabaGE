@@ -1,14 +1,13 @@
 import { isPersonalAuthor, isEmployerAuthor } from '../constants/authorTypes';
 import { supabase } from '../config/supabase';
-import { ROLES, isEmployerRole } from '../constants/roles';
+import { ROLES, isEmployerRole, rolePath } from '../constants/roles';
 import {
   FEED_CONTENT_TYPES,
   FEED_PAGE_SIZE,
   FEED_RECOMMENDATION_SUBTYPES,
   INSTITUTION_COMPANY_TYPES,
 } from '../constants/feedContentTypes';
-import { getCompanyLogoUrl } from '../constants/images';
-import { resolveUserAvatar } from '../utils/resolveUserAvatar';
+import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { companyService } from './company.service';
 import { jobsService } from './jobs.service';
 import { followsService, FOLLOWS_TARGET } from './follows.service';
@@ -119,9 +118,13 @@ async function enrichPosts(posts, user) {
       enriched.set(post.id, {
         ...post,
         author_name: company?.company_name ?? post.author_name,
-        author_avatar: getCompanyLogoUrl(company?.logo_path) ?? post.author_avatar,
+        author_avatar: resolveAuthorAvatar(post.author_type, {
+          logoPath: company?.logo_path,
+          companyType: company?.company_type,
+          profile: company,
+        }) ?? post.author_avatar,
         author_company: company ?? null,
-        author_path: isOwner && isEmployerRole(user?.role) ? '/business/profile' : `/companies/${post.author_id}`,
+        author_path: isOwner && isEmployerRole(user?.role) ? rolePath(user.role, '/profile') : `/companies/${post.author_id}`,
       });
       return;
     }
@@ -131,7 +134,9 @@ async function enrichPosts(posts, user) {
       ...post,
       author_name: candidate?.full_name ?? post.author_name,
       author_headline: candidate?.headline ?? post.author_headline,
-      author_avatar: resolveUserAvatar(candidate?.avatar_path) ?? post.author_avatar,
+      author_avatar: resolveAuthorAvatar(post.author_type, {
+        avatarPath: candidate?.avatar_path,
+      }) ?? post.author_avatar,
       author_path: isOwner && user?.role === ROLES.PERSONAL ? '/personal/profile' : `/profile/${post.author_id}`,
     });
   });

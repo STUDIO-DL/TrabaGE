@@ -1,13 +1,11 @@
 import { Link } from 'react-router-dom';
-import UserAvatar from './UserAvatar';
-import Avatar from '../ui/Avatar';
-import { DEFAULT_COMPANY_LOGO } from '../../constants/images';
+import AppAvatar from './AppAvatar';
+import { AvatarType, avatarTypeFromUserType } from '../../constants/avatarDefaults';
 import { getUserProfilePath } from '../../utils/profileRoutes';
-import { isEmployerAuthor } from '../../constants/authorTypes';
 
 const AVATAR_SIZE_CLASS = {
   sm: '!h-8 !w-8',
-  md: '!h-12 !w-12',
+  md: '!h-10 !w-10',
 };
 
 export default function UserProfileLink({
@@ -25,25 +23,23 @@ export default function UserProfileLink({
   children,
 }) {
   const path = explicitPath || getUserProfilePath(userId, userType);
+  const avatarType = avatarTypeFromUserType(userType);
 
   const handleClick = (event) => {
     if (stopPropagation) event.stopPropagation();
   };
 
-  const renderAvatar = () => {
-    if (isEmployerAuthor(userType) || userType === 'institution' || userType === 'organization') {
-      return (
-        <Avatar
-          src={avatar}
-          name={name}
-          size={size}
-          fallback={DEFAULT_COMPANY_LOGO}
-          className={AVATAR_SIZE_CLASS[size]}
-        />
-      );
-    }
-    return <UserAvatar src={avatar} alt={name} size={size} />;
-  };
+  const renderAvatar = () => (
+    <AppAvatar
+      type={avatarType}
+      src={avatar}
+      name={name}
+      alt={name}
+      size={size}
+      variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
+      className={AVATAR_SIZE_CLASS[size]}
+    />
+  );
 
   if (children) {
     if (!path) return children;

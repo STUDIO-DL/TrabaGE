@@ -24,7 +24,7 @@ export default function SavedJobs() {
   };
 
   return (
-    <PageContainer title="Empleos guardados" backButton>
+    <PageContainer backButton>
       <div className="space-y-3 p-4">
         {loading ? (
           <JobListSkeleton count={3} />

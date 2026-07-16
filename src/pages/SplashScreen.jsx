@@ -82,9 +82,9 @@ export default function SplashScreen() {
 
   return (
     <MobileScreenLayout
-      contentClassName="items-center justify-center px-md"
+      contentClassName="items-center justify-center px-space-base"
       noScroll
-      className="bg-white"
+      className="bg-app-bg"
       footerClassName="!border-0 !bg-transparent !pt-0"
       footer={
         <div className="flex justify-center pb-1">
@@ -99,7 +99,7 @@ export default function SplashScreen() {
           className="splash-map-in splash-map-glow mt-lg h-8 w-auto text-primary-600 sm:h-9"
         />
 
-        <p className="splash-tagline-in mt-lg max-w-[16rem] text-small leading-snug text-slate-500 sm:max-w-xs sm:text-body">
+        <p className="splash-tagline-in mt-lg max-w-[16rem] text-body-small leading-snug text-app-muted sm:max-w-xs">
           La plataforma de empleo y oportunidades para Guinea Ecuatorial
         </p>
       </div>

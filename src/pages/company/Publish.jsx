@@ -53,7 +53,7 @@ export default function Publish() {
 
   if (isPreviewMode) {
     return (
-      <PageContainer title="Publicar">
+      <PageContainer topBar={false} bottomNav={false} className="!pb-0 bg-white">
         <div className="p-4">
           <div className="rounded-2xl border border-primary-100 bg-primary-50 p-6 text-center">
             <p className="text-sm text-primary-900">{GUEST_MODE_MESSAGE}</p>
@@ -71,23 +71,18 @@ export default function Publish() {
 
   if (mode === PUBLISH_MODES.POST) {
     return (
-      <PageContainer title="Nueva publicación">
-        <div className="p-4">
-          <button
-            type="button"
-            onClick={() => setMode(PUBLISH_MODES.SELECT)}
-            className="mb-4 text-sm font-medium text-primary-600 hover:text-primary-700"
-          >
-            ← Volver
-          </button>
-          <PostComposer onSubmit={handleCreatePost} loading={loading} />
-        </div>
+      <PageContainer topBar={false} bottomNav={false} className="!pb-0 bg-white">
+        <PostComposer
+          onSubmit={handleCreatePost}
+          loading={loading}
+          onClose={() => setMode(PUBLISH_MODES.SELECT)}
+        />
       </PageContainer>
     );
   }
 
   return (
-    <PageContainer title="Publicar">
+    <PageContainer topBar={false}>
       <div className="p-4">
         <p className="mb-4 text-sm text-gray-600">¿Qué quieres publicar?</p>
         <div className="grid grid-cols-1 gap-3">

@@ -14,7 +14,7 @@ export const DEEP_LINK_PATHS = {
   post: (id) => `/post/${id}`,
   job: (id) => `/job/${id}`,
   profile: (id) => `/profile/${id}`,
-  company: (id) => `/business/${id}`,
+  company: (id) => `/companies/${id}`,
 };
 
 /**
@@ -25,7 +25,7 @@ export const DEEP_LINK_ROUTE_PATTERNS = {
   post: '/post/:postId',
   job: '/job/:id',
   profile: '/profile/:userId',
-  company: '/business/:companyId',
+  company: '/companies/:companyId',
 };
 
 /**

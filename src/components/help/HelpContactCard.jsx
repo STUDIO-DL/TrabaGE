@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import AppIcon from '../common/AppIcon';
 import Button from '../ui/Button';
+import Card from '../ui/Card';
 import Input from '../ui/Input';
+import Textarea from '../ui/Textarea';
 import { Mail, ICON_SIZES } from '../../constants/icons';
 import { SUPPORT_EMAIL } from '../../data/help-center';
 import { useAuth } from '../../hooks/useAuth';
@@ -66,25 +68,25 @@ export default function HelpContactCard() {
   };
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-50">
+    <Card padding="lg" elevation={2}>
+      <div className="flex items-start gap-space-md">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-radius-md bg-app-primary-soft">
           <AppIcon icon={Mail} size={ICON_SIZES.default} className="text-primary-600" />
         </span>
         <div className="min-w-0 flex-1">
-          <h2 className="text-lg font-semibold text-slate-900">¿Necesitas más ayuda?</h2>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          <h2 className="text-title text-app-text">¿Necesitas más ayuda?</h2>
+          <p className="mt-space-sm text-body-small leading-relaxed text-app-muted">
             Si no encuentras la respuesta que buscas, escríbenos y te responderemos en un plazo
             máximo de 48 horas hábiles.
           </p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-space-sm text-body-small text-app-subtle">
             También puedes escribirnos a{' '}
             <a href={`mailto:${SUPPORT_EMAIL}`} className="font-medium text-primary-600 hover:text-primary-700">
               {SUPPORT_EMAIL}
             </a>
           </p>
 
-          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-space-lg space-y-space-base">
             <Input
               label="Nombre completo"
               name="name"
@@ -113,24 +115,19 @@ export default function HelpContactCard() {
               required
               disabled={submitting}
             />
-            <div>
-              <label htmlFor="help-message" className="mb-1.5 block text-sm font-medium text-gray-700">
-                Mensaje
-              </label>
-              <textarea
-                id="help-message"
-                name="message"
-                rows={4}
-                value={form.message}
-                onChange={handleChange('message')}
-                placeholder="Describe tu consulta con el mayor detalle posible..."
-                required
-                disabled={submitting}
-                className="w-full resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-colors focus:border-primary-500 focus:ring-2 focus:ring-primary-100 disabled:opacity-60"
-              />
-            </div>
+            <Textarea
+              label="Mensaje"
+              id="help-message"
+              name="message"
+              rows={4}
+              value={form.message}
+              onChange={handleChange('message')}
+              placeholder="Describe tu consulta con el mayor detalle posible..."
+              required
+              disabled={submitting}
+            />
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
+            {error && <p className="text-body-small text-error-600">{error}</p>}
 
             <Button type="submit" loading={submitting} fullWidth className="sm:w-auto">
               Enviar mensaje
@@ -138,6 +135,6 @@ export default function HelpContactCard() {
           </form>
         </div>
       </div>
-    </section>
+    </Card>
   );
 }

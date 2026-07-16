@@ -10,7 +10,7 @@ import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { user, logout, isPreviewMode, role } = useAuth();
+  const { user, isPreviewMode, role } = useAuth();
   const { profile, loading, refetch } = useProfile();
   const { showToast } = useNotificationContext();
   const base = role || ROLES.BUSINESS;
@@ -34,7 +34,6 @@ export default function Profile() {
         userId={user?.id}
         isPreviewMode={isPreviewMode}
         onPreviewAction={handlePreviewAction}
-        onLogout={logout}
         onUploadComplete={refetch}
         onOpenSettings={() => navigate(rolePath(base, '/settings'))}
       />

@@ -6,7 +6,7 @@ export default function HelpQuestion({ id, question, answer, isOpen, onToggle })
   const buttonId = `${id}-button`;
 
   return (
-    <div className="bg-white">
+    <div className="bg-app-card">
       <h3>
         <button
           id={buttonId}
@@ -14,13 +14,13 @@ export default function HelpQuestion({ id, question, answer, isOpen, onToggle })
           aria-expanded={isOpen}
           aria-controls={panelId}
           onClick={onToggle}
-          className="flex w-full items-start justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-slate-50 sm:px-5"
+          className="flex w-full items-start justify-between gap-space-md px-space-base py-space-base text-left transition-colors duration-fast ease-out hover:bg-app-surface sm:px-space-lg"
         >
-          <span className="text-sm font-medium text-slate-900 sm:text-[15px]">{question}</span>
+          <span className="text-body-small font-medium text-app-text">{question}</span>
           <AppIcon
             icon={ChevronDown}
             size={ICON_SIZES.default}
-            className={`mt-0.5 shrink-0 text-primary-600 transition-transform duration-300 ${
+            className={`mt-0.5 shrink-0 text-primary-600 transition-transform duration-fast ease-out ${
               isOpen ? 'rotate-180' : ''
             }`}
           />
@@ -31,12 +31,12 @@ export default function HelpQuestion({ id, question, answer, isOpen, onToggle })
         id={panelId}
         role="region"
         aria-labelledby={buttonId}
-        className={`grid transition-all duration-300 ease-in-out ${
+        className={`grid transition-all duration-fast ease-out ${
           isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
         }`}
       >
         <div className="overflow-hidden">
-          <p className="whitespace-pre-wrap px-4 pb-4 text-sm leading-relaxed text-slate-600 sm:px-5">
+          <p className="whitespace-pre-wrap px-space-base pb-space-base text-body-small leading-relaxed text-app-muted sm:px-space-lg">
             {answer}
           </p>
         </div>

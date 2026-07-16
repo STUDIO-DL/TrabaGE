@@ -1,18 +1,21 @@
-import Avatar from '../ui/Avatar';
+import AppAvatar from '../common/AppAvatar';
 import VerificationBadge from './VerificationBadge';
 import Button from '../ui/Button';
-import { getCompanyLogoUrl } from '../../constants/images';
+import { avatarTypeFromCompanyProfile } from '../../constants/avatarDefaults';
 
 export default function CompanyHeader({ profile, isOwn = false, onEdit }) {
-  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
+  const avatarType = avatarTypeFromCompanyProfile(profile);
 
   return (
     <div className="mb-6 text-center">
-      <Avatar
-        src={logoSrc}
+      <AppAvatar
+        type={avatarType}
+        src={profile?.logo_path}
         name={profile?.company_name}
+        alt={profile?.company_name}
         size="lg"
-        className="mx-auto rounded-2xl !rounded-2xl"
+        variant="rounded"
+        className="mx-auto !rounded-2xl"
       />
       <div className="mt-4 flex items-center justify-center gap-2">
         <h2 className="text-xl font-bold text-gray-900">{profile?.company_name}</h2>

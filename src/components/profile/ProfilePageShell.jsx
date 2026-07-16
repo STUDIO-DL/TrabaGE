@@ -1,88 +1,75 @@
-import { useNavigate } from 'react-router-dom';
-import AppIcon from '../common/AppIcon';
-import { Share2, ICON_SIZES } from '../../constants/icons';
-import ProfileMenu from './ProfileMenu';
-import ContentActionMenu from '../common/ContentActionMenu';
-import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
-
-export default function ProfilePageShell({
-  title = 'Perfil del candidato',
-  backButton = true,
-  compactBack = false,
-  onShare,
-  shareUrl,
-  shareTitle,
-  reportTargetId,
-  isOwn = false,
-  onSettings,
-  onLogout,
-  onDeleteAccount,
-  children,
-}) {
-  const navigate = useNavigate();
-  const showReportMenu = !isOwn && shareUrl && reportTargetId;
-
-  return (
-    <div className="profile-page min-h-full bg-gray-50">
-      <header className="sticky top-0 z-30 border-b border-gray-200 bg-white">
-        <div className="mx-auto flex h-14 max-w-lg items-center gap-2 px-4">
-          {backButton ? (
-            compactBack ? (
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="rounded-lg p-2 text-gray-700 hover:bg-gray-100"
-                aria-label="Volver"
-              >
-                <span aria-hidden className="text-lg leading-none">←</span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                <span aria-hidden>←</span>
-                Volver
-              </button>
-            )
-          ) : (
-            <div className={compactBack ? 'w-10' : 'w-20'} />
-          )}
-
-          <h1 className="flex-1 truncate text-center text-base font-semibold text-gray-900">{title}</h1>
-
-          <div className={`flex items-center justify-end gap-1 ${compactBack ? 'w-[72px]' : 'w-20'}`}>
-            {showReportMenu ? (
-              <ContentActionMenu
-                shareUrl={shareUrl}
-                shareTitle={shareTitle}
-                targetType={REPORT_TARGET_TYPES.PROFILE}
-                targetId={reportTargetId}
-              />
-            ) : (
-              onShare && (
-                <button
-                  type="button"
-                  onClick={onShare}
-                  className="rounded-lg p-2 text-gray-600 hover:bg-gray-100"
-                  aria-label="Compartir"
-                >
-                  <AppIcon icon={Share2} size={ICON_SIZES.default} />
-                </button>
-              )
-            )}
-            {isOwn && (
-              <ProfileMenu
-                onSettings={onSettings}
-                onLogout={onLogout}
-                onDeleteAccount={onDeleteAccount}
-              />
-            )}
-          </div>
-        </div>
-      </header>
-      {children}
-    </div>
-  );
-}
+import { useNavigate } from 'react-router-dom';
+import AppIcon from '../common/AppIcon';
+import { ArrowLeft, Share2, ICON_SIZES } from '../../constants/icons';
+import ProfileSettingsButton from './ProfileSettingsButton';
+import ContentActionMenu from '../common/ContentActionMenu';
+import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
+import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
+
+export default function ProfilePageShell({
+  title,
+  backButton = true,
+  onShare,
+  shareUrl,
+  shareTitle,
+  reportTargetId,
+  isOwn = false,
+  onSettings,
+  children,
+}) {
+  const navigate = useNavigate();
+  const showReportMenu = !isOwn && shareUrl && reportTargetId;
+
+  return (
+    <div className="profile-page min-h-full bg-app-surface">
+      <header className={topBarOuterClass}>
+        <div className={topBarInnerClass}>
+          {backButton ? (
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
+              aria-label="Volver"
+            >
+              <AppIcon icon={ArrowLeft} size={ICON_SIZES.md} />
+            </button>
+          ) : (
+            <div className="min-w-touch shrink-0" aria-hidden="true" />
+          )}
+
+          {title ? (
+            <h1 className="min-w-0 flex-1 truncate text-center text-body font-semibold text-app-text">
+              {title}
+            </h1>
+          ) : (
+            <div className="min-w-0 flex-1" aria-hidden="true" />
+          )}
+
+          <div className="flex shrink-0 items-center justify-end gap-space-xs">
+            {showReportMenu ? (
+              <ContentActionMenu
+                shareUrl={shareUrl}
+                shareTitle={shareTitle}
+                targetType={REPORT_TARGET_TYPES.PROFILE}
+                targetId={reportTargetId}
+              />
+            ) : (
+              onShare && (
+                <button
+                  type="button"
+                  onClick={onShare}
+                  className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
+                  aria-label="Compartir"
+                >
+                  <AppIcon icon={Share2} size={ICON_SIZES.default} />
+                </button>
+              )
+            )}
+            {isOwn ? <ProfileSettingsButton onClick={onSettings} /> : null}
+          </div>
+        </div>
+      </header>
+      {children}
+    </div>
+  );
+}

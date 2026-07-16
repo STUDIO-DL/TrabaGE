@@ -1,5 +1,6 @@
 import Input from '../ui/Input';
 import AppIcon from '../common/AppIcon';
+import NotificationBellButton from '../notifications/NotificationBellButton';
 import { Filter, Search, ICON_SIZES } from '../../constants/icons';
 
 export default function JobsSearchBar({ query = '', onQueryChange, onFiltersToggle, filtersOpen = false }) {
@@ -16,6 +17,8 @@ export default function JobsSearchBar({ query = '', onQueryChange, onFiltersTogg
           className="mb-0"
         />
       </div>
+      <NotificationBellButton className="h-11 w-11 border border-app-border bg-app-card" />
+
       <button
         type="button"
         onClick={onFiltersToggle}

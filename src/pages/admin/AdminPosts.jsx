@@ -8,9 +8,9 @@ import Select from '../../components/ui/Select';
 import Textarea from '../../components/ui/Textarea';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
-import { getCompanyLogoUrl } from '../../constants/images';
+import AppAvatar from '../../components/common/AppAvatar';
+import { AvatarType, avatarTypeFromAuthorType } from '../../constants/avatarDefaults';
 import { formatDate } from '../../utils/formatDate';
-import { resolveUserAvatar } from '../../utils/resolveUserAvatar';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { NEWS_CATEGORIES } from '../../constants/feedContentTypes';
 
@@ -167,20 +167,25 @@ export default function AdminPosts() {
       {
         key: 'author',
         label: 'Autor',
-        render: (row) => (
-          <div className="flex items-center gap-2">
-            <img
-              src={
-                row.author?.type === 'company'
-                  ? getCompanyLogoUrl(row.author.avatar)
-                  : resolveUserAvatar(row.author?.avatar)
-              }
-              alt=""
-              className="h-8 w-8 rounded-full object-cover"
-            />
-            <span>{row.author?.name ?? 'Usuario'}</span>
-          </div>
-        ),
+        render: (row) => {
+          const authorType = row.author?.type === 'company' ? 'business' : row.author?.type;
+          const avatarType = avatarTypeFromAuthorType(authorType);
+
+          return (
+            <div className="flex items-center gap-2">
+              <AppAvatar
+                type={avatarType}
+                src={row.author?.avatar}
+                name={row.author?.name}
+                alt={row.author?.name}
+                size="sm"
+                variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
+                className="h-8 w-8"
+              />
+              <span>{row.author?.name ?? 'Usuario'}</span>
+            </div>
+          );
+        },
       },
       {
         key: 'content',

@@ -5,7 +5,8 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
-import { getCompanyLogoUrl } from '../../constants/images';
+import AppAvatar from '../../components/common/AppAvatar';
+import { avatarTypeFromCompanyProfile } from '../../constants/avatarDefaults';
 import { formatDate } from '../../utils/formatDate';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
@@ -63,10 +64,14 @@ export default function AdminCompanies() {
         key: 'logo',
         label: 'Logo',
         render: (row) => (
-          <img
-            src={getCompanyLogoUrl(row.logo_path)}
-            alt=""
-            className="h-9 w-9 rounded-xl object-cover"
+          <AppAvatar
+            type={avatarTypeFromCompanyProfile(row)}
+            src={row.logo_path}
+            name={row.company_name}
+            alt={row.company_name}
+            size="sm"
+            variant="rounded"
+            className="h-9 w-9"
           />
         ),
       },

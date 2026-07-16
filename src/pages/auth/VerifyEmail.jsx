@@ -29,7 +29,7 @@ export default function VerifyEmail() {
   };
 
   return (
-    <main className="min-h-dvh bg-app-bg px-5 py-10 text-app-text">
+    <main className="keyboard-scroll-host min-h-dvh overflow-y-auto bg-app-bg px-5 py-10 text-app-text">
       <div className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-md flex-col justify-center">
         <div className="flex justify-center">
           <TrabaGEWordmark className="h-10 w-auto" />

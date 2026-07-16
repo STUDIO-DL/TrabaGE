@@ -30,27 +30,26 @@ export default function ForgotPassword() {
   return (
     <MobileScreenLayout
       header={
-        <div className="px-md pt-sm">
-          <h1 className="text-heading-m font-bold text-gray-900">Recuperar contraseña</h1>
-          <p className="mt-xs text-small text-gray-500">Te enviaremos un enlace a tu correo</p>
+        <div className="px-space-base pt-space-sm">
+          <h1 className="text-heading-m text-app-text">Recuperar contraseña</h1>
+          <p className="mt-space-xs text-body-small text-app-muted">Te enviaremos un enlace a tu correo</p>
         </div>
       }
-      contentClassName="px-md pb-sm"
+      contentClassName="px-space-base pb-space-sm"
       footer={
-        <div className="space-y-sm">
-          {error ? <p className="text-small text-red-600">{error}</p> : null}
-          {message ? <p className="text-small text-green-600">{message}</p> : null}
-          <Button type="submit" form="forgot-password-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+        <div className="space-y-space-sm">
+          {error ? <p className="text-body-small text-error-600">{error}</p> : null}
+          {message ? <p className="text-body-small text-success-600">{message}</p> : null}
+          <Button type="submit" form="forgot-password-form" fullWidth loading={loading} size="lg">
             Enviar enlace
           </Button>
-          <Link to="/login" className="block text-center text-small text-primary-600">
+          <Link to="/login" className="block text-center text-body-small text-primary-600">
             Volver al login
           </Link>
         </div>
       }
-      footerClassName="border-t border-gray-100 px-md pb-md pt-sm"
     >
-      <form id="forgot-password-form" onSubmit={handleSubmit} className="mt-sm">
+      <form id="forgot-password-form" onSubmit={handleSubmit} className="mt-space-sm">
         <Input label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
       </form>
     </MobileScreenLayout>

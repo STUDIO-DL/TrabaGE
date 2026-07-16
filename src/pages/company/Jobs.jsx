@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import EmptyState from '../../components/common/EmptyState';
 import { JobListSkeleton } from '../../components/common/Skeleton';
+import { NoJobs } from '../../assets/empty-states';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
@@ -107,7 +108,7 @@ export default function CompanyJobs() {
   };
 
   return (
-    <PageContainer title="Mis ofertas" backButton bottomNav={false}>
+    <PageContainer backButton bottomNav={false}>
       <div className="space-y-4 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
@@ -131,8 +132,13 @@ export default function CompanyJobs() {
           <JobListSkeleton count={3} />
         ) : visibleJobs.length === 0 ? (
           <EmptyState
-            title="No hay ofertas en esta vista"
-            description="Crea una nueva oferta o cambia el filtro para revisar tus publicaciones."
+            image={NoJobs}
+            title={jobs.length === 0 ? 'Publica tu primera oferta' : 'Nada con este filtro'}
+            description={
+              jobs.length === 0
+                ? 'Cuando publiques, podrás gestionar candidatos y estados desde aquí.'
+                : 'Prueba otro estado o crea una oferta nueva.'
+            }
             actionLabel="Crear oferta"
             onAction={() => navigate(rolePath(base, '/jobs/create'))}
           />

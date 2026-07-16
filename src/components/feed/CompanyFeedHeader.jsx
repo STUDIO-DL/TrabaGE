@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import GlobalSearch from '../search/GlobalSearch';
+import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
 import { Bell, Filter, ICON_SIZES } from '../../constants/icons';
 import { useNotifications } from '../../hooks/useNotifications';
 import { useAuth } from '../../hooks/useAuth';
@@ -12,37 +13,35 @@ export default function CompanyFeedHeader() {
   const notificationsPath = rolePath(role || ROLES.BUSINESS, '/notifications');
 
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-100 bg-white">
+    <header className={topBarOuterClass}>
       <div className="mx-auto max-w-lg">
-        <div className="flex items-center justify-between px-4 pb-3 pt-3">
-          <h1 className="text-2xl font-bold text-gray-900">Inicio</h1>
-          <Link
-            to={notificationsPath}
-            className="relative rounded-lg p-2 text-gray-700 hover:bg-gray-50"
-            aria-label="Notificaciones"
-          >
-            <AppIcon icon={Bell} size={ICON_SIZES.nav} />
-            {unreadCount > 0 && (
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary-600 ring-2 ring-white" />
-            )}
-          </Link>
-        </div>
-
-        <div className="flex items-center gap-2 px-4 pb-3">
+        <div className={topBarInnerClass}>
           <GlobalSearch
+            className="min-w-0 flex-1"
             placeholder="Buscar personas, Business, empleos…"
             variant="rounded"
           />
+          <Link
+            to={notificationsPath}
+            className="relative inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
+            aria-label="Notificaciones"
+          >
+            <AppIcon icon={Bell} size={ICON_SIZES.nav} />
+            {unreadCount > 0 ? (
+              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-radius-circular bg-primary-600 ring-2 ring-app-card" />
+            ) : null}
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-space-sm px-space-base pb-space-md">
           <button
             type="button"
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 hover:bg-gray-50"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-radius-md border border-app-border bg-app-card text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
             aria-label="Filtros"
           >
             <AppIcon icon={Filter} size={ICON_SIZES.default} />
           </button>
-        </div>
-        <div className="px-4 pb-3">
-          <span className="inline-block border-b-2 border-primary-600 pb-2 text-sm font-medium text-primary-600">
+          <span className="inline-block border-b-2 border-primary-600 pb-space-sm text-body-small font-medium text-primary-600">
             Para ti
           </span>
         </div>

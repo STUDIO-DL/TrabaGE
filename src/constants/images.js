@@ -1,15 +1,28 @@
-import { resolveCompanyCoverUrl, resolveLogoUrl } from '../utils/storagePaths';
-import DefaultUserAvatar from '../assets/default-user-avatar.png';
-import DefaultCompanyLogo from '../assets/branding/trabage-icon.png';
+import { resolveCompanyCoverUrl } from '../utils/storagePaths';
+import {
+  AvatarType,
+  DEFAULT_COMPANY_LOGO,
+  DEFAULT_ORGANIZATION_LOGO,
+  DEFAULT_USER_AVATAR,
+  avatarTypeFromCompanyProfile,
+  resolveAvatarSrc,
+} from './avatarDefaults';
 
-export const DEFAULT_COMPANY_LOGO = DefaultCompanyLogo;
-export const DEFAULT_USER_AVATAR = DefaultUserAvatar;
+export {
+  AvatarType,
+  DEFAULT_USER_AVATAR,
+  DEFAULT_COMPANY_LOGO,
+  DEFAULT_ORGANIZATION_LOGO,
+} from './avatarDefaults';
 
-export function getCompanyLogoUrl(logoPath) {
-  if (typeof logoPath === 'string' && logoPath.trim().startsWith('http')) {
-    return logoPath.trim();
-  }
-  return resolveLogoUrl(logoPath) || DEFAULT_COMPANY_LOGO;
+export function getCompanyLogoUrl(logoPath, options = {}) {
+  const type =
+    typeof options === 'string'
+      ? options
+      : options.accountType ??
+        avatarTypeFromCompanyProfile(options.profile ?? { company_type: options.companyType });
+
+  return resolveAvatarSrc(type, logoPath);
 }
 
 export function getCompanyCoverUrl(coverPath) {

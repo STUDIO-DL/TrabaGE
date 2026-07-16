@@ -94,7 +94,6 @@ export default function Applicants() {
 
   return (
     <PageContainer
-      title="Candidatos"
       backButton
       bottomNav={false}
       actions={verified ? <VerifiedBadge size="md" /> : null}

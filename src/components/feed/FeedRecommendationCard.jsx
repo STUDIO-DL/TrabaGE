@@ -6,8 +6,6 @@ import CompanyNameWithBadge from '../company/CompanyNameWithBadge';
 import { useFollow } from '../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../services/follows.service';
 import { FEED_RECOMMENDATION_SUBTYPES } from '../../constants/feedContentTypes';
-import { getCompanyLogoUrl } from '../../constants/images';
-import { resolveUserAvatar } from '../../utils/resolveUserAvatar';
 import { AUTHOR_TYPES } from '../../constants/authorTypes';
 
 function FollowSuggestionButton({ targetType, targetId }) {
@@ -71,7 +69,7 @@ export default function FeedRecommendationCard({ item }) {
             userId={profile.user_id}
             userType={AUTHOR_TYPES.PERSONAL}
             name={profile.full_name ?? 'Persona'}
-            avatar={resolveUserAvatar(profile.avatar_path)}
+            avatar={profile.avatar_path}
             path={`/profile/${profile.user_id}`}
             size="md"
             layout="avatar"
@@ -112,7 +110,7 @@ export default function FeedRecommendationCard({ item }) {
             userId={company.user_id}
             userType={AUTHOR_TYPES.BUSINESS}
             name={company.company_name}
-            avatar={getCompanyLogoUrl(company.logo_path)}
+            avatar={company.logo_path}
             path={`/companies/${company.user_id}`}
             size="md"
             layout="avatar"
@@ -146,7 +144,7 @@ export default function FeedRecommendationCard({ item }) {
             userId={institution.user_id}
             userType={AUTHOR_TYPES.ORGANIZATION}
             name={institution.company_name}
-            avatar={getCompanyLogoUrl(institution.logo_path)}
+            avatar={institution.logo_path}
             path={`/companies/${institution.user_id}`}
             size="md"
             layout="avatar"

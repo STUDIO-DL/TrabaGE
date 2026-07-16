@@ -1,25 +1,54 @@
-import { useState } from 'react';
-import Textarea from '../ui/Textarea';
+import { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
-import FileUpload from '../ui/FileUpload';
 import AppIcon from '../common/AppIcon';
-import { X, ICON_SIZES } from '../../constants/icons';
-import { FILE_HINTS } from '../../utils/validateFile';
+import AppAvatar from '../common/AppAvatar';
+import { avatarTypeFromRole } from '../../constants/avatarDefaults';
+import { X, Image, Plus, ICON_SIZES } from '../../constants/icons';
+import { validateFile } from '../../utils/validateFile';
+import { useAuth } from '../../hooks/useAuth';
+import { useProfile } from '../../hooks/useProfile';
+import { isEmployerRole } from '../../constants/roles';
+import { useKeyboard } from '../../hooks/useKeyboard';
 
-export default function PostComposer({ onSubmit, loading = false }) {
+export default function PostComposer({ onSubmit, loading = false, onClose }) {
+  const navigate = useNavigate();
+  const { role } = useAuth();
+  const { profile } = useProfile();
+  const avatarType = avatarTypeFromRole(role, { profile });
+  const fileInputRef = useRef(null);
   const [content, setContent] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadError, setUploadError] = useState('');
 
-  const handleImageSelect = (file, error) => {
-    if (error) {
-      setUploadError(error);
+  const isCompany = isEmployerRole(role);
+  const hasContent = Boolean(content.trim());
+  const handleClose = onClose ?? (() => navigate(-1));
+  const { footerPaddingBottom } = useKeyboard();
+
+  const handleImageSelect = (file) => {
+    if (!file) return;
+
+    const validation = validateFile(file, 'postImage');
+    if (!validation.valid) {
+      setUploadError(validation.error);
       return;
     }
+
     setUploadError('');
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files?.[0];
+    handleImageSelect(file);
+    e.target.value = '';
+  };
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
   };
 
   const clearImage = () => {
@@ -30,49 +59,102 @@ export default function PostComposer({ onSubmit, loading = false }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!content.trim()) return;
+    if (!hasContent) return;
     await onSubmit?.({ content: content.trim(), imageFile });
     setContent('');
     clearImage();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-      <Textarea
-        placeholder="¿Qué quieres compartir?"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        rows={3}
-      />
+    <form onSubmit={handleSubmit} className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-white text-gray-900">
+      <header className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 py-3">
+        <button
+          type="button"
+          onClick={handleClose}
+          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100"
+          aria-label="Cerrar"
+        >
+          <AppIcon icon={X} size={ICON_SIZES.lg} />
+        </button>
 
-      {imagePreview && (
-        <div className="relative mt-3">
-          <img src={imagePreview} alt="" className="max-h-48 w-full rounded-xl object-cover" />
-          <button
-            type="button"
-            onClick={clearImage}
-            className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white"
-            aria-label="Quitar imagen"
-          >
-            <AppIcon icon={X} size={ICON_SIZES.sm} className="text-white" />
-          </button>
-        </div>
-      )}
-
-      {uploadError && <p className="mt-2 text-xs text-red-600">{uploadError}</p>}
-
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <FileUpload
-          label={imageFile ? 'Cambiar imagen' : 'Imagen'}
-          accept="image/jpeg,image/png,image/webp"
-          fileType="postImage"
-          hint={FILE_HINTS.postImage}
-          onUpload={handleImageSelect}
+        <AppAvatar
+          type={avatarType}
+          src={isCompany ? profile?.logo_path : profile?.avatar_path}
+          name={isCompany ? profile?.company_name : profile?.full_name}
+          alt={isCompany ? profile?.company_name : profile?.full_name}
+          size="sm"
+          variant={isCompany ? 'rounded' : 'circular'}
+          className="!h-10 !w-10"
         />
-        <Button type="submit" loading={loading} disabled={!content.trim()}>
+
+        <div className="flex-1" />
+
+        <Button
+          type="submit"
+          size="sm"
+          loading={loading}
+          disabled={!hasContent}
+          className="!rounded-full px-5 disabled:bg-gray-200 disabled:text-gray-400"
+        >
           Publicar
         </Button>
+      </header>
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pt-4">
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder="Comparte tus ideas…"
+          rows={8}
+          autoFocus
+          className="w-full flex-1 resize-none border-0 bg-transparent text-base leading-relaxed text-gray-900 outline-none placeholder:text-gray-400"
+        />
+
+        {imagePreview && (
+          <div className="relative mt-4 shrink-0">
+            <img src={imagePreview} alt="" className="max-h-56 w-full rounded-xl object-cover" />
+            <button
+              type="button"
+              onClick={clearImage}
+              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
+              aria-label="Quitar imagen"
+            >
+              <AppIcon icon={X} size={ICON_SIZES.sm} className="text-white" />
+            </button>
+          </div>
+        )}
+
+        {uploadError && <p className="mt-2 shrink-0 text-sm text-red-600">{uploadError}</p>}
       </div>
+
+      <footer
+        className="keyboard-aware-footer flex shrink-0 items-center justify-end gap-1 border-t border-gray-100 px-4 py-3"
+        style={{ paddingBottom: footerPaddingBottom }}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          className="hidden"
+          onChange={handleFileInputChange}
+        />
+        <button
+          type="button"
+          onClick={openFilePicker}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100"
+          aria-label="Añadir imagen"
+        >
+          <AppIcon icon={Image} size={ICON_SIZES.lg} />
+        </button>
+        <button
+          type="button"
+          onClick={openFilePicker}
+          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100"
+          aria-label="Añadir archivo"
+        >
+          <AppIcon icon={Plus} size={ICON_SIZES.lg} />
+        </button>
+      </footer>
     </form>
   );
 }

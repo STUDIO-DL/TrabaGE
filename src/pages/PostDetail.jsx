@@ -1,13 +1,12 @@
 import { isEmployerAuthor } from '../constants/authorTypes';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import MobileScreenLayout from '../components/layout/MobileScreenLayout';
+import PageContainer from '../components/layout/PageContainer';
 import EmptyState from '../components/common/EmptyState';
 import PostCard from '../components/feed/PostCard';
 import { postsService } from '../services/posts.service';
 import { supabase } from '../config/supabase';
-import { getCompanyLogoUrl } from '../constants/images';
-import { resolveUserAvatar } from '../utils/resolveUserAvatar';
+import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { PostCardSkeleton } from '../components/common/Skeleton';
 
 async function enrichPost(post) {
@@ -16,14 +15,18 @@ async function enrichPost(post) {
   if (isEmployerAuthor(post.author_type)) {
     const { data: company } = await supabase
       .from('company_profiles')
-      .select('user_id, company_name, logo_path, is_verified, verification_status')
+      .select('user_id, company_name, logo_path, is_verified, verification_status, company_type')
       .eq('user_id', post.author_id)
       .maybeSingle();
 
     return {
       ...post,
       author_name: company?.company_name ?? 'Empresa',
-      author_avatar: getCompanyLogoUrl(company?.logo_path),
+      author_avatar: resolveAuthorAvatar(post.author_type, {
+        logoPath: company?.logo_path,
+        companyType: company?.company_type,
+        profile: company,
+      }),
       author_company: company,
     };
   }
@@ -38,7 +41,9 @@ async function enrichPost(post) {
     ...post,
     author_name: candidate?.full_name ?? 'Usuario',
     author_headline: candidate?.headline ?? '',
-    author_avatar: resolveUserAvatar(candidate?.avatar_path),
+    author_avatar: resolveAuthorAvatar(post.author_type, {
+      avatarPath: candidate?.avatar_path,
+    }),
   };
 }
 
@@ -64,9 +69,7 @@ export default function PostDetail() {
   }, [postId]);
 
   return (
-    <MobileScreenLayout
-      header={<h1 className="truncate text-body font-semibold text-app-text">Publicación</h1>}
-    >
+    <PageContainer backButton bottomNav={false}>
       <div className="p-space-base">
         {loading ? (
           <PostCardSkeleton />
@@ -89,6 +92,6 @@ export default function PostDetail() {
           </div>
         )}
       </div>
-    </MobileScreenLayout>
+    </PageContainer>
   );
 }

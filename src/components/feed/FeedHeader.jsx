@@ -4,37 +4,40 @@ import { isCompanyVerified } from '../../utils/companyVerification';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { ROLES, isEmployerRole, rolePath } from '../../constants/roles';
-import { getCompanyLogoUrl } from '../../constants/images';
-import UserAvatar from '../common/UserAvatar';
-import Avatar from '../ui/Avatar';
+import AppAvatar from '../common/AppAvatar';
+import { avatarTypeFromRole } from '../../constants/avatarDefaults';
 import GlobalSearch from '../search/GlobalSearch';
+import NotificationBellButton from '../notifications/NotificationBellButton';
+import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
 
 export default function FeedHeader() {
   const { role } = useAuth();
   const { profile } = useProfile();
   const isCompany = isEmployerRole(role);
+  const avatarType = avatarTypeFromRole(role, { profile });
   const profilePath = rolePath(role ?? ROLES.PERSONAL, '/profile');
   const showVerifiedBadge = isCompany && isCompanyVerified(profile);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-gray-100 bg-white/95 backdrop-blur">
-      <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-2.5">
+    <header className={topBarOuterClass}>
+      <div className={topBarInnerClass}>
         <Link to={profilePath} className="shrink-0" aria-label="Ir a mi perfil">
-          {isCompany ? (
-            <Avatar
-              src={getCompanyLogoUrl(profile?.logo_path)}
-              name={profile?.company_name}
-              size="sm"
-              className="!h-8 !w-8 !rounded-xl"
-            />
-          ) : (
-            <UserAvatar src={profile?.avatar_path} alt={profile?.full_name} size="sm" />
-          )}
+          <AppAvatar
+            type={avatarType}
+            src={isCompany ? profile?.logo_path : profile?.avatar_path}
+            name={isCompany ? profile?.company_name : profile?.full_name}
+            alt={isCompany ? profile?.company_name : profile?.full_name}
+            size="sm"
+            variant={isCompany ? 'rounded' : 'circular'}
+            className={isCompany ? '!h-8 !w-8' : undefined}
+          />
         </Link>
 
-        {showVerifiedBadge && <VerifiedBadge size="sm" className="shrink-0" />}
+        {showVerifiedBadge ? <VerifiedBadge size="sm" className="shrink-0" /> : null}
 
         <GlobalSearch placeholder="Buscar personas, Business y organizaciones…" />
+
+        <NotificationBellButton />
       </div>
     </header>
   );

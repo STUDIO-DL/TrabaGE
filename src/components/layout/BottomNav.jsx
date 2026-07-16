@@ -7,6 +7,7 @@ import { NavIcon } from './NavIcons';
 import AppIcon from '../common/AppIcon';
 import { Plus, ICON_SIZES } from '../../constants/icons';
 import { notificationsService } from '../../services/notifications.service';
+import { useKeyboard } from '../../hooks/useKeyboard';
 
 function buildPersonalNav(role) {
   return [
@@ -52,6 +53,7 @@ function buildEmployerNav(role) {
 
 export default function BottomNav() {
   const { role, user, isPreviewMode } = useAuth();
+  const { bottomBarInset, isKeyboardVisible } = useKeyboard();
   const [unreadCount, setUnreadCount] = useState(0);
 
   const items = useMemo(
@@ -82,7 +84,13 @@ export default function BottomNav() {
   if (role === ROLES.ADMIN) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-nav border-t border-app-border bg-app-card/95 pb-safe backdrop-blur">
+    <nav
+      className={[
+        'fixed left-0 right-0 z-nav border-t border-app-border bg-app-card/95 backdrop-blur keyboard-aware-footer',
+        isKeyboardVisible ? '' : 'pb-safe',
+      ].join(' ')}
+      style={{ bottom: bottomBarInset }}
+    >
       <div className="mx-auto flex max-w-lg items-end">
         {items.map(({ to, label, icon, showBadge, prominent }) => {
           if (prominent) {
@@ -106,7 +114,7 @@ export default function BottomNav() {
                     </span>
                     <span
                       className={[
-                        'truncate text-[9px] font-medium leading-tight sm:text-[10px]',
+                        'truncate text-[11px] font-medium leading-tight sm:text-caption',
                         isActive ? ICON_COLORS.primary : ICON_COLORS.inactive,
                       ].join(' ')}
                     >
@@ -124,7 +132,7 @@ export default function BottomNav() {
               to={to}
               className={({ isActive }) =>
                 [
-                  'relative flex min-h-touch min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-space-sm text-[9px] font-medium leading-tight transition-colors duration-fast ease-out sm:px-space-xs sm:text-[10px]',
+                  'relative flex min-h-touch min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-space-sm text-[11px] font-medium leading-tight transition-colors duration-fast ease-out sm:px-space-xs sm:text-caption',
                   isActive ? ICON_COLORS.primary : ICON_COLORS.inactive,
                 ].join(' ')
               }

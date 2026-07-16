@@ -2,24 +2,45 @@ import { useMemo, useState } from 'react';
 import AppIcon from '../../common/AppIcon';
 import AutocompleteInput from '../../ui/AutocompleteInput';
 import Button from '../../ui/Button';
+import Card from '../../ui/Card';
 import { Sparkles, Trash2, ICON_SIZES } from '../../../constants/icons';
 import {
   COMPANY_SERVICE_SUGGESTIONS,
   filterCompanyServiceSuggestions,
 } from '../../../constants/companyServices';
 
-const PREVIEW_COUNT = 10;
 const POPULAR_COUNT = 6;
+
+function ServiceCard({ name, onDelete, readOnly }) {
+  return (
+    <Card padding="md" className="flex items-center justify-between gap-space-sm">
+      <div className="flex min-w-0 items-center gap-space-sm">
+        <AppIcon icon={Sparkles} size={ICON_SIZES.sm} className="shrink-0 text-primary-600" />
+        <span className="truncate text-body-small font-medium text-app-text">{name}</span>
+      </div>
+      {!readOnly && onDelete && (
+        <button
+          type="button"
+          onClick={onDelete}
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm text-app-subtle transition-colors duration-fast hover:bg-error-50 hover:text-error-600"
+          aria-label="Eliminar servicio"
+        >
+          <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
+        </button>
+      )}
+    </Card>
+  );
+}
 
 export default function CompanyServicesSection({
   items = [],
   readOnly = false,
   onAdd,
   onDelete,
+  variant = 'tab',
 }) {
   const [serviceName, setServiceName] = useState('');
   const [adding, setAdding] = useState(false);
-  const preview = items.slice(0, PREVIEW_COUNT);
   const hasItems = items.length > 0;
 
   const existingNames = useMemo(() => items.map((item) => item.name), [items]);
@@ -30,7 +51,7 @@ export default function CompanyServicesSection({
   );
 
   const popularSuggestions = useMemo(() => {
-    const taken = new Set(existingNames.map((n) => n.trim().toLowerCase()));
+    const taken = new Set(existingNames.map((name) => name.trim().toLowerCase()));
     return COMPANY_SERVICE_SUGGESTIONS.filter((s) => !taken.has(s.toLowerCase())).slice(
       0,
       POPULAR_COUNT,
@@ -40,7 +61,7 @@ export default function CompanyServicesSection({
   const addService = async (name) => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    if (existingNames.some((n) => n.toLowerCase() === trimmed.toLowerCase())) return;
+    if (existingNames.some((existing) => existing.toLowerCase() === trimmed.toLowerCase())) return;
 
     setAdding(true);
     await onAdd?.(trimmed);
@@ -51,58 +72,36 @@ export default function CompanyServicesSection({
   if (readOnly && !hasItems) return null;
 
   return (
-    <section className="border-b border-gray-200 bg-white px-4 py-5">
-      <div className="mb-4 flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50">
-          <AppIcon icon={Sparkles} size={ICON_SIZES.default} className="text-primary-600" />
-        </span>
-        <div>
-          <h3 className="text-base font-semibold text-gray-900">Servicios que ofrecemos</h3>
-          <p className="text-xs text-gray-500">Opcional · visible para quienes visiten tu perfil</p>
-        </div>
+    <section className="px-space-base py-space-base">
+      <div className="mb-space-base flex items-center justify-between gap-space-sm">
+        <h3 className="text-body font-semibold text-app-text">Servicios</h3>
+        {!readOnly && (
+          <span className="text-caption text-app-muted">Opcional</span>
+        )}
       </div>
 
       {!hasItems && !readOnly ? (
-        <div className="rounded-xl border border-dashed border-primary-200 bg-gradient-to-b from-primary-50/50 to-white px-4 py-8 text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl border border-primary-100 bg-white">
-            <AppIcon icon={Sparkles} size={ICON_SIZES.lg} className="text-primary-300" />
-          </div>
-          <p className="mt-4 text-sm text-gray-600">
-            ¿Tu empresa ofrece servicios además de empleo? Añádelos aquí para que los candidatos te
-            conozcan mejor.
+        <Card padding="lg" className="text-center">
+          <p className="text-body-small text-app-muted">
+            Añade los servicios que ofrece tu empresa para que los visitantes te conozcan mejor.
           </p>
-        </div>
+        </Card>
       ) : hasItems ? (
-        <div className="flex flex-wrap gap-2">
-          {preview.map((item) => (
-            <span
+        <div className="grid gap-space-sm sm:grid-cols-2">
+          {items.map((item) => (
+            <ServiceCard
               key={item.id}
-              className="inline-flex items-center gap-1 rounded-full border border-primary-200 bg-primary-50 px-3.5 py-1.5 text-sm font-medium text-primary-900"
-            >
-              {item.name}
-              {!readOnly && (
-                <button
-                  type="button"
-                  onClick={() => onDelete?.(item.id)}
-                  className="ml-0.5 rounded p-0.5 text-primary-400 hover:bg-red-50 hover:text-red-500"
-                  aria-label="Eliminar"
-                >
-                  <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
-                </button>
-              )}
-            </span>
+              name={item.name}
+              readOnly={readOnly}
+              onDelete={onDelete ? () => onDelete(item.id) : undefined}
+            />
           ))}
-          {items.length > PREVIEW_COUNT && (
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600">
-              +{items.length - PREVIEW_COUNT} más
-            </span>
-          )}
         </div>
       ) : null}
 
       {!readOnly && (
-        <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
-          <div className="flex gap-2">
+        <div className="mt-space-base space-y-space-sm border-t border-app-border pt-space-base">
+          <div className="flex gap-space-sm">
             <AutocompleteInput
               value={serviceName}
               onChange={setServiceName}
@@ -118,14 +117,14 @@ export default function CompanyServicesSection({
 
           {!serviceName.trim() && popularSuggestions.length > 0 && (
             <div>
-              <p className="mb-2 text-xs font-medium text-gray-500">Sugerencias</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="mb-space-xs text-caption text-app-muted">Sugerencias</p>
+              <div className="flex flex-wrap gap-space-xs">
                 {popularSuggestions.map((service) => (
                   <button
                     key={service}
                     type="button"
                     onClick={() => addService(service)}
-                    className="rounded-full border border-dashed border-gray-300 bg-white px-3 py-1 text-xs text-gray-600 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-800"
+                    className="rounded-radius-full border border-dashed border-app-border bg-app-card px-space-md py-space-xs text-caption text-app-muted transition-colors duration-fast hover:border-primary-300 hover:bg-primary-50 hover:text-primary-800"
                   >
                     + {service}
                   </button>

@@ -2,7 +2,11 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import AppIcon from '../common/AppIcon';
+import Skeleton from '../common/Skeleton';
+import AppAvatar from '../common/AppAvatar';
+import { avatarTypeFromRole } from '../../constants/avatarDefaults';
 import DeleteAccountModal from '../profile/modals/DeleteAccountModal';
+import LogoutConfirmModal from '../profile/modals/LogoutConfirmModal';
 import PageContainer from '../layout/PageContainer';
 import {
   Bell,
@@ -25,9 +29,13 @@ import { SUPPORT_EMAIL } from '../../constants/support';
 import { APP_VERSION } from '../../constants/zarrel';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { useAuth } from '../../hooks/useAuth';
+import { useProfile } from '../../hooks/useProfile';
+import { getCompanyDisplayName } from '../../utils/companyProfile';
 import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+
+const SETTINGS_AVATAR_SIZE_CLASS = 'h-[132px] w-[132px]';
 
 function SectionCard({ title, children }) {
   return (
@@ -101,17 +109,45 @@ function Divider() {
   return <div className="mx-space-lg h-px bg-app-divider" />;
 }
 
-function EmailSummaryCard({ email }) {
-  return (
-    <div className="rounded-radius-xl border border-primary-100/70 bg-app-card px-space-lg py-space-lg shadow-elevation-2">
-      <div className="flex items-center gap-space-base">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-radius-circular bg-primary-50 text-primary-600">
-          <AppIcon icon={Mail} size={ICON_SIZES.md} strokeWidth={1.9} />
-        </span>
-        <div className="min-w-0">
-          <p className="truncate text-button font-semibold text-app-text">{email || 'Cuenta sin correo'}</p>
-          <p className="mt-space-xs text-body-small text-app-subtle">Cuenta activa</p>
+function AccountSummaryCard({ email, profile, loading, isCompany, accountType }) {
+  const displayName = isCompany
+    ? getCompanyDisplayName(profile)
+    : profile?.full_name?.trim() || 'Usuario';
+
+  if (loading) {
+    return (
+      <div
+        className="overflow-hidden rounded-radius-xl border border-primary-100/70 bg-app-card shadow-elevation-2"
+        aria-busy="true"
+        aria-label="Cargando perfil"
+      >
+        <div className="flex flex-col items-center px-space-lg pb-space-xl pt-space-xl text-center">
+          <Skeleton className={`${SETTINGS_AVATAR_SIZE_CLASS} shrink-0 rounded-radius-circular`} />
+          <Skeleton className="mt-space-base h-6 w-44 max-w-full" />
+          <Skeleton className="mt-space-sm h-3.5 w-48 max-w-full" />
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-radius-xl border border-primary-100/70 bg-app-card shadow-elevation-2">
+      <div className="flex flex-col items-center px-space-lg pb-space-xl pt-space-xl text-center">
+        <AppAvatar
+          type={accountType}
+          src={isCompany ? profile?.logo_path : profile?.avatar_path}
+          name={displayName}
+          alt={displayName}
+          size="xl"
+          variant={isCompany ? 'rounded' : 'circular'}
+          className={`${SETTINGS_AVATAR_SIZE_CLASS} border-2 border-app-border shadow-elevation-2`}
+        />
+        <h2 className="mt-space-base max-w-full truncate text-title font-bold tracking-tight text-app-text">
+          {displayName}
+        </h2>
+        <p className="mt-space-sm max-w-full truncate text-caption text-app-subtle">
+          {email || 'Cuenta sin correo'}
+        </p>
       </div>
     </div>
   );
@@ -119,13 +155,17 @@ function EmailSummaryCard({ email }) {
 
 export default function SettingsScreen({ accountType }) {
   const { user, logout, role, isPreviewMode } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const { showToast } = useNotificationContext();
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [logoutLoading, setLogoutLoading] = useState(false);
 
   const activeRole = accountType || role;
   const isCompany = isEmployerRole(activeRole);
+  const avatarType = avatarTypeFromRole(activeRole, { profile });
   const routes = useMemo(() => {
     const base = isCompany ? activeRole || ROLES.BUSINESS : ROLES.PERSONAL;
     return {
@@ -142,12 +182,19 @@ export default function SettingsScreen({ accountType }) {
     window.location.href = `mailto:${SUPPORT_EMAIL}?subject=Soporte%20TrabaGE`;
   };
 
-  const handleLogout = async () => {
+  const openLogoutConfirm = () => {
     if (isPreviewMode) {
       showToast(GUEST_MODE_MESSAGE, 'info');
       return;
     }
+    setLogoutOpen(true);
+  };
+
+  const confirmLogout = async () => {
+    setLogoutLoading(true);
     await logout();
+    setLogoutLoading(false);
+    setLogoutOpen(false);
     navigate('/login', { replace: true });
   };
 
@@ -177,12 +224,14 @@ export default function SettingsScreen({ accountType }) {
     <PageContainer topBar={false} bottomNav className="bg-app-surface">
       <div className="min-h-dvh bg-gradient-to-b from-app-card via-app-surface to-app-surface pb-28 pt-safe">
         <div className="mx-auto w-full max-w-lg px-space-lg pt-space-xl sm:px-space-xl">
-          <header className="mb-space-2xl text-center">
-            <h1 className="text-title font-bold tracking-tight text-app-text">Configuración</h1>
-          </header>
-
           <div className="space-y-space-2xl">
-            <EmailSummaryCard email={user?.email} />
+            <AccountSummaryCard
+              email={user?.email}
+              profile={profile}
+              loading={profileLoading}
+              isCompany={isCompany}
+              accountType={avatarType}
+            />
 
             <SectionCard title="Cuenta">
               <SettingsRow icon={User} title="Gestionar perfil" to={routes.profile} />
@@ -248,8 +297,8 @@ export default function SettingsScreen({ accountType }) {
               />
             </SectionCard>
 
-            <SectionCard title="Cuenta">
-              <SettingsRow icon={LogOut} title="Cerrar sesión" onClick={handleLogout} showChevron={false} />
+            <SectionCard title="Sesión">
+              <SettingsRow icon={LogOut} title="Cerrar sesión" onClick={openLogoutConfirm} showChevron={false} />
               <Divider />
               <SettingsRow
                 icon={Trash2}
@@ -262,6 +311,13 @@ export default function SettingsScreen({ accountType }) {
           </div>
         </div>
       </div>
+
+      <LogoutConfirmModal
+        isOpen={logoutOpen}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={confirmLogout}
+        loading={logoutLoading}
+      />
 
       <DeleteAccountModal
         isOpen={deleteOpen}

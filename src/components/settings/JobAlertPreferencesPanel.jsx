@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import ProfileSectionCard from './ProfileSectionCard';
-import Input from '../ui/Input';
-import Button from '../ui/Button';
-import Select from '../ui/Select';
+
 import AppIcon from '../common/AppIcon';
+import Button from '../ui/Button';
+import Input from '../ui/Input';
+import Select from '../ui/Select';
 import { Save, ICON_SIZES } from '../../constants/icons';
-import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { CITIES } from '../../constants/cities';
 import { JOB_TYPES } from '../../constants/jobTypes';
 import {
@@ -19,11 +18,15 @@ import {
   normalizeJobPreferences,
   serializeJobPreferences,
 } from '../../constants/jobPreferences';
+import { useAuth } from '../../hooks/useAuth';
+import { useCandidateProfile } from '../../hooks/useCandidateProfile';
+import { useNotificationContext } from '../../context/NotificationContext';
+import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
-function ChipGroup({ label, options, selected = [], onToggle }) {
+function ChipGroup({ label, options, selected = [], onToggle, disabled = false }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-gray-700">{label}</p>
+      <p className="mb-2 text-sm font-medium text-slate-700">{label}</p>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => {
           const value = option.value ?? option;
@@ -34,12 +37,14 @@ function ChipGroup({ label, options, selected = [], onToggle }) {
             <button
               key={value}
               type="button"
+              disabled={disabled}
               onClick={() => onToggle(value)}
               className={[
                 'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
                 active
                   ? 'border-primary-300 bg-primary-50 text-primary-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
+                disabled ? 'cursor-not-allowed opacity-50' : '',
               ].join(' ')}
             >
               {optionLabel}
@@ -51,13 +56,11 @@ function ChipGroup({ label, options, selected = [], onToggle }) {
   );
 }
 
-export default function NotificationPreferencesSection({
-  profile,
-  isOwn,
-  onSavePreferences,
-  onSaveNotificationSettings,
-  loading = false,
-}) {
+export default function JobAlertPreferencesPanel() {
+  const { isPreviewMode } = useAuth();
+  const { profile, updateBasicInfo } = useCandidateProfile();
+  const { showToast } = useNotificationContext();
+
   const WORK_MODE_OPTIONS = [
     { value: 'onsite', label: 'Presencial' },
     { value: 'remote', label: 'Remoto' },
@@ -69,6 +72,7 @@ export default function NotificationPreferencesSection({
   const [notificationFrequency, setNotificationFrequency] = useState('instant');
   const [keywordDraft, setKeywordDraft] = useState('');
   const [dirty, setDirty] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     setPrefs(normalizeJobPreferences(profile?.job_preferences));
@@ -77,8 +81,6 @@ export default function NotificationPreferencesSection({
     setKeywordDraft('');
     setDirty(false);
   }, [profile?.job_preferences, profile?.notifications_enabled, profile?.notification_frequency]);
-
-  if (!isOwn) return null;
 
   const toggle = (field, value) => {
     setPrefs((current) => {
@@ -106,21 +108,45 @@ export default function NotificationPreferencesSection({
   };
 
   const handleSave = async () => {
-    await onSaveNotificationSettings?.({
+    if (isPreviewMode) {
+      showToast(GUEST_MODE_MESSAGE, 'info');
+      return;
+    }
+
+    setSaving(true);
+    const { error: settingsError } = await updateBasicInfo({
       notifications_enabled: notificationsEnabled,
       notification_frequency: notificationFrequency,
     });
-    await onSavePreferences?.(serializeJobPreferences(prefs));
+    if (settingsError) {
+      setSaving(false);
+      showToast(settingsError.message, 'error');
+      return;
+    }
+
+    const { error: prefsError } = await updateBasicInfo({
+      job_preferences: serializeJobPreferences(prefs),
+    });
+    setSaving(false);
+
+    if (prefsError) {
+      showToast(prefsError.message, 'error');
+      return;
+    }
+
+    showToast('Preferencias de alertas guardadas', 'success');
     setDirty(false);
   };
 
   return (
-    <ProfileSectionCard
-      icon={PROFILE_SECTION_ICONS.preferences}
-      iconTone="preferences"
-      title="Notificaciones y recomendaciones"
-      isEmpty={false}
-    >
+    <section className="rounded-[28px] border border-slate-100 bg-white p-4 shadow-[0_18px_46px_rgba(15,23,42,0.05)] sm:p-5">
+      <div className="mb-5">
+        <h3 className="text-[16px] font-bold text-slate-950">Alertas de empleo</h3>
+        <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+          Configura cuándo y dónde quieres recibir avisos sobre ofertas relevantes.
+        </p>
+      </div>
+
       <div className="mb-5 rounded-xl border border-primary-100 bg-primary-50/60 p-4 text-left">
         <p className="text-sm font-medium text-primary-900">Recomendaciones personalizadas</p>
         <p className="mt-1.5 text-sm leading-relaxed text-primary-800/90">
@@ -129,21 +155,22 @@ export default function NotificationPreferencesSection({
       </div>
 
       <div className="space-y-5">
-        <label className="flex items-start gap-3 rounded-xl border border-gray-200 p-4">
+        <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
           <input
             type="checkbox"
             checked={notificationsEnabled}
+            disabled={isPreviewMode}
             onChange={(e) => {
               setNotificationsEnabled(e.target.checked);
               setDirty(true);
             }}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-primary-600"
+            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600"
           />
           <span>
-            <span className="block text-sm font-medium text-gray-900">
+            <span className="block text-sm font-medium text-slate-900">
               Notificarme cuando existan ofertas relevantes
             </span>
-            <span className="mt-0.5 block text-xs text-gray-500">
+            <span className="mt-0.5 block text-xs text-slate-500">
               Recibirás alertas in-app y push según la frecuencia elegida.
             </span>
           </span>
@@ -157,7 +184,7 @@ export default function NotificationPreferencesSection({
             setDirty(true);
           }}
           options={NOTIFICATION_FREQUENCIES}
-          disabled={!notificationsEnabled}
+          disabled={!notificationsEnabled || isPreviewMode}
         />
 
         <ChipGroup
@@ -165,6 +192,7 @@ export default function NotificationPreferencesSection({
           options={CITIES.map((city) => ({ value: city, label: city }))}
           selected={prefs.preferred_locations}
           onToggle={(value) => toggle('preferred_locations', value)}
+          disabled={isPreviewMode}
         />
 
         <ChipGroup
@@ -172,6 +200,7 @@ export default function NotificationPreferencesSection({
           options={JOB_CATEGORIES.map((category) => ({ value: category, label: category }))}
           selected={prefs.preferred_categories}
           onToggle={(value) => toggle('preferred_categories', value)}
+          disabled={isPreviewMode}
         />
 
         <ChipGroup
@@ -179,6 +208,7 @@ export default function NotificationPreferencesSection({
           options={JOB_TYPES}
           selected={prefs.preferred_job_types}
           onToggle={(value) => toggle('preferred_job_types', value)}
+          disabled={isPreviewMode}
         />
 
         <ChipGroup
@@ -186,6 +216,7 @@ export default function NotificationPreferencesSection({
           options={WORK_MODE_OPTIONS}
           selected={prefs.preferred_work_modes}
           onToggle={(value) => toggle('preferred_work_modes', value)}
+          disabled={isPreviewMode}
         />
 
         <Select
@@ -202,6 +233,7 @@ export default function NotificationPreferencesSection({
             { value: '', label: 'Seleccionar' },
             ...EXPERIENCE_LEVELS,
           ]}
+          disabled={isPreviewMode}
         />
 
         <Input
@@ -218,6 +250,7 @@ export default function NotificationPreferencesSection({
             }));
             setDirty(true);
           }}
+          disabled={isPreviewMode}
         />
 
         <Select
@@ -234,11 +267,12 @@ export default function NotificationPreferencesSection({
             { value: '', label: 'Seleccionar' },
             ...AVAILABILITY_OPTIONS,
           ]}
+          disabled={isPreviewMode}
         />
 
         <div>
-          <p className="mb-2 text-sm font-medium text-gray-700">Palabras clave del perfil</p>
-          <p className="mb-2 text-xs text-gray-500">
+          <p className="mb-2 text-sm font-medium text-slate-700">Palabras clave del perfil</p>
+          <p className="mb-2 text-xs text-slate-500">
             Mejoran la coincidencia con ofertas (ej. ventas, contabilidad, recepción).
           </p>
           <div className="flex gap-2">
@@ -248,8 +282,9 @@ export default function NotificationPreferencesSection({
               onChange={(e) => setKeywordDraft(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addKeyword())}
               className="mb-0"
+              disabled={isPreviewMode}
             />
-            <Button type="button" size="sm" variant="secondary" onClick={addKeyword}>
+            <Button type="button" size="sm" variant="secondary" onClick={addKeyword} disabled={isPreviewMode}>
               Añadir
             </Button>
           </div>
@@ -258,14 +293,15 @@ export default function NotificationPreferencesSection({
               {prefs.keywords.map((keyword) => (
                 <span
                   key={keyword}
-                  className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-700"
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
                 >
                   {keyword}
                   <button
                     type="button"
                     onClick={() => removeKeyword(keyword)}
-                    className="text-gray-400 hover:text-red-500"
+                    className="text-slate-400 hover:text-red-500"
                     aria-label={`Eliminar ${keyword}`}
+                    disabled={isPreviewMode}
                   >
                     ×
                   </button>
@@ -276,12 +312,19 @@ export default function NotificationPreferencesSection({
         </div>
 
         {dirty && (
-          <Button type="button" fullWidth loading={loading} onClick={handleSave} className="gap-2">
+          <Button
+            type="button"
+            fullWidth
+            loading={saving}
+            onClick={handleSave}
+            disabled={isPreviewMode}
+            className="gap-2"
+          >
             <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
             Guardar preferencias
           </Button>
         )}
       </div>
-    </ProfileSectionCard>
+    </section>
   );
 }

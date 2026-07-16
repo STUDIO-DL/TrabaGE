@@ -8,7 +8,8 @@ import DashboardStatCard from '../../components/company/dashboard/DashboardStatC
 import DashboardRecentCandidates from '../../components/company/dashboard/DashboardRecentCandidates';
 import DashboardQuickAccess from '../../components/company/dashboard/DashboardQuickAccess';
 import CompanyVerificationStatus from '../../components/company/profile/CompanyVerificationStatus';
-import { getCompanyLogoUrl } from '../../constants/images';
+import AppAvatar from '../../components/common/AppAvatar';
+import { avatarTypeFromRole } from '../../constants/avatarDefaults';
 import {
   Bell,
   Briefcase,
@@ -53,7 +54,7 @@ export default function Dashboard() {
     jobsService.getCompanyJobs(user.id).then(({ data }) => setJobs(data ?? []));
   }, [user?.id, isPreviewMode]);
 
-  const logoSrc = getCompanyLogoUrl(profile?.logo_path);
+  const avatarType = avatarTypeFromRole(base, { profile });
 
   const stats = useMemo(
     () => ({
@@ -88,8 +89,7 @@ export default function Dashboard() {
       <div className="px-4 py-6 lg:px-8 lg:py-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Resumen</h1>
-            <p className="mt-1 text-sm text-gray-500">{orgLabels.welcome}</p>
+            <p className="text-sm text-gray-500">{orgLabels.welcome}</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -111,7 +111,15 @@ export default function Dashboard() {
               className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-1.5 shadow-sm"
               aria-label={orgLabels.profile}
             >
-              <img src={logoSrc} alt="" className="h-8 w-8 rounded-lg object-cover" />
+              <AppAvatar
+                type={avatarType}
+                src={profile?.logo_path}
+                name={profile?.company_name}
+                alt={profile?.company_name}
+                size="sm"
+                variant="rounded"
+                className="h-8 w-8"
+              />
               <AppIcon icon={ChevronDown} size={ICON_SIZES.sm} className="text-gray-400" />
             </Link>
 

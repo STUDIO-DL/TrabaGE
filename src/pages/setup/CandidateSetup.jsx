@@ -90,14 +90,14 @@ export default function CandidateSetup() {
       title="Completa tu perfil"
       footer={
         <>
-          {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
-          <Button type="submit" form="candidate-setup-form" fullWidth loading={loading} className="btn-primary-mobile !rounded-btn-primary !py-0">
+          {error ? <p className="mb-space-sm text-body-small text-error-600">{error}</p> : null}
+          <Button type="submit" form="candidate-setup-form" fullWidth loading={loading} size="lg">
             Continuar
           </Button>
         </>
       }
     >
-      <form id="candidate-setup-form" onSubmit={handleSubmit} className="space-y-md p-md">
+      <form id="candidate-setup-form" onSubmit={handleSubmit} className="space-y-space-base p-space-base">
         <Input label="Nombre completo" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
         <Input label="Titular profesional" value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} placeholder="Ej. Desarrollador Frontend" required />
         <Textarea label="Sobre mí" value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })} />

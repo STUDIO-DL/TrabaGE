@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { ChevronDown, Eye, EyeOff, Lock, Mail, MapPin } from 'lucide-react';
 
+import AppIcon from '../../components/common/AppIcon';
 import Button from '../../components/ui/Button';
 import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
@@ -9,6 +9,15 @@ import AccountTypeCards from '../../components/auth/AccountTypeCards';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
 import { LegalInlineLink } from '../../components/legal/LegalLinks';
+import {
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  MapPin,
+  ICON_SIZES,
+} from '../../constants/icons';
 import { CITIES } from '../../constants/cities';
 import {
   ACCOUNT_KINDS,
@@ -29,12 +38,17 @@ import { getErrorMessage } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
 const fieldClassName =
-  'w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
+  'h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base text-body-small text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
+
+const AUTH_ALERT_ERROR =
+  'rounded-radius-md border border-error-200 bg-error-50 px-space-md py-space-sm text-body-small text-error-700';
+const AUTH_ALERT_WARNING =
+  'rounded-radius-md border border-warning-200 bg-warning-50 px-space-md py-space-sm text-body-small text-warning-800';
 
 function RegisterField({ label, id, children }) {
   return (
     <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-slate-800">
+      <label htmlFor={id} className="mb-space-sm block text-label font-semibold text-app-text">
         {label}
       </label>
       {children}
@@ -45,8 +59,10 @@ function RegisterField({ label, id, children }) {
 function FieldIcon({ icon: Icon }) {
   if (!Icon) return null;
   return (
-    <Icon
-      className="pointer-events-none absolute right-3.5 top-1/2 h-[1.1rem] w-[1.1rem] -translate-y-1/2 text-slate-400"
+    <AppIcon
+      icon={Icon}
+      size={ICON_SIZES.sm}
+      className="pointer-events-none absolute right-space-md top-1/2 -translate-y-1/2 text-app-subtle"
       strokeWidth={1.75}
       aria-hidden
     />
@@ -89,9 +105,9 @@ function SelectField({ id, label, icon: Icon, value, onChange, placeholder, opti
             </option>
           ))}
         </select>
-        <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 items-center gap-1.5 text-slate-400">
-          {Icon ? <Icon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.75} aria-hidden /> : null}
-          <ChevronDown className="h-4 w-4" aria-hidden />
+        <div className="pointer-events-none absolute right-space-md top-1/2 flex -translate-y-1/2 items-center gap-space-sm text-app-subtle">
+          {Icon ? <AppIcon icon={Icon} size={ICON_SIZES.sm} strokeWidth={1.75} aria-hidden /> : null}
+          <AppIcon icon={ChevronDown} size={ICON_SIZES.sm} aria-hidden />
         </div>
       </div>
     </RegisterField>
@@ -116,18 +132,16 @@ function PasswordField({ id, label, value, onChange, placeholder, autoComplete, 
             <button
               type="button"
               onClick={onToggle}
-              className="rounded-md p-0.5 text-slate-400 transition hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+              className="rounded-radius-sm p-space-xs text-app-subtle transition-colors duration-fast ease-out hover:text-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
               aria-label={show ? 'Ocultar contraseña' : 'Mostrar contraseña'}
             >
-              {show ? (
-                <EyeOff className="h-[1.1rem] w-[1.1rem]" aria-hidden />
-              ) : (
-                <Eye className="h-[1.1rem] w-[1.1rem]" aria-hidden />
-              )}
+              <AppIcon icon={show ? EyeOff : Eye} size={ICON_SIZES.sm} aria-hidden />
             </button>
           ) : null}
-          <Lock
-            className="pointer-events-none h-[1.1rem] w-[1.1rem] text-slate-400"
+          <AppIcon
+            icon={Lock}
+            size={ICON_SIZES.sm}
+            className="pointer-events-none text-app-subtle"
             strokeWidth={1.75}
             aria-hidden
           />
@@ -143,11 +157,11 @@ function RegisterHeader({ subtitle }) {
       <div className="flex justify-center">
         <TrabaGEWordmark className="h-9 w-auto sm:h-10" />
       </div>
-      <h1 className="mt-5 text-[1.65rem] font-bold leading-tight tracking-tight text-slate-900 sm:text-[1.75rem]">
+      <h1 className="mt-space-xl text-heading-m leading-tight text-app-text">
         Bienvenido a <span className="text-primary-600">TrabaGE</span>
       </h1>
-      <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-500">{subtitle}</p>
-      <div className="mx-auto mt-4 h-1.5 w-1.5 rounded-full bg-primary-500" aria-hidden />
+      <p className="mx-auto mt-space-sm max-w-sm text-body-small leading-relaxed text-app-muted">{subtitle}</p>
+      <div className="mx-auto mt-space-base h-1.5 w-1.5 rounded-radius-circular bg-primary-500" aria-hidden />
     </div>
   );
 }
@@ -336,9 +350,9 @@ export default function Register() {
     : 'Crea tu cuenta y comienza tu camino profesional.';
 
   return (
-    <div className="min-h-dvh bg-[#ECEEF1]">
+    <div className="keyboard-scroll-host min-h-dvh overflow-x-hidden overflow-y-auto bg-app-surface">
       <div
-        className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-5 py-8 sm:px-6 sm:py-10"
+        className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-space-lg py-space-2xl sm:px-space-xl sm:py-space-3xl"
         style={{
           paddingTop: 'max(2rem, env(safe-area-inset-top))',
           paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
@@ -348,24 +362,21 @@ export default function Register() {
           <RegisterHeader subtitle={headerSubtitle} />
 
           {fromOAuth && !oauthCompletion ? (
-            <div className="login-fade-in-delayed mx-auto mt-4 w-full max-w-md rounded-xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm text-yellow-800">
+            <div className={`login-fade-in-delayed mx-auto mt-space-base w-full max-w-md ${AUTH_ALERT_WARNING}`}>
               Inicia sesión o completa el registro para continuar.
             </div>
           ) : null}
 
-          <div className="login-fade-in-delayed mx-auto mt-6 w-full max-w-md rounded-2xl bg-white p-5 shadow-[0_8px_30px_rgba(15,23,42,0.08)] sm:p-6">
+          <div className="login-card login-fade-in-delayed mx-auto mt-space-xl w-full max-w-md p-space-lg sm:p-space-xl">
             {oauthCompletion ? (
               <form onSubmit={handleOAuthRoleComplete} className="space-y-5">
                 <div>
-                  <p className="mb-3 text-sm font-semibold text-slate-800">Tipo de cuenta</p>
+                  <p className="mb-space-md text-label font-semibold text-app-text">Tipo de cuenta</p>
                   <AccountTypeCards value={accountKind} onChange={setAccountKind} disabled={loading} />
                 </div>
 
                 {error ? (
-                  <p
-                    role="alert"
-                    className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-                  >
+                  <p role="alert" className={AUTH_ALERT_ERROR}>
                     {error}
                   </p>
                 ) : null}
@@ -374,7 +385,8 @@ export default function Register() {
                   type="submit"
                   fullWidth
                   loading={loading}
-                  className="relative !rounded-xl py-3.5 text-base font-semibold"
+                  size="lg"
+                  className="!rounded-radius-md"
                 >
                   Continuar
                 </Button>
@@ -383,7 +395,7 @@ export default function Register() {
               <>
                 <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
                   <div>
-                    <p className="mb-3 text-sm font-semibold text-slate-800">Tipo de cuenta</p>
+                    <p className="mb-space-md text-label font-semibold text-app-text">Tipo de cuenta</p>
                     <AccountTypeCards
                       value={accountKind}
                       onChange={setAccountKind}
@@ -393,7 +405,7 @@ export default function Register() {
 
                   {/* Account-type specific fields. Keyed by accountKind so they
                       smoothly animate in on every switch, with no page reload. */}
-                  <div key={accountKind} className="register-fields-in space-y-4">
+                  <div key={accountKind} className="register-fields-in space-y-space-base">
                     {config.fields.map((field) => {
                       const id = `register-${field.key}`;
                       const value = typeValues[field.key] ?? '';
@@ -469,14 +481,14 @@ export default function Register() {
                     onChange={setCity}
                   />
 
-                  <label className="flex cursor-pointer items-start gap-2.5 pt-0.5">
+                  <label className="flex cursor-pointer items-start gap-space-sm pt-space-xs">
                     <input
                       type="checkbox"
                       checked={acceptedTerms}
                       onChange={(e) => setAcceptedTerms(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600 focus:ring-primary-500"
+                      className="mt-0.5 h-4 w-4 rounded-radius-sm border-app-border text-primary-600 focus:ring-primary-500"
                     />
-                    <span className="text-xs leading-relaxed text-slate-600">
+                    <span className="text-caption leading-relaxed text-app-muted">
                       Acepto los{' '}
                       <LegalInlineLink to={LEGAL_ROUTES.terms}>
                         Términos y Condiciones
@@ -490,10 +502,7 @@ export default function Register() {
                   </label>
 
                   {error ? (
-                    <p
-                      role="alert"
-                      className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
-                    >
+                    <p role="alert" className={AUTH_ALERT_ERROR}>
                       {error}
                     </p>
                   ) : null}
@@ -502,18 +511,19 @@ export default function Register() {
                     type="submit"
                     fullWidth
                     loading={loading}
-                    className="relative !rounded-xl py-3.5 text-base font-semibold"
+                    size="lg"
+                    className="!rounded-radius-md"
                   >
                     Crear cuenta
                   </Button>
                 </form>
 
-                <div className="relative my-5">
+                <div className="relative my-space-lg">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200" />
+                    <div className="w-full border-t border-app-border" />
                   </div>
-                  <div className="relative flex justify-center text-xs text-slate-500">
-                    <span className="bg-white px-3">o regístrate con</span>
+                  <div className="relative flex justify-center text-caption text-app-subtle">
+                    <span className="bg-app-card px-space-md">o regístrate con</span>
                   </div>
                 </div>
 
@@ -522,11 +532,11 @@ export default function Register() {
                   label="Continuar con Google"
                 />
 
-                <p className="mt-5 text-center text-sm text-slate-500">
+                <p className="mt-space-lg text-center text-body-small text-app-subtle">
                   ¿Ya tienes cuenta?{' '}
                   <Link
                     to="/login"
-                    className="font-semibold text-primary-600 transition hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+                    className="font-semibold text-primary-600 transition-colors duration-fast ease-out hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                   >
                     Inicia sesión
                   </Link>
@@ -535,7 +545,7 @@ export default function Register() {
             )}
           </div>
 
-          <div className="mt-8 flex justify-center">
+          <div className="mt-space-2xl flex justify-center">
             <ZarrelCredit variant="developed" />
           </div>
         </div>

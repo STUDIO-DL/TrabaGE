@@ -96,7 +96,7 @@ export default function AppearanceScreen() {
   };
 
   return (
-    <PageContainer title="Apariencia" backButton className="bg-app-surface">
+    <PageContainer backButton className="bg-app-surface">
       <div className="min-h-dvh bg-gradient-to-b from-white via-slate-50 to-slate-50 px-5 pb-28 pt-5 theme-transition">
         <div className="mx-auto w-full max-w-lg">
           <div className="mb-6 rounded-[30px] border border-slate-100 bg-white p-5 shadow-[0_18px_46px_rgba(15,23,42,0.05)]">

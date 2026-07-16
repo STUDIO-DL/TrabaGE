@@ -84,7 +84,7 @@ export default function JobDetail() {
 
   if (loading) {
     return (
-      <PageContainer title="Detalle" backButton>
+      <PageContainer backButton>
         <JobDetailSkeleton />
       </PageContainer>
     );
@@ -92,7 +92,7 @@ export default function JobDetail() {
 
   if (!job) {
     return (
-      <PageContainer title="Detalle" backButton>
+      <PageContainer backButton>
         <p className="p-space-base text-body-small text-app-muted">Empleo no encontrado.</p>
       </PageContainer>
     );
@@ -100,7 +100,6 @@ export default function JobDetail() {
 
   return (
     <FormPageLayout
-      title="Detalle del empleo"
       backButton
       actions={
         <ContentActionMenu

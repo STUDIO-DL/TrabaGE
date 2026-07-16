@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none" role="img" aria-label="Logo Business predeterminado">
+  <rect width="96" height="96" rx="48" fill="#DBEAFE"/>
+  <rect x="28" y="30" width="40" height="42" rx="4" fill="#2563EB"/>
+  <rect x="34" y="38" width="8" height="8" rx="1.5" fill="#BFDBFE"/>
+  <rect x="46" y="38" width="8" height="8" rx="1.5" fill="#BFDBFE"/>
+  <rect x="34" y="50" width="8" height="8" rx="1.5" fill="#BFDBFE"/>
+  <rect x="46" y="50" width="8" height="8" rx="1.5" fill="#BFDBFE"/>
+  <rect x="40" y="62" width="16" height="10" rx="2" fill="#1D4ED8"/>
+  <rect x="42" y="22" width="12" height="8" rx="2" fill="#2563EB"/>
+</svg>

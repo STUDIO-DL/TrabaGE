@@ -21,6 +21,8 @@ import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { FILE_HINTS, validateFile } from '../../utils/validateFile';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { FormPageSkeleton } from '../../components/common/Skeleton';
+import { authService } from '../../services/auth.service';
+import { ROLES, normalizeRole, rolePath } from '../../constants/roles';
 
 function parseCustomQuestions(raw) {
   if (!raw) return [];
@@ -183,6 +185,12 @@ export default function ApplyJob() {
     if (job?.company_id) {
       const notificationTitle = 'Nueva candidatura recibida';
       const notificationBody = `${fullName} aplicó a "${job.title}".`;
+      const { data: roleData } = await authService.getUserRole(job.company_id);
+      const employerRole =
+        normalizeRole(roleData?.role, { companyType: job.company_profiles?.company_type }) ??
+        ROLES.BUSINESS;
+      const applicantsLink = rolePath(employerRole, '/applicants');
+
       await notificationsService.create({
         recipient_id: job.company_id,
         type: 'new_application',
@@ -191,7 +199,7 @@ export default function ApplyJob() {
         metadata: {
           job_id: jobId,
           candidate_id: user.id,
-          link: '/business/applicants',
+          link: applicantsLink,
         },
       });
 
@@ -201,7 +209,7 @@ export default function ApplyJob() {
         body: notificationBody,
         data: {
           type: 'new_application',
-          link: '/business/applicants',
+          link: applicantsLink,
           job_id: jobId,
           candidate_id: user.id,
         },

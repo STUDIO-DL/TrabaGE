@@ -7,14 +7,14 @@ import {
   MapPin,
   ICON_SIZES,
 } from '../../constants/icons';
-import Avatar from '../ui/Avatar';
+import AppAvatar from '../common/AppAvatar';
 import Chip from '../ui/Chip';
 import CompanyNameWithBadge from '../company/CompanyNameWithBadge';
+import { avatarTypeFromCompanyProfile } from '../../constants/avatarDefaults';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
 import { formatSalary } from '../../utils/formatSalary';
 import TimeAgo from '../common/TimeAgo';
-import { getCompanyLogoUrl } from '../../constants/images';
 import { getWorkModeLabel } from '../../constants/workModes';
 import { getJobTypeLabel } from '../../constants/jobTypes';
 
@@ -27,6 +27,7 @@ export default function JobCard({
   if (!job) return null;
 
   const company = job.company_profiles;
+  const avatarType = avatarTypeFromCompanyProfile(company);
   const detailPath = `/personal/jobs/${job.id}`;
   const salary = job.salary != null || job.salary_negotiable
     ? formatSalary(job.salary, job.salary_negotiable)
@@ -36,10 +37,13 @@ export default function JobCard({
     <article className="rounded-radius-md border border-app-border bg-app-card p-space-md shadow-elevation-1 transition-colors duration-fast ease-out hover:border-app-muted/50">
       <div className="flex gap-space-md">
         <Link to={detailPath} className="shrink-0" aria-label={`Ver ${job.title}`}>
-          <Avatar
-            src={getCompanyLogoUrl(company?.logo_path)}
+          <AppAvatar
+            type={avatarType}
+            src={company?.logo_path}
             name={company?.company_name}
+            alt={company?.company_name}
             size="md"
+            variant="rounded"
             className="!rounded-radius-md"
           />
         </Link>

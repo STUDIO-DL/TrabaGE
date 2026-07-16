@@ -12,6 +12,7 @@
 // still appears under "Todas" but is excluded from the specific chips.
 
 import { DEEP_LINK_PATHS } from './deepLinks';
+import { ROLES, isEmployerRole, normalizeRole, rolePath } from '../constants/roles';
 
 export const NOTIFICATION_CATEGORY = {
   ALL: 'all',
@@ -97,9 +98,9 @@ export function getNotificationLink(notification, role = 'candidate') {
       // existed (only `/business/jobs/:jobId/edit` does).
       return DEEP_LINK_PATHS.job(metadata.job_id);
     }
-    return role === 'business' || role === 'organization' || role === 'company'
-      ? '/business/applicants'
-      : '/personal/applications';
+    return isEmployerRole(role)
+      ? rolePath(normalizeRole(role) ?? ROLES.BUSINESS, '/applicants')
+      : rolePath(ROLES.PERSONAL, '/applications');
   }
 
   if (category === NOTIFICATION_CATEGORY.POSTS) {

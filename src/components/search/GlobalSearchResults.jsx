@@ -1,9 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { Briefcase, Building2, Landmark, Loader2, User } from 'lucide-react';
-import Avatar from '../ui/Avatar';
+import AppAvatar from '../common/AppAvatar';
 import AppIcon from '../common/AppIcon';
-import { DEFAULT_COMPANY_LOGO, DEFAULT_USER_AVATAR, getCompanyLogoUrl } from '../../constants/images';
-import { resolveAvatarUrl } from '../../utils/storagePaths';
+import { AvatarType, avatarTypeFromSearchEntity } from '../../constants/avatarDefaults';
 import {
   SEARCH_ENTITY_TYPE_LABELS,
   groupSearchResults,
@@ -20,10 +19,6 @@ const ENTITY_ICONS = {
   job: Briefcase,
 };
 
-function isPersonType(type) {
-  return type === 'personal' || type === 'candidate';
-}
-
 function isOrgType(type) {
   return (
     type === 'business' ||
@@ -34,21 +29,9 @@ function isOrgType(type) {
   );
 }
 
-function resolveAvatarSrc(item) {
-  if (!item.avatar_path) {
-    return isPersonType(item.type) ? DEFAULT_USER_AVATAR : DEFAULT_COMPANY_LOGO;
-  }
-
-  if (isPersonType(item.type)) {
-    return resolveAvatarUrl(item.avatar_path) || DEFAULT_USER_AVATAR;
-  }
-
-  return getCompanyLogoUrl(item.avatar_path);
-}
-
 function SearchResultRow({ item, onSelect }) {
   const Icon = ENTITY_ICONS[item.type] || User;
-  const avatarFallback = isPersonType(item.type) ? DEFAULT_USER_AVATAR : DEFAULT_COMPANY_LOGO;
+  const avatarType = avatarTypeFromSearchEntity(item.type);
 
   return (
     <button
@@ -57,11 +40,13 @@ function SearchResultRow({ item, onSelect }) {
       onClick={() => onSelect(item)}
       className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none"
     >
-      <Avatar
-        src={resolveAvatarSrc(item)}
+      <AppAvatar
+        type={avatarType}
+        src={item.avatar_path}
         name={item.title}
-        fallback={avatarFallback}
+        alt={item.title}
         size="sm"
+        variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
         className={isOrgType(item.type) ? '!rounded-xl' : ''}
       />
       <span className="min-w-0 flex-1">

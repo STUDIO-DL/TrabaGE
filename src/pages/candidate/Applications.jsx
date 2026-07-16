@@ -41,7 +41,7 @@ export default function Applications() {
   };
 
   return (
-    <PageContainer title="Mis aplicaciones">
+    <PageContainer backButton>
       <div className="p-4">
         {loading ? (
           <ApplicationListSkeleton count={3} />
