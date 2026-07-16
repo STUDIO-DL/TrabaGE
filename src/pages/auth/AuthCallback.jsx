@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
-import Spinner from '../../components/ui/Spinner';
+import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
 import { clearPreviewMode } from '../../constants/preview';
 import {
   authService,
@@ -18,10 +18,26 @@ import { useAuth } from '../../hooks/useAuth';
 const MAX_ATTEMPTS = 15;
 const RETRY_MS = 300;
 
+function isEmailVerificationFlow(queryParams, hashParams) {
+  const type = queryParams.get('type') || hashParams.get('type');
+  return type === 'signup' || type === 'email' || type === 'magiclink';
+}
+
+function isExpiredLinkError(message) {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes('otp_expired') ||
+    lower.includes('token has expired') ||
+    lower.includes('link is invalid') ||
+    lower.includes('invalid or has expired')
+  );
+}
+
 export default function AuthCallback() {
   const navigate = useNavigate();
   const { refreshAuthState, logout } = useAuth();
   const [error, setError] = useState('');
+  const [errorEmail, setErrorEmail] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -32,18 +48,24 @@ export default function AuthCallback() {
 
       const queryParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-      const oauthError = queryParams.get('error_description') || hashParams.get('error_description');
+      const oauthError =
+        queryParams.get('error_description') || hashParams.get('error_description');
       const isPasswordRecovery =
         queryParams.get('type') === 'recovery' || hashParams.get('type') === 'recovery';
+      const emailVerification = isEmailVerificationFlow(queryParams, hashParams);
+
       if (oauthError) {
-        setError(mapAuthError({ message: decodeURIComponent(oauthError.replace(/\+/g, ' ')) }));
+        const decoded = decodeURIComponent(oauthError.replace(/\+/g, ' '));
+        if (isExpiredLinkError(decoded)) {
+          setError('El enlace ha expirado o ya no es válido.');
+        } else {
+          setError(mapAuthError({ message: decoded }));
+        }
         return;
       }
 
       const redirectFromSession = async (session, event = null) => {
         if (!session?.user?.id || cancelled || resolved) return false;
-        // Claim the resolution up front so the onAuthStateChange handler and
-        // the polling loop can't both run completePostAuthFlow / navigate.
         resolved = true;
 
         if (isPasswordRecovery || event === 'PASSWORD_RECOVERY') {
@@ -55,9 +77,6 @@ export default function AuthCallback() {
 
         const oauthIntent = consumeOAuthIntent();
 
-        // CASO 1 — Iniciar sesión con Google: never create an account.
-        // Supabase OAuth inserts auth.users for unknown Google emails; we detect
-        // that orphan and discard it before any profile bootstrap.
         if (oauthIntent === OAUTH_INTENTS.LOGIN) {
           const registered = await isRegisteredTrabaGEAccount(session.user);
           if (!registered) {
@@ -83,11 +102,12 @@ export default function AuthCallback() {
 
         if (flowError) {
           setError(mapAuthError(flowError));
+          if (emailVerification && session.user.email) {
+            setErrorEmail(session.user.email);
+          }
           return true;
         }
 
-        // Signup safety net only: OAuth without a pending account type.
-        // Login of an unregistered user never reaches here (handled above).
         if (needsAccountTypeSelection) {
           if (cancelled) return true;
           if (oauthIntent === OAUTH_INTENTS.LOGIN) {
@@ -116,8 +136,12 @@ export default function AuthCallback() {
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'PASSWORD_RECOVERY') {
-          // Defer Supabase calls to avoid auth client deadlock with AuthContext.
+        if (
+          event === 'SIGNED_IN' ||
+          event === 'INITIAL_SESSION' ||
+          event === 'PASSWORD_RECOVERY' ||
+          event === 'USER_UPDATED'
+        ) {
           setTimeout(() => {
             void redirectFromSession(session, event);
           }, 0);
@@ -150,7 +174,7 @@ export default function AuthCallback() {
       subscription.unsubscribe();
 
       if (!cancelled) {
-        setError('No se pudo completar el inicio de sesión con Google. Inténtalo de nuevo.');
+        setError('No se pudo completar la autenticación. Inténtalo de nuevo.');
       }
     };
 
@@ -162,24 +186,36 @@ export default function AuthCallback() {
   }, [navigate, refreshAuthState, logout]);
 
   if (error) {
+    const isExpired = error.includes('expirado') || error.includes('válido');
+
     return (
       <div className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center px-6 py-10 text-center">
-        <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+        >
           {error}
         </p>
-        <Link
-          to="/login"
-          className="mt-6 text-sm font-semibold text-primary-600 transition hover:text-primary-700"
-        >
-          Volver al inicio de sesión
-        </Link>
+        <div className="mt-6 flex w-full max-w-xs flex-col gap-3">
+          {isExpired ? (
+            <Link
+              to={errorEmail ? '/verify-email' : '/register'}
+              state={errorEmail ? { email: errorEmail } : undefined}
+              className="inline-flex items-center justify-center rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
+            >
+              Solicitar nuevo enlace
+            </Link>
+          ) : null}
+          <Link
+            to="/login"
+            className="text-sm font-semibold text-primary-600 transition hover:text-primary-700"
+          >
+            Volver al inicio de sesión
+          </Link>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="flex min-h-dvh items-center justify-center">
-      <Spinner size="lg" />
-    </div>
-  );
+  return <AuthLoadingScreen />;
 }

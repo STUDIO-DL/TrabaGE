@@ -12,8 +12,7 @@ export default function VerifyEmail() {
   const location = useLocation();
   const navigate = useNavigate();
   const [email] = useState(() => {
-    const value =
-      location.state?.email || sessionStorage.getItem(PENDING_EMAIL_KEY) || '';
+    const value = location.state?.email || sessionStorage.getItem(PENDING_EMAIL_KEY) || '';
     return String(value).trim().toLowerCase();
   });
   const sentAt = location.state?.sentAt || null;
@@ -48,13 +47,11 @@ export default function VerifyEmail() {
             Hemos enviado un enlace de verificación a tu dirección de correo.
           </p>
           {email ? (
-            <p className="mt-2 break-all text-sm font-semibold text-primary-600">
-              {email}
-            </p>
+            <p className="mt-2 break-all text-sm font-semibold text-primary-600">{email}</p>
           ) : null}
           <p className="mt-3 text-sm leading-relaxed text-app-muted">
-            Revisa tu bandeja de entrada (y la carpeta de spam si es necesario)
-            para activar tu cuenta.
+            Revisa tu bandeja de entrada (y la carpeta de spam si es necesario) para activar tu
+            cuenta.
           </p>
 
           {message ? (
@@ -62,11 +59,13 @@ export default function VerifyEmail() {
               {message}
             </p>
           ) : null}
+
           {error ? (
             <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
               {error}
             </p>
           ) : null}
+
           {!email ? (
             <p role="alert" className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
               No encontramos el correo pendiente. Vuelve al registro para continuar.

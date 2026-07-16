@@ -12,11 +12,12 @@ function hasText(value) {
   return String(value ?? '').trim().length > 0;
 }
 
-// Candidato: city + profesión (headline). full_name is backfilled at sign-up
-// (Google/manual metadata via profileBootstrap) and is not re-collected here.
+// Candidato: nombre, ciudad y profesión (headline). full_name may be backfilled
+// at sign-up, but setup still collects it when missing.
 export function getCandidateRequiredMissing(profile) {
-  if (!profile) return ['city', 'headline'];
+  if (!profile) return ['full_name', 'city', 'headline'];
   const missing = [];
+  if (!hasText(profile.full_name)) missing.push('full_name');
   if (!hasText(profile.city)) missing.push('city');
   if (!hasText(profile.headline)) missing.push('headline');
   return missing;

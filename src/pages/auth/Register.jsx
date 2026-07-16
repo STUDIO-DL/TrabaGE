@@ -3,7 +3,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, Eye, EyeOff, Lock, Mail, MapPin } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
-import Spinner from '../../components/ui/Spinner';
+import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import AccountTypeCards from '../../components/auth/AccountTypeCards';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
@@ -23,8 +23,7 @@ import { clearPreviewMode } from '../../constants/preview';
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
-import { bootstrapProfile } from '../../services/profileBootstrap';
-import { resolvePostAuthRedirect } from '../../utils/resolvePostAuthRedirect';
+import { completePostAuthFlow } from '../../services/authFlow';
 import { mapAuthError } from '../../utils/errors';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
@@ -225,21 +224,24 @@ export default function Register() {
     setLoading(true);
     setError('');
 
-    const role = accountKindToRole(accountKind);
-    authService.rememberAccountKind(accountKind);
-    const { error: roleError } = await authService.setUserRole(user.id, role);
+    authService.rememberPendingAccountType(accountKind);
 
-    if (roleError) {
-      setError(mapAuthError(roleError));
+    const { error: flowError, needsAccountTypeSelection, redirectTo } =
+      await completePostAuthFlow(user);
+
+    if (flowError) {
+      setError(mapAuthError(flowError));
       setLoading(false);
       return;
     }
 
-    // Same shared bootstrap + gated routing as the auth callback so this
-    // fallback lands the user on their dashboard or the setup assistant.
-    await bootstrapProfile({ user, role });
+    if (needsAccountTypeSelection) {
+      setError('No se pudo completar el registro. Inténtalo de nuevo.');
+      setLoading(false);
+      return;
+    }
+
     await refreshAuthState();
-    const redirectTo = await resolvePostAuthRedirect(user.id, role);
     navigate(redirectTo || '/', { replace: true });
     setLoading(false);
   };
@@ -320,11 +322,7 @@ export default function Register() {
 
   // Already signed-in users should never see the registration form after login.
   if (authLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
 
   if (isAuthenticated && !isPreviewMode && role && !oauthCompletion) {

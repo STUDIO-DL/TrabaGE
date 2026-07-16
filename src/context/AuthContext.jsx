@@ -156,10 +156,6 @@ export function AuthProvider({ children }) {
       return undefined;
     }
 
-    const authTimeout = setTimeout(() => {
-      if (mounted) setLoading(false);
-    }, 4000);
-
     authService
       .getSession()
       .then(({ data }) => {
@@ -170,7 +166,6 @@ export function AuthProvider({ children }) {
         reportError(err, { area: 'auth_initial_session' });
       })
       .finally(() => {
-        clearTimeout(authTimeout);
         if (mounted) setLoading(false);
       });
 
@@ -187,7 +182,6 @@ export function AuthProvider({ children }) {
 
     return () => {
       mounted = false;
-      clearTimeout(authTimeout);
       subscription.unsubscribe();
     };
   }, [hydrateUser, hydratePreview]);
@@ -295,6 +289,10 @@ export function AuthProvider({ children }) {
     }
   }, [hydrateUser, isPreviewMode]);
 
+  const resendVerificationEmail = useCallback(async (email) => {
+    return authService.resendVerificationEmail(email);
+  }, []);
+
   const getHomePath = useCallback(() => {
     // Guide users with an incomplete required profile to the setup assistant;
     // everyone else lands on their role-based home. Preview users are never
@@ -330,6 +328,7 @@ export function AuthProvider({ children }) {
       setPreviewRole,
       refreshSetupStatus,
       refreshAuthState,
+      resendVerificationEmail,
       getHomePath,
       setSetupComplete,
       };
@@ -349,6 +348,7 @@ export function AuthProvider({ children }) {
       setPreviewRole,
       refreshSetupStatus,
       refreshAuthState,
+      resendVerificationEmail,
       getHomePath,
     ],
   );

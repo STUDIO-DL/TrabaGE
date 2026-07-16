@@ -3,7 +3,6 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, MailCheck, ShieldCheck, User } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
-import Spinner from '../../components/ui/Spinner';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
@@ -18,6 +17,7 @@ import {
   isEmailNotVerifiedError,
 } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
+import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
 
 function LoginDecorations() {
   return (
@@ -424,6 +424,7 @@ export default function Login() {
   const submitLogin = async (loginEmail, loginPassword) => {
     setLoading(true);
     setError('');
+    setEmailVerificationRequired(false);
     clearPreviewMode();
 
     const { error: loginError, redirectTo } = await login(loginEmail, loginPassword);
@@ -468,13 +469,8 @@ export default function Login() {
     setPassword('');
   };
 
-  // While session/role hydrate, keep a quiet loader — never flash /register.
   if (authLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
 
   // Authenticated users with a resolved role go straight home.
@@ -484,11 +480,7 @@ export default function Login() {
 
   // Session present but role still resolving — avoid the register flicker.
   if (isAuthenticated && !isPreviewMode && !role) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AuthLoadingScreen />;
   }
 
   return (
