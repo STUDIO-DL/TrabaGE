@@ -29,6 +29,4 @@ Thumbs.db
 .supabase/
 scripts/admins.local.json
 
-# PWA
-sw.js
-workbox-*.js
+
