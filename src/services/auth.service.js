@@ -32,6 +32,19 @@ export const OAUTH_INTENTS = {
 export const GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE =
   'No encontramos una cuenta asociada a este correo.\n\nSi todavía no tienes una cuenta en TrabaGE, puedes crear una utilizando "Crear cuenta".';
 
+export const EMAIL_NOT_VERIFIED_MESSAGE =
+  'Tu correo electrónico aún no ha sido verificado. Revisa tu bandeja de entrada y activa tu cuenta antes de iniciar sesión.';
+
+export function isEmailVerified(user) {
+  return Boolean(user?.email_confirmed_at);
+}
+
+export function isEmailNotVerifiedError(error) {
+  const code = String(error?.code || '').toLowerCase();
+  const message = String(error?.message || '').toLowerCase();
+  return code === 'email_not_confirmed' || message.includes('email not confirmed');
+}
+
 function normalizeAccountType(accountType) {
   if (isValidAccountKind(accountType)) return accountKindToRole(accountType);
   return normalizeRole(accountType);
@@ -291,10 +304,27 @@ export const authService = {
       return configError();
     }
 
-    return supabase.auth.signInWithPassword({
+    const result = await supabase.auth.signInWithPassword({
       email: normalizeEmail(email),
       password: normalizePassword(password),
     });
+
+    if (isEmailNotVerifiedError(result.error)) {
+      return {
+        data: { user: null, session: null },
+        error: { code: 'email_not_confirmed', message: EMAIL_NOT_VERIFIED_MESSAGE },
+      };
+    }
+
+    if (result.data?.user && !isEmailVerified(result.data.user)) {
+      await supabase.auth.signOut({ scope: 'local' });
+      return {
+        data: { user: null, session: null },
+        error: { code: 'email_not_confirmed', message: EMAIL_NOT_VERIFIED_MESSAGE },
+      };
+    }
+
+    return result;
   },
 
   register: async (email, password, role, metadata = {}) => {
@@ -317,14 +347,103 @@ export const authService = {
     // can pre-fill them after email verification.
     savePendingOrgDetails(metadata.orgDetails);
 
-    return supabase.auth.signUp({
+    const result = await supabase.auth.signUp({
       email: normalizeEmail(email),
       password: normalizePassword(password),
       options: {
         data: signupData,
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
       },
     });
+
+    if (result.data?.session) {
+      await supabase.auth.signOut({ scope: 'local' });
+      return {
+        data: { ...result.data, session: null },
+        error: {
+          code: 'email_confirmation_disabled',
+          message:
+            'La confirmación de correo no está habilitada en Supabase. Activa Confirm Email antes de registrar usuarios.',
+        },
+      };
+    }
+
+    return result;
+  },
+
+  resendSignupConfirmation: (email) => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    return supabase.auth.resend({
+      type: 'signup',
+      email: normalizeEmail(email),
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+      },
+    });
+  },
+
+  confirmEmailFromUrl: async () => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const errorDescription =
+      query.get('error_description') || hash.get('error_description');
+
+    if (errorDescription) {
+      return {
+        data: { user: null, session: null },
+        error: {
+          code: query.get('error') || hash.get('error') || 'confirmation_failed',
+          message: decodeURIComponent(errorDescription.replace(/\+/g, ' ')),
+        },
+      };
+    }
+
+    const tokenHash = query.get('token_hash') || hash.get('token_hash');
+    const code = query.get('code');
+    const confirmationType = query.get('type') === 'signup' ? 'signup' : 'email';
+    let result;
+
+    if (tokenHash) {
+      result = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: confirmationType,
+      });
+    } else if (code) {
+      result = await supabase.auth.exchangeCodeForSession(code);
+    } else {
+      const sessionResult = await supabase.auth.getSession();
+      result = {
+        data: {
+          session: sessionResult.data?.session ?? null,
+          user: sessionResult.data?.session?.user ?? null,
+        },
+        error: sessionResult.error,
+      };
+    }
+
+    if (result.error) return result;
+
+    const user = result.data?.user ?? result.data?.session?.user;
+    if (!isEmailVerified(user)) {
+      return {
+        data: result.data,
+        error: {
+          code: 'email_not_confirmed',
+          message: 'No se pudo confirmar el correo electrónico.',
+        },
+      };
+    }
+
+    // Confirmation is complete, but TrabaGE requires an explicit login after it.
+    await supabase.auth.signOut({ scope: 'local' });
+    return { data: { user, session: null }, error: null };
   },
 
   applyPendingAccountType: async (userOrId) => {

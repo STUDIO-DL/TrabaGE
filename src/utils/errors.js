@@ -7,8 +7,17 @@ export function mapAuthError(error) {
   if (message.includes('invalid login credentials') || code === 'invalid_credentials') {
     return 'Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.';
   }
-  if (message.includes('email not confirmed')) {
-    return 'Debes verificar tu correo electrónico para poder iniciar sesión.';
+  if (message.includes('email not confirmed') || code === 'email_not_confirmed') {
+    return 'Tu correo electrónico aún no ha sido verificado. Revisa tu bandeja de entrada y activa tu cuenta antes de iniciar sesión.';
+  }
+  if (
+    message.includes('token has expired') ||
+    message.includes('token is expired') ||
+    message.includes('invalid token') ||
+    message.includes('otp expired') ||
+    code === 'otp_expired'
+  ) {
+    return 'El enlace de verificación es inválido o ha expirado. Solicita uno nuevo para continuar.';
   }
   if (
     message.includes('user already registered') ||
@@ -28,6 +37,12 @@ export function mapAuthError(error) {
   }
   if (message.includes('signup is disabled') || message.includes('signups not allowed')) {
     return 'El registro de nuevas cuentas no está disponible en este momento.';
+  }
+  if (code === 'email_confirmation_disabled') {
+    return 'No se pudo iniciar la verificación del correo. Contacta con soporte.';
+  }
+  if (code === 'email_confirmation_disabled') {
+    return 'No se pudo iniciar la verificación del correo. Contacta con soporte.';
   }
   if (message.includes('rate limit') || message.includes('too many requests') || message.includes('email rate limit')) {
     return 'Has realizado demasiados intentos. Espera unos minutos e inténtalo de nuevo.';

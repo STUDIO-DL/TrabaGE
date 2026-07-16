@@ -8,12 +8,15 @@ import RoleRoute from './components/routing/RoleRoute';
 import GuestBar from './components/common/GuestBar';
 import InstallPrompt from './components/common/InstallPrompt';
 import { ToastContainer } from './components/ui/Toast';
+import Spinner from './components/ui/Spinner';
 import { useNotificationContext } from './context/NotificationContext';
 import { ROLES } from './constants/roles';
 
 const SplashScreen = lazy(() => import('./pages/SplashScreen'));
 const OnboardingFlow = lazy(() => import('./pages/onboarding/OnboardingFlow'));
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
+const AuthConfirm = lazy(() => import('./pages/auth/AuthConfirm'));
+const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
 const Login = lazy(() => import('./pages/auth/Login'));
 const Explore = lazy(() => import('./pages/auth/Explore'));
 const Register = lazy(() => import('./pages/auth/Register'));
@@ -122,12 +125,20 @@ function AppRoutes() {
     <>
       <GuestBar />
       <InstallPrompt />
-      <Suspense fallback={null}>
+      <Suspense
+        fallback={
+          <div className="flex min-h-dvh items-center justify-center bg-app-bg">
+            <Spinner size="lg" />
+          </div>
+        }
+      >
         <Routes>
             <Route path="/" element={<SplashScreen />} />
             <Route path="/onboarding" element={<OnboardingFlow />} />
             <Route path="/login" element={<Login />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/confirm" element={<AuthConfirm />} />
+            <Route path="/auth/verify-email" element={<VerifyEmail />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/account-type" element={<Navigate to="/register" replace />} />
             <Route path="/register-method" element={<Navigate to="/register" replace />} />

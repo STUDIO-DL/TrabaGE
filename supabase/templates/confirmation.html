@@ -1,7 +1,11 @@
 <h2>Verifica tu correo en TrabaGE</h2>
 <p>Hola,</p>
 <p>Gracias por registrarte en TrabaGE. Haz clic en el enlace siguiente para verificar tu correo y activar tu cuenta:</p>
-<p><a href="{{ .ConfirmationURL }}">Verificar mi correo</a></p>
+<p>
+  <a href="{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email">
+    Verificar mi correo
+  </a>
+</p>
 <p>Si no creaste esta cuenta, puedes ignorar este mensaje.</p>
 <p>El equipo de TrabaGE</p>
 <p style="margin-top:24px;font-size:12px;color:#64748b;">Developed by <a href="https://zarrel.org" target="_blank" rel="noopener noreferrer">ZARREL</a></p>

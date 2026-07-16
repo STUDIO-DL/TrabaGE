@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Lock, Mail, ShieldCheck, User } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, MailCheck, ShieldCheck, User } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
 import Spinner from '../../components/ui/Spinner';
@@ -10,7 +10,13 @@ import ZarrelCredit from '../../components/branding/ZarrelCredit';
 import { LegalFooterLinks } from '../../components/legal/LegalLinks';
 import { clearPreviewMode } from '../../constants/preview';
 import { useAuth } from '../../hooks/useAuth';
-import { authService, GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE } from '../../services/auth.service';
+import useEmailVerificationResend from '../../hooks/useEmailVerificationResend';
+import {
+  authService,
+  EMAIL_NOT_VERIFIED_MESSAGE,
+  GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
+  isEmailNotVerifiedError,
+} from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
 
 function LoginDecorations() {
@@ -117,6 +123,51 @@ function GoogleAccountMissingPanel({ message, onDismiss }) {
   );
 }
 
+function EmailVerificationPanel({ email, onBack }) {
+  const { resend, remaining, sending, message, error, canResend } =
+    useEmailVerificationResend(email);
+
+  return (
+    <div className="login-fade-in-delayed text-center">
+      <MailCheck className="mx-auto h-12 w-12 text-primary-600" aria-hidden />
+      <h2 className="mt-4 text-lg font-bold text-slate-900">Verifica tu correo electrónico</h2>
+      <p className="mt-2 text-sm leading-relaxed text-slate-600">
+        {EMAIL_NOT_VERIFIED_MESSAGE}
+      </p>
+      {email ? <p className="mt-2 break-all text-sm font-semibold text-primary-600">{email}</p> : null}
+      {message ? (
+        <p role="status" className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+          {message}
+        </p>
+      ) : null}
+      {error ? (
+        <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+      <div className="mt-5 space-y-3">
+        <Button
+          type="button"
+          fullWidth
+          loading={sending}
+          disabled={!canResend}
+          onClick={resend}
+          className="!rounded-xl"
+        >
+          {remaining > 0 ? `Reenviar correo en ${remaining}s` : 'Reenviar correo'}
+        </Button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          Volver
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function LoginScreen({
   email,
   setEmail,
@@ -132,6 +183,9 @@ function LoginScreen({
   googleAccountMissing,
   googleAccountMissingMessage,
   onDismissGoogleMissing,
+  emailVerificationRequired,
+  onDismissEmailVerification,
+  verificationSuccess,
 }) {
   return (
     <div className="relative min-h-dvh w-full overflow-hidden bg-gradient-to-b from-[#EFF6FF] via-white to-[#EFF6FF]">
@@ -160,13 +214,20 @@ function LoginScreen({
 
           {/* Card */}
           <div className="login-fade-in-delayed mt-7 rounded-3xl bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.10)] sm:p-7">
-            {googleAccountMissing ? (
+            {emailVerificationRequired ? (
+              <EmailVerificationPanel email={email} onBack={onDismissEmailVerification} />
+            ) : googleAccountMissing ? (
               <GoogleAccountMissingPanel
                 message={googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE}
                 onDismiss={onDismissGoogleMissing}
               />
             ) : (
               <>
+                {verificationSuccess ? (
+                  <p role="status" className="mb-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">
+                    Tu correo ha sido verificado correctamente. Ya puedes iniciar sesión.
+                  </p>
+                ) : null}
                 <form onSubmit={onSubmit} className="space-y-4" autoComplete="off">
                   <div>
                     <label
@@ -282,7 +343,7 @@ function LoginScreen({
           </div>
 
           {/* Crear cuenta */}
-          {!googleAccountMissing ? (
+          {!googleAccountMissing && !emailVerificationRequired ? (
             <p className="mt-6 text-center text-sm text-slate-500">
               ¿No tienes cuenta?{' '}
               <Link
@@ -338,6 +399,12 @@ export default function Login() {
   const [googleAccountMissingMessage, setGoogleAccountMissingMessage] = useState(
     () => location.state?.googleAccountMissingMessage || GOOGLE_LOGIN_NO_ACCOUNT_MESSAGE,
   );
+  const [emailVerificationRequired, setEmailVerificationRequired] = useState(
+    () => location.state?.emailVerificationRequired === true,
+  );
+  const [verificationSuccess] = useState(
+    () => location.state?.emailVerificationSuccess === true,
+  );
 
   useEffect(() => {
     if (location.state?.googleAccountMissing) {
@@ -361,6 +428,12 @@ export default function Login() {
 
     const { error: loginError, redirectTo } = await login(loginEmail, loginPassword);
     if (loginError) {
+      if (isEmailNotVerifiedError(loginError)) {
+        setEmail(loginEmail.trim().toLowerCase());
+        setEmailVerificationRequired(true);
+        setLoading(false);
+        return false;
+      }
       setError(mapAuthError(loginError));
       setLoading(false);
       return false;
@@ -388,6 +461,11 @@ export default function Login() {
 
   const handleDismissGoogleMissing = () => {
     setGoogleAccountMissing(false);
+  };
+
+  const handleDismissEmailVerification = () => {
+    setEmailVerificationRequired(false);
+    setPassword('');
   };
 
   // While session/role hydrate, keep a quiet loader — never flash /register.
@@ -429,6 +507,9 @@ export default function Login() {
       googleAccountMissing={googleAccountMissing}
       googleAccountMissingMessage={googleAccountMissingMessage}
       onDismissGoogleMissing={handleDismissGoogleMissing}
+      emailVerificationRequired={emailVerificationRequired}
+      onDismissEmailVerification={handleDismissEmailVerification}
+      verificationSuccess={verificationSuccess}
     />
   );
 }

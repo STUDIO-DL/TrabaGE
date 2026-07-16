@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../config/supabase';
-import { authService } from '../services/auth.service';
+import { authService, isEmailVerified } from '../services/auth.service';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
 import { clearOneSignalUserId, setOneSignalUserId } from '../config/onesignal';
 import {
@@ -86,6 +86,19 @@ export function AuthProvider({ children }) {
       setSetupComplete(false);
       clearSentryUser();
       void clearOneSignalUserId();
+      return;
+    }
+
+    // Defense in depth: Supabase should not issue password sessions before
+    // confirmation, but TrabaGE never hydrates an unverified session.
+    if (!isEmailVerified(currentUser)) {
+      setSession(null);
+      setUser(null);
+      setRole(null);
+      setSetupComplete(false);
+      clearSentryUser();
+      void clearOneSignalUserId();
+      void supabase.auth.signOut({ scope: 'local' });
       return;
     }
 
@@ -297,14 +310,18 @@ export function AuthProvider({ children }) {
   }, [role, setupComplete, isPreviewMode]);
 
   const value = useMemo(
-    () => ({
+    () => {
+      const emailVerified = isEmailVerified(user);
+      return {
       session,
       user,
       role,
       setupComplete,
       loading,
       isPreviewMode,
-      isAuthenticated: Boolean(session?.user) || isPreviewActive(isPreviewMode),
+      emailVerified,
+      isAuthenticated:
+        (Boolean(session?.user) && emailVerified) || isPreviewActive(isPreviewMode),
       login,
       register,
       logout,
@@ -315,7 +332,8 @@ export function AuthProvider({ children }) {
       refreshAuthState,
       getHomePath,
       setSetupComplete,
-    }),
+      };
+    },
     [
       session,
       user,

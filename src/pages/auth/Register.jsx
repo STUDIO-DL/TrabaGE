@@ -177,7 +177,7 @@ export default function Register() {
   // the three account types share a single, config-driven code path.
   const [typeValues, setTypeValues] = useState({});
   // Common fields — preserved across account-type switches.
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(() => location.state?.email || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [city, setCity] = useState('');
@@ -185,7 +185,6 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const config = getRegisterConfig(accountKind);
 
@@ -309,40 +308,15 @@ export default function Register() {
       return;
     }
 
-    setSuccess(true);
     setLoading(false);
+    navigate('/auth/verify-email', {
+      replace: true,
+      state: {
+        email: email.trim().toLowerCase(),
+        sentAt: Date.now(),
+      },
+    });
   };
-
-  if (success) {
-    return (
-      <div className="min-h-dvh bg-[#ECEEF1]">
-        <div
-          className="mx-auto flex min-h-dvh w-full max-w-lg flex-col items-center justify-center px-5 py-10 text-center sm:px-6"
-          style={{
-            paddingTop: 'max(2.5rem, env(safe-area-inset-top))',
-            paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom))',
-          }}
-        >
-          <RegisterHeader subtitle="Revisa tu correo para activar tu cuenta." />
-          <div className="login-fade-in mt-8 w-full max-w-md rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgba(15,23,42,0.08)] sm:p-7">
-            <p className="text-sm leading-relaxed text-slate-600">
-              Hemos enviado un enlace de verificación a tu correo electrónico. Verifica tu cuenta para
-              acceder a TrabaGE.
-            </p>
-            <Link
-              to="/login"
-              className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-primary-600 px-4 py-3.5 text-base font-semibold text-white transition hover:bg-primary-700"
-            >
-              He verificado mi correo
-            </Link>
-          </div>
-          <div className="mt-8 flex justify-center">
-            <ZarrelCredit variant="developed" />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // Already signed-in users should never see the registration form after login.
   if (authLoading) {
