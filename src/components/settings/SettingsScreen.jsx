@@ -35,7 +35,7 @@ import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
-const SETTINGS_AVATAR_SIZE_CLASS = 'h-[132px] w-[132px]';
+const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7rem] w-[7rem]';
 
 function SectionCard({ title, children }) {
   return (
@@ -72,11 +72,11 @@ function SettingsRow({
     <button
       type="button"
       onClick={handleClick}
-      className="group flex min-h-[58px] w-full items-center gap-space-base px-space-lg py-space-md text-left transition-colors duration-fast ease-out hover:bg-primary-50/40 active:scale-[0.99] active:bg-primary-50 focus:outline-none focus-visible:bg-primary-50 focus-visible:ring-2 focus-visible:ring-primary-100"
+      className="group flex min-h-touch w-full items-center gap-space-md px-space-base py-space-sm text-left transition-colors duration-fast ease-out hover:bg-primary-50/40 active:scale-[0.99] active:bg-primary-50 focus:outline-none focus-visible:bg-primary-50 focus-visible:ring-2 focus-visible:ring-primary-100"
     >
       <span
         className={[
-          'flex h-10 w-10 shrink-0 items-center justify-center rounded-radius-lg',
+          'flex h-9 w-9 shrink-0 items-center justify-center rounded-radius-md',
           danger ? 'bg-error-50 text-error-600' : 'bg-primary-50 text-primary-600',
         ].join(' ')}
       >
@@ -121,7 +121,7 @@ function AccountSummaryCard({ email, profile, loading, isCompany, accountType })
         aria-busy="true"
         aria-label="Cargando perfil"
       >
-        <div className="flex flex-col items-center px-space-lg pb-space-xl pt-space-xl text-center">
+        <div className="flex flex-col items-center px-space-base pb-space-lg pt-space-lg text-center">
           <Skeleton className={`${SETTINGS_AVATAR_SIZE_CLASS} shrink-0 rounded-radius-circular`} />
           <Skeleton className="mt-space-base h-6 w-44 max-w-full" />
           <Skeleton className="mt-space-sm h-3.5 w-48 max-w-full" />
@@ -132,7 +132,7 @@ function AccountSummaryCard({ email, profile, loading, isCompany, accountType })
 
   return (
     <div className="overflow-hidden rounded-radius-xl border border-primary-100/70 bg-app-card shadow-elevation-2">
-      <div className="flex flex-col items-center px-space-lg pb-space-xl pt-space-xl text-center">
+      <div className="flex flex-col items-center px-space-base pb-space-lg pt-space-lg text-center">
         <AppAvatar
           type={accountType}
           src={isCompany ? profile?.logo_path : profile?.avatar_path}
@@ -223,8 +223,8 @@ export default function SettingsScreen({ accountType }) {
   return (
     <PageContainer topBar={false} bottomNav className="bg-app-surface">
       <div className="min-h-dvh bg-gradient-to-b from-app-card via-app-surface to-app-surface pb-28 pt-safe">
-        <div className="mx-auto w-full max-w-lg px-space-lg pt-space-xl sm:px-space-xl">
-          <div className="space-y-space-2xl">
+        <div className="mx-auto w-full max-w-lg px-space-base pt-space-lg sm:px-space-lg">
+          <div className="space-y-space-xl">
             <AccountSummaryCard
               email={user?.email}
               profile={profile}

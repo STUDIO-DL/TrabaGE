@@ -12,7 +12,7 @@ export default function JobsHeader() {
         className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
         aria-label="Empleos guardados"
       >
-        <AppIcon icon={Bookmark} size={ICON_SIZES.nav} />
+        <AppIcon icon={Bookmark} size={ICON_SIZES.md} />
       </Link>
     </TopBarShell>
   );

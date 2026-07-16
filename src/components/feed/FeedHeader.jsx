@@ -29,7 +29,7 @@ export default function FeedHeader() {
             alt={isCompany ? profile?.company_name : profile?.full_name}
             size="sm"
             variant={isCompany ? 'rounded' : 'circular'}
-            className={isCompany ? '!h-8 !w-8' : undefined}
+            className={isCompany ? '!h-7 !w-7' : undefined}
           />
         </Link>
 

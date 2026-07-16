@@ -45,7 +45,7 @@
     --keyboard-gap: 14px;
     --page-padding-x: 16px;
     --page-padding-y: 16px;
-    --section-gap: 24px;
+    --section-gap: 20px;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
@@ -112,7 +112,7 @@
 @layer components {
   .page-shell {
     @apply min-h-dvh;
-    padding-bottom: calc(5rem + var(--safe-area-bottom) + var(--keyboard-offset, 0px));
+    padding-bottom: calc(4.25rem + var(--safe-area-bottom) + var(--keyboard-offset, 0px));
     transition: padding-bottom var(--motion-normal) var(--ease-out);
   }
 
@@ -215,11 +215,11 @@
   }
 
   .btn-primary-mobile {
-    @apply inline-flex h-btn-primary w-full items-center justify-center rounded-btn-primary bg-primary-600 text-body font-semibold text-white transition-colors duration-fast ease-out hover:bg-primary-700 disabled:bg-primary-300;
+    @apply inline-flex h-btn-primary min-h-touch w-full items-center justify-center rounded-btn-primary bg-primary-600 text-button font-semibold text-white transition-colors duration-fast ease-out hover:bg-primary-700 disabled:bg-primary-300;
   }
 
   .btn-secondary-mobile {
-    @apply inline-flex h-btn-secondary w-full items-center justify-center rounded-btn-secondary border text-body-small font-semibold transition-colors duration-fast ease-out;
+    @apply inline-flex h-btn-secondary min-h-touch w-full items-center justify-center rounded-btn-secondary border text-body-small font-semibold transition-colors duration-fast ease-out;
     border-color: rgb(var(--app-border));
     background: rgb(var(--app-card));
     color: rgb(var(--app-text));

@@ -42,7 +42,7 @@ export default function FormPageLayout({
       </main>
 
       {footer ? (
-        <KeyboardAwareFooter className="border-t border-app-border bg-app-card p-space-base">
+        <KeyboardAwareFooter className="border-t border-app-border bg-app-card px-space-base py-space-md">
           {footer}
         </KeyboardAwareFooter>
       ) : null}
@@ -51,7 +51,7 @@ export default function FormPageLayout({
         <div
           className="shrink-0"
           style={{
-            paddingBottom: `calc(4.5rem + env(safe-area-inset-bottom, 0px) + ${keyboardOffset}px)`,
+            paddingBottom: `calc(4rem + env(safe-area-inset-bottom, 0px) + ${keyboardOffset}px)`,
           }}
           aria-hidden
         />

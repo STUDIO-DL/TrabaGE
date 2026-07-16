@@ -5,8 +5,12 @@ import Card from '../ui/Card';
 import Button from '../ui/Button';
 import Select from '../ui/Select';
 import AppIcon from '../common/AppIcon';
+import { getUserProfilePath } from '../../utils/profileRoutes';
 import { Download, Eye, Phone, ICON_SIZES } from '../../constants/icons';
-import { APPLICATION_STATUSES, getApplicationStatus } from '../../constants/applicationStatuses';
+import {
+  EMPLOYER_APPLICATION_STATUSES,
+  getApplicationStatus,
+} from '../../constants/applicationStatuses';
 
 export default function ApplicantCard({
   application,
@@ -18,6 +22,7 @@ export default function ApplicantCard({
   const candidate = application.candidate_profiles;
   const job = application.jobs;
   const status = getApplicationStatus(application.status);
+  const profilePath = getUserProfilePath(application.candidate_id, 'personal');
 
   return (
     <Card className="mb-3">
@@ -46,17 +51,19 @@ export default function ApplicantCard({
           value={application.status}
           onChange={(e) => onStatusChange?.(application.id, e.target.value)}
           disabled={statusUpdating}
-          options={APPLICATION_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
+          options={EMPLOYER_APPLICATION_STATUSES.map((s) => ({ value: s.value, label: s.label }))}
         />
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Link to={`/profile/${application.candidate_id}`}>
-          <Button variant="secondary" size="sm" className="inline-flex items-center gap-1.5">
-            <AppIcon icon={Eye} size={ICON_SIZES.default} />
-            Ver perfil
-          </Button>
-        </Link>
+        {profilePath ? (
+          <Link to={profilePath}>
+            <Button variant="secondary" size="sm" className="inline-flex items-center gap-1.5">
+              <AppIcon icon={Eye} size={ICON_SIZES.default} />
+              Ver perfil
+            </Button>
+          </Link>
+        ) : null}
         <Button
           variant="ghost"
           size="sm"

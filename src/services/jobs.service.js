@@ -83,7 +83,7 @@ export const jobsService = {
   },
 
   updateJob: async (id, data) => {
-    const shouldEnrich = ['title', 'description', 'requirements'].some((key) => key in data);
+    const shouldEnrich = ['title', 'role', 'description', 'requirements'].some((key) => key in data);
     const payload = shouldEnrich ? enrichJobMatchingFields(data) : data;
     const result = await supabase.from('jobs').update(payload).eq('id', id).select().single();
     return { ...result, error: mapJobError(result.error) };

@@ -35,12 +35,12 @@ export default function VerifyEmail() {
           <TrabaGEWordmark className="h-10 w-auto" />
         </div>
 
-        <section className="mt-8 rounded-3xl border border-app-border bg-app-card p-6 text-center shadow-elevation-3 sm:p-8">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary-50 text-primary-600">
-            <MailCheck className="h-8 w-8" aria-hidden />
+        <section className="mt-space-lg rounded-radius-xl border border-app-border bg-app-card p-space-base text-center shadow-elevation-3 sm:p-space-lg">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-radius-circular bg-primary-50 text-primary-600">
+            <MailCheck className="h-7 w-7" aria-hidden />
           </div>
 
-          <h1 className="mt-5 text-2xl font-bold tracking-tight">
+          <h1 className="mt-space-base text-title font-bold tracking-tight">
             Verifica tu correo electrónico
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-app-muted">

@@ -78,7 +78,7 @@ export default function Modal({
       />
       <div
         className={[
-          'relative z-10 w-full overflow-y-auto bg-app-card p-space-xl text-app-text shadow-elevation-4 keyboard-aware-footer',
+          'relative z-10 w-full overflow-y-auto bg-app-card p-space-base text-app-text shadow-elevation-4 keyboard-aware-footer',
           panelMotion,
           isSheet
             ? 'rounded-t-radius-xl'

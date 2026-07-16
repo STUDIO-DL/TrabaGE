@@ -26,7 +26,7 @@ export default function CompanyFeedHeader() {
             className="relative inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
             aria-label="Notificaciones"
           >
-            <AppIcon icon={Bell} size={ICON_SIZES.nav} />
+            <AppIcon icon={Bell} size={ICON_SIZES.md} />
             {unreadCount > 0 ? (
               <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-radius-circular bg-primary-600 ring-2 ring-app-card" />
             ) : null}
@@ -36,7 +36,7 @@ export default function CompanyFeedHeader() {
         <div className="flex items-center gap-space-sm px-space-base pb-space-md">
           <button
             type="button"
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-radius-md border border-app-border bg-app-card text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
+            className="inline-flex h-10 w-10 min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-md border border-app-border bg-app-card text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
             aria-label="Filtros"
           >
             <AppIcon icon={Filter} size={ICON_SIZES.default} />

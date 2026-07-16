@@ -47,17 +47,17 @@ export default function ProfileSectionCard({
   if (isEmpty && !isOwn) return null;
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+    <section className="rounded-radius-lg border border-gray-200 bg-white p-space-md shadow-sm">
+      <div className="mb-space-md flex items-center justify-between gap-space-sm">
+        <div className="flex items-center gap-space-sm">
           {icon && (
             <span
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ring-1 ${toneClass}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-radius-md ring-1 ${toneClass}`}
             >
               <AppIcon icon={icon} size={ICON_SIZES.default} />
             </span>
           )}
-          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-subtitle font-semibold text-gray-900">{title}</h3>
         </div>
         {isOwn && onAdd && (
           <button

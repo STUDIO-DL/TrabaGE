@@ -50,7 +50,7 @@ export default function Explore() {
         />
 
         <div className="mt-md text-center">
-          <h1 className="text-heading-m font-bold text-[#0F172A]">¿Cómo quieres explorar?</h1>
+          <h1 className="text-title font-bold text-[#0F172A]">¿Cómo quieres explorar?</h1>
           <p className="mt-xs text-small text-[#64748B]">
             Elige una experiencia. Puedes navegar libremente, pero necesitarás una cuenta para interactuar.
           </p>

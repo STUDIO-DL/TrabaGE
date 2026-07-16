@@ -30,7 +30,7 @@ export default function Chip({
       type={isInteractive && Component === 'button' ? 'button' : undefined}
       onClick={onClick}
       className={[
-        'inline-flex max-w-full items-center gap-space-xs rounded-radius-circular px-space-md py-space-xs text-caption font-medium',
+        'inline-flex max-w-full items-center gap-space-xs rounded-radius-circular px-space-sm py-0.5 text-caption font-medium',
         'transition-colors duration-fast ease-out',
         selected
           ? 'bg-primary-600 text-white ring-0'

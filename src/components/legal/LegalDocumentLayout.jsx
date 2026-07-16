@@ -42,7 +42,7 @@ export default function LegalDocumentLayout({
               {intro.part}
             </p>
           ) : null}
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl dark:text-slate-50">
+          <h1 className="text-title font-bold tracking-tight text-slate-900 dark:text-slate-50">
             {pageTitle}
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">

@@ -18,19 +18,19 @@ export default function EmptyState({
   return (
     <div
       className={[
-        'mx-auto flex w-full max-w-[400px] flex-col items-center px-space-xl py-space-3xl text-center sm:py-space-4xl',
+        'mx-auto flex w-full max-w-[400px] flex-col items-center px-space-base py-space-2xl text-center sm:py-space-3xl',
         isSoft ? '' : 'bg-app-card',
       ].join(' ')}
       role="status"
     >
       {isSoft && icon ? (
         <span
-          className="mb-space-xl flex h-[72px] w-[72px] items-center justify-center rounded-radius-circular bg-app-primary-soft/70 ring-1 ring-inset ring-app-border/40 dark:bg-app-primary-soft/25"
+          className="mb-space-lg flex h-16 w-16 items-center justify-center rounded-radius-circular bg-app-primary-soft/70 ring-1 ring-inset ring-app-border/40 dark:bg-app-primary-soft/25"
           aria-hidden="true"
         >
           <AppIcon
             icon={icon}
-            size={ICON_SIZES.xl}
+            size={ICON_SIZES.lg}
             className="text-app-subtle dark:text-app-muted"
             strokeWidth={ICON_STROKE.thin}
           />
@@ -57,14 +57,14 @@ export default function EmptyState({
         )
       ) : null}
 
-      <h2 className="text-title text-app-text sm:text-heading-m">{title}</h2>
+      <h2 className="text-subtitle font-semibold text-app-text sm:text-title">{title}</h2>
 
       {description && (
         <p className="mt-space-md text-body-small leading-relaxed text-app-muted">{description}</p>
       )}
 
       {actionLabel && onAction && (
-        <Button type="button" className="mt-space-2xl min-w-[160px]" onClick={onAction}>
+        <Button type="button" className="mt-space-xl min-w-[140px]" onClick={onAction}>
           {actionLabel}
         </Button>
       )}

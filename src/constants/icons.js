@@ -118,16 +118,16 @@ export {
 };
 
 /**
- * Icon size tokens (Lucide) — sm 16 · md/default 18 · lg/nav 22 · xl 28
+ * Icon size tokens (Lucide) — sm 16 · md/default 18 · lg 20 · nav 20 · xl 24
  * Prefer these over arbitrary sizes. Stroke: 2 (default).
  */
 export const ICON_SIZES = {
   sm: 16,
   md: 18,
   default: 18,
-  lg: 22,
-  nav: 22,
-  xl: 28,
+  lg: 20,
+  nav: 20,
+  xl: 24,
 };
 
 export const ICON_STROKE = {

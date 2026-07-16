@@ -11,6 +11,7 @@ import { useNotifications } from '../../hooks/useNotifications';
 import { usePushPermission } from '../../hooks/usePushPermission';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { ROLES, isEmployerRole, isPersonalRole } from '../../constants/roles';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { analyticsService } from '../../services/analytics.service';
 import {
@@ -102,7 +103,7 @@ export default function NotificationsView({ role = 'candidate' }) {
     await markAsRead(notification.id);
 
     if (
-      role === 'candidate' &&
+      isPersonalRole(role) &&
       getNotificationCategory(notification) === NOTIFICATION_CATEGORY.JOBS &&
       notification.metadata?.job_id &&
       user?.id
@@ -125,7 +126,7 @@ export default function NotificationsView({ role = 'candidate' }) {
     );
   };
 
-  const emptyCopyByRole = role === 'company' ? EMPLOYER_EMPTY_COPY : CANDIDATE_EMPTY_COPY;
+  const emptyCopyByRole = isEmployerRole(role) ? EMPLOYER_EMPTY_COPY : CANDIDATE_EMPTY_COPY;
   const emptyCopy = emptyCopyByRole[activeFilter] ?? emptyCopyByRole[NOTIFICATION_CATEGORY.ALL];
 
   return (

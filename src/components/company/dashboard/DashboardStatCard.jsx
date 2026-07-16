@@ -26,7 +26,7 @@ export default function DashboardStatCard({ icon, tone = 'blue', value, label, l
           </Link>
         )}
       </div>
-      <p className="mt-4 text-2xl font-bold tracking-tight text-gray-900">{value}</p>
+      <p className="mt-space-base text-title font-bold tracking-tight text-gray-900">{value}</p>
       <p className="mt-1 text-sm text-gray-500">{label}</p>
     </div>
   );

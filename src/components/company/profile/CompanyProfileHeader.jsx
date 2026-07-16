@@ -124,7 +124,7 @@ export default function CompanyProfileHeader({
                 alt={name}
                 size="xl"
                 variant="rounded"
-                className="!h-20 !w-20 !rounded-full sm:!h-24 sm:!w-24"
+                className="!h-[4.5rem] !w-[4.5rem] !rounded-full sm:!h-20 sm:!w-20"
               />
             </div>
             {!readOnly && (
@@ -151,7 +151,7 @@ export default function CompanyProfileHeader({
         </div>
 
         <div className="mt-space-md flex items-start gap-space-sm">
-          <h1 className="min-w-0 flex-1 text-xl font-bold leading-tight text-app-text sm:text-2xl">
+          <h1 className="min-w-0 flex-1 text-title font-bold leading-tight text-app-text">
             {name}
           </h1>
           {!readOnly && onEditName && (

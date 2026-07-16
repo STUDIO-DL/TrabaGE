@@ -140,7 +140,7 @@ function EmailVerificationPanel({ email, onBack }) {
 
   return (
     <div className="login-fade-in-delayed text-center">
-      <AppIcon icon={MailCheck} size={ICON_SIZES.xl} className="mx-auto text-primary-600" aria-hidden />
+      <AppIcon icon={MailCheck} size={ICON_SIZES.lg} className="mx-auto text-primary-600" aria-hidden />
       <h2 className="mt-space-base text-title text-app-text">Verifica tu correo electrónico</h2>
       <p className="mt-space-sm text-body-small leading-relaxed text-app-muted">
         {getEmailNotVerifiedMessage()}
@@ -212,13 +212,13 @@ function LoginScreen({
           </div>
 
           <div className="mt-space-xl text-center">
-            <h1 className="text-heading-m text-app-text">Bienvenido</h1>
+            <h1 className="text-title text-app-text">Bienvenido</h1>
             <p className="mx-auto mt-space-sm max-w-xs text-body-small leading-relaxed text-app-muted">
               Conecta con oportunidades, empresas y clientes desde un solo lugar.
             </p>
           </div>
 
-          <div className="login-card login-fade-in-delayed mt-space-xl p-space-xl sm:p-space-2xl">
+          <div className="login-card login-fade-in-delayed mt-space-xl p-space-lg sm:p-space-xl">
             {emailVerificationRequired ? (
               <EmailVerificationPanel email={email} onBack={onDismissEmailVerification} />
             ) : googleAccountMissing ? (

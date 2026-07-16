@@ -313,8 +313,8 @@ export default function ProfileHero({
   const showYearsBadge = hasYearsExperience(profile?.years_experience) || isOwn;
 
   return (
-    <section className="profile-hero relative overflow-hidden px-4 pb-8 pt-6 text-white">
-      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-5 sm:flex-row sm:items-end">
+    <section className="profile-hero relative overflow-hidden px-space-base pb-space-lg pt-space-base text-white">
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-space-base sm:flex-row sm:items-end">
         <div className="relative shrink-0">
           <UserAvatar
             src={profile?.avatar_path}
@@ -363,8 +363,8 @@ export default function ProfileHero({
             isOwn={isOwn}
             saving={savingField === 'full_name'}
             onSave={(v) => onSaveField?.('full_name', v)}
-            displayClassName="text-2xl font-bold leading-tight sm:text-3xl"
-            inputClassName="text-xl sm:text-2xl font-bold"
+            displayClassName="text-title font-bold leading-tight"
+            inputClassName="text-title font-bold"
           />
 
           <div className="mt-1">
@@ -375,8 +375,8 @@ export default function ProfileHero({
               isOwn={isOwn}
               saving={savingField === 'headline'}
               onSave={(v) => onSaveField?.('headline', v)}
-              displayClassName="text-base text-blue-100 sm:text-lg"
-              inputClassName="text-base"
+              displayClassName="text-body-small text-blue-100 sm:text-body"
+              inputClassName="text-body-small"
             />
           </div>
 

@@ -6,7 +6,7 @@ export const topBarOuterClass =
   'sticky top-0 z-30 border-b border-app-border bg-app-card/95 pt-safe backdrop-blur';
 
 export const topBarInnerClass =
-  'mx-auto flex h-14 max-w-lg items-center gap-space-md px-space-base';
+  'mx-auto flex h-topbar max-w-lg items-center gap-space-sm px-space-base';
 
 export function TopBarShell({ children, className = '' }) {
   return (
@@ -37,7 +37,7 @@ export default function TopBar({ title, backButton = false, actions, leading, ce
       {backButton ? <BackButton onClick={() => navigate(-1)} /> : null}
       {leading}
       {title ? (
-        <h1 className="min-w-0 flex-1 truncate text-body font-semibold text-app-text">{title}</h1>
+        <h1 className="min-w-0 flex-1 truncate text-subtitle font-semibold text-app-text">{title}</h1>
       ) : (
         !center && <div className="min-w-0 flex-1" aria-hidden="true" />
       )}

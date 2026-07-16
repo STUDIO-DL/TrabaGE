@@ -6,10 +6,10 @@ import {
 } from '../../constants/avatarDefaults';
 
 const SIZES = {
-  sm: { box: 'h-8 w-8', px: 32, text: 'text-caption' },
-  md: { box: 'h-10 w-10', px: 40, text: 'text-body-small' },
-  lg: { box: 'h-14 w-14', px: 56, text: 'text-subtitle' },
-  xl: { box: 'h-20 w-20', px: 80, text: 'text-title' },
+  sm: { box: 'h-7 w-7', px: 28, text: 'text-caption' },
+  md: { box: 'h-9 w-9', px: 36, text: 'text-body-small' },
+  lg: { box: 'h-12 w-12', px: 48, text: 'text-subtitle' },
+  xl: { box: 'h-[4.5rem] w-[4.5rem]', px: 72, text: 'text-title' },
 };
 
 const VARIANTS = {

@@ -12,6 +12,7 @@ function inferRequiredSkills(job) {
 
   const haystack = [
     job.title,
+    job.role,
     job.description,
     job.requirements,
   ]
@@ -26,7 +27,7 @@ function inferRequiredSkills(job) {
 function inferRequiredLanguages(job) {
   if (job.required_languages?.length) return job.required_languages;
 
-  const haystack = [job.title, job.description, job.requirements].filter(Boolean).join(' ').toLowerCase();
+  const haystack = [job.title, job.role, job.description, job.requirements].filter(Boolean).join(' ').toLowerCase();
   const languages = [];
   if (/(inglés|ingles|english)/.test(haystack)) languages.push('Inglés');
   if (/(francés|frances|french)/.test(haystack)) languages.push('Francés');
@@ -36,7 +37,7 @@ function inferRequiredLanguages(job) {
 
 function inferEducationLevel(job) {
   if (job.education_level) return job.education_level;
-  const text = [job.description, job.requirements].filter(Boolean).join(' ').toLowerCase();
+  const text = [job.role, job.description, job.requirements].filter(Boolean).join(' ').toLowerCase();
   if (/(master|maestr|mba|posgrado)/.test(text)) return 'master';
   if (/(licenci|grado|universit|ingenier)/.test(text)) return 'degree';
   if (/(técnico|tecnico|fp)/.test(text)) return 'technical';
@@ -46,7 +47,7 @@ function inferEducationLevel(job) {
 
 function inferAvailabilityRequired(job) {
   if (job.availability_required) return job.availability_required;
-  const text = [job.title, job.description, job.requirements].filter(Boolean).join(' ').toLowerCase();
+  const text = [job.title, job.role, job.description, job.requirements].filter(Boolean).join(' ').toLowerCase();
   if (/(inmediata|immediate|asap|incorporación inmediata)/.test(text)) return 'immediate';
   if (/(30 días|30 dias|un mes)/.test(text)) return '30_days';
   return 'flexible';

@@ -6,7 +6,7 @@ function ErrorFallback({ resetErrorBoundary }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center bg-slate-50 p-4 text-center">
       <AlertTriangle className="h-12 w-12 text-red-500" />
-      <h1 className="mt-4 text-2xl font-bold text-slate-800">Algo no ha funcionado bien</h1>
+      <h1 className="mt-space-base text-title font-bold text-slate-800">Algo no ha funcionado bien</h1>
       <p className="mt-2 max-w-md text-slate-600">
         Lo sentimos, la aplicación ha encontrado un problema inesperado. Puedes intentar recargar la página o volver al inicio.
       </p>

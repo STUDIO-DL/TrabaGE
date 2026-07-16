@@ -15,7 +15,7 @@ export default function AdminStatCard({ icon, tone = 'blue', value, label }) {
       <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${TONES[tone]}`}>
         <AppIcon icon={icon} size={ICON_SIZES.default} />
       </span>
-      <p className="mt-4 text-2xl font-bold tracking-tight text-gray-900">{value}</p>
+      <p className="mt-space-base text-title font-bold tracking-tight text-gray-900">{value}</p>
       <p className="mt-1 text-sm text-gray-500">{label}</p>
     </div>
   );

@@ -1,8 +1,8 @@
 const paddingMap = {
   none: 'p-0',
-  sm: 'p-space-md',
-  md: 'p-space-base',
-  lg: 'p-space-xl',
+  sm: 'p-space-sm',
+  md: 'p-space-md',
+  lg: 'p-space-base',
 };
 
 const elevationMap = {

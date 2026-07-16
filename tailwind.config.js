@@ -9,6 +9,7 @@ import {
   iconSize,
   typography,
   layout,
+  componentSize,
 } from './src/constants/designTokens.js';
 
 /** @type {import('tailwindcss').Config} */
@@ -217,22 +218,25 @@ export default {
         standard: motion.easing.standard,
       },
       height: {
-        'btn-primary': '56px',
-        'btn-sm': '36px',
-        'btn-md': '44px',
-        'btn-lg': '52px',
-        'btn-secondary': '48px',
-        'input-md': '44px',
+        'btn-primary': `${componentSize.button.primaryMobile.height}px`,
+        'btn-sm': `${componentSize.button.sm.height}px`,
+        'btn-md': `${componentSize.button.md.height}px`,
+        'btn-lg': `${componentSize.button.lg.height}px`,
+        'btn-secondary': `${componentSize.button.secondaryMobile.height}px`,
+        'input-md': `${componentSize.input.height}px`,
         logo: `${layout.logoMaxHeight}px`,
         'onboarding-ill': `${layout.onboardingIllustrationMax}px`,
         'icon-sm': `${iconSize.sm}px`,
         'icon-md': `${iconSize.md}px`,
         'icon-lg': `${iconSize.lg}px`,
+        'icon-xl': `${iconSize.xl}px`,
+        'topbar': '48px',
       },
       width: {
         'icon-sm': `${iconSize.sm}px`,
         'icon-md': `${iconSize.md}px`,
         'icon-lg': `${iconSize.lg}px`,
+        'icon-xl': `${iconSize.xl}px`,
       },
       maxWidth: {
         screen: layout.maxWidth.screen,
@@ -246,7 +250,7 @@ export default {
       },
       minHeight: {
         'onboarding-ill': `${layout.onboardingIllustrationMin}px`,
-        touch: '44px',
+        touch: `${componentSize.touch}px`,
       },
       zIndex: {
         overlay: '40',

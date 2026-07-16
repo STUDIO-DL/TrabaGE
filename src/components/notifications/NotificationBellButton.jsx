@@ -14,7 +14,7 @@ import {
   getNotificationsInboxPath,
 } from '../../utils/notificationSetup';
 
-export default function NotificationBellButton({ className = '', size = ICON_SIZES.nav }) {
+export default function NotificationBellButton({ className = '', size = ICON_SIZES.md }) {
   const navigate = useNavigate();
   const { user, role, isPreviewMode } = useAuth();
   const { profile } = useProfile();
@@ -47,7 +47,7 @@ export default function NotificationBellButton({ className = '', size = ICON_SIZ
       onClick={handleClick}
       disabled={status.loading || status.savingKey === 'push_enabled'}
       className={[
-        'relative inline-flex shrink-0 items-center justify-center rounded-xl p-2 transition-colors duration-fast ease-out',
+        'relative inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-xs transition-colors duration-fast ease-out',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-200',
         isActive
           ? 'text-primary-600 hover:bg-primary-50'

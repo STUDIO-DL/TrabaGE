@@ -3,26 +3,25 @@ import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
-import Textarea from '../../components/ui/Textarea';
-import FileUpload from '../../components/ui/FileUpload';
-import Card from '../../components/ui/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { useJob } from '../../hooks/useJobs';
 import { useProfile } from '../../hooks/useProfile';
-import { useNotificationContext } from '../../context/NotificationContext';
+import { useCandidateProfile } from '../../hooks/useCandidateProfile';
 import { applicationsService } from '../../services/applications.service';
-import { storageService } from '../../services/storage.service';
-import { profileService } from '../../services/profile.service';
 import { notificationsService } from '../../services/notifications.service';
 import { analyticsService } from '../../services/analytics.service';
 import { cvPath } from '../../constants/storage';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
-import { FILE_HINTS, validateFile } from '../../utils/validateFile';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { authService } from '../../services/auth.service';
 import { ROLES, normalizeRole, rolePath } from '../../constants/roles';
+import ApplyJobSummary from '../../components/apply/ApplyJobSummary';
+import ApplyCvSelector from '../../components/apply/ApplyCvSelector';
+import ApplyCoverLetter from '../../components/apply/ApplyCoverLetter';
+import ApplyPreviewCard from '../../components/apply/ApplyPreviewCard';
+import ApplySuccessState from '../../components/apply/ApplySuccessState';
+import ApplyCustomQuestions from '../../components/apply/ApplyCustomQuestions';
 
 function parseCustomQuestions(raw) {
   if (!raw) return [];
@@ -34,25 +33,33 @@ function parseCustomQuestions(raw) {
     return [];
   }
 }
+
 export default function ApplyJob() {
   const { id: jobId } = useParams();
   const navigate = useNavigate();
   const { user, isPreviewMode } = useAuth();
   const { profile } = useProfile();
+  const { uploadCV } = useCandidateProfile();
   const { job, loading: jobLoading } = useJob(jobId);
-  const { showToast } = useNotificationContext();
 
-  const [cvMode, setCvMode] = useState('saved');
   const [cvFile, setCvFile] = useState(null);
   const [coverLetter, setCoverLetter] = useState('');
   const [answers, setAnswers] = useState({});
   const [loading, setLoading] = useState(false);
+  const [cvUploading, setCvUploading] = useState(false);
   const [error, setError] = useState('');
   const [existingApplication, setExistingApplication] = useState(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const customQuestions = parseCustomQuestions(job?.custom_questions);
-  const hasSavedCv = Boolean(profile?.cv_path && user?.id && profile.cv_path.startsWith(`${user.id}/`));
-  const hasActiveApplication = existingApplication?.status && existingApplication.status !== 'withdrawn';
+  const hasSavedCv = Boolean(
+    profile?.cv_path && user?.id && profile.cv_path.startsWith(`${user.id}/`),
+  );
+  const hasActiveApplication =
+    existingApplication?.status && existingApplication.status !== 'withdrawn';
+  const selectedCvName = cvFile?.name ?? profile?.cv_name ?? null;
+  const hasCvReady = hasSavedCv || Boolean(cvFile);
+  const hasCoverLetter = Boolean(coverLetter.trim());
 
   useEffect(() => {
     if (isPreviewMode) {
@@ -61,31 +68,46 @@ export default function ApplyJob() {
   }, [isPreviewMode, navigate]);
 
   useEffect(() => {
-    if (!hasSavedCv) setCvMode('upload');
-  }, [hasSavedCv]);
-
-  useEffect(() => {
     if (!user?.id || !jobId || isPreviewMode) return;
 
     applicationsService.hasApplied(user.id, jobId).then(({ data }) => {
       setExistingApplication(data);
-      if (data?.status && data.status !== 'withdrawn') {
-        setError('Ya has aplicado a esta oferta. Puedes revisar el estado en Mis aplicaciones.');
-      }
     });
   }, [isPreviewMode, jobId, user?.id]);
-
-  useEffect(() => {
-    if (profile?.full_name && !answers.full_name) {
-      setAnswers((prev) => ({ ...prev, full_name: profile.full_name }));
-    }
-  }, [profile?.full_name, answers.full_name]);
 
   useEffect(() => {
     if (profile?.cover_letter && !coverLetter) {
       setCoverLetter(profile.cover_letter);
     }
   }, [profile?.cover_letter, coverLetter]);
+
+  const resolveCvForSubmit = async () => {
+    if (cvFile) {
+      setCvUploading(true);
+      const { error: uploadError } = await uploadCV(cvFile);
+      setCvUploading(false);
+
+      if (uploadError) {
+        throw new Error(
+          getSupabaseErrorMessage(uploadError, 'No se pudo subir el CV. Inténtalo de nuevo.'),
+        );
+      }
+
+      return {
+        cvPath: cvPath(user.id),
+        cvName: cvFile.name,
+      };
+    }
+
+    if (hasSavedCv) {
+      return {
+        cvPath: profile.cv_path,
+        cvName: profile.cv_name || 'cv.pdf',
+      };
+    }
+
+    throw new Error('Sube tu CV en PDF para enviar la solicitud.');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -95,45 +117,19 @@ export default function ApplyJob() {
       return;
     }
 
+    if (hasActiveApplication) {
+      setError('Ya has enviado una solicitud para esta oferta.');
+      return;
+    }
+
     const fullName = profile?.full_name?.trim();
     if (!fullName) {
       setError('Completa tu nombre en el perfil antes de aplicar.');
       return;
     }
 
-    let applicationCvPath = null;
-    let cvName = null;
-
-    if (cvMode === 'saved' && hasSavedCv) {
-      applicationCvPath = profile.cv_path;
-      cvName = profile.cv_name || 'cv.pdf';
-    } else if (cvFile) {
-      const validation = validateFile(cvFile, 'cv');
-      if (!validation.valid) {
-        setError(validation.error);
-        return;
-      }
-
-      const path = cvPath(user.id);
-      const { error: uploadError } = await storageService.uploadCV(
-        user.id,
-        cvFile,
-        profile?.cv_path,
-      );
-      if (uploadError) {
-        setError(getSupabaseErrorMessage(uploadError, 'No se pudo subir el CV. Inténtalo de nuevo.'));
-        return;
-      }
-
-      await profileService.updateCandidateProfile(user.id, {
-        cv_path: path,
-        cv_name: cvFile.name,
-      });
-
-      applicationCvPath = path;
-      cvName = cvFile.name;
-    } else {
-      setError('Debes seleccionar o subir un CV en PDF.');
+    if (!hasCvReady) {
+      setError('Sube tu CV en PDF para enviar la solicitud.');
       return;
     }
 
@@ -147,82 +143,86 @@ export default function ApplyJob() {
     setLoading(true);
     setError('');
 
-    if (existingApplication?.status && existingApplication.status !== 'withdrawn') {
-      setError('Ya has aplicado a esta oferta. Puedes revisar el estado en Mis aplicaciones.');
-      setLoading(false);
-      return;
-    }
+    try {
+      const { cvPath, cvName } = await resolveCvForSubmit();
 
-    const customAnswers = customQuestions.reduce((acc, q) => {
-      if (answers[q.id]?.trim()) acc[q.id] = answers[q.id].trim();
-      return acc;
-    }, {});
+      const customAnswers = customQuestions.reduce((acc, q) => {
+        if (answers[q.id]?.trim()) acc[q.id] = answers[q.id].trim();
+        return acc;
+      }, {});
 
-    const notes = coverLetter.trim();
+      const notes = coverLetter.trim();
 
-    const applicationPayload = {
-      candidate_id: user.id,
-      job_id: jobId,
-      cv_path: applicationCvPath,
-      cv_name: cvName,
-      full_name: fullName,
-      additional_notes: notes || null,
-      custom_answers: Object.keys(customAnswers).length ? customAnswers : null,
-    };
+      const applicationPayload = {
+        candidate_id: user.id,
+        job_id: jobId,
+        cv_path: cvPath,
+        cv_name: cvName,
+        full_name: fullName,
+        additional_notes: notes || null,
+        custom_answers: Object.keys(customAnswers).length ? customAnswers : null,
+      };
 
-    const { error: applyError } = existingApplication?.status === 'withdrawn'
-      ? await applicationsService.reapply(existingApplication.id, applicationPayload)
-      : await applicationsService.apply(applicationPayload);
+      const { error: applyError } =
+        existingApplication?.status === 'withdrawn'
+          ? await applicationsService.reapply(existingApplication.id, applicationPayload)
+          : await applicationsService.apply(applicationPayload);
 
-    if (applyError) {
-      setError(getSupabaseErrorMessage(applyError));
-      setLoading(false);
-      return;
-    }
+      if (applyError) {
+        setError(getSupabaseErrorMessage(applyError));
+        setLoading(false);
+        return;
+      }
 
-    analyticsService.trackApplicationSubmitted(user.id, jobId, { source: 'apply_form' });
+      analyticsService.trackApplicationSubmitted(user.id, jobId, { source: 'apply_form' });
 
-    if (job?.company_id) {
-      const notificationTitle = 'Nueva candidatura recibida';
-      const notificationBody = `${fullName} aplicó a "${job.title}".`;
-      const { data: roleData } = await authService.getUserRole(job.company_id);
-      const employerRole =
-        normalizeRole(roleData?.role, { companyType: job.company_profiles?.company_type }) ??
-        ROLES.BUSINESS;
-      const applicantsLink = rolePath(employerRole, '/applicants');
+      if (job?.company_id) {
+        const notificationTitle = 'Nueva candidatura recibida';
+        const notificationBody = `${fullName} aplicó a "${job.title}".`;
+        const { data: roleData } = await authService.getUserRole(job.company_id);
+        const employerRole =
+          normalizeRole(roleData?.role, { companyType: job.company_profiles?.company_type }) ??
+          ROLES.BUSINESS;
+        const applicantsLink = rolePath(employerRole, '/applicants');
 
-      await notificationsService.create({
-        recipient_id: job.company_id,
-        type: 'new_application',
-        title: notificationTitle,
-        body: notificationBody,
-        metadata: {
-          job_id: jobId,
-          candidate_id: user.id,
-          link: applicantsLink,
-        },
-      });
-
-      await notificationsService.sendPush({
-        recipientIds: [job.company_id],
-        title: notificationTitle,
-        body: notificationBody,
-        data: {
+        await notificationsService.create({
+          recipient_id: job.company_id,
           type: 'new_application',
-          link: applicantsLink,
-          job_id: jobId,
-          candidate_id: user.id,
-        },
-      });
-    }
+          title: notificationTitle,
+          body: notificationBody,
+          metadata: {
+            job_id: jobId,
+            candidate_id: user.id,
+            actor_id: user.id,
+            actor_type: 'personal',
+            link: applicantsLink,
+          },
+        });
 
-    showToast('Aplicación enviada', 'success');
-    navigate('/personal/applications', { replace: true });
+        await notificationsService.sendPush({
+          recipientIds: [job.company_id],
+          title: notificationTitle,
+          body: notificationBody,
+          data: {
+            type: 'new_application',
+            link: applicantsLink,
+            job_id: jobId,
+            candidate_id: user.id,
+          },
+        });
+      }
+
+      setSubmitted(true);
+    } catch (submitError) {
+      setError(submitError.message || 'No se pudo enviar la solicitud.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (jobLoading) {
     return (
-      <PageContainer title="Aplicar al empleo" backButton bottomNav={false}>
+      <PageContainer title="Enviar solicitud" backButton bottomNav={false}>
         <FormPageSkeleton fields={4} />
       </PageContainer>
     );
@@ -230,103 +230,83 @@ export default function ApplyJob() {
 
   if (!job) {
     return (
-      <PageContainer title="Aplicar al empleo" backButton bottomNav={false}>
-        <p className="p-space-base text-body-small text-app-muted">Oferta no encontrada o no disponible.</p>
+      <PageContainer title="Enviar solicitud" backButton bottomNav={false}>
+        <p className="p-space-base text-body-small text-app-muted">
+          Oferta no encontrada o no disponible.
+        </p>
       </PageContainer>
+    );
+  }
+
+  if (submitted) {
+    return (
+      <FormPageLayout title="Enviar solicitud" backButton={false} contentClassName="flex flex-col">
+        <ApplySuccessState onViewApplications={() => navigate('/personal/applications', { replace: true })} />
+      </FormPageLayout>
     );
   }
 
   return (
     <FormPageLayout
-      title="Aplicar al empleo"
+      title="Enviar solicitud"
       backButton
       footer={
-        <>
-          {error ? <p className="mb-sm text-small text-red-600">{error}</p> : null}
-          <Button type="submit" form="apply-job-form" fullWidth loading={loading} disabled={hasActiveApplication} className="btn-primary-mobile !rounded-btn-primary !py-0">
-            {hasActiveApplication ? 'Ya aplicaste' : 'Enviar aplicación'}
+        <div className="space-y-space-sm">
+          {error ? (
+            <p className="text-caption text-error-600" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {hasActiveApplication ? (
+            <p className="text-caption text-app-muted" role="status">
+              Ya has enviado una solicitud para esta oferta.
+            </p>
+          ) : null}
+          <Button
+            type="submit"
+            form="apply-job-form"
+            fullWidth
+            loading={loading || cvUploading}
+            disabled={hasActiveApplication || !hasCvReady}
+          >
+            Enviar solicitud
           </Button>
-        </>
+          <Button
+            type="button"
+            variant="secondary"
+            fullWidth
+            disabled={loading}
+            onClick={() => navigate(-1)}
+          >
+            Cancelar
+          </Button>
+        </div>
       }
     >
-      <form id="apply-job-form" onSubmit={handleSubmit} className="space-y-md p-md pb-lg">
-        {job && (
-          <Card padding="md">
-            <p className="font-semibold text-gray-900">{job.title}</p>
-            <p className="text-sm text-gray-500">{job.city}</p>
-          </Card>
-        )}
+      <form id="apply-job-form" onSubmit={handleSubmit} className="space-y-space-md p-space-base pb-space-xl">
+        <ApplyJobSummary job={job} />
 
-        <Card padding="md" className="space-y-3">
-          <h3 className="text-sm font-semibold text-gray-900">CV</h3>
-          {hasSavedCv && (
-            <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 p-3">
-              <input
-                type="radio"
-                name="cvMode"
-                checked={cvMode === 'saved'}
-                onChange={() => setCvMode('saved')}
-              />
-              <div>
-                <p className="text-sm font-medium text-gray-900">Usar CV guardado</p>
-                <p className="text-xs text-gray-500">{profile.cv_name || 'cv.pdf'}</p>
-              </div>
-            </label>
-          )}
-          <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-gray-200 p-3">
-            <input
-              type="radio"
-              name="cvMode"
-              checked={cvMode === 'upload'}
-              onChange={() => setCvMode('upload')}
-            />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-gray-900">Subir nuevo CV (PDF)</p>
-              {cvMode === 'upload' && (
-                <div className="mt-2">
-                  <FileUpload
-                    label={cvFile ? cvFile.name : 'Seleccionar PDF'}
-                    accept="application/pdf"
-                    fileType="cv"
-                    hint={FILE_HINTS.cv}
-                    onUpload={(file, uploadError) => {
-                      if (uploadError) setError(uploadError);
-                      else {
-                        setCvFile(file);
-                        setError('');
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
-          </label>
-        </Card>
-
-        <Textarea
-          label="Carta de presentación (opcional)"
-          value={coverLetter}
-          onChange={(e) => setCoverLetter(e.target.value)}
-          rows={4}
-          placeholder="Cuéntanos por qué te interesa este puesto..."
+        <ApplyCvSelector
+          cvName={profile?.cv_name}
+          hasSavedCv={hasSavedCv}
+          pendingFile={cvFile}
+          uploading={cvUploading}
+          onSelectFile={setCvFile}
+          onUploadError={(message) => {
+            if (message) setError(message);
+            else setError('');
+          }}
         />
 
-        {customQuestions.length > 0 && (
-          <Card padding="md" className="space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Preguntas del empleo</h3>
-            {customQuestions.map((q) => (
-              <div key={q.id}>
-                <Input
-                  label={q.question}
-                  value={answers[q.id] || ''}
-                  onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
-                  required={q.required}
-                />
-              </div>
-            ))}
-          </Card>
-        )}
+        <ApplyCoverLetter value={coverLetter} onChange={setCoverLetter} />
 
+        <ApplyCustomQuestions
+          questions={customQuestions}
+          answers={answers}
+          onChange={setAnswers}
+        />
+
+        <ApplyPreviewCard cvName={selectedCvName} hasCoverLetter={hasCoverLetter} />
       </form>
     </FormPageLayout>
   );

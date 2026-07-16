@@ -50,7 +50,7 @@ function ThemeCard({ option, selected, saving, onSelect }) {
       <div className="flex items-start gap-4">
         <span
           className={[
-            'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl transition',
+            'flex h-12 w-12 shrink-0 items-center justify-center rounded-radius-lg transition',
             selected ? 'bg-primary-600 text-white' : 'bg-primary-50 text-primary-600 group-hover:bg-primary-100',
           ].join(' ')}
         >
@@ -58,7 +58,7 @@ function ThemeCard({ option, selected, saving, onSelect }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-3">
-            <span className="text-[17px] font-bold text-slate-950">{option.title}</span>
+            <span className="text-subtitle font-bold text-slate-950">{option.title}</span>
             <span
               className={[
                 'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition',

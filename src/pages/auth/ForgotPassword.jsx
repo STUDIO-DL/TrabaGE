@@ -31,7 +31,7 @@ export default function ForgotPassword() {
     <MobileScreenLayout
       header={
         <div className="px-space-base pt-space-sm">
-          <h1 className="text-heading-m text-app-text">Recuperar contraseña</h1>
+          <h1 className="text-title text-app-text">Recuperar contraseña</h1>
           <p className="mt-space-xs text-body-small text-app-muted">Te enviaremos un enlace a tu correo</p>
         </div>
       }

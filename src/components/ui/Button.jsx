@@ -12,9 +12,9 @@ const variants = {
 };
 
 const sizes = {
-  sm: 'h-btn-sm min-h-touch sm:min-h-0 px-space-md text-caption rounded-radius-md',
-  md: 'h-btn-md min-h-touch px-space-base text-button rounded-radius-md',
-  lg: 'h-btn-lg min-h-touch px-space-xl text-button rounded-radius-lg',
+  sm: 'h-btn-sm min-h-touch sm:min-h-0 px-space-sm text-caption rounded-radius-md',
+  md: 'h-btn-md min-h-touch px-space-md text-button rounded-radius-md',
+  lg: 'h-btn-lg min-h-touch px-space-lg text-button rounded-radius-md',
 };
 
 export default function Button({

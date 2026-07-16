@@ -79,7 +79,7 @@ export default function SetPassword() {
           <div className="mb-sm flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-600">
             <Lock className="h-6 w-6" aria-hidden />
           </div>
-          <h1 className="text-heading-m font-bold text-gray-900">Actualizar contraseña</h1>
+          <h1 className="text-title font-bold text-gray-900">Actualizar contraseña</h1>
           <p className="mt-xs text-small text-gray-500">
             {requiresCurrentPassword
               ? 'Introduce tu contraseña actual y elige una nueva contraseña segura.'

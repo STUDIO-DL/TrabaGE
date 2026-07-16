@@ -67,14 +67,14 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-white text-gray-900">
-      <header className="flex shrink-0 items-center gap-3 border-b border-gray-100 px-4 py-3">
+      <header className="flex h-topbar shrink-0 items-center gap-space-sm border-b border-gray-100 px-space-base">
         <button
           type="button"
           onClick={handleClose}
-          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100"
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-circular text-gray-600 transition-colors hover:bg-gray-100"
           aria-label="Cerrar"
         >
-          <AppIcon icon={X} size={ICON_SIZES.lg} />
+          <AppIcon icon={X} size={ICON_SIZES.md} />
         </button>
 
         <AppAvatar
@@ -84,7 +84,6 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
           alt={isCompany ? profile?.company_name : profile?.full_name}
           size="sm"
           variant={isCompany ? 'rounded' : 'circular'}
-          className="!h-10 !w-10"
         />
 
         <div className="flex-1" />
@@ -100,14 +99,14 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
         </Button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-4 pt-4">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-space-base pt-space-md">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Comparte tus ideas…"
           rows={8}
           autoFocus
-          className="w-full flex-1 resize-none border-0 bg-transparent text-base leading-relaxed text-gray-900 outline-none placeholder:text-gray-400"
+          className="w-full flex-1 resize-none border-0 bg-transparent text-body leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 placeholder:opacity-80"
         />
 
         {imagePreview && (
@@ -128,7 +127,7 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
       </div>
 
       <footer
-        className="keyboard-aware-footer flex shrink-0 items-center justify-end gap-1 border-t border-gray-100 px-4 py-3"
+        className="keyboard-aware-footer flex shrink-0 items-center justify-end gap-0.5 border-t border-gray-100 px-space-base py-space-sm"
         style={{ paddingBottom: footerPaddingBottom }}
       >
         <input
@@ -141,18 +140,18 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
         <button
           type="button"
           onClick={openFilePicker}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100"
+          className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-gray-600 transition-colors hover:bg-gray-100"
           aria-label="Añadir imagen"
         >
-          <AppIcon icon={Image} size={ICON_SIZES.lg} />
+          <AppIcon icon={Image} size={ICON_SIZES.md} />
         </button>
         <button
           type="button"
           onClick={openFilePicker}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-gray-600 transition-colors hover:bg-gray-100"
+          className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-gray-600 transition-colors hover:bg-gray-100"
           aria-label="Añadir archivo"
         >
-          <AppIcon icon={Plus} size={ICON_SIZES.lg} />
+          <AppIcon icon={Plus} size={ICON_SIZES.md} />
         </button>
       </footer>
     </form>

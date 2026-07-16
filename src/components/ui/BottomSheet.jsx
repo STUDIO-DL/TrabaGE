@@ -62,7 +62,7 @@ export default function BottomSheet({
       />
       <div
         className={[
-          'relative z-10 w-full max-w-lg rounded-t-radius-xl bg-app-card p-space-xl text-app-text shadow-elevation-4 keyboard-aware-footer',
+          'relative z-10 w-full max-w-lg rounded-t-radius-xl bg-app-card p-space-base text-app-text shadow-elevation-4 keyboard-aware-footer',
           'overflow-y-auto',
           panelMotion,
           className,

@@ -4,7 +4,7 @@ import EmptyState from '../../components/common/EmptyState';
 import { ApplicationListSkeleton } from '../../components/common/Skeleton';
 import { NoApplications } from '../../assets/empty-states';
 import CompanyNameWithBadge from '../../components/company/CompanyNameWithBadge';
-import Badge from '../../components/ui/Badge';
+import ApplicationStatusBadge from '../../components/apply/ApplicationStatusBadge';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { useApplications } from '../../hooks/useApplications';
@@ -12,22 +12,13 @@ import { applicationsService } from '../../services/applications.service';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
-const APPLICATION_STATUS_LABELS = {
-  pending: 'En revisión',
-  viewed: 'Vista por la empresa',
-  contacted: 'Contactado',
-  accepted: 'Aceptada',
-  rejected: 'Rechazada',
-  withdrawn: 'Retirada',
-};
-
 export default function Applications() {
   const navigate = useNavigate();
   const { showToast } = useNotificationContext();
   const { applications, loading, refetch } = useApplications();
 
   const handleWithdraw = async (applicationId) => {
-    const confirmed = window.confirm('¿Quieres retirar esta aplicación?');
+    const confirmed = window.confirm('¿Quieres retirar esta solicitud?');
     if (!confirmed) return;
 
     const { error } = await applicationsService.withdraw(applicationId);
@@ -36,13 +27,13 @@ export default function Applications() {
       return;
     }
 
-    showToast('Aplicación retirada', 'success');
+    showToast('Solicitud retirada', 'success');
     refetch();
   };
 
   return (
     <PageContainer backButton>
-      <div className="p-4">
+      <div className="p-space-base">
         {loading ? (
           <ApplicationListSkeleton count={3} />
         ) : applications.length === 0 ? (
@@ -55,7 +46,7 @@ export default function Applications() {
           />
         ) : (
           applications.map((app) => (
-            <Card key={app.id} className="mb-3">
+            <Card key={app.id} className="mb-space-md">
               <button
                 type="button"
                 onClick={() => app.jobs?.id && navigate(`/personal/jobs/${app.jobs.id}`)}
@@ -68,9 +59,11 @@ export default function Applications() {
                 showUnverifiedLabel
                 className="mt-0.5"
               />
-              {app.jobs?.city && <p className="mt-1 text-body-small text-app-muted">{app.jobs.city}</p>}
-              <div className="mt-3 flex items-center justify-between gap-3">
-                <Badge label={APPLICATION_STATUS_LABELS[app.status] ?? 'Estado desconocido'} />
+              {app.jobs?.city && (
+                <p className="mt-space-xs text-body-small text-app-muted">{app.jobs.city}</p>
+              )}
+              <div className="mt-space-md flex items-center justify-between gap-space-md">
+                <ApplicationStatusBadge status={app.status} />
                 {!['withdrawn', 'rejected', 'accepted'].includes(app.status) && (
                   <Button size="sm" variant="ghost" onClick={() => handleWithdraw(app.id)}>
                     Retirar

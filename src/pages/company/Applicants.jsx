@@ -16,7 +16,7 @@ import { resolveCvBucket } from '../../utils/storagePaths';
 import { profileService } from '../../services/profile.service';
 import { openCandidateContact } from '../../utils/contact';
 import { isCompanyVerified } from '../../utils/companyVerification';
-import { APPLICATION_STATUSES } from '../../constants/applicationStatuses';
+import { EMPLOYER_APPLICATION_STATUSES } from '../../constants/applicationStatuses';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 export default function Applicants() {
@@ -112,7 +112,7 @@ export default function Applicants() {
             onChange={(event) => setStatusFilter(event.target.value)}
             options={[
               { value: 'all', label: 'Todos los estados' },
-              ...APPLICATION_STATUSES.map((status) => ({
+              ...EMPLOYER_APPLICATION_STATUSES.map((status) => ({
                 value: status.value,
                 label: status.label,
               })),

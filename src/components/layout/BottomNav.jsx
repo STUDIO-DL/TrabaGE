@@ -100,17 +100,17 @@ export default function BottomNav() {
                 to={to}
                 end
                 isActive={(_, location) => isEmployerPublishActive(location.pathname, role)}
-                className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-space-xs px-0.5 pb-space-sm pt-space-xs"
+                className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-0.5 px-0.5 pb-1 pt-0.5"
               >
                 {({ isActive }) => (
                   <>
                     <span
                       className={[
-                        'flex h-12 w-12 items-center justify-center rounded-radius-lg shadow-elevation-2 transition-colors duration-fast ease-out',
+                        'flex h-11 w-11 min-h-touch min-w-touch items-center justify-center rounded-radius-md shadow-elevation-2 transition-colors duration-fast ease-out',
                         isActive ? 'bg-primary-700' : 'bg-primary-600',
                       ].join(' ')}
                     >
-                      <AppIcon icon={Plus} size={ICON_SIZES.nav} className="text-white" />
+                      <AppIcon icon={Plus} size={ICON_SIZES.md} className="text-white" />
                     </span>
                     <span
                       className={[
@@ -132,13 +132,13 @@ export default function BottomNav() {
               to={to}
               className={({ isActive }) =>
                 [
-                  'relative flex min-h-touch min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-space-sm text-[11px] font-medium leading-tight transition-colors duration-fast ease-out sm:px-space-xs sm:text-caption',
+                  'relative flex min-h-touch min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-0.5 py-1.5 text-[11px] font-medium leading-tight transition-colors duration-fast ease-out sm:px-space-xs sm:text-caption',
                   isActive ? ICON_COLORS.primary : ICON_COLORS.inactive,
                 ].join(' ')
               }
             >
               <span className="relative">
-                <NavIcon name={icon} className="h-icon-lg w-icon-lg" />
+                <NavIcon name={icon} />
                 {showBadge && unreadCount > 0 && (
                   <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-radius-circular bg-primary-600 ring-2 ring-app-card" />
                 )}

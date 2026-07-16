@@ -40,8 +40,8 @@ export default function HelpCenter() {
   return (
     <PageContainer backButton bottomNav={false}>
       <div className="mx-auto max-w-lg bg-app-bg pb-space-3xl">
-        <div className="border-b border-app-border px-space-base py-space-xl sm:px-space-lg">
-          <h1 className="text-heading-m text-app-text">Centro de Ayuda</h1>
+        <div className="border-b border-app-border px-space-base py-space-lg sm:px-space-lg">
+          <h1 className="text-title text-app-text">Centro de Ayuda</h1>
           <p className="mt-space-sm text-body-small leading-relaxed text-app-muted">
             Encuentra respuestas rápidas a las preguntas más frecuentes sobre TrabaGE.
           </p>
@@ -50,7 +50,7 @@ export default function HelpCenter() {
           </div>
         </div>
 
-        <div className="space-y-space-base px-space-base py-space-xl sm:px-space-lg">
+        <div className="space-y-space-base px-space-base py-space-lg sm:px-space-lg">
           {hasResults ? (
             filteredCategories.map((category) => (
               <HelpCategory

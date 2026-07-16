@@ -85,13 +85,17 @@ export function matchesCategory(notification, category) {
  * @param {string} [role] - 'candidate' | 'company' (affects scoped fallbacks)
  * @returns {string | null}
  */
-export function getNotificationLink(notification, role = 'candidate') {
+export function getNotificationLink(notification, role = ROLES.PERSONAL) {
   const metadata = notification?.metadata ?? {};
   if (metadata.link) return metadata.link;
 
   const category = getNotificationCategory(notification);
+  const resolvedRole = normalizeRole(role) ?? (isEmployerRole(role) ? ROLES.BUSINESS : ROLES.PERSONAL);
 
   if (category === NOTIFICATION_CATEGORY.JOBS) {
+    if (notification?.type === 'new_application' && metadata.candidate_id) {
+      return DEEP_LINK_PATHS.profile(metadata.candidate_id);
+    }
     if (metadata.job_id) {
       // Canonical shareable job path (maps to JobDetail for any role). This
       // avoids the previously broken `/business/jobs/:id` route, which never
@@ -99,7 +103,7 @@ export function getNotificationLink(notification, role = 'candidate') {
       return DEEP_LINK_PATHS.job(metadata.job_id);
     }
     return isEmployerRole(role)
-      ? rolePath(normalizeRole(role) ?? ROLES.BUSINESS, '/applicants')
+      ? rolePath(resolvedRole, '/applicants')
       : rolePath(ROLES.PERSONAL, '/applications');
   }
 

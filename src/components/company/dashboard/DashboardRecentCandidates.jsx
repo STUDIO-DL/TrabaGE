@@ -4,6 +4,8 @@ import AppAvatar from '../../common/AppAvatar';
 import { AvatarType } from '../../../constants/avatarDefaults';
 import UserProfileLink from '../../common/UserProfileLink';
 import { ChevronRight, Users, ICON_SIZES } from '../../../constants/icons';
+import { useAuth } from '../../../hooks/useAuth';
+import { ROLES, rolePath } from '../../../constants/roles';
 import DashboardSectionEmpty from './DashboardSectionEmpty';
 
 function formatAppliedAt(date) {
@@ -17,12 +19,15 @@ function formatAppliedAt(date) {
 }
 
 export default function DashboardRecentCandidates({ candidates }) {
+  const { role } = useAuth();
+  const base = role || ROLES.BUSINESS;
+
   return (
     <section className="rounded-2xl border border-gray-200 bg-white shadow-sm">
       <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
         <h2 className="text-base font-semibold text-gray-900">Candidatos recientes</h2>
         <Link
-          to="/business/applicants"
+          to={rolePath(base, '/applicants')}
           className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
         >
           Ver todos

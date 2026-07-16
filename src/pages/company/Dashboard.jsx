@@ -28,10 +28,12 @@ import { jobsService } from '../../services/jobs.service';
 import { getOrgLabels } from '../../utils/orgLabels';
 
 function mapCandidateForDashboard(application) {
+  const profile = application.candidate_profiles;
   return {
     id: application.id,
     user_id: application.candidate_id,
-    full_name: application.candidate_profiles?.full_name || application.full_name || '',
+    full_name: profile?.full_name || application.full_name || 'Candidato',
+    avatar_path: profile?.avatar_path,
     job_title: application.jobs?.title || '',
     applied_at: application.applied_at,
   };
@@ -70,7 +72,7 @@ export default function Dashboard() {
       applications
         .slice(0, 5)
         .map(mapCandidateForDashboard)
-        .filter((candidate) => candidate.full_name),
+        .filter((candidate) => candidate.user_id),
     [applications],
   );
 
