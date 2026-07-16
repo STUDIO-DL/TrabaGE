@@ -29,4 +29,9 @@ export {
   ApplicationListSkeleton,
   ProfileCardSkeleton,
   CompanyCardSkeleton,
+  ProfilePageSkeleton,
+  JobDetailSkeleton,
+  SearchResultItemSkeleton,
+  SearchResultsSkeleton,
+  FormPageSkeleton,
 } from '../common/Skeleton';

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import ProfilePageShell from '../../components/profile/ProfilePageShell';
 import ProfileActionBar from '../../components/profile/ProfileActionBar';
 import CompanyProfileView from '../../components/company/profile/CompanyProfileView';
-import Spinner from '../../components/ui/Spinner';
+import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import PageContainer from '../../components/layout/PageContainer';
 import { companyService } from '../../services/company.service';
 import { jobsService } from '../../services/jobs.service';
@@ -92,7 +92,7 @@ export default function CompanyPublicProfile() {
   if (loading) {
     return (
       <PageContainer topBar={false} className="max-w-none">
-        <Spinner fullscreen />
+        <ProfilePageSkeleton />
       </PageContainer>
     );
   }

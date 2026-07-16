@@ -9,7 +9,7 @@ import Textarea from '../../components/ui/Textarea';
 import Select from '../../components/ui/Select';
 import DynamicListInput from '../../components/ui/DynamicListInput';
 import Card from '../../components/ui/Card';
-import Spinner from '../../components/ui/Spinner';
+import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { CITIES } from '../../constants/cities';
 import { JOB_TYPES } from '../../constants/jobTypes';
 import { WORK_MODES } from '../../constants/workModes';
@@ -206,7 +206,7 @@ export default function PublishJob() {
   if (initialLoading) {
     return (
       <PageContainer title="Editar empleo" backButton bottomNav={false}>
-        <Spinner fullscreen />
+        <FormPageSkeleton fields={6} />
       </PageContainer>
     );
   }

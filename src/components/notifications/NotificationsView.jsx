@@ -124,7 +124,7 @@ export default function NotificationsView({ role = 'candidate' }) {
     >
       {/* Segmented filter chips — horizontally scrollable, no scrollbar clutter */}
       <div className="sticky top-14 z-10 border-b border-app-border bg-app-bg/95 backdrop-blur supports-[backdrop-filter]:bg-app-bg/80">
-        <div className="flex gap-2 overflow-x-auto px-4 py-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="flex gap-space-sm overflow-x-auto px-space-base py-space-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NOTIFICATION_FILTERS.map((filter) => {
             const isActive = activeFilter === filter.id;
             return (
@@ -133,11 +133,13 @@ export default function NotificationsView({ role = 'candidate' }) {
                 type="button"
                 onClick={() => setActiveFilter(filter.id)}
                 aria-pressed={isActive}
-                className={`shrink-0 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                className={[
+                  'shrink-0 rounded-radius-circular px-space-base py-space-sm text-body-small font-medium transition-colors duration-fast',
+                  'min-h-touch',
                   isActive
-                    ? 'bg-primary-600 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                    ? 'bg-primary-600 text-white shadow-elevation-1'
+                    : 'bg-app-disabled text-app-muted hover:bg-app-surface',
+                ].join(' ')}
               >
                 {filter.label}
               </button>
@@ -146,7 +148,7 @@ export default function NotificationsView({ role = 'candidate' }) {
         </div>
       </div>
 
-      <div className="p-3">
+      <div className="p-space-md">
         {loading ? (
           <NotificationListSkeleton count={6} />
         ) : filtered.length === 0 ? (
@@ -157,7 +159,7 @@ export default function NotificationsView({ role = 'candidate' }) {
             description={emptyCopy.description}
           />
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-app-divider">
             {filtered.map((n) => (
               <NotificationItem
                 key={n.id}
@@ -170,20 +172,21 @@ export default function NotificationsView({ role = 'candidate' }) {
         )}
 
         {loadingMore && (
-          <div className="pt-2">
+          <div className="pt-space-sm">
             <NotificationListSkeleton count={2} />
           </div>
         )}
 
         {!loading && hasMore && !loadingMore && filtered.length > 0 && (
-          <button
-            type="button"
+          <Button
+            variant="secondary"
+            fullWidth
+            className="mt-space-md"
             onClick={loadMore}
             aria-label="Cargar más notificaciones"
-            className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
           >
             Cargar más
-          </button>
+          </Button>
         )}
       </div>
     </PageContainer>

@@ -7,7 +7,7 @@ import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
 import SkillsSection from '../../components/profile/SkillsSection';
 import ServicesSection from '../../components/profile/ServicesSection';
-import Spinner from '../../components/ui/Spinner';
+import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useProfile } from '../../hooks/useProfile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
 import { openCandidateContact } from '../../utils/contact';
@@ -26,7 +26,7 @@ export default function PublicProfile() {
   if (loading) {
     return (
       <PageContainer topBar={false} bottomNav={false} className="max-w-none">
-        <Spinner fullscreen />
+        <ProfilePageSkeleton />
       </PageContainer>
     );
   }

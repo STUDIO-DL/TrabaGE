@@ -1,6 +1,7 @@
 import {
   Award,
   AlertTriangle,
+  ArrowLeft,
   BadgeCheck,
   Bell,
   Bookmark,
@@ -56,6 +57,7 @@ import {
 export {
   Award,
   AlertTriangle,
+  ArrowLeft,
   BadgeCheck,
   Bell,
   Bookmark,

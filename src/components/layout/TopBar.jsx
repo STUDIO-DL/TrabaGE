@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom';
+import AppIcon from '../common/AppIcon';
+import { ArrowLeft, ICON_SIZES } from '../../constants/icons';
 
 export default function TopBar({ title, backButton = false, actions }) {
   const navigate = useNavigate();
@@ -10,10 +12,10 @@ export default function TopBar({ title, backButton = false, actions }) {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="min-h-touch min-w-touch rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
+            className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
             aria-label="Volver"
           >
-            ←
+            <AppIcon icon={ArrowLeft} size={ICON_SIZES.md} />
           </button>
         )}
         <h1 className="flex-1 truncate text-body font-semibold text-app-text">{title}</h1>

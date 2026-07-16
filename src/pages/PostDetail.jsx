@@ -2,13 +2,13 @@ import { isEmployerAuthor } from '../constants/authorTypes';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
-import Spinner from '../components/ui/Spinner';
 import EmptyState from '../components/common/EmptyState';
 import PostCard from '../components/feed/PostCard';
 import { postsService } from '../services/posts.service';
 import { supabase } from '../config/supabase';
 import { getCompanyLogoUrl } from '../constants/images';
 import { resolveUserAvatar } from '../utils/resolveUserAvatar';
+import { PostCardSkeleton } from '../components/common/Skeleton';
 
 async function enrichPost(post) {
   if (!post) return post;
@@ -64,25 +64,29 @@ export default function PostDetail() {
   }, [postId]);
 
   return (
-    <MobileScreenLayout header={<h1 className="truncate text-xl font-bold">Publicación</h1>}>
-      <div className="p-4">
+    <MobileScreenLayout
+      header={<h1 className="truncate text-body font-semibold text-app-text">Publicación</h1>}
+    >
+      <div className="p-space-base">
         {loading ? (
-          <Spinner />
+          <PostCardSkeleton />
         ) : !post ? (
           <EmptyState
             title="Publicación no encontrada"
             description="El contenido puede haber sido eliminado o no estar disponible."
           />
         ) : (
-          <PostCard
-            post={post}
-            authorId={post.author_id}
-            authorName={post.author_name}
-            authorHeadline={post.author_headline}
-            authorAvatar={post.author_avatar}
-            authorType={post.author_type}
-            authorCompany={post.author_company}
-          />
+          <div className="card-enter">
+            <PostCard
+              post={post}
+              authorId={post.author_id}
+              authorName={post.author_name}
+              authorHeadline={post.author_headline}
+              authorAvatar={post.author_avatar}
+              authorType={post.author_type}
+              authorCompany={post.author_company}
+            />
+          </div>
         )}
       </div>
     </MobileScreenLayout>

@@ -20,6 +20,7 @@ import { cvPath } from '../../constants/storage';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { FILE_HINTS, validateFile } from '../../utils/validateFile';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { FormPageSkeleton } from '../../components/common/Skeleton';
 
 function parseCustomQuestions(raw) {
   if (!raw) return [];
@@ -214,7 +215,7 @@ export default function ApplyJob() {
   if (jobLoading) {
     return (
       <PageContainer title="Aplicar al empleo" backButton bottomNav={false}>
-        <p className="p-4 text-sm text-gray-500">Cargando...</p>
+        <FormPageSkeleton fields={4} />
       </PageContainer>
     );
   }
@@ -222,7 +223,7 @@ export default function ApplyJob() {
   if (!job) {
     return (
       <PageContainer title="Aplicar al empleo" backButton bottomNav={false}>
-        <p className="p-4 text-sm text-gray-500">Oferta no encontrada o no disponible.</p>
+        <p className="p-space-base text-body-small text-app-muted">Oferta no encontrada o no disponible.</p>
       </PageContainer>
     );
   }

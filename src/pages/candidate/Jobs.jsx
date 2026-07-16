@@ -200,7 +200,7 @@ export default function Jobs() {
 
         {showRecommendedSection && (
           <section aria-label="Recomendado para ti" className="space-y-3">
-            <h2 className="text-base font-bold text-gray-900">Recomendado para ti</h2>
+            <h2 className="text-title font-semibold text-app-text">Recomendado para ti</h2>
             {recommendedJobs.map(({ job }) => (
               <JobCard
                 key={job.id}
@@ -214,7 +214,7 @@ export default function Jobs() {
         )}
 
         {showRecommendedSection && otherJobs.length > 0 && (
-          <h2 className="text-base font-bold text-gray-900">Más ofertas</h2>
+          <h2 className="text-title font-semibold text-app-text">Más ofertas</h2>
         )}
 
         <JobsToolbar count={loading ? 0 : displayJobs.length} sort={sort} onSortChange={setSort} />

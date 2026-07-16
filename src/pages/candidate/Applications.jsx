@@ -59,7 +59,7 @@ export default function Applications() {
               <button
                 type="button"
                 onClick={() => app.jobs?.id && navigate(`/personal/jobs/${app.jobs.id}`)}
-                className="text-left font-semibold text-gray-900 hover:text-primary-700"
+                className="text-left font-semibold text-app-text transition-colors duration-fast hover:text-primary-700"
               >
                 {app.jobs?.title || 'Oferta no disponible'}
               </button>
@@ -68,7 +68,7 @@ export default function Applications() {
                 showUnverifiedLabel
                 className="mt-0.5"
               />
-              {app.jobs?.city && <p className="mt-1 text-sm text-gray-500">{app.jobs.city}</p>}
+              {app.jobs?.city && <p className="mt-1 text-body-small text-app-muted">{app.jobs.city}</p>}
               <div className="mt-3 flex items-center justify-between gap-3">
                 <Badge label={APPLICATION_STATUS_LABELS[app.status] ?? 'Estado desconocido'} />
                 {!['withdrawn', 'rejected', 'accepted'].includes(app.status) && (

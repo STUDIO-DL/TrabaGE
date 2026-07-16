@@ -1,7 +1,7 @@
 import PageContainer from '../../components/layout/PageContainer';
 import { useNavigate } from 'react-router-dom';
 import CompanyProfileLayout from '../../components/company/profile/CompanyProfileLayout';
-import Spinner from '../../components/ui/Spinner';
+import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { ROLES, rolePath } from '../../constants/roles';
@@ -22,7 +22,7 @@ export default function Profile() {
   if (loading) {
     return (
       <PageContainer topBar={false} className="max-w-none">
-        <Spinner fullscreen />
+        <ProfilePageSkeleton />
       </PageContainer>
     );
   }

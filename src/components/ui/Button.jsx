@@ -35,9 +35,10 @@ export default function Button({
       type={type}
       disabled={disabled || loading}
       className={[
-        'inline-flex items-center justify-center gap-space-sm font-semibold transition-colors duration-fast ease-out',
+        'inline-flex items-center justify-center gap-space-sm font-semibold transition-all duration-fast ease-out',
+        'active:scale-[0.98]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
-        'disabled:cursor-not-allowed',
+        'disabled:cursor-not-allowed disabled:active:scale-100',
         resolvedVariant,
         sizes[size] || sizes.md,
         fullWidth ? 'w-full' : '',

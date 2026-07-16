@@ -4,6 +4,7 @@ import FeedHeader from '../../components/feed/FeedHeader';
 import FeedItemRenderer from '../../components/feed/FeedItemRenderer';
 import EmptyState from '../../components/common/EmptyState';
 import { PostListSkeleton } from '../../components/common/Skeleton';
+import Button from '../../components/ui/Button';
 import { NoPosts } from '../../assets/empty-states';
 import { useIntelligentFeed } from '../../hooks/useIntelligentFeed';
 
@@ -22,14 +23,17 @@ export default function Feed() {
 
   return (
     <PageContainer topBar={<FeedHeader />}>
-      <div className="p-4">
+      <div className="space-y-space-sm p-space-base">
         {error && (
-          <div className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+          <div
+            className="mb-space-md rounded-radius-lg border border-error-100 bg-error-50 px-space-base py-space-md text-body-small text-error-800"
+            role="alert"
+          >
             <p>No se pudo cargar el feed. Inténtalo de nuevo.</p>
             <button
               type="button"
               onClick={refetch}
-              className="mt-2 font-medium text-red-700 underline hover:text-red-900"
+              className="mt-space-sm font-medium text-error-700 underline transition-colors duration-fast hover:text-error-900"
               aria-label="Reintentar cargar el feed"
             >
               Reintentar
@@ -45,20 +49,21 @@ export default function Feed() {
             description="Tu feed mostrará publicaciones, noticias y recomendaciones según tu perfil."
           />
         ) : (
-          items.map((item) => (
-            <FeedItemRenderer key={item.item_key ?? item.id} item={item} />
+          items.map((item, index) => (
+            <div
+              key={item.item_key ?? item.id}
+              className="card-enter"
+              style={{ animationDelay: `${Math.min(index, 6) * 30}ms` }}
+            >
+              <FeedItemRenderer item={item} />
+            </div>
           ))
         )}
         {loadingMore && <PostListSkeleton count={1} />}
         {!loading && hasMore && !loadingMore && (
-          <button
-            type="button"
-            onClick={loadMore}
-            aria-label="Cargar más contenido del feed"
-            className="mt-3 w-full rounded-xl bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
-          >
+          <Button variant="secondary" fullWidth className="mt-space-sm" onClick={loadMore} aria-label="Cargar más contenido del feed">
             Cargar más
-          </button>
+          </Button>
         )}
       </div>
     </PageContainer>

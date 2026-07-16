@@ -9,7 +9,7 @@ import Card from '../../components/ui/Card';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import Button from '../../components/ui/Button';
 import AppIcon from '../../components/common/AppIcon';
-import Spinner from '../../components/ui/Spinner';
+import { JobDetailSkeleton } from '../../components/common/Skeleton';
 import TimeAgo from '../../components/common/TimeAgo';
 import { Bookmark, Clock, FileText, ICON_SIZES } from '../../constants/icons';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
@@ -85,7 +85,7 @@ export default function JobDetail() {
   if (loading) {
     return (
       <PageContainer title="Detalle" backButton>
-        <Spinner fullscreen />
+        <JobDetailSkeleton />
       </PageContainer>
     );
   }
@@ -93,7 +93,7 @@ export default function JobDetail() {
   if (!job) {
     return (
       <PageContainer title="Detalle" backButton>
-        <p className="p-4 text-sm text-gray-500">Empleo no encontrado.</p>
+        <p className="p-space-base text-body-small text-app-muted">Empleo no encontrado.</p>
       </PageContainer>
     );
   }
@@ -137,23 +137,23 @@ export default function JobDetail() {
         </div>
       }
     >
-      <div className="space-y-md p-md pb-lg">
+      <div className="space-y-space-base p-space-base pb-space-xl">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">{job.title}</h2>
+          <h2 className="text-heading-m font-bold text-app-text">{job.title}</h2>
           <CompanyNameWithBadge
             company={company}
             userId={job.company_id}
-            nameClassName="mt-1 text-sm text-gray-600"
+            nameClassName="mt-space-xs text-body-small text-app-muted"
             showUnverifiedLabel
           />
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-space-sm text-body-small text-app-muted">
             {formatSalary(job.salary, job.salary_negotiable)}
             {job.city ? ` · ${job.city}` : ''}
             {job.work_mode ? ` · ${getWorkModeLabel(job.work_mode)}` : ''}
           </p>
           <ApplicationsCounter count={applicationCount} />
           {job.created_at && (
-            <p className="mt-2 flex items-center gap-1 text-xs text-gray-400">
+            <p className="mt-space-sm flex items-center gap-space-xs text-caption text-app-subtle">
               <AppIcon icon={Clock} size={ICON_SIZES.sm} className="shrink-0" />
               <TimeAgo date={job.created_at} />
             </p>
@@ -161,8 +161,8 @@ export default function JobDetail() {
         </div>
 
         {!isCompanyVerified(company) && (
-          <Card padding="md" className="border-amber-200 bg-amber-50">
-            <p className="text-sm text-amber-800">
+          <Card padding="md" className="border-warning-200 bg-warning-50">
+            <p className="text-body-small text-warning-800">
               Esta empresa aún no ha completado el proceso de verificación.
             </p>
           </Card>
@@ -170,15 +170,15 @@ export default function JobDetail() {
 
         {job.description && (
           <section>
-            <h3 className="mb-2 font-semibold text-gray-900">Descripción</h3>
-            <p className="text-sm text-gray-700">{job.description}</p>
+            <h3 className="mb-space-sm text-button font-semibold text-app-text">Descripción</h3>
+            <p className="text-body-small text-app-text">{job.description}</p>
           </section>
         )}
 
         {parseRequirements(job.requirements).length > 0 && (
           <section>
-            <h3 className="mb-2 font-semibold text-gray-900">Requisitos</h3>
-            <ul className="list-inside list-disc space-y-1 text-sm text-gray-700">
+            <h3 className="mb-space-sm text-button font-semibold text-app-text">Requisitos</h3>
+            <ul className="list-inside list-disc space-y-space-xs text-body-small text-app-text">
               {parseRequirements(job.requirements).map((item) => (
                 <li key={item}>{item}</li>
               ))}
@@ -188,8 +188,8 @@ export default function JobDetail() {
 
         {parseBenefits(job.benefits).length > 0 && (
           <section>
-            <h3 className="mb-2 font-semibold text-gray-900">Beneficios</h3>
-            <ul className="list-inside list-disc space-y-1 text-sm text-gray-700">
+            <h3 className="mb-space-sm text-button font-semibold text-app-text">Beneficios</h3>
+            <ul className="list-inside list-disc space-y-space-xs text-body-small text-app-text">
               {parseBenefits(job.benefits).map((item) => (
                 <li key={item}>{item}</li>
               ))}
@@ -199,8 +199,8 @@ export default function JobDetail() {
 
         {job.application_deadline && (
           <section>
-            <h3 className="mb-2 font-semibold text-gray-900">Fecha límite</h3>
-            <p className="text-sm text-gray-700">{job.application_deadline}</p>
+            <h3 className="mb-space-sm text-button font-semibold text-app-text">Fecha límite</h3>
+            <p className="text-body-small text-app-text">{job.application_deadline}</p>
           </section>
         )}
 

@@ -19,7 +19,7 @@ import EducationModal from '../../components/profile/modals/EducationModal';
 import CertificationModal from '../../components/profile/modals/CertificationModal';
 import LanguageModal from '../../components/profile/modals/LanguageModal';
 import DeleteAccountModal from '../../components/profile/modals/DeleteAccountModal';
-import Spinner from '../../components/ui/Spinner';
+import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -226,7 +226,7 @@ export default function Profile() {
   if (loading) {
     return (
       <PageContainer topBar={false} className="max-w-none">
-        <Spinner fullscreen />
+        <ProfilePageSkeleton />
       </PageContainer>
     );
   }

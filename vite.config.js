@@ -28,6 +28,8 @@ export default defineConfig({
       includeAssets: ['robots.txt', 'sitemap.xml', 'favicon.ico', 'icons/*.png', 'manifest.json'],
       manifest: false,
       workbox: {
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/\.netlify\//],
         globPatterns: [
           'index.html',
           'manifest.json',
@@ -38,6 +40,16 @@ export default defineConfig({
           'icons/*.png',
         ],
         globIgnores: ['**/OneSignalSDKWorker.js', '**/OneSignalSDKUpdaterWorker.js'],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/icons/'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'trabage-icons',
+              expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+        ],
       },
     }),
   ],

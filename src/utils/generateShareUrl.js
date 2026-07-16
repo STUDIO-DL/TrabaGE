@@ -1,10 +1,19 @@
 import { DEEP_LINK_PATHS } from './deepLinks';
+import { readViteEnv } from '../config/env';
 
-const APP_URL = import.meta.env.VITE_APP_URL || window.location.origin;
+/** Prefer configured production URL; never bake placeholder/localhost into share links. */
+function getAppOrigin() {
+  const fromEnv = readViteEnv(import.meta.env.VITE_APP_URL)?.replace(/\/$/, '');
+  if (fromEnv && !fromEnv.includes('localhost')) return fromEnv;
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return window.location.origin;
+  }
+  return fromEnv || 'https://trabage.org';
+}
 
 export const generateShareUrl = (path) => {
   const normalized = path.startsWith('/') ? path : `/${path}`;
-  return `${APP_URL}${normalized}`;
+  return `${getAppOrigin()}${normalized}`;
 };
 
 export const generateProfileUrl = (userId) => generateShareUrl(DEEP_LINK_PATHS.profile(userId));

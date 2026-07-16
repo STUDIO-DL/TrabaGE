@@ -4,7 +4,7 @@ import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import FileUpload from '../../components/ui/FileUpload';
 import AppIcon from '../../components/common/AppIcon';
-import Spinner from '../../components/ui/Spinner';
+import { FormPageSkeleton } from '../../components/common/Skeleton';
 import VerifiedBadge from '../../components/company/VerifiedBadge';
 import { ShieldCheck, ICON_SIZES } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
@@ -188,16 +188,16 @@ export default function Verification() {
 
   return (
     <PageContainer title="Verificación de Empresa" backButton bottomNav={false}>
-      <div className="space-y-4 p-4">
+      <div className="space-y-space-base p-space-base">
         {loading ? (
-          <Spinner fullscreen />
+          <FormPageSkeleton fields={3} />
         ) : (
           <>
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-space-md">
               <AppIcon icon={ShieldCheck} size={ICON_SIZES.lg} className="text-primary-600" />
               <div>
-                <h2 className="font-semibold text-gray-900">Verificación de Empresa</h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <h2 className="text-title font-semibold text-app-text">Verificación de Empresa</h2>
+                <p className="mt-space-xs text-body-small text-app-muted">
                   Obtén el distintivo de empresa verificada y genera confianza en candidatos.
                 </p>
               </div>

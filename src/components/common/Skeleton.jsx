@@ -163,3 +163,94 @@ export function CompanyCardSkeleton() {
     </article>
   );
 }
+
+export function ProfilePageSkeleton() {
+  return (
+    <div className="space-y-space-base p-space-base" aria-busy="true" aria-label="Cargando perfil">
+      <div className="overflow-hidden rounded-radius-lg border border-app-border bg-app-card shadow-elevation-1">
+        <Skeleton className="h-28 w-full rounded-none" />
+        <div className="-mt-10 px-space-base pb-space-base">
+          <Skeleton className="h-20 w-20 rounded-radius-circular ring-4 ring-app-card" />
+          <Skeleton className="mt-space-md h-5 w-1/2" />
+          <Skeleton className="mt-space-sm h-3.5 w-2/3" />
+          <div className="mt-space-base flex gap-space-sm">
+            <Skeleton className="h-9 w-24 rounded-radius-md" />
+            <Skeleton className="h-9 w-24 rounded-radius-md" />
+          </div>
+        </div>
+      </div>
+      {Array.from({ length: 3 }, (_, i) => (
+        <div
+          key={i}
+          className="rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1"
+        >
+          <Skeleton className="mb-space-md h-4 w-1/3" />
+          <SkeletonText lines={3} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function JobDetailSkeleton() {
+  return (
+    <div className="space-y-space-base p-space-base" aria-busy="true" aria-label="Cargando empleo">
+      <div className="rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1">
+        <Skeleton className="h-6 w-4/5" />
+        <Skeleton className="mt-space-sm h-4 w-1/2" />
+        <Skeleton className="mt-space-sm h-3.5 w-2/3" />
+        <div className="mt-space-md flex gap-space-sm">
+          <Skeleton className="h-6 w-16 rounded-radius-circular" />
+          <Skeleton className="h-6 w-20 rounded-radius-circular" />
+          <Skeleton className="h-6 w-14 rounded-radius-circular" />
+        </div>
+      </div>
+      {Array.from({ length: 3 }, (_, i) => (
+        <div
+          key={i}
+          className="rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1"
+        >
+          <Skeleton className="mb-space-md h-4 w-1/4" />
+          <SkeletonText lines={4} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function SearchResultItemSkeleton() {
+  return (
+    <div className="flex gap-space-md border-b border-app-border p-space-base" aria-hidden="true">
+      <Skeleton className="h-10 w-10 shrink-0 rounded-radius-circular" />
+      <div className="min-w-0 flex-1 space-y-space-sm">
+        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-3 w-2/3" />
+      </div>
+    </div>
+  );
+}
+
+export function SearchResultsSkeleton({ count = 6 }) {
+  return (
+    <div aria-busy="true" aria-label="Cargando resultados">
+      {Array.from({ length: count }, (_, i) => (
+        <SearchResultItemSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+
+export function FormPageSkeleton({ fields = 5 }) {
+  return (
+    <div className="space-y-space-base p-space-base" aria-busy="true" aria-label="Cargando formulario">
+      {Array.from({ length: fields }, (_, i) => (
+        <div key={i} className="space-y-space-sm">
+          <Skeleton className="h-3.5 w-1/4" />
+          <Skeleton className="h-11 w-full rounded-radius-md" />
+        </div>
+      ))}
+      <Skeleton className="mt-space-md h-11 w-full rounded-radius-md" />
+    </div>
+  );
+}
+

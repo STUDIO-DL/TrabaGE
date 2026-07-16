@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 import AppIcon from '../common/AppIcon';
 import { X, ICON_SIZES } from '../../constants/icons';
+import useAnimatedPresence from '../../hooks/useAnimatedPresence';
 
 /**
  * Dialog — mobile: bottom sheet feel; sm+: centered modal.
@@ -15,8 +16,10 @@ export default function Modal({
   variant = 'auto',
   size = 'md',
 }) {
+  const { mounted, exiting } = useAnimatedPresence(isOpen, 200);
+
   useEffect(() => {
-    if (!isOpen) return undefined;
+    if (!mounted || exiting) return undefined;
 
     const handleKey = (e) => {
       if (e.key === 'Escape') onClose();
@@ -29,13 +32,23 @@ export default function Modal({
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [isOpen, onClose]);
+  }, [mounted, exiting, onClose]);
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
   const isSheet = variant === 'sheet';
   const maxWidth =
     size === 'sm' ? 'sm:max-w-sm' : size === 'lg' ? 'sm:max-w-xl' : 'sm:max-w-lg';
+
+  const panelMotion = exiting
+    ? 'animate-[sheetSlideDown_var(--motion-fast)_var(--ease-out)_forwards]'
+    : isSheet
+      ? 'animate-[sheetSlideUp_var(--motion-normal)_var(--ease-out)]'
+      : 'animate-[cardFadeIn_var(--motion-normal)_var(--ease-out)]';
+
+  const overlayMotion = exiting
+    ? 'animate-[overlayFadeOut_var(--motion-fast)_var(--ease-out)_forwards]'
+    : 'animate-[overlayFadeIn_var(--motion-fast)_var(--ease-out)]';
 
   return createPortal(
     <div
@@ -49,16 +62,17 @@ export default function Modal({
     >
       <button
         type="button"
-        className="absolute inset-0 bg-app-overlay/55 transition-opacity duration-normal ease-out"
+        className={`absolute inset-0 bg-app-overlay/55 ${overlayMotion}`}
         aria-label="Cerrar modal"
         onClick={onClose}
       />
       <div
         className={[
           'relative z-10 w-full overflow-y-auto bg-app-card p-space-xl text-app-text shadow-elevation-4',
-          'max-h-[90dvh] transition-transform duration-normal ease-out',
+          'max-h-[90dvh]',
+          panelMotion,
           isSheet
-            ? 'rounded-t-radius-xl animate-[sheetSlideUp_var(--motion-normal)_var(--ease-out)]'
+            ? 'rounded-t-radius-xl'
             : `rounded-t-radius-xl sm:rounded-radius-xl ${maxWidth}`,
         ].join(' ')}
       >
@@ -76,7 +90,7 @@ export default function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
+            className="ml-auto min-h-touch min-w-touch rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
             aria-label="Cerrar"
           >
             <AppIcon icon={X} size={ICON_SIZES.md} />

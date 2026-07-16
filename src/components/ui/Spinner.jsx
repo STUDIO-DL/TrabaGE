@@ -20,7 +20,7 @@ export default function Spinner({ size = 'md', color = 'primary', fullscreen = f
 
   if (fullscreen) {
     return (
-      <div className="flex min-h-[200px] items-center justify-center" aria-busy="true">
+      <div className="flex min-h-[40dvh] w-full items-center justify-center py-space-xl" aria-busy="true">
         {spinner}
       </div>
     );
