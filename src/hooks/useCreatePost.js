@@ -13,6 +13,7 @@ import { GUEST_MODE_MESSAGE } from '../utils/guestMode';
 import { compressPostImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
+import { TOAST } from '../utils/copyLabels';
 
 export function useCreatePost() {
   const { user, isPreviewMode, role } = useAuth();
@@ -91,7 +92,7 @@ export function useCreatePost() {
       });
     }
 
-    showToast('Publicación creada', 'success');
+    showToast(TOAST.postCreated, 'success');
     setLoading(false);
     return { ok: true, post };
   };

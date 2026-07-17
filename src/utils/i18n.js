@@ -21,7 +21,7 @@ const MESSAGES = {
       userBanned: 'Esta cuenta no está disponible. Contacta con soporte si crees que es un error.',
       sessionExpired: 'Tu sesión ha expirado. Vuelve a iniciar sesión.',
       smtpError: 'No se pudo enviar el correo en este momento. Inténtalo de nuevo más tarde.',
-      unexpected: 'Ha ocurrido un error inesperado. Por favor, inténtalo de nuevo más tarde.',
+      unexpected: 'No hemos podido completar la operación. Inténtalo de nuevo.',
       googleLoginNoAccount:
         'No encontramos una cuenta asociada a este correo.\n\nSi todavía no tienes una cuenta en TrabaGE, puedes crear una utilizando "Crear cuenta".',
       authIncomplete: 'No se pudo completar la autenticación. Inténtalo de nuevo.',
@@ -36,10 +36,10 @@ const MESSAGES = {
       passwordMustDiffer: 'La nueva contraseña debe ser diferente de la contraseña actual.',
       cannotVerifyEmail: 'No se pudo verificar el correo de tu cuenta. Vuelve a iniciar sesión.',
       registerFullNameRequired: 'Introduce tu nombre completo.',
-      registerBusinessNameRequired: 'Introduce el nombre del negocio.',
+      registerBusinessNameRequired: 'Introduce el nombre de tu cuenta Business.',
       registerOrgNameRequired: 'Introduce el nombre de la organización.',
       registerOrgTypeRequired: 'Selecciona el tipo de organización.',
-      supabaseFallback: 'No se pudo completar la acción. Inténtalo de nuevo.',
+      supabaseFallback: 'No hemos podido completar la operación. Inténtalo de nuevo.',
     },
     auth: {
       passwordHint: 'Mínimo 6 caracteres con mayúscula, minúscula y símbolo.',

@@ -214,7 +214,7 @@ export default function SettingsScreen({ accountType }) {
       return;
     }
 
-    showToast('Cuenta eliminada', 'success');
+    showToast('Cuenta eliminada.', 'success');
     setDeleteOpen(false);
     await logout();
     navigate('/login', { replace: true });

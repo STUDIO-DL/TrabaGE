@@ -1,4 +1,5 @@
 import { hasCompanyDescription } from '../../../utils/companyProfile';
+import { getEmptyAboutOrgCopy, resolveOrgViewerContext } from '../../../utils/copyLabels';
 import { sectionLinkClass } from './companyProfileStyles';
 
 export default function CompanyAboutSection({
@@ -14,7 +15,8 @@ export default function CompanyAboutSection({
 }) {
   const description = profile?.description?.trim();
   const hasDescription = hasCompanyDescription(profile);
-  const emptyText = 'No hay información disponible sobre esta empresa.';
+  const viewer = resolveOrgViewerContext({ isOwn: !readOnly, profile });
+  const emptyText = getEmptyAboutOrgCopy(viewer);
   const previewLimit = compact ? 160 : 320;
   const showPreview = hasDescription && !expanded && description.length > previewLimit;
   const previewText = showPreview ? `${description.slice(0, previewLimit).trim()}…` : description;

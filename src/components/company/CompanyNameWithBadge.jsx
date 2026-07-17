@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import VerifiedBadge from './VerifiedBadge';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { getUserProfilePath } from '../../utils/profileRoutes';
+import { getOrgLabels, isOrganizationProfile } from '../../utils/orgLabels';
 
 export default function CompanyNameWithBadge({
   company,
@@ -13,8 +14,12 @@ export default function CompanyNameWithBadge({
   nameClassName = 'text-sm text-gray-500',
   showUnverifiedLabel = false,
 }) {
-  const companyName = name ?? company?.company_name ?? 'Nombre de empresa';
+  const companyName = name ?? company?.company_name ?? 'Perfil Business';
   const verified = isCompanyVerified(company);
+  const orgLabels = getOrgLabels(company);
+  const unverifiedLabel = isOrganizationProfile(company)
+    ? 'Organización no verificada'
+    : 'Cuenta Business no verificada';
   const size = profile ? 'md' : badgeSize;
   const profilePath = getUserProfilePath(userId ?? company?.user_id, 'company');
 
@@ -33,9 +38,9 @@ export default function CompanyNameWithBadge({
     <span className={`inline-flex flex-wrap items-center gap-1.5 ${className}`}>
       {nameElement}
       {verified ? (
-        <VerifiedBadge size={size} />
+        <VerifiedBadge size={size} tooltip={orgLabels.verified} />
       ) : showUnverifiedLabel ? (
-        <span className="text-xs text-gray-400">Empresa no verificada</span>
+        <span className="text-xs text-gray-400">{unverifiedLabel}</span>
       ) : null}
     </span>
   );

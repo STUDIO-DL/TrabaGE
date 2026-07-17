@@ -8,7 +8,7 @@ export function filterPostsByQuery(posts, query) {
       post.content,
       post.author_name,
       post.author_headline,
-      isPersonalAuthor(post.author_type) ? 'persona' : 'negocio',
+      isPersonalAuthor(post.author_type) ? 'persona' : 'empresa',
     ]
       .filter(Boolean)
       .join(' ')

@@ -15,7 +15,7 @@ export const helpCategories = [
       {
         question: '¿Cuál es la diferencia entre los tipos de cuenta?',
         answer:
-          'Cuenta personal: te permite crear tu perfil profesional, subir tu CV, buscar ofertas de empleo y postularte a vacantes.\n\nCuenta Business: te permite crear el perfil de tu negocio, publicar ofertas de trabajo, recibir postulaciones y gestionar procesos de selección.\n\nCuenta de Organización: pensada para instituciones y entidades que conectan educación y oportunidades.\n\nCada tipo de cuenta tiene un panel adaptado a sus necesidades. No se puede seguir a cuentas personales.',
+          'Cuenta personal: te permite crear tu perfil profesional, subir tu CV, buscar ofertas de empleo y postularte a vacantes.\n\nCuenta Business: te permite crear el perfil de tu cuenta Business, publicar ofertas de trabajo, recibir postulaciones y gestionar procesos de selección.\n\nCuenta de Organización: pensada para instituciones y entidades que conectan educación y oportunidades.\n\nCada tipo de cuenta tiene un panel adaptado a sus necesidades. No se puede seguir a cuentas personales.',
       },
       {
         question: '¿Puedo tener una cuenta personal y una Business al mismo tiempo?',
@@ -91,7 +91,7 @@ export const helpCategories = [
       {
         question: '¿Por qué no aparecen resultados cuando busco empleo?',
         answer:
-          'Puede deberse a varios motivos:\n\n• Los filtros aplicados son demasiado restrictivos. Prueba a ampliar la búsqueda eliminando algunos filtros.\n• No existen ofertas activas en ese momento para el puesto o ubicación buscados.\n• Las palabras clave introducidas no coinciden con los títulos de las ofertas disponibles. Prueba con sinónimos o términos más generales.\n\nSi el problema persiste, contacta con nuestro equipo de soporte.',
+          'Puede deberse a varios motivos:\n\n• Los filtros aplicados son demasiado restrictivos. Prueba a ampliar la búsqueda eliminando algunos filtros.\n• En este momento no hay ofertas activas para el puesto o ubicación buscados.\n• Las palabras clave introducidas no coinciden con los títulos de las ofertas disponibles. Prueba con sinónimos o términos más generales.\n\nSi el problema persiste, contacta con nuestro equipo de soporte.',
       },
       {
         question: '¿Puedo guardar ofertas para verlas más tarde?',

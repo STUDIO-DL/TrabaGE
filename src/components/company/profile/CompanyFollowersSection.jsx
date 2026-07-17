@@ -4,10 +4,18 @@ import Button from '../../ui/Button';
 import Spinner from '../../ui/Spinner';
 import { followsService } from '../../../services/follows.service';
 import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
+import { getEmptyFollowersCopy, resolveOrgViewerContext } from '../../../utils/copyLabels';
+import { isOrganizationProfile } from '../../../utils/orgLabels';
 
 const PAGE_SIZE = 20;
 
-export default function CompanyFollowersSection({ targetType, targetId, visible = false }) {
+export default function CompanyFollowersSection({
+  targetType,
+  targetId,
+  visible = false,
+  readOnly = true,
+  profile = null,
+}) {
   const [followers, setFollowers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -67,7 +75,15 @@ export default function CompanyFollowersSection({ targetType, targetId, visible 
       ) : error ? (
         <p className="mt-3 text-sm text-red-600">{error}</p>
       ) : followers.length === 0 ? (
-        <p className="mt-3 text-sm text-gray-500">Aún no tienes seguidores.</p>
+        <p className="mt-3 text-sm text-gray-500">
+          {getEmptyFollowersCopy(
+            resolveOrgViewerContext({
+              isOwn: !readOnly,
+              profile,
+              orgKind: isOrganizationProfile(profile) ? 'organization' : 'business',
+            }),
+          )}
+        </p>
       ) : (
         <ul className="mt-4 divide-y divide-gray-100">
           {followers.map((follower) => (

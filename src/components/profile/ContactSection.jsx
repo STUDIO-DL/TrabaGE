@@ -5,6 +5,7 @@ import Button from '../ui/Button';
 import AppIcon from '../common/AppIcon';
 import { Save, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 export default function ContactSection({
   contactEmail,
@@ -39,7 +40,7 @@ export default function ContactSection({
       iconTone="contact"
       title="Datos de contacto"
       isEmpty={!isOwn && !contactEmail && !contactWhatsapp}
-      emptyText="Contacto no disponible."
+      emptyText={getProfileSectionEmptyCopy('contact', isOwn)}
     >
       {isOwn ? (
         <div className="space-y-4">

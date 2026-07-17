@@ -13,6 +13,7 @@ import { postsService } from '../../services/posts.service';
 import { storageService } from '../../services/storage.service';
 import { STORAGE_BUCKETS } from '../../constants/storage';
 import { FEED_CONTENT_TYPES } from '../../constants/feedContentTypes';
+import { TOAST } from '../../utils/copyLabels';
 
 export default function Feed() {
   const { user } = useAuth();
@@ -44,7 +45,7 @@ export default function Feed() {
       return;
     }
 
-    showToast('Publicación actualizada', 'success');
+    showToast(TOAST.postUpdated, 'success');
     refetch();
   };
 
@@ -62,7 +63,7 @@ export default function Feed() {
       await storageService.deleteFile(STORAGE_BUCKETS.POST_IMAGES, post.post_image_path);
     }
 
-    showToast('Publicación eliminada', 'success');
+    showToast(TOAST.postDeleted, 'success');
     refetch();
   };
 

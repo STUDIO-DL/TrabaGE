@@ -69,12 +69,12 @@ export const REGISTER_ACCOUNT_CONFIG = {
   },
   [ACCOUNT_KINDS.BUSINESS]: {
     emailLabel: 'Correo empresarial',
-    emailPlaceholder: 'nombre@negocio.com',
+    emailPlaceholder: 'nombre@empresa.com',
     fields: [
       {
         key: 'orgName',
         type: 'text',
-        label: 'Nombre del negocio',
+        label: 'Nombre de la cuenta Business',
         placeholder: 'Ej. Tech Solutions Ltd.',
         icon: Building2,
         autoComplete: 'organization',

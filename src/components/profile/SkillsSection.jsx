@@ -7,6 +7,7 @@ import { Trash2, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { SKILL_SUGGESTIONS, filterSkillSuggestions } from '../../constants/skills';
 import { normalizeSkillName } from '../../utils/normalizeSkill';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 const PREVIEW_COUNT = 8;
 const POPULAR_COUNT = 6;
@@ -50,7 +51,7 @@ export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
       title="Habilidades principales"
       isOwn={isOwn}
       isEmpty={!items.length && !isOwn}
-      emptyText="Sin habilidades registradas."
+      emptyText={getProfileSectionEmptyCopy('skills', isOwn)}
       footerLabel={footerLabel}
     >
       <div className="flex flex-wrap gap-2">

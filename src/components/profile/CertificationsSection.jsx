@@ -2,6 +2,7 @@ import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { Award } from '../../constants/icons';
 import { formatDate } from '../../utils/formatDate';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 const PREVIEW_COUNT = 2;
 
@@ -18,7 +19,7 @@ export default function CertificationsSection({ items = [], isOwn, onAdd, onEdit
       isOwn={isOwn}
       onAdd={onAdd}
       isEmpty={!items.length}
-      emptyText="Sin certificaciones registradas."
+      emptyText={getProfileSectionEmptyCopy('certifications', isOwn)}
       footerLabel={footerLabel}
     >
       {preview.map((item) => (

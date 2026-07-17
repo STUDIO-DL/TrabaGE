@@ -24,6 +24,7 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { validateFile } from '../../utils/validateFile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
 import { shareContent, getShareDescription } from '../../utils/shareContent';
+import { TOAST } from '../../utils/copyLabels';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -82,21 +83,21 @@ export default function Profile() {
         : { [field]: value };
     const { error } = await updateBasicInfo(payload);
     setSavingField(null);
-    showToast(error ? error.message : 'Guardado', error ? 'error' : 'success');
+    showToast(error ? error.message : TOAST.saved, error ? 'error' : 'success');
   };
 
   const handleSaveAbout = async (about) => {
     setAboutSaving(true);
     const { error } = await updateBasicInfo({ about });
     setAboutSaving(false);
-    showToast(error ? error.message : 'Descripción guardada', error ? 'error' : 'success');
+    showToast(error ? error.message : 'Descripción guardada.', error ? 'error' : 'success');
   };
 
   const handleSaveContact = async (data) => {
     setContactSaving(true);
     const { error } = await updateBasicInfo(data);
     setContactSaving(false);
-    showToast(error ? error.message : 'Contacto guardado', error ? 'error' : 'success');
+    showToast(error ? error.message : TOAST.contactSaved, error ? 'error' : 'success');
   };
 
   const handleAvatar = async (file) => {
@@ -108,7 +109,7 @@ export default function Profile() {
     setAvatarLoading(true);
     const { error } = await uploadAvatar(file);
     setAvatarLoading(false);
-    showToast(error ? error.message : 'Foto actualizada', error ? 'error' : 'success');
+    showToast(error ? error.message : 'Foto actualizada.', error ? 'error' : 'success');
   };
 
   const handleUploadCV = async (file, errorMsg) => {
@@ -116,21 +117,21 @@ export default function Profile() {
     setCvLoading(true);
     const { error } = await uploadCV(file);
     setCvLoading(false);
-    showToast(error ? error.message : 'CV subido', error ? 'error' : 'success');
+    showToast(error ? error.message : 'CV subido correctamente.', error ? 'error' : 'success');
   };
 
   const handleSaveCoverLetter = async (text) => {
     setCoverLoading(true);
     const { error } = await saveCoverLetter(text);
     setCoverLoading(false);
-    showToast(error ? error.message : 'Carta guardada', error ? 'error' : 'success');
+    showToast(error ? error.message : 'Carta guardada.', error ? 'error' : 'success');
   };
 
   const saveExperience = async (data, id) => {
     setSaving(true);
     const result = id ? await updateExperience(id, data) : await addExperience(data);
     setSaving(false);
-    if (!result.error) showToast('Experiencia guardada', 'success');
+    if (!result.error) showToast('Experiencia guardada.', 'success');
     return result;
   };
 
@@ -138,7 +139,7 @@ export default function Profile() {
     setSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
     setSaving(false);
-    if (!result.error) showToast('Educación guardada', 'success');
+    if (!result.error) showToast('Educación guardada.', 'success');
     return result;
   };
 
@@ -146,7 +147,7 @@ export default function Profile() {
     setSaving(true);
     const result = id ? await updateCertification(id, data) : await addCertification(data);
     setSaving(false);
-    if (!result.error) showToast('Certificación guardada', 'success');
+    if (!result.error) showToast('Certificación guardada.', 'success');
     return result;
   };
 
@@ -154,7 +155,7 @@ export default function Profile() {
     setSaving(true);
     const result = id ? await updateLanguage(id, data) : await addLanguage(data);
     setSaving(false);
-    if (!result.error) showToast('Idioma guardado', 'success');
+    if (!result.error) showToast('Idioma guardado.', 'success');
     return result;
   };
 
@@ -218,7 +219,7 @@ export default function Profile() {
               onEdit={openLanguage}
               onDelete={async (id) => {
                 await deleteLanguage(id);
-                showToast('Idioma eliminado', 'success');
+                showToast('Idioma eliminado.', 'success');
               }}
             />
           </>
@@ -246,7 +247,7 @@ export default function Profile() {
           onEdit={openEducation}
           onDelete={async (id) => {
             await deleteEducation(id);
-            showToast('Educación eliminada', 'success');
+            showToast('Educación eliminada.', 'success');
           }}
         />
 
@@ -257,7 +258,7 @@ export default function Profile() {
           onEdit={openCert}
           onDelete={async (id) => {
             await deleteCertification(id);
-            showToast('Certificación eliminada', 'success');
+            showToast('Certificación eliminada.', 'success');
           }}
         />
 
@@ -266,11 +267,11 @@ export default function Profile() {
           isOwn={canEdit}
           onAdd={async (name) => {
             const { error } = await addSkill(name);
-            showToast(error ? error.message : 'Habilidad añadida', error ? 'error' : 'success');
+            showToast(error ? error.message : 'Habilidad añadida.', error ? 'error' : 'success');
           }}
           onDelete={async (id) => {
             await deleteSkill(id);
-            showToast('Habilidad eliminada', 'success');
+            showToast('Habilidad eliminada.', 'success');
           }}
         />
 
@@ -279,11 +280,11 @@ export default function Profile() {
           isOwn={canEdit}
           onAdd={async (data) => {
             const { error } = await addCandidateLink(data);
-            showToast(error ? error.message : 'Enlace añadido', error ? 'error' : 'success');
+            showToast(error ? error.message : 'Enlace añadido.', error ? 'error' : 'success');
           }}
           onDelete={async (id) => {
             await deleteCandidateLink(id);
-            showToast('Enlace eliminado', 'success');
+            showToast('Enlace eliminado.', 'success');
           }}
         />
 
@@ -292,11 +293,11 @@ export default function Profile() {
           isOwn={canEdit}
           onAdd={async (name) => {
             const { error } = await addService(name);
-            showToast(error ? error.message : 'Servicio añadido', error ? 'error' : 'success');
+            showToast(error ? error.message : 'Servicio añadido.', error ? 'error' : 'success');
           }}
           onDelete={async (id) => {
             await deleteService(id);
-            showToast('Servicio eliminado', 'success');
+            showToast('Servicio eliminado.', 'success');
           }}
         />
 
@@ -307,7 +308,7 @@ export default function Profile() {
           onEdit={openExperience}
           onDelete={async (id) => {
             await deleteExperience(id);
-            showToast('Experiencia eliminada', 'success');
+            showToast('Experiencia eliminada.', 'success');
           }}
         />
 

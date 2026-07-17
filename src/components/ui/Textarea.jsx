@@ -1,4 +1,4 @@
-export default function Textarea({ label, error, hint, className = '', id, rows = 4, ...props }) {
+export default function Textarea({ label, error, hint, className = '', id, rows = 4, required, ...props }) {
   const inputId = id || props.name;
 
   return (
@@ -6,6 +6,7 @@ export default function Textarea({ label, error, hint, className = '', id, rows 
       {label && (
         <label htmlFor={inputId} className="mb-space-sm block text-label text-app-muted">
           {label}
+          {required ? <span className="text-red-600" aria-hidden="true"> *</span> : null}
         </label>
       )}
       <textarea
@@ -19,6 +20,7 @@ export default function Textarea({ label, error, hint, className = '', id, rows 
           error ? 'border-error-500 focus:ring-error-100' : 'border-app-border',
         ].join(' ')}
         aria-invalid={error ? true : undefined}
+        required={required}
         {...props}
       />
       {error && <p className="mt-space-xs text-caption text-error-600">{error}</p>}

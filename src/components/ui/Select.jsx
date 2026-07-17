@@ -1,4 +1,4 @@
-export default function Select({ label, error, hint, options = [], className = '', id, ...props }) {
+export default function Select({ label, error, hint, options = [], className = '', id, required, ...props }) {
   const inputId = id || props.name;
 
   return (
@@ -6,6 +6,7 @@ export default function Select({ label, error, hint, options = [], className = '
       {label && (
         <label htmlFor={inputId} className="mb-space-sm block text-label text-app-muted">
           {label}
+          {required ? <span className="text-red-600" aria-hidden="true"> *</span> : null}
         </label>
       )}
       <select
@@ -18,6 +19,7 @@ export default function Select({ label, error, hint, options = [], className = '
           error ? 'border-error-500 focus:ring-error-100' : 'border-app-border',
         ].join(' ')}
         aria-invalid={error ? true : undefined}
+        required={required}
         {...props}
       >
         {options.map(({ value, label: optionLabel }) => (

@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 import AppIcon from '../common/AppIcon';
 import { Save, X, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 const PREVIEW_LENGTH = 180;
 
@@ -40,7 +41,7 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
       onAdd={startEdit}
       addLabel={hasContent ? 'Editar' : 'Añadir'}
       isEmpty={!hasContent && !editing}
-      emptyText="Sin descripción."
+      emptyText={getProfileSectionEmptyCopy('about', isOwn)}
     >
       {editing ? (
         <div className="space-y-3">

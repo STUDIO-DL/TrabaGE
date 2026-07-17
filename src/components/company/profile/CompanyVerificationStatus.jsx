@@ -3,6 +3,7 @@ import AppIcon from '../../common/AppIcon';
 import { AlertTriangle, ShieldCheck, ICON_SIZES } from '../../../constants/icons';
 import VerifiedBadge from '../VerifiedBadge';
 import { getVerificationStatus, isCompanyVerified } from '../../../utils/companyVerification';
+import { getOrgLabels } from '../../../utils/orgLabels';
 
 const STATUS_MAP = {
   pending: {
@@ -20,11 +21,12 @@ const STATUS_MAP = {
 };
 
 export default function CompanyVerificationStatus({ company, status, profile = false }) {
+  const orgLabels = getOrgLabels(company);
   if (isCompanyVerified(company)) {
     return (
       <span className="inline-flex items-center gap-1.5">
-        <VerifiedBadge size={profile ? 'md' : 'sm'} />
-        <Badge variant="verified" label="Empresa Verificada" />
+        <VerifiedBadge size={profile ? 'md' : 'sm'} tooltip={orgLabels.verified} />
+        <Badge variant="verified" label={orgLabels.verified} />
       </span>
     );
   }
