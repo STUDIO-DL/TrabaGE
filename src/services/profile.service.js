@@ -22,6 +22,9 @@ export const CANDIDATE_PROFILE_COLUMNS = [
   'cover_letter',
   'job_preferences',
   'expected_salary',
+  'sector',
+  'show_education_in_intro',
+  'intro_education_id',
   'setup_complete',
   'is_active',
   'created_at',
@@ -40,8 +43,9 @@ const FULL_PROFILE_SELECT = `
 `;
 
 const PUBLIC_PROFILE_SELECT = `
-  user_id, full_name, headline, about, city, province, country, avatar_path,
-  years_experience, contact_email, contact_whatsapp, setup_complete, is_active,
+  user_id, full_name, headline, about, city, province, country, sector, avatar_path,
+  years_experience, show_education_in_intro, intro_education_id,
+  contact_email, contact_whatsapp, setup_complete, is_active,
   created_at, updated_at
 `;
 

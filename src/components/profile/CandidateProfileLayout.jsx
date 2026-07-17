@@ -20,8 +20,7 @@ export default function CandidateProfileLayout({
   shareTitle,
   reportTargetId,
   onSettings,
-  onSaveField,
-  savingField,
+  onEditIntro,
   onContact,
   sidebar,
   children,
@@ -48,8 +47,7 @@ export default function CandidateProfileLayout({
         onCoverChange={onCoverChange}
         coverLoading={coverLoading}
         coverSrc={coverSrc}
-        onSaveField={onSaveField}
-        savingField={savingField}
+        onEditIntro={onEditIntro}
       />
       <ProfileActionBar
         isOwn={isOwn}

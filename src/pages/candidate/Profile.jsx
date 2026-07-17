@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CandidateProfileLayout from '../../components/profile/CandidateProfileLayout';
@@ -66,7 +66,6 @@ export default function Profile() {
   const [editingCert, setEditingCert] = useState(null);
   const [editingLanguage, setEditingLanguage] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [savingField, setSavingField] = useState(null);
   const [aboutSaving, setAboutSaving] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -75,16 +74,12 @@ export default function Profile() {
 
   const canEdit = !isPreviewMode;
 
-  const handleSaveField = async (field, value) => {
-    setSavingField(field);
-    const payload =
-      field === 'years_experience'
-        ? { years_experience: value === '' || value == null ? null : Number(value) }
-        : { [field]: value };
-    const { error } = await updateBasicInfo(payload);
-    setSavingField(null);
-    showToast(error ? error.message : TOAST.saved, error ? 'error' : 'success');
-  };
+  useEffect(() => {
+    if (loading) return;
+    if (window.location.hash === '#contacto') {
+      document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [loading]);
 
   const handleSaveAbout = async (about) => {
     setAboutSaving(true);
@@ -207,8 +202,7 @@ export default function Profile() {
         avatarLoading={avatarLoading}
         onShare={handleShare}
         onSettings={canEdit ? () => navigate('/personal/settings') : undefined}
-        onSaveField={canEdit ? handleSaveField : undefined}
-        savingField={savingField}
+        onEditIntro={canEdit ? () => navigate('/personal/profile/edit-intro') : undefined}
         sidebar={
           <>
             <ProfileSidebar profile={profile} email={user?.email} />

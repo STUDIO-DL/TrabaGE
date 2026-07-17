@@ -35,6 +35,7 @@ const ApplyJob = lazy(() => import('./pages/candidate/ApplyJob'));
 const CandidateApplications = lazy(() => import('./pages/candidate/Applications'));
 const CandidateNotifications = lazy(() => import('./pages/candidate/Notifications'));
 const CandidateProfile = lazy(() => import('./pages/candidate/Profile'));
+const EditIntro = lazy(() => import('./pages/candidate/EditIntro'));
 const CandidateSavedJobs = lazy(() => import('./pages/candidate/SavedJobs'));
 const CandidateSettings = lazy(() => import('./pages/candidate/Settings'));
 const CandidateAppearance = lazy(() => import('./pages/candidate/Appearance'));
@@ -160,6 +161,7 @@ function AppRoutes() {
                 <Route path="/personal/applications" element={<CandidateApplications />} />
                 <Route path="/personal/notifications" element={<CandidateNotifications />} />
                 <Route path="/personal/profile" element={<CandidateProfile />} />
+                <Route path="/personal/profile/edit-intro" element={<EditIntro />} />
                 <Route path="/personal/settings" element={<CandidateSettings />} />
                 <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
                 <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />

@@ -36,6 +36,7 @@ export default function ContactSection({
 
   return (
     <ProfileSectionCard
+      id="contacto"
       icon={PROFILE_SECTION_ICONS.contact}
       iconTone="contact"
       title="Datos de contacto"

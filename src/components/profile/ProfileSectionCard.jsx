@@ -29,6 +29,7 @@ function DeleteActionButton({ onClick, label = 'Eliminar' }) {
 }
 
 export default function ProfileSectionCard({
+  id,
   icon,
   iconTone = 'about',
   title,
@@ -47,7 +48,7 @@ export default function ProfileSectionCard({
   if (isEmpty && !isOwn) return null;
 
   return (
-    <section className="rounded-radius-lg border border-gray-200 bg-white p-space-md shadow-sm">
+    <section id={id} className="rounded-radius-lg border border-gray-200 bg-white p-space-md shadow-sm">
       <div className="mb-space-md flex items-center justify-between gap-space-sm">
         <div className="flex items-center gap-space-sm">
           {icon && (
