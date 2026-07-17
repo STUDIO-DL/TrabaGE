@@ -13,10 +13,12 @@ const SLIDES = [
   {
     image: '/images/onboarding-network.png',
     imageAlt: 'Red de profesionales de diferentes sectores conectados por TrabaGE',
+    imageClassName: 'onboarding-hero-image--portrait',
   },
   {
     image: '/images/onboarding-opportunities.png',
     imageAlt: 'Joven profesional descubriendo oportunidades laborales en TrabaGE',
+    imageClassName: 'onboarding-hero-image--portrait',
   },
 ];
 
@@ -49,6 +51,7 @@ export default function OnboardingFlow() {
       key={SLIDES[step].image}
       image={SLIDES[step].image}
       imageAlt={SLIDES[step].imageAlt}
+      imageClassName={SLIDES[step].imageClassName}
       currentStep={step}
       totalSteps={SLIDES.length}
       onSelectStep={setStep}

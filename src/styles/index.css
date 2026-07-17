@@ -292,6 +292,14 @@
     mix-blend-mode: multiply;
   }
 
+  /* Portrait PNGs (682×1024) are height-bound in the shared frame; scale up to match map slide width */
+  .onboarding-hero-image--portrait {
+    width: 150%;
+    height: 150%;
+    max-width: none;
+    object-position: center center;
+  }
+
   .onboarding-screen-icons {
     background: rgb(var(--app-bg));
   }
@@ -300,6 +308,11 @@
     .onboarding-hero-frame {
       width: min(94vw, 26rem);
       height: clamp(15rem, 48dvh, 24rem);
+    }
+
+    .onboarding-hero-image--portrait {
+      width: 148%;
+      height: 148%;
     }
   }
 

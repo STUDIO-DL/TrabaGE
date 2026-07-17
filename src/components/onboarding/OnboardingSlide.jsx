@@ -4,6 +4,7 @@ import Button from '../ui/Button';
 export default function OnboardingSlide({
   image,
   imageAlt = '',
+  imageClassName = '',
   title,
   description,
   currentStep,
@@ -40,7 +41,7 @@ export default function OnboardingSlide({
             <img
               src={image}
               alt={imageAlt}
-              className="onboarding-hero-image"
+              className={['onboarding-hero-image', imageClassName].filter(Boolean).join(' ')}
               decoding="async"
               fetchPriority={currentStep === 0 ? 'high' : 'auto'}
             />
