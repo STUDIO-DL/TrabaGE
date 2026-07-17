@@ -283,7 +283,13 @@ export default function SettingsScreen({ accountType }) {
             <SectionCard title="Legal">
               <SettingsRow icon={FileText} title="Política de privacidad" to={LEGAL_ROUTES.privacy} />
               <Divider />
-              <SettingsRow icon={FileText} title="Términos de servicio" to={LEGAL_ROUTES.terms} />
+              <SettingsRow icon={FileText} title="Términos y Condiciones" to={LEGAL_ROUTES.terms} />
+              <Divider />
+              <SettingsRow
+                icon={FileText}
+                title="Aviso Legal / Propiedad Intelectual"
+                to={LEGAL_ROUTES.legalNotice}
+              />
             </SectionCard>
 
             <SectionCard title="Soporte">

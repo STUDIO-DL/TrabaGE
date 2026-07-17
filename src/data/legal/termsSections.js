@@ -201,6 +201,10 @@ export const TERMS_ARTICLES = [
         type: 'p',
         text: 'Conservas los derechos sobre tu propio contenido; TrabaGE solo lo utiliza para operar y mostrar el servicio.',
       },
+      {
+        type: 'p',
+        text: 'El uso informativo y nominativo de marcas de terceros (empresas, universidades e instituciones), la política de logotipos y el procedimiento de retirada (take-down) se detallan en el Aviso Legal / Propiedad Intelectual y en la sección final de estos Términos.',
+      },
     ],
   },
   {

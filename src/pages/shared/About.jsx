@@ -92,6 +92,9 @@ export default function About() {
           <Link to={LEGAL_ROUTES.terms} className="text-slate-500 hover:text-slate-700">
             Términos y Condiciones
           </Link>
+          <Link to={LEGAL_ROUTES.legalNotice} className="text-slate-500 hover:text-slate-700">
+            Aviso Legal / Propiedad Intelectual
+          </Link>
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-2 border-t border-slate-100 pt-6 dark:border-slate-800">

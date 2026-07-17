@@ -70,6 +70,9 @@ export default function AppInfo() {
           <Link to={LEGAL_ROUTES.terms} className="font-medium text-primary-600 hover:text-primary-700">
             Términos y Condiciones
           </Link>
+          <Link to={LEGAL_ROUTES.legalNotice} className="font-medium text-primary-600 hover:text-primary-700">
+            Aviso Legal / Propiedad Intelectual
+          </Link>
           <a
             href={ZARREL_URL}
             target="_blank"
