@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useAuth } from './useAuth';
-import { useProfile } from './useProfile';
+import { mergeOwnCandidateProfile, useProfile } from './useProfile';
 import { profileService } from '../services/profile.service';
 import { storageService } from '../services/storage.service';
 import { jobMatchesService } from '../services/jobMatches.service';
@@ -43,11 +43,16 @@ export function useCandidateProfile() {
 
   const updateBasicInfo = useCallback(
     async (data) => {
+      mergeOwnCandidateProfile(userId, data);
       const { error: saveError } = await profileService.updateCandidateProfile(userId, data);
-      if (!saveError) await afterCandidateProfileChanged();
+      if (!saveError) {
+        await afterCandidateProfileChanged();
+      } else {
+        await refetch();
+      }
       return { error: friendlyProfileError(saveError) };
     },
-    [afterCandidateProfileChanged, userId],
+    [afterCandidateProfileChanged, refetch, userId],
   );
 
   const uploadAvatar = useCallback(

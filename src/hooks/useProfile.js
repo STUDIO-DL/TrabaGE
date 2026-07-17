@@ -5,12 +5,61 @@ import { companyService } from '../services/company.service';
 import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewApplicantProfile, getPreviewProfile, PREVIEW_USER } from '../constants/preview';
 
+const profileCache = new Map();
+const cacheListeners = new Map();
+
+function getCacheKey(targetId, { role, isPreviewMode, viewingOtherCandidate }) {
+  if (!targetId || isPreviewMode) return null;
+  if (viewingOtherCandidate) return `public:candidate:${targetId}`;
+  if (!isEmployerRole(role)) return `own:candidate:${targetId}`;
+  return `own:company:${targetId}`;
+}
+
+function getCachedProfile(cacheKey) {
+  if (!cacheKey) return null;
+  return profileCache.get(cacheKey) ?? null;
+}
+
+function setCachedProfile(cacheKey, profile) {
+  if (!cacheKey) return;
+  profileCache.set(cacheKey, profile);
+  cacheListeners.get(cacheKey)?.forEach((listener) => listener(profile));
+}
+
+export function mergeOwnCandidateProfile(userId, partial) {
+  if (!userId || !partial) return;
+  const cacheKey = `own:candidate:${userId}`;
+  const current = profileCache.get(cacheKey);
+  if (!current) return;
+  setCachedProfile(cacheKey, { ...current, ...partial });
+}
+
+function subscribeToProfileCache(cacheKey, listener) {
+  if (!cacheKey) return () => {};
+  if (!cacheListeners.has(cacheKey)) cacheListeners.set(cacheKey, new Set());
+  cacheListeners.get(cacheKey).add(listener);
+  return () => cacheListeners.get(cacheKey)?.delete(listener);
+}
+
 export function useProfile(userId) {
   const { user, role, isPreviewMode } = useAuth();
   const targetId = userId || user?.id;
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const viewingOtherCandidate = Boolean(userId) && userId !== user?.id;
+  const cacheKey = getCacheKey(targetId, { role, isPreviewMode, viewingOtherCandidate });
+  const cachedProfile = getCachedProfile(cacheKey);
+
+  const [profile, setProfile] = useState(cachedProfile);
+  const [loading, setLoading] = useState(!cachedProfile);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (!cacheKey) return undefined;
+    return subscribeToProfileCache(cacheKey, (nextProfile) => {
+      setProfile(nextProfile);
+      setLoading(false);
+      setError(null);
+    });
+  }, [cacheKey]);
 
   const fetchProfile = useCallback(async () => {
     if (!targetId) return;
@@ -38,7 +87,9 @@ export function useProfile(userId) {
       }
     }
 
-    setLoading(true);
+    if (!getCachedProfile(cacheKey)) {
+      setLoading(true);
+    }
     setError(null);
 
     const isCandidate = userId ? true : !isEmployerRole(role);
@@ -54,7 +105,11 @@ export function useProfile(userId) {
     setProfile(data);
     setError(fetchError?.message ?? null);
     setLoading(false);
-  }, [targetId, role, userId, user?.id, isPreviewMode]);
+
+    if (!fetchError && data && cacheKey) {
+      setCachedProfile(cacheKey, data);
+    }
+  }, [targetId, role, userId, user?.id, isPreviewMode, cacheKey]);
 
   useEffect(() => {
     fetchProfile();

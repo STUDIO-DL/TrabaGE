@@ -37,7 +37,8 @@ export function getIntroEducationItem(profile) {
 
   const education = profile?.education ?? [];
   if (profile?.intro_education_id) {
-    const selected = education.find((item) => item.id === profile.intro_education_id);
+    const introId = String(profile.intro_education_id);
+    const selected = education.find((item) => String(item.id) === introId);
     if (selected) return selected;
   }
 

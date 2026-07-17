@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
@@ -62,12 +62,14 @@ export default function EditIntro() {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
+  const formInitializedRef = useRef(false);
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
   const [modalSaving, setModalSaving] = useState(false);
 
   useEffect(() => {
-    if (!profile) return;
+    if (!profile || formInitializedRef.current) return;
+    formInitializedRef.current = true;
     setForm({
       full_name: profile.full_name || '',
       headline: profile.headline || '',
@@ -100,7 +102,13 @@ export default function EditIntro() {
     event.preventDefault();
     const nextErrors = validateIntroForm(form);
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
+    if (Object.keys(nextErrors).length > 0) {
+      const firstError = Object.values(nextErrors)[0];
+      showToast(firstError, 'error');
+      const firstField = Object.keys(nextErrors)[0];
+      document.getElementById(firstField)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     setSaving(true);
     const payload = {
@@ -122,7 +130,7 @@ export default function EditIntro() {
     }
 
     showToast(TOAST.saved, 'success');
-    navigate('/personal/profile');
+    navigate('/personal/profile', { state: { profileUpdated: true } });
   };
 
   const saveExperience = async (data, id) => {
@@ -169,7 +177,7 @@ export default function EditIntro() {
           </Button>
         }
       >
-        <form id="edit-intro-form" onSubmit={handleSave} className="pb-space-xl">
+        <form id="edit-intro-form" noValidate onSubmit={handleSave} className="pb-space-xl">
           <EditIntroSection title="Información básica">
             <Input
               label="Nombre"
@@ -251,6 +259,7 @@ export default function EditIntro() {
             </Button>
             <label className="flex min-h-touch cursor-pointer items-center gap-space-sm rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
               <input
+                id="show_education_in_intro"
                 type="checkbox"
                 checked={form.show_education_in_intro}
                 onChange={setField('show_education_in_intro')}
@@ -258,6 +267,11 @@ export default function EditIntro() {
               />
               <span className="text-body-small text-app-text">Mostrar centro en mi intro</span>
             </label>
+            {errors.intro_education_id ? (
+              <p id="intro_education_id" className="text-caption text-error-600">
+                {errors.intro_education_id}
+              </p>
+            ) : null}
           </EditIntroSection>
 
           <EditIntroSection title="Ubicación">

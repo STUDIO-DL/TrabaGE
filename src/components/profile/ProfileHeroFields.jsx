@@ -7,6 +7,9 @@ export const EMPTY = {
   headline: 'Titular no especificado',
   city: 'Ubicación no especificada',
   years: 'Años de experiencia no especificados',
+  sector: 'Sector no especificado',
+  position: 'Puesto actual no especificado',
+  education: 'Centro educativo no seleccionado',
 };
 
 export const YEAR_OPTIONS = Array.from({ length: 51 }, (_, i) => i);
