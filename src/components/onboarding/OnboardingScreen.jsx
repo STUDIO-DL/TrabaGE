@@ -15,6 +15,7 @@ export default function OnboardingScreen({
   return (
     <MobileScreenLayout
       noScroll
+      className="onboarding-screen-icons"
       header={
         onSkip ? (
           <div className="flex justify-end px-md pt-sm">
@@ -42,10 +43,10 @@ export default function OnboardingScreen({
       footerClassName="w-full max-w-md px-md pb-md"
     >
       <div
-        className="onboarding-illustration-in flex h-52 w-52 items-center justify-center rounded-full bg-gradient-to-br from-primary-50 via-white to-primary-100 shadow-[0_10px_30px_rgba(15,23,42,0.05)]"
+        className="onboarding-illustration-in flex h-52 w-52 items-center justify-center"
         aria-label={iconLabel}
       >
-        {Icon && <Icon className="h-24 w-24 text-primary-600" strokeWidth={1.5} />}
+        {Icon && <Icon className="relative z-[1] h-24 w-24 text-primary-600" strokeWidth={1.5} />}
       </div>
 
       <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">

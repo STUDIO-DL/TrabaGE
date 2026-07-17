@@ -18,10 +18,8 @@ export default function OnboardingSlide({
   const hasCopy = Boolean(title || description);
 
   return (
-    <div className="flex min-h-dvh flex-col overflow-hidden bg-gradient-to-b from-primary-50/60 via-white to-white">
-      <section
-        className="relative flex min-h-0 w-full flex-1 items-center justify-center"
-      >
+    <div className="onboarding-screen flex min-h-dvh flex-col overflow-hidden">
+      <section className="onboarding-hero-section relative flex min-h-0 w-full flex-1 items-center justify-center">
         {onSkip ? (
           <button
             type="button"
@@ -37,15 +35,16 @@ export default function OnboardingSlide({
         ) : null}
 
         {image ? (
-          <div className="onboarding-hero-in relative flex h-[clamp(17rem,52dvh,27rem)] w-[min(86vw,23rem)] items-center justify-center overflow-hidden rounded-radius-xl border border-app-border bg-white p-space-md shadow-elevation-2">
+          <figure className="onboarding-hero-in onboarding-hero-frame mx-auto">
+            <span className="onboarding-hero-canvas" aria-hidden="true" />
             <img
               src={image}
               alt={imageAlt}
-              className="max-h-full max-w-full object-contain"
+              className="onboarding-hero-image"
               decoding="async"
               fetchPriority={currentStep === 0 ? 'high' : 'auto'}
             />
-          </div>
+          </figure>
         ) : (
           <div className="h-8" aria-hidden />
         )}
