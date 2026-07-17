@@ -183,10 +183,10 @@ async function rankPosts(posts, user, role, authorId) {
   return posts;
 }
 
-export function usePosts(authorId) {
+export function usePosts(authorId, { enabled = true } = {}) {
   const { user, isPreviewMode, role } = useAuth();
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(enabled);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState(null);
@@ -197,6 +197,8 @@ export function usePosts(authorId) {
   }, [posts]);
 
   const fetchPosts = useCallback(async ({ append = false, offset = 0 } = {}) => {
+    if (!enabled) return;
+
     if (append) setLoadingMore(true);
     else setLoading(true);
     setError(null);
@@ -243,11 +245,15 @@ export function usePosts(authorId) {
     setError(null);
     setLoading(false);
     setLoadingMore(false);
-  }, [authorId, isPreviewMode, role, user]);
+  }, [authorId, enabled, isPreviewMode, role, user]);
 
   useEffect(() => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
     fetchPosts();
-  }, [fetchPosts]);
+  }, [enabled, fetchPosts]);
 
   const loadMore = useCallback(() => {
     if (loading || loadingMore || !hasMore) return;

@@ -50,16 +50,16 @@ export default function CandidateProfileLayout({
         onContact={onContact}
         contactDisabled={!hasCandidateContact(profile)}
       />
-      <div className="mx-auto max-w-5xl px-4 py-6">
+      <div className="mx-auto max-w-5xl px-space-base py-space-lg">
         <div
           className={
             sidebarContent
-              ? 'grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]'
+              ? 'grid gap-space-lg lg:grid-cols-[minmax(0,1fr)_280px]'
               : 'mx-auto max-w-3xl'
           }
         >
-          <main className="space-y-4">{children}</main>
-          {sidebarContent ? <div className="space-y-4 lg:order-none">{sidebarContent}</div> : null}
+          <main className="space-y-space-base">{children}</main>
+          {sidebarContent ? <div className="space-y-space-base lg:order-none">{sidebarContent}</div> : null}
         </div>
       </div>
     </ProfilePageShell>

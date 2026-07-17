@@ -313,13 +313,13 @@ export default function ProfileHero({
   const showYearsBadge = hasYearsExperience(profile?.years_experience) || isOwn;
 
   return (
-    <section className="profile-hero relative overflow-hidden px-space-base pb-space-lg pt-space-base text-white">
-      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-space-base sm:flex-row sm:items-end">
+    <section className="profile-hero relative overflow-hidden px-space-base py-space-lg text-white">
+      <div className="relative z-10 mx-auto flex max-w-5xl flex-col gap-space-lg sm:flex-row sm:items-start">
         <div className="relative shrink-0">
           <UserAvatar
             src={profile?.avatar_path}
             alt={profile?.full_name}
-            size="xl"
+            size="2xl"
             className="border-white/30 ring-4 ring-white/20"
           />
           {isOwn && onAvatarChange && (
@@ -340,7 +340,7 @@ export default function ProfileHero({
                 disabled={avatarLoading}
                 onClick={() => inputRef.current?.click()}
                 aria-label="Cambiar foto de perfil"
-                className="absolute bottom-1 right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white text-primary-700 shadow disabled:opacity-60"
+                className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-full bg-white text-primary-700 shadow disabled:opacity-60"
               >
                 {avatarLoading ? (
                   <span className="text-xs font-medium">…</span>
@@ -355,7 +355,7 @@ export default function ProfileHero({
           )}
         </div>
 
-        <div className="min-w-0 flex-1 pb-1">
+        <div className="min-w-0 flex-1">
           <EditableHeroField
             as="h2"
             value={profile?.full_name}
@@ -363,11 +363,11 @@ export default function ProfileHero({
             isOwn={isOwn}
             saving={savingField === 'full_name'}
             onSave={(v) => onSaveField?.('full_name', v)}
-            displayClassName="text-title font-bold leading-tight"
+            displayClassName="text-title font-bold leading-tight sm:text-heading-m"
             inputClassName="text-title font-bold"
           />
 
-          <div className="mt-1">
+          <div className="mt-space-sm">
             <EditableHeroField
               as="p"
               value={profile?.headline}
@@ -380,7 +380,7 @@ export default function ProfileHero({
             />
           </div>
 
-          <div className="mt-2">
+          <div className="mt-space-md">
             <EditableHeroSelect
               value={profile?.city || ''}
               placeholder={EMPTY.city}
@@ -394,7 +394,7 @@ export default function ProfileHero({
           </div>
 
           {showYearsBadge && (
-            <ul className="mt-4 flex flex-wrap gap-2">
+            <ul className="mt-space-md flex flex-wrap gap-space-sm">
               <EditableHeroYearsBadge
                 value={profile?.years_experience}
                 isOwn={isOwn}

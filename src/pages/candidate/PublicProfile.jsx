@@ -7,6 +7,7 @@ import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
 import SkillsSection from '../../components/profile/SkillsSection';
 import ServicesSection from '../../components/profile/ServicesSection';
+import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useProfile } from '../../hooks/useProfile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
@@ -43,17 +44,19 @@ export default function PublicProfile() {
     <PageContainer topBar={false} bottomNav={false} className="max-w-none !pb-0">
       <CandidateProfileLayout
         backButton
+        profile={profile}
         shareUrl={generateProfileUrl(userId)}
         shareTitle={profile.full_name || 'Perfil en TrabaGE'}
         reportTargetId={userId}
         onContact={handleContact}
       >
         <AboutSection about={profile.about} />
+        <ExperienceSection items={profile.experience} />
         <EducationSection items={profile.education} />
         <CertificationsSection items={profile.certifications} />
         <SkillsSection items={profile.skills} />
+        <PortfolioLinksSection items={profile.candidate_links} />
         <ServicesSection items={profile.services} />
-        <ExperienceSection items={profile.experience} />
       </CandidateProfileLayout>
     </PageContainer>
   );

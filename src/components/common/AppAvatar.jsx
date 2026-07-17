@@ -10,6 +10,7 @@ const SIZES = {
   md: { box: 'h-9 w-9', px: 36, text: 'text-body-small' },
   lg: { box: 'h-12 w-12', px: 48, text: 'text-subtitle' },
   xl: { box: 'h-[4.5rem] w-[4.5rem]', px: 72, text: 'text-title' },
+  '2xl': { box: 'h-[7rem] w-[7rem]', px: 112, text: 'text-heading-m' },
 };
 
 const VARIANTS = {

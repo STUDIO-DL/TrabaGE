@@ -1,6 +1,8 @@
 import AppIcon from '../../common/AppIcon';
 import {
+  Briefcase,
   Calendar,
+  ExternalLink,
   Globe,
   Mail,
   MapPin,
@@ -8,7 +10,7 @@ import {
   Users,
   ICON_SIZES,
 } from '../../../constants/icons';
-import { getCompanyLocationText } from '../../../utils/companyProfile';
+import { getCompanyLocationText, getCompanySectorText } from '../../../utils/companyProfile';
 
 function normalizeWebsiteHref(url) {
   if (!url) return null;
@@ -26,12 +28,12 @@ function formatWebsiteDisplay(url) {
   }
 }
 
-function InfoRow({ icon, label, value, href }) {
+function InfoRow({ icon, label, value, href, external = false }) {
   if (!value) return null;
 
   const content = (
-    <div className="flex min-h-touch items-center gap-space-md py-space-sm">
-      <AppIcon icon={icon} size={ICON_SIZES.md} className="shrink-0 text-app-subtle" />
+    <div className="flex min-h-touch items-start gap-space-sm py-space-xs">
+      <AppIcon icon={icon} size={ICON_SIZES.md} className="mt-0.5 shrink-0 text-app-subtle" />
       <div className="min-w-0 flex-1">
         <p className="text-caption text-app-subtle">{label}</p>
         <p
@@ -42,6 +44,9 @@ function InfoRow({ icon, label, value, href }) {
           {value}
         </p>
       </div>
+      {external && href && (
+        <AppIcon icon={ExternalLink} size={ICON_SIZES.sm} className="mt-1 shrink-0 text-primary-600" />
+      )}
     </div>
   );
 
@@ -51,7 +56,7 @@ function InfoRow({ icon, label, value, href }) {
         href={href}
         target={href.startsWith('http') ? '_blank' : undefined}
         rel="noopener noreferrer"
-        className="block transition-opacity duration-fast hover:opacity-80"
+        className="block rounded-radius-sm transition-opacity duration-fast hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
       >
         {content}
       </a>
@@ -63,6 +68,7 @@ function InfoRow({ icon, label, value, href }) {
 
 export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
   const location = getCompanyLocationText(profile);
+  const sector = getCompanySectorText(profile);
   const website = profile?.website?.trim();
   const websiteHref = normalizeWebsiteHref(website);
   const email = profile?.contact_email?.trim();
@@ -72,6 +78,8 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
     : profile?.contact_whatsapp?.trim()
       ? `https://wa.me/${profile.contact_whatsapp.replace(/\D/g, '')}`
       : null;
+  const address = profile?.address?.trim();
+  const excludeHeaderMeta = variant === 'inicio';
 
   const rows = [
     {
@@ -81,6 +89,7 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
       value: formatWebsiteDisplay(website),
       href: websiteHref,
       show: Boolean(website),
+      external: true,
     },
     {
       key: 'email',
@@ -102,8 +111,8 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
       key: 'location',
       icon: MapPin,
       label: 'Ubicación',
-      value: location !== 'Ubicación no especificada' ? location : null,
-      show: location !== 'Ubicación no especificada',
+      value: address || (location !== 'Ubicación no especificada' ? location : null),
+      show: Boolean(address) || (!excludeHeaderMeta && location !== 'Ubicación no especificada'),
     },
     {
       key: 'founded',
@@ -117,13 +126,20 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
       icon: Users,
       label: 'Tamaño',
       value: profile?.company_size?.trim() || null,
-      show: Boolean(profile?.company_size?.trim()),
+      show: Boolean(profile?.company_size?.trim()) && !excludeHeaderMeta,
+    },
+    {
+      key: 'sector',
+      icon: Briefcase,
+      label: 'Sector',
+      value: sector !== 'Sector no especificado' ? sector : null,
+      show: sector !== 'Sector no especificado' && !excludeHeaderMeta,
     },
   ];
 
   const visibleRows = rows.filter((row) => row.show);
 
-  if (variant === 'minimal' && visibleRows.length === 0) return null;
+  if ((variant === 'minimal' || variant === 'inicio') && visibleRows.length === 0) return null;
 
   return (
     <div className="divide-y divide-app-border">
@@ -134,8 +150,31 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
           label={row.label}
           value={row.value}
           href={row.href}
+          external={row.external}
         />
       ))}
     </div>
   );
+}
+
+export function hasVisibleCompanyInfoRows(profile, variant = 'minimal') {
+  const location = getCompanyLocationText(profile);
+  const sector = getCompanySectorText(profile);
+  const website = profile?.website?.trim();
+  const email = profile?.contact_email?.trim();
+  const phone = profile?.contact_phone?.trim() || profile?.contact_whatsapp?.trim();
+  const address = profile?.address?.trim();
+  const excludeHeaderMeta = variant === 'inicio';
+
+  const checks = [
+    Boolean(website),
+    Boolean(email),
+    Boolean(phone),
+    Boolean(address) || (!excludeHeaderMeta && location !== 'Ubicación no especificada'),
+    Boolean(profile?.founded_year),
+    Boolean(profile?.company_size?.trim()) && !excludeHeaderMeta,
+    sector !== 'Sector no especificado' && !excludeHeaderMeta,
+  ];
+
+  return checks.some(Boolean);
 }

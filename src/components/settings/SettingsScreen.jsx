@@ -35,7 +35,7 @@ import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
-const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7rem] w-[7rem]';
+const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7rem] w-[7rem]'; // matches AppAvatar size="2xl"
 
 function SectionCard({ title, children }) {
   return (
@@ -138,9 +138,9 @@ function AccountSummaryCard({ email, profile, loading, isCompany, accountType })
           src={isCompany ? profile?.logo_path : profile?.avatar_path}
           name={displayName}
           alt={displayName}
-          size="xl"
+          size="2xl"
           variant={isCompany ? 'rounded' : 'circular'}
-          className={`${SETTINGS_AVATAR_SIZE_CLASS} border-2 border-app-border shadow-elevation-2`}
+          className="border-2 border-app-border shadow-elevation-2"
         />
         <h2 className="mt-space-base max-w-full truncate text-title font-bold tracking-tight text-app-text">
           {displayName}

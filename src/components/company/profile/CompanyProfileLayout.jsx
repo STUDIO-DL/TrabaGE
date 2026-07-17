@@ -6,8 +6,6 @@ import Input from '../../ui/Input';
 import Modal from '../../ui/Modal';
 import Select from '../../ui/Select';
 import Textarea from '../../ui/Textarea';
-import { generateCompanyUrl } from '../../../utils/generateShareUrl';
-import { shareContent, getShareDescription } from '../../../utils/shareContent';
 import { useNotificationContext } from '../../../context/NotificationContext';
 import { companyService } from '../../../services/company.service';
 import { storageService } from '../../../services/storage.service';
@@ -353,16 +351,6 @@ export default function CompanyProfileLayout({
     setEditMode(mode);
   };
 
-  const handleShare = () => {
-    if (!userId) return;
-    shareContent({
-      title: displayProfile?.company_name || profile?.company_name || 'Empresa en TrabaGE',
-      text: getShareDescription('company'),
-      url: generateCompanyUrl(userId),
-      showToast,
-    });
-  };
-
   const uploadImage = async (file, type) => {
     const validation = validateFile(file, type === 'logo' ? 'logo' : 'image');
     if (!validation.valid) {
@@ -529,18 +517,14 @@ export default function CompanyProfileLayout({
   });
 
   return (
-    <ProfilePageShell
-      backButton={false}
-      onShare={handleShare}
-      isOwn={!readOnly}
-      onSettings={readOnly ? undefined : onOpenSettings}
-    >
+    <ProfilePageShell hideHeader isOwn={!readOnly}>
       <CompanyProfileView
         profile={displayProfile}
         companyId={userId}
         jobs={jobs}
         readOnly={readOnly}
         isOwn={!readOnly}
+        onSettings={readOnly ? undefined : onOpenSettings}
         onEditName={readOnly ? undefined : () => openEdit('name')}
         onEditAbout={readOnly ? undefined : () => openEdit('about')}
         onEditDetails={readOnly ? undefined : () => openEdit('details')}

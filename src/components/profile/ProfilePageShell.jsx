@@ -9,6 +9,7 @@ import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
 export default function ProfilePageShell({
   title,
   backButton = true,
+  hideHeader = false,
   onShare,
   shareUrl,
   shareTitle,
@@ -22,6 +23,7 @@ export default function ProfilePageShell({
 
   return (
     <div className="profile-page min-h-full bg-app-surface">
+      {!hideHeader && (
       <header className={topBarOuterClass}>
         <div className={topBarInnerClass}>
           {backButton ? (
@@ -69,6 +71,7 @@ export default function ProfilePageShell({
           </div>
         </div>
       </header>
+      )}
       {children}
     </div>
   );

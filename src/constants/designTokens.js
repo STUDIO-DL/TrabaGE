@@ -187,6 +187,7 @@ export const componentSize = {
     md: 36,
     lg: 48,
     xl: 72,
+    '2xl': 112,
   },
   touch: 44,
 };

@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import Card from '../../ui/Card';
 import CompanyProfileHeader from './CompanyProfileHeader';
 import CompanyProfileTabs from './CompanyProfileTabs';
 import CompanyProfileCompleteness from './CompanyProfileCompleteness';
@@ -8,8 +7,12 @@ import CompanyAboutTabSection from './CompanyAboutTabSection';
 import CompanyServicesSection from './CompanyServicesSection';
 import CompanyJobsSection from './CompanyJobsSection';
 import CompanyPostsSection, { CompanyPostsFeed } from './CompanyPostsSection';
-import CompanyInfoRows from './CompanyInfoRows';
+import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
+import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
+import CompanyProfileSectionCard from './CompanyProfileSectionCard';
 import { usePosts } from '../../../hooks/usePosts';
+import { sectionLinkClass, profileContentShellClass, profileInicioGridClass } from './companyProfileStyles';
+import { hasCompanyDescription } from '../../../utils/companyProfile';
 
 export default function CompanyProfileView({
   profile,
@@ -29,6 +32,7 @@ export default function CompanyProfileView({
   logoLoading = false,
   coverLoading = false,
   showFollowButton = false,
+  showBackButton = false,
   isFollowing = false,
   followLoading = false,
   canFollow = true,
@@ -39,6 +43,7 @@ export default function CompanyProfileView({
   shareTitle,
   reportTargetId,
   followerCount = 0,
+  onSettings,
 }) {
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
@@ -51,6 +56,7 @@ export default function CompanyProfileView({
   const hasServices = services.length > 0;
   const showFollowerCount = readOnly || isOwn;
   const showPublicActions = readOnly && (showFollowButton || onContact || shareUrl);
+  const shouldLoadPosts = activeTab === 'inicio' || activeTab === 'publicaciones';
 
   const {
     posts,
@@ -58,18 +64,28 @@ export default function CompanyProfileView({
     loadingMore: postsLoadingMore,
     hasMore: postsHasMore,
     loadMore: loadMorePosts,
-  } = usePosts(companyId);
+  } = usePosts(companyId, { enabled: shouldLoadPosts });
 
   const goToTab = (tabId) => {
     setActiveTab(tabId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const showAboutOnInicio = hasCompanyDescription(profile) || profile?.mission?.trim() || profile?.vision?.trim();
+  const infoVariant = 'inicio';
+  const showInfoCard = hasVisibleCompanyInfoRows(profile, infoVariant);
+  const showSocialCard = hasCompanySocialLinks(profile) || !readOnly;
+  const showInicioSidebar = showInfoCard || showSocialCard;
+  const inicioGridClass = showInicioSidebar
+    ? profileInicioGridClass
+    : 'grid gap-space-base';
+
   return (
     <div className="bg-app-surface">
       <CompanyProfileHeader
         profile={profile}
         readOnly={readOnly}
+        showBackButton={showBackButton}
         onEditName={onEditName}
         onUploadLogo={onUploadLogo}
         onUploadCover={onUploadCover}
@@ -90,6 +106,7 @@ export default function CompanyProfileView({
         reportTargetId={reportTargetId}
         onContact={onContact}
         contactDisabled={contactDisabled}
+        onSettings={onSettings}
       />
 
       {isOwn && !readOnly && (
@@ -99,59 +116,130 @@ export default function CompanyProfileView({
       <CompanyProfileTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        hasServices={hasServices || !readOnly}
+        hasServices={hasServices}
+        stickyTop="top-0"
       />
 
       {activeTab === 'inicio' && (
-        <div className="divide-y divide-app-border">
-          <Card padding="none" className="border-0 shadow-none">
-            <CompanyAboutSection
-              profile={profile}
-              readOnly={readOnly}
-              onEditAbout={onEditAbout}
-              expanded={aboutExpanded}
-              onToggleExpand={() => setAboutExpanded((value) => !value)}
-              onViewMore={() => goToTab('acerca')}
-              compact
-            />
-          </Card>
+        <div className={`${profileContentShellClass} px-space-base py-space-base`}>
+          <div className={inicioGridClass}>
+            <div className="space-y-space-base">
+              {showAboutOnInicio && (
+                <CompanyProfileSectionCard
+                  title="Acerca de"
+                  action={
+                    !readOnly && onEditAbout ? (
+                      <button type="button" onClick={onEditAbout} className={sectionLinkClass}>
+                        Editar
+                      </button>
+                    ) : (
+                      <button type="button" onClick={() => goToTab('acerca')} className={sectionLinkClass}>
+                        Ver más
+                      </button>
+                    )
+                  }
+                >
+                  <CompanyAboutSection
+                    profile={profile}
+                    readOnly={readOnly}
+                    onEditAbout={onEditAbout}
+                    expanded={aboutExpanded}
+                    onToggleExpand={() => setAboutExpanded((value) => !value)}
+                    onViewMore={() => goToTab('acerca')}
+                    compact
+                    embedded
+                  />
+                </CompanyProfileSectionCard>
+              )}
 
-          <CompanyJobsSection
-            jobs={jobs}
-            readOnly={readOnly}
-            maxVisible={3}
-            onViewAll={() => goToTab('empleos')}
-            variant="preview"
-          />
+              <CompanyProfileSectionCard
+                title="Empleos activos"
+                action={
+                  activeJobCount > 0 ? (
+                    <button type="button" onClick={() => goToTab('empleos')} className={sectionLinkClass}>
+                      Ver todos
+                    </button>
+                  ) : null
+                }
+              >
+                <CompanyJobsSection
+                  jobs={jobs}
+                  readOnly={readOnly}
+                  maxVisible={3}
+                  onViewAll={() => goToTab('empleos')}
+                  variant="preview"
+                  showTitle={false}
+                  embedded
+                />
+              </CompanyProfileSectionCard>
 
-          <CompanyPostsSection
-            posts={posts}
-            loading={postsLoading}
-            maxVisible={2}
-            onViewAll={() => goToTab('publicaciones')}
-          />
-
-          <section className="px-space-base py-space-base">
-            <h3 className="text-body font-semibold text-app-text">Información</h3>
-            <div className="mt-space-sm">
-              <CompanyInfoRows profile={profile} variant="minimal" />
+              {(posts.length > 0 || postsLoading) && (
+                <CompanyProfileSectionCard
+                  title="Últimas publicaciones"
+                  action={
+                    posts.length > 0 ? (
+                      <button
+                        type="button"
+                        onClick={() => goToTab('publicaciones')}
+                        className={sectionLinkClass}
+                      >
+                        Ver todas
+                      </button>
+                    ) : null
+                  }
+                >
+                  <CompanyPostsSection
+                    posts={posts}
+                    loading={postsLoading}
+                    maxVisible={3}
+                    onViewAll={() => goToTab('publicaciones')}
+                    embedded
+                  />
+                </CompanyProfileSectionCard>
+              )}
             </div>
-          </section>
+
+            {showInicioSidebar && (
+              <aside className="space-y-space-base">
+                {showInfoCard && (
+                  <CompanyProfileSectionCard title="Información">
+                    <CompanyInfoRows profile={profile} variant={infoVariant} />
+                  </CompanyProfileSectionCard>
+                )}
+
+                {showSocialCard && (
+                  <CompanyProfileSectionCard title="Redes sociales">
+                    <CompanySocialCard
+                      profile={profile}
+                      readOnly={readOnly}
+                      onAddSocial={onEditDetails}
+                      compact
+                      embedded
+                    />
+                  </CompanyProfileSectionCard>
+                )}
+              </aside>
+            )}
+          </div>
         </div>
       )}
 
       {activeTab === 'empleos' && (
-        <CompanyJobsSection jobs={jobs} readOnly={readOnly} variant="full" showTitle={false} />
+        <div className={profileContentShellClass}>
+          <CompanyJobsSection jobs={jobs} readOnly={readOnly} variant="full" showTitle={false} />
+        </div>
       )}
 
       {activeTab === 'publicaciones' && (
-        <CompanyPostsFeed
-          posts={posts}
-          loading={postsLoading}
-          loadingMore={postsLoadingMore}
-          hasMore={postsHasMore}
-          onLoadMore={loadMorePosts}
-        />
+        <div className={profileContentShellClass}>
+          <CompanyPostsFeed
+            posts={posts}
+            loading={postsLoading}
+            loadingMore={postsLoadingMore}
+            hasMore={postsHasMore}
+            onLoadMore={loadMorePosts}
+          />
+        </div>
       )}
 
       {activeTab === 'acerca' && (
@@ -165,13 +253,15 @@ export default function CompanyProfileView({
         />
       )}
 
-      {activeTab === 'servicios' && (hasServices || !readOnly) && (
-        <CompanyServicesSection
-          items={services}
-          readOnly={readOnly}
-          onAdd={onAddService}
-          onDelete={onDeleteService}
-        />
+      {activeTab === 'servicios' && hasServices && (
+        <div className={profileContentShellClass}>
+          <CompanyServicesSection
+            items={services}
+            readOnly={readOnly}
+            onAdd={onAddService}
+            onDelete={onDeleteService}
+          />
+        </div>
       )}
     </div>
   );

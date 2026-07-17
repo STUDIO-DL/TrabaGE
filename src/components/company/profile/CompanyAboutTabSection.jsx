@@ -1,9 +1,9 @@
-import Card from '../../ui/Card';
 import CompanyAboutSection from './CompanyAboutSection';
-import CompanyInfoRows from './CompanyInfoRows';
-import CompanySocialCard from './CompanySocialCard';
+import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
+import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
 import CompanyContactSection from './CompanyContactSection';
-import Button from '../../ui/Button';
+import CompanyProfileSectionCard from './CompanyProfileSectionCard';
+import { profileContentShellClass, sectionLinkClass } from './companyProfileStyles';
 
 export default function CompanyAboutTabSection({
   profile,
@@ -13,9 +13,21 @@ export default function CompanyAboutTabSection({
   onSaveContact,
   contactSaving = false,
 }) {
+  const showInfoCard = hasVisibleCompanyInfoRows(profile, 'full');
+  const showSocialCard = hasCompanySocialLinks(profile) || !readOnly;
+
   return (
-    <div className="space-y-space-base px-space-base py-space-base">
-      <Card padding="md">
+    <div className={`${profileContentShellClass} space-y-space-base px-space-base py-space-base`}>
+      <CompanyProfileSectionCard
+        title="Acerca de"
+        action={
+          !readOnly && onEditAbout ? (
+            <button type="button" onClick={onEditAbout} className={sectionLinkClass}>
+              Editar
+            </button>
+          ) : null
+        }
+      >
         <CompanyAboutSection
           profile={profile}
           readOnly={readOnly}
@@ -24,36 +36,43 @@ export default function CompanyAboutTabSection({
           compact={false}
           embedded
         />
-      </Card>
+      </CompanyProfileSectionCard>
 
-      <Card padding="md">
-        <h3 className="mb-space-sm text-body font-semibold text-app-text">Información</h3>
-        <CompanyInfoRows profile={profile} variant="full" />
-        {!readOnly && onEditDetails && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="mt-space-sm"
-            onClick={onEditDetails}
-          >
-            Editar información
-          </Button>
-        )}
-      </Card>
+      {showInfoCard && (
+        <CompanyProfileSectionCard
+          title="Información"
+          action={
+            !readOnly && onEditDetails ? (
+              <button type="button" onClick={onEditDetails} className={sectionLinkClass}>
+                Editar
+              </button>
+            ) : null
+          }
+        >
+          <CompanyInfoRows profile={profile} variant="full" />
+        </CompanyProfileSectionCard>
+      )}
 
-      <CompanySocialCard profile={profile} readOnly={readOnly} onAddSocial={onEditDetails} />
+      {showSocialCard && (
+        <CompanyProfileSectionCard title="Redes sociales">
+          <CompanySocialCard
+            profile={profile}
+            readOnly={readOnly}
+            onAddSocial={onEditDetails}
+            compact
+            embedded
+          />
+        </CompanyProfileSectionCard>
+      )}
 
-      {!readOnly && (
+      {!readOnly ? (
         <CompanyContactSection
           profile={profile}
           readOnly={false}
           onSave={onSaveContact}
           saving={contactSaving}
         />
-      )}
-
-      {readOnly && (
+      ) : (
         <CompanyContactSection profile={profile} readOnly />
       )}
     </div>

@@ -122,7 +122,8 @@ export default function CompanyPublicProfile() {
   return (
     <PageContainer topBar={false} className="max-w-none">
       <ProfilePageShell
-        backButton
+        hideHeader
+        backButton={false}
         shareUrl={generateCompanyUrl(companyId)}
         shareTitle={profile?.company_name || orgLabels.defaultName}
         reportTargetId={companyId}
@@ -131,6 +132,7 @@ export default function CompanyPublicProfile() {
         <CompanyProfileView
           profile={profile}
           readOnly
+          showBackButton
           companyId={companyId}
           jobs={jobs}
           showFollowButton={showFollowButton || !isAuthenticated}
