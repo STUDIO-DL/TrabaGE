@@ -495,7 +495,7 @@ export default function Register() {
                       </LegalInlineLink>{' '}
                       y la{' '}
                       <LegalInlineLink to={LEGAL_ROUTES.privacy}>
-                        Política de Privacidad
+                        Política de Uso de Datos
                       </LegalInlineLink>
                       .
                     </span>

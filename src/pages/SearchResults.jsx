@@ -20,6 +20,8 @@ import AppAvatar from '../components/common/AppAvatar';
 
 import { SearchResultsSkeleton } from '../components/common/Skeleton';
 
+import DirectoryBrandDisclaimer from '../components/legal/DirectoryBrandDisclaimer';
+
 import { Search } from '../constants/icons';
 
 import { AvatarType, avatarTypeFromSearchEntity } from '../constants/avatarDefaults';
@@ -307,7 +309,13 @@ export default function SearchResults() {
 
       ) : (
 
-        renderResults()
+        <>
+
+          {renderResults()}
+
+          {!loading && results.length > 0 ? <DirectoryBrandDisclaimer /> : null}
+
+        </>
 
       )}
 

@@ -1,6 +1,7 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
+import BrandLogoOwnershipModal from '../BrandLogoOwnershipModal';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -122,6 +123,7 @@ export default function CompanyProfileHeader({
   const navigate = useNavigate();
   const { role } = useAuth();
   const logoInputRef = useRef(null);
+  const [logoOwnershipOpen, setLogoOwnershipOpen] = useState(false);
   const coverInputId = 'company-cover-input';
 
   const name = getCompanyDisplayName(profile);
@@ -230,7 +232,7 @@ export default function CompanyProfileHeader({
                     />
                     <button
                       type="button"
-                      onClick={() => logoInputRef.current?.click()}
+                      onClick={() => setLogoOwnershipOpen(true)}
                       disabled={logoLoading}
                       className="absolute bottom-1 right-1 flex min-h-touch min-w-touch items-center justify-center rounded-full bg-primary-600 text-white shadow-elevation-1 ring-2 ring-white transition-colors duration-fast hover:bg-primary-700 disabled:opacity-60"
                       aria-label="Subir logo"
@@ -323,6 +325,17 @@ export default function CompanyProfileHeader({
 
         <div className="h-14 bg-app-card sm:h-16" aria-hidden />
       </div>
+
+      {!readOnly && (
+        <BrandLogoOwnershipModal
+          isOpen={logoOwnershipOpen}
+          onClose={() => setLogoOwnershipOpen(false)}
+          onConfirm={() => {
+            setLogoOwnershipOpen(false);
+            logoInputRef.current?.click();
+          }}
+        />
+      )}
     </section>
   );
 }

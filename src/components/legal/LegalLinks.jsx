@@ -18,11 +18,17 @@ export function LegalFooterLinks({ className = '' }) {
       className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm ${className}`}
       aria-label="Enlaces legales"
     >
-      <LegalInlineLink to={LEGAL_ROUTES.privacy}>Política de Privacidad</LegalInlineLink>
+      <LegalInlineLink to={LEGAL_ROUTES.terms}>Términos y Condiciones</LegalInlineLink>
       <span className="text-slate-300" aria-hidden>
         ·
       </span>
-      <LegalInlineLink to={LEGAL_ROUTES.terms}>Términos de Uso</LegalInlineLink>
+      <LegalInlineLink to={LEGAL_ROUTES.legalNotice}>
+        Aviso Legal / Propiedad Intelectual
+      </LegalInlineLink>
+      <span className="text-slate-300" aria-hidden>
+        ·
+      </span>
+      <LegalInlineLink to={LEGAL_ROUTES.privacy}>Política de Privacidad</LegalInlineLink>
     </nav>
   );
 }
@@ -31,8 +37,8 @@ export function LegalAcceptanceText({ className = '' }) {
   return (
     <p className={`text-center text-xs leading-relaxed text-slate-500 ${className}`}>
       Al crear una cuenta aceptas nuestros{' '}
-      <LegalInlineLink to={LEGAL_ROUTES.terms}>Términos de Uso</LegalInlineLink> y nuestra{' '}
-      <LegalInlineLink to={LEGAL_ROUTES.privacy}>Política de Privacidad</LegalInlineLink>.
+      <LegalInlineLink to={LEGAL_ROUTES.terms}>Términos y Condiciones</LegalInlineLink> y la{' '}
+      <LegalInlineLink to={LEGAL_ROUTES.privacy}>Política de Uso de Datos</LegalInlineLink>.
     </p>
   );
 }
