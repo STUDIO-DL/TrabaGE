@@ -7,6 +7,7 @@ import {
   logoPath,
   postImagePath,
   verificationDocPath,
+  educationFilePath,
 } from '../constants/storage';
 
 const WEBP_CONTENT_TYPE = 'image/webp';
@@ -132,4 +133,33 @@ export const storageService = {
   getPublicUrl: (bucket, path) => supabase.storage.from(bucket).getPublicUrl(path),
 
   deleteFile: (bucket, path) => supabase.storage.from(bucket).remove([path]),
+
+  uploadEducationFile: async (userId, educationId, file, fileId) => {
+    const safeName = file.name.replace(/[^\w.\-()+\s]/g, '_').slice(0, 120);
+    const path = educationFilePath(userId, educationId, fileId, safeName);
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKETS.CANDIDATE_EDUCATION_FILES)
+      .upload(path, file, { upsert: false, contentType: file.type || undefined });
+
+    return {
+      data,
+      error,
+      path,
+      meta: {
+        path,
+        name: file.name,
+        size: file.size,
+        mimeType: file.type || null,
+      },
+    };
+  },
+
+  deleteEducationFiles: async (paths = []) => {
+    const unique = [...new Set(paths.filter(Boolean))];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKETS.CANDIDATE_EDUCATION_FILES)
+      .remove(unique);
+    return { error };
+  },
 };

@@ -130,18 +130,21 @@ export function useCandidateProfile() {
 
   const addEducation = useCallback(
     async (data) => {
-      const { error: saveError } = await profileService.addEducation({ ...data, user_id: userId });
+      const { data: saved, error: saveError } = await profileService.addEducation({
+        ...data,
+        user_id: userId,
+      });
       if (!saveError) await afterCandidateProfileChanged();
-      return { error: friendlyProfileError(saveError) };
+      return { data: saved, error: friendlyProfileError(saveError) };
     },
     [afterCandidateProfileChanged, userId],
   );
 
   const updateEducation = useCallback(
     async (id, data) => {
-      const { error: saveError } = await profileService.updateEducation(id, data);
+      const { data: saved, error: saveError } = await profileService.updateEducation(id, data);
       if (!saveError) await afterCandidateProfileChanged();
-      return { error: friendlyProfileError(saveError) };
+      return { data: saved, error: friendlyProfileError(saveError) };
     },
     [afterCandidateProfileChanged],
   );

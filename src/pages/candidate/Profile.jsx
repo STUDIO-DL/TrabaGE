@@ -135,11 +135,11 @@ export default function Profile() {
     return result;
   };
 
-  const saveEducation = async (data, id) => {
+  const saveEducation = async (data, id, options = {}) => {
     setSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
     setSaving(false);
-    if (!result.error) showToast('Educación guardada.', 'success');
+    if (!result.error && !options.silent) showToast('Educación guardada.', 'success');
     return result;
   };
 
@@ -337,6 +337,7 @@ export default function Profile() {
         initial={editingEducation}
         onSave={saveEducation}
         loading={saving}
+        userId={user?.id}
       />
       <CertificationModal
         isOpen={certOpen}

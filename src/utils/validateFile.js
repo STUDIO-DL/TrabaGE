@@ -6,6 +6,7 @@ const MAX_SIZES = {
   verification: 5 * 1024 * 1024,
   document: 5 * 1024 * 1024,
   image: 3 * 1024 * 1024,
+  educationAttachment: 5 * 1024 * 1024,
 };
 
 const ALLOWED_TYPES = {
@@ -16,6 +17,13 @@ const ALLOWED_TYPES = {
   postImage: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
   image: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
   verification: ['application/pdf'],
+  educationAttachment: [
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/jpg',
+  ],
 };
 
 export const FILE_HINTS = {
@@ -26,6 +34,7 @@ export const FILE_HINTS = {
   postImage: 'Max 3 MB',
   image: 'Max 3 MB',
   verification: 'PDF • Max 5 MB',
+  educationAttachment: 'PDF o imágenes • Max 5 MB',
 };
 
 const TYPE_ALIASES = {
@@ -45,6 +54,9 @@ export const validateFile = (file, type = 'document') => {
     }
     if (resolvedType === 'verification') {
       return { valid: false, error: 'Solo se permiten documentos PDF.' };
+    }
+    if (resolvedType === 'educationAttachment') {
+      return { valid: false, error: 'Solo se permiten PDF o imágenes (JPG, PNG, WebP).' };
     }
     return { valid: false, error: 'Tipo de archivo no permitido.' };
   }

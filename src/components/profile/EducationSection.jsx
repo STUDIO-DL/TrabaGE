@@ -6,6 +6,17 @@ import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 const PREVIEW_COUNT = 2;
 
+function buildEducationMeta(item) {
+  const dateRange = formatDateRange(
+    item.start_date,
+    item.is_current ? null : item.end_date,
+  );
+  const extras = [item.grade, item.skills?.length ? `${item.skills.length} habilidades` : null]
+    .filter(Boolean)
+    .join(' · ');
+  return [dateRange, extras].filter(Boolean).join(' · ');
+}
+
 export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onDelete }) {
   const preview = items.slice(0, PREVIEW_COUNT);
   const footerLabel =
@@ -27,7 +38,7 @@ export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onD
           key={item.id}
           title={item.institution}
           subtitle={[item.program, item.specialty].filter(Boolean).join(' · ')}
-          meta={[formatDateRange(item.start_date, item.end_date), item.grade].filter(Boolean).join(' · ')}
+          meta={buildEducationMeta(item)}
           entryIcon={GraduationCap}
           entryIconTone="education"
           isOwn={isOwn}
