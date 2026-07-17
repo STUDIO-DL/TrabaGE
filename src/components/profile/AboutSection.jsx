@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import ProfileSectionCard from './ProfileSectionCard';
 import Button from '../ui/Button';
 import AppIcon from '../common/AppIcon';
@@ -12,6 +12,12 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
   const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(about || '');
+
+  useEffect(() => {
+    if (!editing) {
+      setDraft(about || '');
+    }
+  }, [about, editing]);
 
   const hasContent = Boolean(about?.trim());
   const needsExpand = hasContent && about.length > PREVIEW_LENGTH;

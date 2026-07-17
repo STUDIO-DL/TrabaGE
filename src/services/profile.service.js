@@ -21,6 +21,8 @@ export const CANDIDATE_PROFILE_COLUMNS = [
   'cv_name',
   'cover_letter',
   'job_preferences',
+  'notifications_enabled',
+  'notification_frequency',
   'expected_salary',
   'sector',
   'show_education_in_intro',

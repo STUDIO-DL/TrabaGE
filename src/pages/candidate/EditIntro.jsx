@@ -56,7 +56,6 @@ export default function EditIntro() {
     updateExperience,
     addEducation,
     updateEducation,
-    refetch,
   } = useCandidateProfile();
 
   const [form, setForm] = useState(emptyForm);
@@ -130,7 +129,7 @@ export default function EditIntro() {
     }
 
     showToast(TOAST.saved, 'success');
-    navigate('/personal/profile', { state: { profileUpdated: true } });
+    navigate('/personal/profile');
   };
 
   const saveExperience = async (data, id) => {
@@ -138,7 +137,6 @@ export default function EditIntro() {
     const result = id ? await updateExperience(id, data) : await addExperience(data);
     setModalSaving(false);
     if (!result.error) {
-      await refetch();
       showToast('Experiencia guardada.', 'success');
     }
     return result;
@@ -149,7 +147,6 @@ export default function EditIntro() {
     const result = id ? await updateEducation(id, data) : await addEducation(data);
     setModalSaving(false);
     if (!result.error) {
-      await refetch();
       if (!id && result.data?.id && form.show_education_in_intro && !form.intro_education_id) {
         setForm((prev) => ({ ...prev, intro_education_id: result.data.id }));
       }

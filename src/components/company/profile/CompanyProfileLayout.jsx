@@ -7,14 +7,9 @@ import Modal from '../../ui/Modal';
 import Select from '../../ui/Select';
 import Textarea from '../../ui/Textarea';
 import { useNotificationContext } from '../../../context/NotificationContext';
-import { companyService } from '../../../services/company.service';
-import { storageService } from '../../../services/storage.service';
 import { jobsService } from '../../../services/jobs.service';
 import { getPreviewMediaUrls } from '../../../constants/preview';
 import { validateFile } from '../../../utils/validateFile';
-import { compressProfileImage } from '../../../utils/imageCompression';
-import { logoPath, companyCoverPath } from '../../../constants/storage';
-import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
 import { CITIES } from '../../../constants/cities';
 import { SECTORS } from '../../../constants/sectors';
 import { Save, ICON_SIZES } from '../../../constants/icons';
@@ -23,6 +18,8 @@ import { useFollow } from '../../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
 import { isOrganizationProfile, getOrgLabels } from '../../../utils/orgLabels';
 import { TOAST } from '../../../utils/copyLabels';
+import { ProfilePageSkeleton } from '../../common/Skeleton';
+import { useCompanyProfile } from '../../../hooks/useCompanyProfile';
 
 const COMPANY_SIZE_OPTIONS = [
   '1-10',
@@ -293,14 +290,22 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
 }
 
 export default function CompanyProfileLayout({
-  profile,
   userId,
   isPreviewMode,
   onPreviewAction,
-  onUploadComplete,
   onOpenSettings,
 }) {
   const { showToast } = useNotificationContext();
+  const {
+    profile,
+    loading,
+    uploadLogo,
+    uploadCover,
+    addCompanyService,
+    deleteCompanyService,
+    saveContact,
+    updateCompanyProfile,
+  } = useCompanyProfile();
   const [jobs, setJobs] = useState([]);
   const [logoLoading, setLogoLoading] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
@@ -363,7 +368,6 @@ export default function CompanyProfileLayout({
     }
 
     const setLoading = type === 'logo' ? setLogoLoading : setCoverLoading;
-    const mediaKey = type === 'logo' ? 'logo' : 'cover';
 
     if (isPreviewMode) {
       onPreviewAction?.('upload-image');
@@ -373,51 +377,15 @@ export default function CompanyProfileLayout({
     if (!userId) return;
 
     setLoading(true);
-
-    let compressed;
-    try {
-      compressed = await compressProfileImage(file);
-    } catch (compressError) {
-      setLoading(false);
-      showToast(compressError.message, 'error');
-      return;
-    }
-
-    const oldPath = type === 'logo' ? profile?.logo_path : profile?.cover_url;
-    const upload =
-      type === 'logo'
-        ? storageService.uploadCompanyLogo(userId, compressed, oldPath)
-        : storageService.uploadCompanyCover(userId, compressed, oldPath);
-
-    const { error: uploadError } = await upload;
-
-    if (uploadError) {
-      setLoading(false);
-      showToast(getSupabaseErrorMessage(uploadError), 'error');
-      return;
-    }
-
-    const path = type === 'logo' ? logoPath(userId) : companyCoverPath(userId);
-    const field = type === 'logo' ? 'logo_path' : 'cover_url';
-
-    const { error: saveError } = await companyService.upsertCompanyProfile({
-      user_id: userId,
-      company_name: fallbackCompanyName,
-      [field]: path,
-    });
+    const { error } = type === 'logo' ? await uploadLogo(file) : await uploadCover(file);
     setLoading(false);
 
-    if (saveError) {
-      showToast(getSupabaseErrorMessage(saveError), 'error');
+    if (error) {
+      showToast(error.message, 'error');
       return;
     }
 
-    setPreviewMedia((prev) => ({
-      ...prev,
-      [mediaKey]: path,
-    }));
     showToast(type === 'logo' ? 'Logo actualizado.' : 'Portada actualizada.', 'success');
-    onUploadComplete?.();
   };
 
   const handleAddService = async (name) => {
@@ -428,18 +396,14 @@ export default function CompanyProfileLayout({
 
     if (!userId) return;
 
-    const { error } = await companyService.addCompanyService({
-      company_id: userId,
-      name,
-    });
+    const { error } = await addCompanyService(name);
 
     if (error) {
-      showToast(getSupabaseErrorMessage(error), 'error');
+      showToast(error.message, 'error');
       return;
     }
 
     showToast('Servicio añadido.', 'success');
-    onUploadComplete?.();
   };
 
   const handleDeleteService = async (id) => {
@@ -448,15 +412,14 @@ export default function CompanyProfileLayout({
       return;
     }
 
-    const { error } = await companyService.deleteCompanyService(id);
+    const { error } = await deleteCompanyService(id);
 
     if (error) {
-      showToast(getSupabaseErrorMessage(error), 'error');
+      showToast(error.message, 'error');
       return;
     }
 
     showToast('Servicio eliminado.', 'success');
-    onUploadComplete?.();
   };
 
   const handleSaveContact = async (contactData) => {
@@ -468,45 +431,31 @@ export default function CompanyProfileLayout({
     if (!userId) return;
 
     setContactSaving(true);
-    const { error } = await companyService.upsertCompanyProfile({
-      user_id: userId,
-      company_name: fallbackCompanyName,
-      ...contactData,
-    });
+    const { error } = await saveContact(contactData, { companyNameFallback: fallbackCompanyName });
     setContactSaving(false);
 
     if (error) {
-      showToast(getSupabaseErrorMessage(error), 'error');
+      showToast(error.message, 'error');
       return;
     }
 
     showToast(TOAST.contactSaved, 'success');
-    onUploadComplete?.();
   };
 
   const handleSaveProfile = async (data) => {
     if (!userId) return;
 
     setProfileSaving(true);
-    const { error } = await companyService.upsertCompanyProfile({
-      user_id: userId,
-      company_name:
-        data.company_name
-        || profile?.company_name?.trim()
-        || displayProfile?.company_name?.trim()
-        || fallbackCompanyName,
-      ...data,
-    });
+    const { error } = await updateCompanyProfile(data, { companyNameFallback: fallbackCompanyName });
     setProfileSaving(false);
 
     if (error) {
-      showToast(getSupabaseErrorMessage(error), 'error');
+      showToast(error.message, 'error');
       return;
     }
 
     showToast(TOAST.profileUpdated, 'success');
     setEditMode(null);
-    onUploadComplete?.();
   };
 
   const readOnly = isPreviewMode;
@@ -519,6 +468,10 @@ export default function CompanyProfileLayout({
     targetId: userId,
     enabled: Boolean(userId) && !isPreviewMode,
   });
+
+  if (loading && !profile && !isPreviewMode) {
+    return <ProfilePageSkeleton />;
+  }
 
   return (
     <ProfilePageShell hideHeader isOwn={!readOnly}>

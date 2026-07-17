@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CandidateProfileLayout from '../../components/profile/CandidateProfileLayout';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
@@ -28,13 +28,11 @@ import { TOAST } from '../../utils/copyLabels';
 
 export default function Profile() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, isPreviewMode } = useAuth();
   const { showToast } = useNotificationContext();
   const {
     profile,
     loading,
-    refetch,
     updateBasicInfo,
     uploadAvatar,
     uploadCV,
@@ -82,13 +80,6 @@ export default function Profile() {
       document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [loading]);
-
-  useEffect(() => {
-    if (location.state?.profileUpdated) {
-      refetch();
-      navigate(location.pathname, { replace: true, state: null });
-    }
-  }, [location.pathname, location.state, navigate, refetch]);
 
   const handleSaveAbout = async (about) => {
     setAboutSaving(true);
