@@ -1,45 +1,68 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import OnboardingScreenOne from '../../components/onboarding/OnboardingScreenOne';
-import OnboardingScreenTwo from '../../components/onboarding/OnboardingScreenTwo';
-import OnboardingScreenThree from '../../components/onboarding/OnboardingScreenThree';
+import OnboardingSlide from '../../components/onboarding/OnboardingSlide';
 import { setOnboardingComplete } from '../../context/AuthContext';
+
+const SLIDE_DURATION_MS = 4000;
+
+const SLIDES = [
+  {
+    image: '/images/onboarding-map.png',
+    imageAlt: 'Mapa de Guinea Ecuatorial con ubicaciones conectadas por TrabaGE',
+  },
+  {
+    image: '/images/onboarding-network.png',
+    imageAlt: 'Red de profesionales de diferentes sectores conectados por TrabaGE',
+  },
+  {
+    image: '/images/onboarding-opportunities.png',
+    imageAlt: 'Joven profesional descubriendo oportunidades laborales en TrabaGE',
+  },
+];
 
 export default function OnboardingFlow() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    SLIDES.forEach(({ image }) => {
+      const preload = new Image();
+      preload.src = image;
+    });
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setStep((current) => (current + 1) % SLIDES.length);
+    }, SLIDE_DURATION_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [step]);
 
   const finish = () => {
     setOnboardingComplete();
     navigate('/login', { replace: true });
   };
 
-  if (step === 0) {
-    return (
-      <OnboardingScreenOne
-        currentStep={0}
-        onNext={() => setStep(1)}
-        onSkip={finish}
-      />
-    );
-  }
-
-  if (step === 1) {
-    return (
-      <OnboardingScreenTwo
-        currentStep={1}
-        onNext={() => setStep(2)}
-        onSkip={finish}
-        onBack={() => setStep(0)}
-      />
-    );
-  }
+  const handleNext = () => {
+    if (step === SLIDES.length - 1) {
+      finish();
+      return;
+    }
+    setStep((current) => current + 1);
+  };
 
   return (
-    <OnboardingScreenThree
-      currentStep={2}
-      onNext={finish}
-      onBack={() => setStep(1)}
+    <OnboardingSlide
+      key={SLIDES[step].image}
+      image={SLIDES[step].image}
+      imageAlt={SLIDES[step].imageAlt}
+      currentStep={step}
+      totalSteps={SLIDES.length}
+      onSelectStep={setStep}
+      onNext={handleNext}
+      onSkip={finish}
+      nextLabel={step === SLIDES.length - 1 ? 'Comenzar' : 'Siguiente'}
     />
   );
 }

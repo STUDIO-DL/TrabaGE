@@ -7,40 +7,41 @@ export default function OnboardingSlide({
   description,
   currentStep,
   totalSteps,
+  onSelectStep,
   onNext,
   onSkip,
   nextLabel = 'Siguiente',
   secondaryAction = null,
 }) {
+  const hasCopy = Boolean(title || description);
+
   return (
-    <div className="flex min-h-dvh flex-col bg-white">
+    <div className="flex min-h-dvh flex-col overflow-hidden bg-white">
       <section
-        className="relative w-full shrink-0"
-        style={{ height: 'clamp(17.5rem, 47dvh, 25.5rem)' }}
+        className="relative flex min-h-0 w-full flex-1 items-center justify-center"
       >
-        <button
-          type="button"
-          onClick={onSkip}
-          className="absolute z-20 text-sm font-medium text-[#6B7280] transition-colors hover:text-[#374151] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
-          style={{
-            top: 'max(0.875rem, env(safe-area-inset-top))',
-            right: 'max(1.25rem, env(safe-area-inset-right))',
-          }}
-        >
-          Saltar
-        </button>
+        {onSkip ? (
+          <button
+            type="button"
+            onClick={onSkip}
+            className="absolute z-20 text-sm font-medium text-[#6B7280] transition-colors hover:text-[#374151] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2"
+            style={{
+              top: 'max(0.875rem, env(safe-area-inset-top))',
+              right: 'max(1.25rem, env(safe-area-inset-right))',
+            }}
+          >
+            Saltar
+          </button>
+        ) : null}
 
         {image ? (
-          <div className="onboarding-hero-in onboarding-hero-shell relative h-full w-full bg-white">
+          <div className="onboarding-hero-in relative flex h-full w-full items-center justify-center bg-white px-4 pb-2 pt-12">
             <img
               src={image}
               alt={imageAlt}
-              className="onboarding-hero-image"
+              className="h-full w-full object-contain"
               decoding="async"
-            />
-            <div
-              className="pointer-events-none absolute inset-x-0 top-0 z-10 h-[22%] bg-gradient-to-b from-white via-white/85 to-transparent"
-              aria-hidden
+              fetchPriority={currentStep === 0 ? 'high' : 'auto'}
             />
           </div>
         ) : (
@@ -48,33 +49,47 @@ export default function OnboardingSlide({
         )}
       </section>
 
-      <div className="flex min-h-0 flex-1 flex-col px-5 pt-6">
-        <div className="mx-auto w-[90%] text-center">
-          <h1 className="onboarding-title-in text-[2rem] font-bold leading-[1.12] tracking-tight sm:text-[2.125rem]">
-            {title}
-          </h1>
-
-          <div className="onboarding-desc-in mt-5 space-y-4 text-[0.9375rem] leading-[1.65] text-[#6B7280] sm:text-base">
-            {description}
+      <div className="shrink-0 px-5">
+        {hasCopy ? (
+          <div className="mx-auto w-[90%] pb-2 text-center">
+            {title ? (
+              <h1 className="onboarding-title-in text-[2rem] font-bold leading-[1.12] tracking-tight sm:text-[2.125rem]">
+                {title}
+              </h1>
+            ) : null}
+            {description ? (
+              <div className="onboarding-desc-in mt-5 space-y-4 text-[0.9375rem] leading-[1.65] text-[#6B7280] sm:text-base">
+                {description}
+              </div>
+            ) : null}
           </div>
-        </div>
+        ) : null}
 
         <div
-          className="mt-auto w-full pt-7"
+          className="w-full pt-4"
           style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
         >
           <div className="mb-6 flex justify-center gap-2.5" role="tablist" aria-label="Progreso del onboarding">
             {Array.from({ length: totalSteps }, (_, i) => (
-              <span
+              <button
                 key={i}
+                type="button"
                 role="tab"
                 aria-selected={i === currentStep}
                 aria-label={`Paso ${i + 1} de ${totalSteps}`}
+                onClick={() => onSelectStep?.(i)}
                 className={[
-                  'rounded-radius-circular transition-colors duration-normal ease-out',
-                  i === currentStep ? 'h-2.5 w-2.5 bg-primary-600' : 'h-2 w-2 bg-app-border',
+                  'flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600',
                 ].join(' ')}
-              />
+              >
+                <span
+                  className={[
+                    'rounded-radius-circular transition-all duration-normal ease-out',
+                    i === currentStep ? 'h-2.5 w-6 bg-primary-600' : 'h-2 w-2 bg-app-border',
+                  ].join(' ')}
+                  aria-hidden
+                />
+              </button>
             ))}
           </div>
 
