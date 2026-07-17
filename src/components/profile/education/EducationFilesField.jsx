@@ -55,18 +55,18 @@ export default function EducationFilesField({
             return (
               <li
                 key={file.path}
-                className="flex items-center gap-space-sm rounded-radius-md border border-app-border bg-app-surface px-space-sm py-space-xs"
+                className="flex min-w-0 items-center gap-space-sm rounded-radius-md border border-app-border bg-app-surface px-space-sm py-space-sm"
               >
                 <AppIcon icon={Icon} size={ICON_SIZES.md} className="shrink-0 text-primary-600" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-body-small text-app-text">{file.name}</p>
-                  <p className="text-caption text-app-subtle">{formatFileSize(file.size)}</p>
+                  <p className="truncate text-caption text-app-subtle">{formatFileSize(file.size)}</p>
                 </div>
                 {!disabled && (
                   <button
                     type="button"
                     onClick={() => onRemoveExisting?.(file.path)}
-                    className="shrink-0 rounded-radius-sm p-space-xs text-app-subtle transition-colors hover:bg-error-50 hover:text-error-600"
+                    className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm text-app-subtle transition-colors hover:bg-error-50 hover:text-error-600"
                     aria-label={`Eliminar ${file.name}`}
                   >
                     <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
@@ -81,12 +81,12 @@ export default function EducationFilesField({
             return (
               <li
                 key={file.clientId}
-                className="flex items-center gap-space-sm rounded-radius-md border border-dashed border-primary-200 bg-primary-50/40 px-space-sm py-space-xs"
+                className="flex min-w-0 items-center gap-space-sm rounded-radius-md border border-dashed border-primary-200 bg-primary-50/40 px-space-sm py-space-sm"
               >
                 <AppIcon icon={Icon} size={ICON_SIZES.md} className="shrink-0 text-primary-600" />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-body-small text-app-text">{file.name}</p>
-                  <p className="text-caption text-app-subtle">
+                  <p className="truncate text-caption text-app-subtle">
                     {formatFileSize(file.size)} · Pendiente
                   </p>
                 </div>
@@ -94,7 +94,7 @@ export default function EducationFilesField({
                   <button
                     type="button"
                     onClick={() => onRemovePending?.(file.clientId)}
-                    className="shrink-0 rounded-radius-sm p-space-xs text-app-subtle transition-colors hover:bg-error-50 hover:text-error-600"
+                    className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm text-app-subtle transition-colors hover:bg-error-50 hover:text-error-600"
                     aria-label={`Quitar ${file.name}`}
                   >
                     <AppIcon icon={Trash2} size={ICON_SIZES.sm} />

@@ -3,6 +3,8 @@ import AppIcon from '../common/AppIcon';
 import { GraduationCap, ICON_SIZES } from '../../constants/icons';
 import { INSTITUTIONS, INSTITUTION_TYPE_LABELS } from '../../data/institutions';
 import { searchInstitutions } from '../../utils/searchInstitutions';
+import { KEYBOARD_GAP } from '../../hooks/useKeyboardInsets';
+import { measureBottomChromeHeight } from '../../utils/scrollInputIntoView';
 
 const MANUAL_FOOTER_ID = '__manual_entry__';
 const DEFAULT_LIST_MAX_HEIGHT = 224;
@@ -72,7 +74,9 @@ export default function InstitutionAutocomplete({
     }
 
     const rect = root.getBoundingClientRect();
-    const spaceBelow = viewport.height - (rect.bottom - viewport.offsetTop) - 16;
+    const bottomChrome = measureBottomChromeHeight();
+    const spaceBelow =
+      viewport.height - (rect.bottom - viewport.offsetTop) - bottomChrome - KEYBOARD_GAP;
     setListMaxHeight(Math.max(MIN_LIST_MAX_HEIGHT, Math.min(DEFAULT_LIST_MAX_HEIGHT, spaceBelow)));
   }, []);
 
@@ -257,7 +261,7 @@ export default function InstitutionAutocomplete({
         <ul
           id={listId}
           role="listbox"
-          className="absolute z-30 mt-1 w-full overflow-auto rounded-radius-md border border-app-border bg-app-card py-1 shadow-sm"
+          className="absolute z-30 mt-1 w-full overflow-auto overscroll-contain rounded-radius-md border border-app-border bg-app-card py-1 shadow-sm [-webkit-overflow-scrolling:touch]"
           style={{ maxHeight: listMaxHeight }}
         >
           {results.map((institution, index) => {
@@ -276,14 +280,14 @@ export default function InstitutionAutocomplete({
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectInstitution(institution)}
                   className={[
-                    'flex w-full items-start gap-3 px-space-md py-2.5 text-left transition-colors',
+                    'flex min-h-touch w-full items-start gap-space-sm px-space-md py-space-sm text-left transition-colors',
                     isActive ? 'bg-primary-50' : 'hover:bg-gray-50',
                   ].join(' ')}
                 >
                   <AppIcon
                     icon={GraduationCap}
                     size={ICON_SIZES.md}
-                    className="mt-0.5 text-primary-600"
+                    className="mt-0.5 shrink-0 text-primary-600"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-body-small font-medium text-app-text">
@@ -295,7 +299,7 @@ export default function InstitutionAutocomplete({
                   </span>
                   <span
                     className={[
-                      'shrink-0 rounded-full border px-2 py-0.5 text-caption font-medium',
+                      'hidden min-[360px]:inline-flex shrink-0 rounded-full border px-2 py-0.5 text-caption font-medium',
                       isActive
                         ? 'border-primary-200 bg-primary-100 text-primary-800'
                         : 'border-gray-200 bg-gray-50 text-app-muted',
@@ -320,7 +324,7 @@ export default function InstitutionAutocomplete({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={enableManualEntry}
                 className={[
-                  'w-full border-t border-gray-100 px-space-md py-2.5 text-left text-caption text-primary-700 transition-colors',
+                  'min-h-touch w-full border-t border-gray-100 px-space-md py-space-sm text-left text-caption text-primary-700 transition-colors',
                   activeIndex === results.length ? 'bg-primary-50' : 'hover:bg-gray-50',
                 ].join(' ')}
               >

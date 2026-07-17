@@ -5,6 +5,21 @@ const FOCUSABLE =
 
 const DEFAULT_MARGIN = KEYBOARD_GAP + 8;
 
+/** Height of fixed/sticky bottom chrome (e.g. KeyboardAwareFooter) overlapping the viewport. */
+export function measureBottomChromeHeight() {
+  if (typeof document === 'undefined') return 0;
+
+  let inset = 0;
+  document.querySelectorAll('[data-keyboard-footer]').forEach((element) => {
+    const rect = element.getBoundingClientRect();
+    if (rect.height <= 0) return;
+    const overlap = Math.max(0, window.innerHeight - rect.top);
+    inset = Math.max(inset, overlap);
+  });
+
+  return inset;
+}
+
 function findScrollParent(element) {
   let parent = element.parentElement;
 

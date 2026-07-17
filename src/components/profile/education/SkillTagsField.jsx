@@ -51,14 +51,14 @@ export default function SkillTagsField({
       {value.length > 0 && (
         <ul className="mb-space-sm flex flex-wrap gap-space-sm" aria-label="Habilidades añadidas">
           {value.map((skill, index) => (
-            <li key={`${skill}-${index}`}>
-              <span className="inline-flex items-center gap-1 rounded-radius-circular border border-app-border bg-app-surface px-space-md py-1 text-body-small text-app-text">
-                {skill}
+            <li key={`${skill}-${index}`} className="max-w-full">
+              <span className="inline-flex max-w-full items-center gap-1 rounded-radius-circular border border-app-border bg-app-surface py-1 pl-space-md pr-1 text-body-small text-app-text">
+                <span className="min-w-0 truncate">{skill}</span>
                 {!disabled && (
                   <button
                     type="button"
                     onClick={() => removeSkill(index)}
-                    className="rounded-radius-sm p-0.5 text-app-subtle transition-colors hover:bg-error-50 hover:text-error-600"
+                    className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm text-app-subtle transition-colors hover:bg-error-50 hover:text-error-600"
                     aria-label={`Eliminar ${skill}`}
                   >
                     <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
@@ -71,8 +71,9 @@ export default function SkillTagsField({
       )}
 
       {!atLimit && !disabled && (
-        <div className="flex gap-space-sm">
+        <div className="flex min-w-0 flex-col gap-space-sm sm:flex-row sm:items-stretch">
           <AutocompleteInput
+            className="min-w-0 flex-1"
             value={draft}
             onChange={setDraft}
             onSelect={addSkill}
@@ -81,7 +82,13 @@ export default function SkillTagsField({
             inputClassName="h-input-md min-h-touch rounded-radius-md border border-app-border bg-app-card px-space-md text-body-small text-app-text outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
             listClassName="rounded-radius-md border border-app-border bg-app-card shadow-elevation-2"
           />
-          <Button type="button" size="sm" variant="secondary" onClick={() => addSkill(draft)}>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            className="shrink-0 sm:w-auto"
+            onClick={() => addSkill(draft)}
+          >
             Añadir
           </Button>
         </div>

@@ -16,6 +16,8 @@ export default function Modal({
   children,
   variant = 'auto',
   size = 'md',
+  /** When true, children include KeyboardAwareFooter — panel skips keyboard bottom padding to avoid double inset. */
+  footerAware = false,
 }) {
   const { mounted, exiting } = useAnimatedPresence(isOpen, 200);
   const { keyboardHeight, keyboardGap, isKeyboardVisible } = useKeyboard();
@@ -52,18 +54,21 @@ export default function Modal({
     ? 'animate-[overlayFadeOut_var(--motion-fast)_var(--ease-out)_forwards]'
     : 'animate-[overlayFadeIn_var(--motion-fast)_var(--ease-out)]';
 
-  const panelPaddingBottom = isKeyboardVisible
-    ? `calc(${keyboardHeight}px + ${keyboardGap}px + env(safe-area-inset-bottom, 0px))`
-    : 'max(1.5rem, env(safe-area-inset-bottom, 0px))';
+  const panelPaddingBottom =
+    footerAware && isKeyboardVisible
+      ? 'env(safe-area-inset-bottom, 0px)'
+      : isKeyboardVisible
+        ? `calc(${keyboardHeight}px + ${keyboardGap}px + env(safe-area-inset-bottom, 0px))`
+        : 'max(1.5rem, env(safe-area-inset-bottom, 0px))';
 
   const panelMaxHeight = isKeyboardVisible
     ? `calc(100dvh - ${keyboardHeight}px - ${keyboardGap}px)`
-    : '90dvh';
+    : 'min(90dvh, 90vh)';
 
   return createPortal(
     <div
       className={[
-        'fixed inset-0 z-modal flex justify-center',
+        'fixed inset-0 z-modal flex touch-none justify-center',
         isSheet ? 'items-end' : 'items-end sm:items-center',
       ].join(' ')}
       role="dialog"
@@ -78,7 +83,8 @@ export default function Modal({
       />
       <div
         className={[
-          'relative z-10 w-full overflow-y-auto bg-app-card p-space-base text-app-text shadow-elevation-4 keyboard-aware-footer',
+          'relative z-10 flex w-full max-w-full flex-col overflow-hidden bg-app-card p-space-base text-app-text shadow-elevation-4 keyboard-aware-footer overscroll-contain',
+          footerAware ? 'min-h-0' : 'overflow-y-auto',
           panelMotion,
           isSheet
             ? 'rounded-t-radius-xl'
@@ -87,29 +93,34 @@ export default function Modal({
         style={{
           maxHeight: panelMaxHeight,
           paddingBottom: panelPaddingBottom,
+          WebkitOverflowScrolling: footerAware ? undefined : 'touch',
         }}
       >
         {isSheet && (
-          <div className="mb-space-md flex justify-center" aria-hidden>
+          <div className="mb-space-md flex shrink-0 justify-center" aria-hidden>
             <span className="h-1 w-10 rounded-radius-circular bg-app-border" />
           </div>
         )}
-        <div className="mb-space-base flex items-start justify-between gap-space-md">
+        <div className="mb-space-base flex shrink-0 items-start justify-between gap-space-md">
           {title && (
-            <h2 id="modal-title" className="text-title text-app-text">
+            <h2 id="modal-title" className="min-w-0 flex-1 text-title text-app-text">
               {title}
             </h2>
           )}
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto min-h-touch min-w-touch rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
+            className="ml-auto min-h-touch min-w-touch shrink-0 rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
             aria-label="Cerrar"
           >
             <AppIcon icon={X} size={ICON_SIZES.md} />
           </button>
         </div>
-        {children}
+        {footerAware ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
+        ) : (
+          children
+        )}
       </div>
     </div>,
     document.body,

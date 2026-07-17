@@ -14,6 +14,7 @@ export default function KeyboardAwareFooter({
 
   return (
     <Component
+      data-keyboard-footer=""
       className={['keyboard-aware-footer shrink-0', className].filter(Boolean).join(' ')}
       style={{ paddingBottom: footerPaddingBottom, ...style }}
       {...rest}

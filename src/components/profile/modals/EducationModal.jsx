@@ -250,9 +250,20 @@ export default function EducationModal({
   const title = initial ? 'Editar educación' : 'Añadir educación';
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} variant="sheet" size="lg">
-      <form id={formId} onSubmit={handleSubmit} className="-mx-space-base flex flex-col">
-        <div className="space-y-space-md px-space-base pb-space-md">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      variant="sheet"
+      size="lg"
+      footerAware
+    >
+      <form
+        id={formId}
+        onSubmit={handleSubmit}
+        className="-mx-space-base flex min-h-0 flex-1 flex-col overflow-hidden"
+      >
+        <div className="min-h-0 flex-1 space-y-space-md overflow-y-auto overflow-x-hidden overscroll-contain px-space-base pb-space-md [-webkit-overflow-scrolling:touch]">
           <InstitutionAutocomplete
             label="Institución educativa"
             value={form.institution}
@@ -299,7 +310,7 @@ export default function EducationModal({
             error={fieldErrors.end_date}
           />
 
-          <label className="flex cursor-pointer items-center gap-space-sm rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
+          <label className="flex min-h-touch cursor-pointer items-center gap-space-sm rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
             <input
               type="checkbox"
               checked={form.is_current}
@@ -382,7 +393,7 @@ export default function EducationModal({
           )}
         </div>
 
-        <KeyboardAwareFooter className="sticky bottom-0 z-10 border-t border-app-border bg-app-card px-space-base pt-space-md">
+        <KeyboardAwareFooter className="z-10 shrink-0 border-t border-app-border bg-app-card px-space-base pt-space-md">
           <Button type="submit" form={formId} fullWidth loading={busy} className="gap-space-sm">
             <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
             Guardar
