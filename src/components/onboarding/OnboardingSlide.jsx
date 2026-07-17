@@ -11,12 +11,13 @@ export default function OnboardingSlide({
   onNext,
   onSkip,
   nextLabel = 'Siguiente',
+  showNextArrow = true,
   secondaryAction = null,
 }) {
   const hasCopy = Boolean(title || description);
 
   return (
-    <div className="flex min-h-dvh flex-col overflow-hidden bg-white">
+    <div className="flex min-h-dvh flex-col overflow-hidden bg-gradient-to-b from-primary-50/60 via-white to-white">
       <section
         className="relative flex min-h-0 w-full flex-1 items-center justify-center"
       >
@@ -35,11 +36,11 @@ export default function OnboardingSlide({
         ) : null}
 
         {image ? (
-          <div className="onboarding-hero-in relative flex h-full w-full items-center justify-center bg-white px-4 pb-2 pt-12">
+          <div className="onboarding-hero-in relative flex h-[clamp(17rem,52dvh,27rem)] w-[min(86vw,23rem)] items-center justify-center overflow-hidden rounded-radius-xl border border-app-border bg-white p-space-md shadow-elevation-2">
             <img
               src={image}
               alt={imageAlt}
-              className="h-full w-full object-contain"
+              className="max-h-full max-w-full object-contain"
               decoding="async"
               fetchPriority={currentStep === 0 ? 'high' : 'auto'}
             />
@@ -100,7 +101,9 @@ export default function OnboardingSlide({
               className="relative inline-flex h-btn-primary w-full items-center justify-center rounded-radius-lg bg-primary-600 px-space-xl text-body font-semibold text-white shadow-elevation-3 transition-colors duration-fast ease-out hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 active:scale-[0.99]"
             >
               {nextLabel}
-              <ChevronRight className="absolute right-5 h-5 w-5" aria-hidden />
+              {showNextArrow ? (
+                <ChevronRight className="absolute right-5 h-5 w-5" aria-hidden />
+              ) : null}
             </button>
             {secondaryAction}
           </div>

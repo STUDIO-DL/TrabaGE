@@ -44,14 +44,6 @@ export default function OnboardingFlow() {
     navigate('/login', { replace: true });
   };
 
-  const handleNext = () => {
-    if (step === SLIDES.length - 1) {
-      finish();
-      return;
-    }
-    setStep((current) => current + 1);
-  };
-
   return (
     <OnboardingSlide
       key={SLIDES[step].image}
@@ -60,9 +52,9 @@ export default function OnboardingFlow() {
       currentStep={step}
       totalSteps={SLIDES.length}
       onSelectStep={setStep}
-      onNext={handleNext}
-      onSkip={finish}
-      nextLabel={step === SLIDES.length - 1 ? 'Comenzar' : 'Siguiente'}
+      onNext={finish}
+      nextLabel="Comenzar"
+      showNextArrow={false}
     />
   );
 }

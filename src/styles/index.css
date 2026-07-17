@@ -397,6 +397,22 @@
   }
 }
 
+@keyframes onboardingCarouselIn {
+  from {
+    opacity: 0;
+    transform: translateX(18px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.onboarding-hero-in {
+  animation: onboardingCarouselIn var(--motion-slow) var(--ease-out) both;
+}
+
 @keyframes onboardingFadeUp {
   from {
     opacity: 0;
@@ -531,6 +547,7 @@
   .login-fade-in,
   .login-fade-in-delayed,
   .register-fields-in,
+  .onboarding-hero-in,
   .onboarding-illustration-in,
   .onboarding-title-in,
   .onboarding-body-in,
