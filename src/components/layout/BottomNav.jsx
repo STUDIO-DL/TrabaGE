@@ -85,6 +85,7 @@ export default function BottomNav() {
 
   return (
     <nav
+      aria-label="Navegación principal"
       className={[
         'fixed left-0 right-0 z-nav border-t border-app-border bg-app-card/95 backdrop-blur keyboard-aware-footer',
         isKeyboardVisible ? '' : 'pb-safe',

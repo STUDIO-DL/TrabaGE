@@ -73,7 +73,7 @@ export default function Jobs() {
   const [followedCompanyIds, setFollowedCompanyIds] = useState([]);
   const [applicationHistory, setApplicationHistory] = useState([]);
 
-  const { user } = useAuth();
+  const { user, isPreviewMode } = useAuth();
   const normalizedQuery = query.trim().toLowerCase();
   const showRecommendations = Boolean(user) && sort === 'match';
 
@@ -154,7 +154,7 @@ export default function Jobs() {
   };
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || isPreviewMode) return;
 
     followsService.getFollowing(user.id, FOLLOWS_TARGET.BUSINESS).then(({ data }) => {
       setFollowedCompanyIds((data ?? []).map((row) => row.target_id));
@@ -163,16 +163,16 @@ export default function Jobs() {
     applicationsService.getCandidateApplications(user.id).then(({ data }) => {
       setApplicationHistory(data ?? []);
     });
-  }, [user?.id]);
+  }, [user?.id, isPreviewMode]);
 
   useEffect(() => {
-    if (!user?.id || !profile || loading || !scoredJobs.length) return;
+    if (isPreviewMode || !user?.id || !profile || loading || !scoredJobs.length) return;
     jobMatchesService.cacheUserJobScores(
       user.id,
       scoredJobs.map(({ job }) => job),
       userProfile,
     );
-  }, [user?.id, profile, loading, scoredJobs, userProfile]);
+  }, [isPreviewMode, user?.id, profile, loading, scoredJobs, userProfile]);
 
   const showRecommendedSection =
     showRecommendations && recommendationMode === 'recommended' && recommendedJobs.length > 0;

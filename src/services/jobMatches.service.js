@@ -5,6 +5,7 @@ import { profileService } from './profile.service';
 import { followsService, FOLLOWS_TARGET } from './follows.service';
 import { applicationsService } from './applications.service';
 import { reportError } from '../utils/logger';
+import { isPreviewUserId } from '../constants/preview';
 
 async function buildCandidateProfile(userId) {
   const [profileResult, followsResult, applicationsResult] = await Promise.all([
@@ -63,6 +64,8 @@ export const jobMatchesService = {
     }),
 
   cacheUserJobScores: async (userId, jobs, userProfile) => {
+    if (isPreviewUserId(userId)) return { data: [], error: null };
+
     const matches = jobs
       .map((job) => ({
         user_id: userId,
