@@ -35,6 +35,13 @@ export const INSTITUTIONS = [
     type: 'university',
   },
   {
+    id: 'irgib-africa-university',
+    name: 'Irgib Africa University',
+    country: 'Benín',
+    city: 'Cotonou',
+    type: 'university',
+  },
+  {
     id: 'universidad-catolica-de-africa-central',
     name: 'Universidad Católica de África Central',
     country: 'Camerún',

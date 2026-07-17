@@ -9,6 +9,7 @@ import { measureBottomChromeHeight } from '../../utils/scrollInputIntoView';
 const MANUAL_FOOTER_ID = '__manual_entry__';
 const DEFAULT_LIST_MAX_HEIGHT = 224;
 const MIN_LIST_MAX_HEIGHT = 120;
+const MIN_SEARCH_CHARS = 2;
 
 /**
  * LinkedIn-style institution combobox with local catalog search.
@@ -29,7 +30,7 @@ export default function InstitutionAutocomplete({
   disabled = false,
   className = '',
   id,
-  placeholder = 'Buscar institución educativa',
+  placeholder = 'Escribe el nombre de tu centro',
   institutions = INSTITUTIONS,
 }) {
   const generatedId = useId();
@@ -45,6 +46,8 @@ export default function InstitutionAutocomplete({
   const [listMaxHeight, setListMaxHeight] = useState(DEFAULT_LIST_MAX_HEIGHT);
 
   const catalogEmpty = institutions.length === 0;
+  const trimmedQuery = query.trim();
+  const hasMinQuery = trimmedQuery.length >= MIN_SEARCH_CHARS;
 
   useEffect(() => {
     setQuery(value);
@@ -55,13 +58,14 @@ export default function InstitutionAutocomplete({
   }, [query, manualMode, institutions]);
 
   const results = useMemo(() => {
-    if (manualMode || catalogEmpty) return [];
+    if (manualMode || catalogEmpty || !hasMinQuery) return [];
     return searchInstitutions(query, institutions);
-  }, [query, institutions, manualMode, catalogEmpty]);
+  }, [query, institutions, manualMode, catalogEmpty, hasMinQuery]);
 
-  const showManualFooter = Boolean(query.trim()) && !manualMode;
+  const showManualFooter = hasMinQuery && !manualMode;
   const optionCount = results.length + (showManualFooter ? 1 : 0);
-  const showList = open && !manualMode && (results.length > 0 || showManualFooter);
+  const showList =
+    open && !manualMode && hasMinQuery && (results.length > 0 || showManualFooter);
 
   const updateListMaxHeight = useCallback(() => {
     const root = rootRef.current;
@@ -131,7 +135,7 @@ export default function InstitutionAutocomplete({
     const next = event.target.value;
     setQuery(next);
     setManualMode(false);
-    setOpen(true);
+    setOpen(next.trim().length >= MIN_SEARCH_CHARS);
     onChange?.(next);
   };
 
@@ -151,7 +155,7 @@ export default function InstitutionAutocomplete({
     if (manualMode) return;
 
     if (!showList || optionCount === 0) {
-      if (event.key === 'ArrowDown' && query.trim()) {
+      if (event.key === 'ArrowDown' && hasMinQuery) {
         setOpen(true);
         setActiveIndex(0);
         event.preventDefault();
@@ -214,7 +218,7 @@ export default function InstitutionAutocomplete({
         required={required}
         onChange={handleInputChange}
         onFocus={() => {
-          if (!manualMode) setOpen(true);
+          if (!manualMode && hasMinQuery) setOpen(true);
         }}
         onKeyDown={handleKeyDown}
         className={[

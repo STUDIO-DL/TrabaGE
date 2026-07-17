@@ -41,7 +41,7 @@ export function searchInstitutions(query, institutions, { limit = 8 } = {}) {
   if (!institutions?.length) return [];
 
   const normalizedQuery = normalizeInstitutionSearchText(query);
-  if (!normalizedQuery) return institutions.slice(0, limit);
+  if (!normalizedQuery) return [];
 
   const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
 
