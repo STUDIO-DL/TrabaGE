@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import { SMTPClient } from 'https://deno.land/x/denomailer@1.6.0/mod.ts';
+import nodemailer from 'npm:nodemailer@6.9.10';
 import {
   buildWelcomeEmailHtml,
   buildWelcomeEmailText,
@@ -59,6 +59,18 @@ async function logWelcomeEmailEvent(
   }
 }
 
+function formatSmtpError(error: unknown): string {
+  if (error instanceof Error) {
+    const smtpError = error as Error & { code?: string; response?: string; responseCode?: number };
+    const parts = [error.message];
+    if (smtpError.code) parts.push(`code=${smtpError.code}`);
+    if (smtpError.responseCode) parts.push(`responseCode=${smtpError.responseCode}`);
+    if (smtpError.response) parts.push(`response=${smtpError.response}`);
+    return parts.join(' | ');
+  }
+  return String(error);
+}
+
 async function sendViaSmtp(to: string, userName: string) {
   const host = Deno.env.get('SMTP_HOST')?.trim();
   const user = Deno.env.get('SMTP_USER')?.trim();
@@ -71,25 +83,26 @@ async function sendViaSmtp(to: string, userName: string) {
   const port = Number(Deno.env.get('SMTP_PORT') ?? 587);
   const fromEmail = getFromAddress();
   const fromName = Deno.env.get('SMTP_FROM_NAME')?.trim() || EMAIL_SENDER_NAME;
+  const secure = port === 465;
 
-  const client = new SMTPClient({
-    connection: {
-      hostname: host,
-      port,
-      tls: port === 465,
-      auth: { username: user, password: pass },
-    },
+  const transporter = nodemailer.createTransport({
+    host,
+    port,
+    secure,
+    auth: { user, pass },
   });
 
-  await client.send({
-    from: `${fromName} <${fromEmail}>`,
-    to,
-    subject: WELCOME_EMAIL_SUBJECT,
-    content: buildWelcomeEmailText(userName),
-    html: buildWelcomeEmailHtml(userName),
-  });
-
-  await client.close();
+  try {
+    await transporter.sendMail({
+      from: `"${fromName}" <${fromEmail}>`,
+      to,
+      subject: WELCOME_EMAIL_SUBJECT,
+      text: buildWelcomeEmailText(userName),
+      html: buildWelcomeEmailHtml(userName),
+    });
+  } finally {
+    transporter.close();
+  }
 }
 
 serve(async (req) => {
@@ -161,7 +174,7 @@ serve(async (req) => {
     try {
       await sendViaSmtp(email, userName);
     } catch (smtpError) {
-      const errorMessage = smtpError instanceof Error ? smtpError.message : String(smtpError);
+      const errorMessage = formatSmtpError(smtpError);
       await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
       console.error('[send_welcome_email] SMTP error:', errorMessage);
       await logWelcomeEmailEvent(admin, userId, 'failed', { email, error: errorMessage });
