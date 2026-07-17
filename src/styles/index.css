@@ -152,9 +152,8 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 3px;
-    background: #3b82f6;
-    box-shadow: 0 -1px 8px rgba(59, 130, 246, 0.55);
+    height: 1px;
+    background: rgb(var(--app-border));
     pointer-events: none;
   }
 
