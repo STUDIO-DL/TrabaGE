@@ -36,7 +36,14 @@ try {
   $metadataContent = [System.Net.Http.StringContent]::new($metadata)
   $form.Add($metadataContent, "metadata")
 
-  foreach ($fileName in @("index.ts", "emailTemplate.ts")) {
+  foreach ($fileName in @(
+    "index.ts",
+    "emailTemplate.ts",
+    "constants.ts",
+    "layout.ts",
+    "templates.ts",
+    "resolveAccountType.ts"
+  )) {
     $filePath = Join-Path $functionDir $fileName
     if (-not (Test-Path $filePath)) {
       throw "No se encontro $filePath"

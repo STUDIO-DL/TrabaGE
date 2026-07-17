@@ -1,13 +1,15 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import nodemailer from 'npm:nodemailer@6.9.10';
+import type { WelcomeAccountType } from './constants.ts';
 import {
+  buildWelcomeEmailContent,
   buildWelcomeEmailHtml,
   buildWelcomeEmailText,
   DEFAULT_FROM_EMAIL,
   EMAIL_SENDER_NAME,
-  WELCOME_EMAIL_SUBJECT,
 } from './emailTemplate.ts';
+import { resolveWelcomeAccountType } from './resolveAccountType.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ?? 'https://trabage.org',
@@ -41,17 +43,49 @@ function isAuthorizedServiceRole(req: Request, serviceRoleKey: string) {
   return authHeader === `Bearer ${serviceRoleKey}`;
 }
 
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function isAccountReady(user: {
+  email?: string | null;
+  email_confirmed_at?: string | null;
+  confirmed_at?: string | null;
+  app_metadata?: { provider?: string; providers?: string[] };
+}) {
+  if (!user.email || !isValidEmail(user.email)) {
+    return false;
+  }
+
+  if (user.email_confirmed_at || user.confirmed_at) {
+    return true;
+  }
+
+  const provider = user.app_metadata?.provider ??
+    user.app_metadata?.providers?.[0] ??
+    '';
+
+  return provider !== '' && provider !== 'email';
+}
+
 async function logWelcomeEmailEvent(
   admin: SupabaseClient,
   userId: string,
   status: 'sent' | 'failed' | 'skipped',
-  details?: { email?: string; error?: string; reason?: string },
+  details?: {
+    email?: string;
+    error?: string;
+    reason?: string;
+    accountType?: WelcomeAccountType;
+    accountTypeSource?: string;
+  },
 ) {
   try {
     await admin.from('welcome_email_logs').insert({
       user_id: userId,
       status,
       email: details?.email ?? null,
+      account_type: details?.accountType ?? null,
       error_message: details?.error ?? details?.reason ?? null,
     });
   } catch (logError) {
@@ -71,7 +105,11 @@ function formatSmtpError(error: unknown): string {
   return String(error);
 }
 
-async function sendViaSmtp(to: string, userName: string) {
+async function sendViaSmtp(
+  to: string,
+  userName: string,
+  accountType: WelcomeAccountType,
+) {
   const host = Deno.env.get('SMTP_HOST')?.trim();
   const user = Deno.env.get('SMTP_USER')?.trim();
   const pass = getSmtpPassword();
@@ -85,6 +123,8 @@ async function sendViaSmtp(to: string, userName: string) {
   const fromName = Deno.env.get('SMTP_FROM_NAME')?.trim() || EMAIL_SENDER_NAME;
   const secure = port === 465;
 
+  const content = buildWelcomeEmailContent(accountType, userName);
+
   const transporter = nodemailer.createTransport({
     host,
     port,
@@ -96,9 +136,9 @@ async function sendViaSmtp(to: string, userName: string) {
     await transporter.sendMail({
       from: `"${fromName}" <${fromEmail}>`,
       to,
-      subject: WELCOME_EMAIL_SUBJECT,
-      text: buildWelcomeEmailText(userName),
-      html: buildWelcomeEmailHtml(userName),
+      subject: content.subject,
+      text: buildWelcomeEmailText(content),
+      html: buildWelcomeEmailHtml(content),
     });
   } finally {
     transporter.close();
@@ -154,38 +194,88 @@ serve(async (req) => {
 
     let email = String(webhookRecord?.email ?? '').trim();
     let userName = String(webhookRecord?.user_name ?? '').trim();
+    const outboxAccountType = webhookRecord?.account_type ?? null;
 
-    if (!email) {
-      const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
-      if (userError || !userData.user?.email) {
-        await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
-        await logWelcomeEmailEvent(admin, userId, 'failed', { error: 'Usuario no encontrado' });
-        return jsonResponse({ error: 'Usuario no encontrado' }, 404);
-      }
-
-      email = userData.user.email;
-      if (!userName) {
-        userName = String(
-          userData.user.user_metadata?.full_name ?? userData.user.user_metadata?.name ?? '',
-        ).trim();
-      }
+    const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
+    if (userError || !userData.user) {
+      await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
+      await logWelcomeEmailEvent(admin, userId, 'failed', { error: 'Usuario no encontrado' });
+      return jsonResponse({ error: 'Usuario no encontrado' }, 404);
     }
 
+    if (!email) {
+      email = String(userData.user.email ?? '').trim();
+    }
+
+    if (!userName) {
+      userName = String(
+        userData.user.user_metadata?.full_name ?? userData.user.user_metadata?.name ?? '',
+      ).trim();
+    }
+
+    if (!email || !isValidEmail(email)) {
+      await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
+      await logWelcomeEmailEvent(admin, userId, 'failed', { error: 'Email inválido o ausente' });
+      return jsonResponse({ error: 'Email inválido o ausente' }, 400);
+    }
+
+    if (!isAccountReady(userData.user)) {
+      await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
+      await logWelcomeEmailEvent(admin, userId, 'failed', {
+        email,
+        error: 'Cuenta no confirmada',
+      });
+      return jsonResponse({ error: 'Cuenta no confirmada' }, 409);
+    }
+
+    const resolved = await resolveWelcomeAccountType(admin, userId, outboxAccountType);
+    const accountType = resolved.accountType;
+
+    if (resolved.resolutionError) {
+      console.error(
+        '[send_welcome_email] using personal fallback:',
+        userId,
+        resolved.resolutionError,
+      );
+    }
+
+    console.log(
+      '[send_welcome_email] resolved account type:',
+      userId,
+      accountType,
+      'source=',
+      resolved.source,
+    );
+
     try {
-      await sendViaSmtp(email, userName);
+      await sendViaSmtp(email, userName, accountType);
     } catch (smtpError) {
       const errorMessage = formatSmtpError(smtpError);
       await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
       console.error('[send_welcome_email] SMTP error:', errorMessage);
-      await logWelcomeEmailEvent(admin, userId, 'failed', { email, error: errorMessage });
+      await logWelcomeEmailEvent(admin, userId, 'failed', {
+        email,
+        accountType,
+        error: errorMessage,
+      });
       return jsonResponse({ error: 'No se pudo enviar el correo de bienvenida' }, 502);
     }
 
     await admin.from('welcome_email_outbox').delete().eq('user_id', userId);
-    console.log('[send_welcome_email] sent:', userId, email);
-    await logWelcomeEmailEvent(admin, userId, 'sent', { email });
+    console.log('[send_welcome_email] sent:', userId, email, accountType);
+    await logWelcomeEmailEvent(admin, userId, 'sent', {
+      email,
+      accountType,
+      accountTypeSource: resolved.source,
+    });
 
-    return jsonResponse({ ok: true, sent: true, user_id: userId });
+    return jsonResponse({
+      ok: true,
+      sent: true,
+      user_id: userId,
+      account_type: accountType,
+      account_type_source: resolved.source,
+    });
   } catch (error) {
     console.error('[send_welcome_email] unexpected:', error);
     return jsonResponse({ error: 'Error interno' }, 500);
