@@ -128,7 +128,7 @@ export const TERMS_ARTICLES = [
       },
       {
         type: 'p',
-        text: 'La verificación no implica que TrabaGE avale la solvencia, reputación o prácticas laborales del negocio. Las cuentas no verificadas pueden seguir usando la plataforma, con la distinción visible para el talento.',
+        text: 'La verificación no implica que TrabaGE avale la solvencia, reputación o prácticas laborales de la cuenta. Las cuentas no verificadas pueden seguir usando la plataforma, con la distinción visible para el talento.',
       },
     ],
   },
