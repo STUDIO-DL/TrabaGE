@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
+import InstitutionAutocomplete from '../../ui/InstitutionAutocomplete';
 import Button from '../../ui/Button';
 import AppIcon from '../../common/AppIcon';
 import { Save, ICON_SIZES } from '../../../constants/icons';
@@ -58,7 +59,12 @@ export default function EducationModal({ isOpen, onClose, initial, onSave, loadi
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={initial ? 'Editar educación' : 'Añadir educación'}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="Institución" value={form.institution} onChange={(e) => setForm({ ...form, institution: e.target.value })} required />
+        <InstitutionAutocomplete
+          label="Institución"
+          value={form.institution}
+          onChange={(institution) => setForm({ ...form, institution })}
+          required
+        />
         <Input label="Programa / título" value={form.program} onChange={(e) => setForm({ ...form, program: e.target.value })} />
         <Input label="Especialidad" value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} />
         <Input label="Nota / grado" value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })} />

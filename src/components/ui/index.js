@@ -15,6 +15,7 @@ export { default as SearchBar } from './SearchBar';
 export { default as EmptyState } from './EmptyState';
 export { default as FileUpload } from './FileUpload';
 export { default as AutocompleteInput } from './AutocompleteInput';
+export { default as InstitutionAutocomplete } from './InstitutionAutocomplete';
 export { default as DynamicListInput } from './DynamicListInput';
 export { default as ErrorBoundary } from './ErrorBoundary';
 export {
