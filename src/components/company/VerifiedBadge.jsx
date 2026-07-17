@@ -10,7 +10,7 @@ export default function VerifiedBadge({
   size = 'sm',
   className = '',
   showTooltip = true,
-  tooltip = 'Empresa Verificada',
+  tooltip = 'Cuenta verificada',
 }) {
   const pixels = SIZE_MAP[size] ?? SIZE_MAP.sm;
 

@@ -14,6 +14,7 @@ import { jobsService } from '../../services/jobs.service';
 import { getJobTypeLabel } from '../../constants/jobTypes';
 import { getWorkModeLabel } from '../../constants/workModes';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { TOAST } from '../../utils/copyLabels';
 
 const STATUS_LABELS = {
   draft: 'Borrador',
@@ -87,13 +88,13 @@ export default function CompanyJobs() {
     if (!ok) return;
 
     runJobAction(job, () => jobsService.deleteJob(job.id)).then(() => {
-      showToast('Oferta eliminada', 'success');
+      showToast(TOAST.jobDeleted, 'success');
     });
   };
 
   const handleDuplicate = (job) => {
     runJobAction(job, () => jobsService.duplicateJob(job)).then(() => {
-      showToast('Oferta duplicada como borrador', 'success');
+      showToast('Oferta duplicada como borrador.', 'success');
     });
   };
 
@@ -167,7 +168,7 @@ export default function CompanyJobs() {
                   <Button
                     size="sm"
                     loading={actionId === job.id}
-                    onClick={() => handleStatus(job, 'active', 'Oferta publicada')}
+                    onClick={() => handleStatus(job, 'active', TOAST.jobPublished)}
                   >
                     Publicar
                   </Button>

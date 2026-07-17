@@ -165,6 +165,7 @@ export default function CompanyProfileView({
                 <CompanyJobsSection
                   jobs={jobs}
                   readOnly={readOnly}
+                  profile={profile}
                   maxVisible={3}
                   onViewAll={() => goToTab('empleos')}
                   variant="preview"
@@ -226,7 +227,7 @@ export default function CompanyProfileView({
 
       {activeTab === 'empleos' && (
         <div className={profileContentShellClass}>
-          <CompanyJobsSection jobs={jobs} readOnly={readOnly} variant="full" showTitle={false} />
+          <CompanyJobsSection jobs={jobs} readOnly={readOnly} profile={profile} variant="full" showTitle={false} />
         </div>
       )}
 
@@ -238,6 +239,8 @@ export default function CompanyProfileView({
             loadingMore={postsLoadingMore}
             hasMore={postsHasMore}
             onLoadMore={loadMorePosts}
+            readOnly={readOnly}
+            profile={profile}
           />
         </div>
       )}

@@ -5,6 +5,7 @@ import { THEME_OPTIONS } from '../../constants/theme';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { useTheme } from '../../hooks/useTheme';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { TOAST } from '../../utils/copyLabels';
 
 function ThemePreview({ theme }) {
   const isDark = theme === 'dark';
@@ -92,7 +93,7 @@ export default function AppearanceScreen() {
       return;
     }
 
-    showToast('Apariencia actualizada', 'success');
+    showToast(TOAST.appearanceUpdated, 'success');
   };
 
   return (

@@ -6,6 +6,7 @@ import AppIcon from '../common/AppIcon';
 import { Trash2, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { SERVICE_SUGGESTIONS, filterServiceSuggestions } from '../../constants/services';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 const PREVIEW_COUNT = 8;
 const POPULAR_COUNT = 6;
@@ -49,7 +50,7 @@ export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) 
       title="Servicios que ofrezco"
       isOwn={isOwn}
       isEmpty={!items.length && !isOwn}
-      emptyText="Sin servicios registrados."
+      emptyText={getProfileSectionEmptyCopy('services', isOwn)}
       footerLabel={footerLabel}
     >
       <div className="flex flex-wrap gap-2">

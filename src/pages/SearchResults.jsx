@@ -301,7 +301,7 @@ export default function SearchResults() {
 
           title="Busca en TrabaGE"
 
-          description="Escribe algo para encontrar personas, empresas o instituciones."
+          description="Escribe algo para encontrar personas, cuentas Business u organizaciones."
 
         />
 

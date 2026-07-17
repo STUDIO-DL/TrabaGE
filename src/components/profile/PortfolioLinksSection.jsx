@@ -6,6 +6,7 @@ import Button from '../ui/Button';
 import AppIcon from '../common/AppIcon';
 import { Trash2, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 const LINK_TYPE_OPTIONS = [
   { value: 'github', label: 'GitHub' },
@@ -54,7 +55,7 @@ export default function PortfolioLinksSection({ items = [], isOwn, onAdd, onDele
       title="Portafolio y enlaces"
       isOwn={isOwn}
       isEmpty={!sortedItems.length && !isOwn}
-      emptyText="Sin enlaces de portafolio."
+      emptyText={getProfileSectionEmptyCopy('portfolio', isOwn)}
     >
       <div className="space-y-2">
         {sortedItems.map((item) => (

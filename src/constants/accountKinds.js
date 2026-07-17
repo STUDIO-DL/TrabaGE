@@ -17,7 +17,7 @@ export const ACCOUNT_KIND_OPTIONS = [
   {
     id: ACCOUNT_KINDS.BUSINESS,
     label: 'Cuenta Business',
-    description: 'Publico ofertas y encuentro talento para mi negocio',
+    description: 'Publico ofertas y encuentro talento con mi cuenta Business',
     icon: Building2,
   },
   {

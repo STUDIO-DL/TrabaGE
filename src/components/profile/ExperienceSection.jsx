@@ -2,6 +2,7 @@ import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { Briefcase } from '../../constants/icons';
 import { formatDateRange } from '../../utils/formatDate';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 const PREVIEW_COUNT = 2;
 
@@ -18,7 +19,7 @@ export default function ExperienceSection({ items = [], isOwn, onAdd, onEdit, on
       isOwn={isOwn}
       onAdd={onAdd}
       isEmpty={!items.length}
-      emptyText="Sin experiencia registrada."
+      emptyText={getProfileSectionEmptyCopy('experience', isOwn)}
       footerLabel={footerLabel}
     >
       {preview.map((item) => (

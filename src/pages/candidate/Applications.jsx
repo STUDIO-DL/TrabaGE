@@ -11,6 +11,7 @@ import { useApplications } from '../../hooks/useApplications';
 import { applicationsService } from '../../services/applications.service';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { TOAST } from '../../utils/copyLabels';
 
 export default function Applications() {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ export default function Applications() {
       return;
     }
 
-    showToast('Solicitud retirada', 'success');
+    showToast(TOAST.applicationWithdrawn, 'success');
     refetch();
   };
 

@@ -2,6 +2,7 @@ import ProfileSectionCard from './ProfileSectionCard';
 import AppIcon from '../common/AppIcon';
 import { ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 /** Sidebar-only language management when editing own profile */
 export default function LanguagesSection({ items = [], isOwn, onAdd, onEdit, onDelete }) {
@@ -15,7 +16,7 @@ export default function LanguagesSection({ items = [], isOwn, onAdd, onEdit, onD
       isOwn={isOwn}
       onAdd={onAdd}
       isEmpty={!items.length}
-      emptyText="Sin idiomas registrados."
+      emptyText={getProfileSectionEmptyCopy('languages', isOwn)}
     >
       <ul className="space-y-3">
         {items.map((item) => (

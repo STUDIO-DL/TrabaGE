@@ -33,7 +33,7 @@ export const NEWS_CATEGORIES = [
   { value: 'employment', label: 'Empleo' },
   { value: 'tech', label: 'Tecnología' },
   { value: 'ai', label: 'IA' },
-  { value: 'business', label: 'Negocios' },
+  { value: 'business', label: 'Business' },
   { value: 'economy', label: 'Economía' },
   { value: 'education', label: 'Educación' },
   { value: 'labor', label: 'Mercado laboral' },

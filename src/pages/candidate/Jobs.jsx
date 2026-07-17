@@ -225,8 +225,8 @@ export default function Jobs() {
           ) : displayJobs.length === 0 ? (
             <EmptyState
               image={NoJobs}
-              title="No hay ofertas disponibles"
-              description="Estamos buscando nuevas oportunidades para ti. Vuelve pronto o ajusta tus alertas en Configuración > Notificaciones."
+              title="Nada por aquí todavía"
+              description="No hay ofertas activas en este momento. Vuelve pronto o ajusta tus alertas en Configuración > Notificaciones."
             />
           ) : (
             listJobs.map((job) => (

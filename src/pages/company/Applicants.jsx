@@ -18,6 +18,7 @@ import { openCandidateContact } from '../../utils/contact';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { EMPLOYER_APPLICATION_STATUSES } from '../../constants/applicationStatuses';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { TOAST } from '../../utils/copyLabels';
 
 export default function Applicants() {
   const { applications, loading, refetch } = useApplications();
@@ -88,7 +89,7 @@ export default function Applicants() {
       return;
     }
 
-    showToast('Estado actualizado', 'success');
+    showToast(TOAST.statusUpdated, 'success');
     refetch();
   };
 

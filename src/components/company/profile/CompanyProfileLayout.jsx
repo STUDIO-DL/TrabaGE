@@ -21,7 +21,8 @@ import { Save, ICON_SIZES } from '../../../constants/icons';
 import CompanyProfileView from './CompanyProfileView';
 import { useFollow } from '../../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
-import { isOrganizationProfile } from '../../../utils/orgLabels';
+import { isOrganizationProfile, getOrgLabels } from '../../../utils/orgLabels';
+import { TOAST } from '../../../utils/copyLabels';
 
 const COMPANY_SIZE_OPTIONS = [
   '1-10',
@@ -351,6 +352,9 @@ export default function CompanyProfileLayout({
     setEditMode(mode);
   };
 
+  const orgLabels = getOrgLabels(profile);
+  const fallbackCompanyName = profile?.company_name?.trim() || orgLabels.defaultName;
+
   const uploadImage = async (file, type) => {
     const validation = validateFile(file, type === 'logo' ? 'logo' : 'image');
     if (!validation.valid) {
@@ -398,7 +402,7 @@ export default function CompanyProfileLayout({
 
     const { error: saveError } = await companyService.upsertCompanyProfile({
       user_id: userId,
-      company_name: profile?.company_name?.trim() || 'Mi empresa',
+      company_name: fallbackCompanyName,
       [field]: path,
     });
     setLoading(false);
@@ -412,7 +416,7 @@ export default function CompanyProfileLayout({
       ...prev,
       [mediaKey]: path,
     }));
-    showToast(type === 'logo' ? 'Logo actualizado' : 'Portada actualizada', 'success');
+    showToast(type === 'logo' ? 'Logo actualizado.' : 'Portada actualizada.', 'success');
     onUploadComplete?.();
   };
 
@@ -434,7 +438,7 @@ export default function CompanyProfileLayout({
       return;
     }
 
-    showToast('Servicio añadido', 'success');
+    showToast('Servicio añadido.', 'success');
     onUploadComplete?.();
   };
 
@@ -451,7 +455,7 @@ export default function CompanyProfileLayout({
       return;
     }
 
-    showToast('Servicio eliminado', 'success');
+    showToast('Servicio eliminado.', 'success');
     onUploadComplete?.();
   };
 
@@ -466,7 +470,7 @@ export default function CompanyProfileLayout({
     setContactSaving(true);
     const { error } = await companyService.upsertCompanyProfile({
       user_id: userId,
-      company_name: profile?.company_name?.trim() || 'Mi empresa',
+      company_name: fallbackCompanyName,
       ...contactData,
     });
     setContactSaving(false);
@@ -476,7 +480,7 @@ export default function CompanyProfileLayout({
       return;
     }
 
-    showToast('Contacto guardado', 'success');
+    showToast(TOAST.contactSaved, 'success');
     onUploadComplete?.();
   };
 
@@ -490,7 +494,7 @@ export default function CompanyProfileLayout({
         data.company_name
         || profile?.company_name?.trim()
         || displayProfile?.company_name?.trim()
-        || 'Mi empresa',
+        || fallbackCompanyName,
       ...data,
     });
     setProfileSaving(false);
@@ -500,7 +504,7 @@ export default function CompanyProfileLayout({
       return;
     }
 
-    showToast('Perfil actualizado', 'success');
+    showToast(TOAST.profileUpdated, 'success');
     setEditMode(null);
     onUploadComplete?.();
   };

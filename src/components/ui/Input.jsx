@@ -8,6 +8,7 @@ export default function Input({
   icon: Icon,
   className = '',
   id,
+  required,
   ...props
 }) {
   const inputId = id || props.name;
@@ -17,6 +18,7 @@ export default function Input({
       {label && (
         <label htmlFor={inputId} className="mb-space-sm block text-label text-app-muted">
           {label}
+          {required ? <span className="text-red-600" aria-hidden="true"> *</span> : null}
         </label>
       )}
       <div className="relative">
@@ -39,6 +41,7 @@ export default function Input({
           ].join(' ')}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}
+          required={required}
           {...props}
         />
       </div>

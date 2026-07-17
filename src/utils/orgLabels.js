@@ -25,24 +25,25 @@ export function isInstitutionKind(orgKind) {
 }
 
 /**
- * Spanish labels for Business vs Organization surfaces.
- * Prefer "Business"/"Negocio" and "Organización" — never mix the two concepts.
+ * Spanish labels for Cuenta Business vs Cuenta de Organización surfaces.
+ * Use "empresa"/"organización" only for third-person profile context (e.g. empty states).
+ * Account-type naming always follows roles.js: Cuenta Business / Cuenta de Organización.
  */
 export function getOrgLabels(profile, orgKind = null) {
   const isOrganization =
     isOrganizationKind(orgKind) || (profile ? isOrganizationProfile(profile) : false);
 
   return {
-    entity: isOrganization ? 'organización' : 'negocio',
-    entityCapitalized: isOrganization ? 'Organización' : 'Negocio',
-    profile: isOrganization ? 'Perfil de organización' : 'Perfil de negocio',
-    verified: isOrganization ? 'Organización verificada' : 'Negocio verificado',
-    defaultName: isOrganization ? 'Tu organización' : 'Tu negocio',
-    notFound: isOrganization ? 'Organización no encontrada' : 'Empresa no encontrada',
+    entity: isOrganization ? 'organización' : 'empresa',
+    entityCapitalized: isOrganization ? 'Organización' : 'Empresa',
+    profile: isOrganization ? 'Perfil de organización' : 'Perfil Business',
+    verified: isOrganization ? 'Organización verificada' : 'Cuenta Business verificada',
+    defaultName: isOrganization ? 'Tu organización' : 'Tu cuenta Business',
+    notFound: isOrganization ? 'Organización no encontrada' : 'Perfil no encontrado',
     welcome: 'Bienvenido de nuevo',
     createOffer: isOrganization ? 'Crear convocatoria' : 'Crear oferta',
     followPrompt: isOrganization
       ? 'Inicia sesión para seguir organizaciones'
-      : 'Inicia sesión para seguir negocios',
+      : 'Inicia sesión para seguir cuentas Business',
   };
 }

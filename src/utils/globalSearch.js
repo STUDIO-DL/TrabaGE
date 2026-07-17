@@ -4,11 +4,11 @@ export const SEARCH_ENTITY_ORDER = ['personal', 'business', 'organization'];
 
 export const SEARCH_ENTITY_LABELS = {
   personal: 'Personas',
-  business: 'Negocios',
+  business: 'Business',
   organization: 'Organizaciones',
   // Legacy result_type aliases from search RPC during transition
   candidate: 'Personas',
-  company: 'Negocios',
+  company: 'Business',
   institution: 'Organizaciones',
   job: 'Empleos',
 };

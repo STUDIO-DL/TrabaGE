@@ -32,8 +32,8 @@ const CANDIDATE_EMPTY_COPY = {
     description: 'Aquí verás nuevas ofertas, recomendaciones y novedades de tus candidaturas.',
   },
   [NOTIFICATION_CATEGORY.POSTS]: {
-    title: 'Sin notificaciones de posts',
-    description: 'Aquí verás publicaciones de las empresas e instituciones que sigues.',
+    title: 'Sin novedades de publicaciones',
+    description: 'Aquí verás actualizaciones de las cuentas Business y organizaciones que sigues.',
   },
 };
 
@@ -121,7 +121,7 @@ export default function NotificationsView({ role = 'candidate' }) {
   const handleDelete = async (notification) => {
     const { error } = await deleteNotification(notification.id);
     showToast(
-      error ? getSupabaseErrorMessage(error) : 'Notificación eliminada',
+      error ? getSupabaseErrorMessage(error) : 'Notificación eliminada.',
       error ? 'error' : 'success',
     );
   };

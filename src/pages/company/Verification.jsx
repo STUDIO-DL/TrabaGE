@@ -22,6 +22,7 @@ import { FILE_HINTS } from '../../utils/validateFile';
 import { formatRelativeTime } from '../../utils/formatDate';
 import { PREVIEW_COMPANY_PROFILE, PREVIEW_COMPANY_VERIFICATION } from '../../constants/preview';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { getOrgLabels, isOrganizationProfile } from '../../utils/orgLabels';
 
 export default function Verification() {
   const { user, isPreviewMode } = useAuth();
@@ -104,18 +105,23 @@ export default function Verification() {
       return;
     }
 
-    showToast('Solicitud enviada correctamente', 'success');
+    showToast('Solicitud enviada correctamente.', 'success');
     await loadData();
   };
+
+  const orgLabels = getOrgLabels(companyProfile);
+  const verificationTitle = isOrganizationProfile(companyProfile)
+    ? 'Verificación de organización'
+    : 'Verificación de cuenta Business';
 
   const renderContent = () => {
     if (verified) {
       return (
         <Card padding="lg" className="space-y-4">
           <div className="flex items-center gap-3">
-            <VerifiedBadge size="md" />
+            <VerifiedBadge size="md" tooltip={orgLabels.verified} />
             <div>
-              <p className="font-semibold text-gray-900">Empresa Verificada</p>
+              <p className="font-semibold text-gray-900">{orgLabels.verified}</p>
               {companyProfile?.verified_at && (
                 <p className="text-sm text-gray-500">
                   Aprobada el {new Date(companyProfile.verified_at).toLocaleDateString('es-ES')}
@@ -172,7 +178,7 @@ export default function Verification() {
     return (
       <Card padding="lg" className="space-y-4">
         <p className="text-sm text-gray-600">
-          Sube un documento legal ({FILE_HINTS.verification}) para verificar tu empresa.
+          Sube un documento legal ({FILE_HINTS.verification}) para verificar tu perfil.
         </p>
         <FileUpload
           label="Subir Documento"
@@ -187,7 +193,7 @@ export default function Verification() {
   };
 
   return (
-    <PageContainer title="Verificación de Empresa" backButton bottomNav={false}>
+    <PageContainer title={verificationTitle} backButton bottomNav={false}>
       <div className="space-y-space-base p-space-base">
         {loading ? (
           <FormPageSkeleton fields={3} />
@@ -196,9 +202,9 @@ export default function Verification() {
             <div className="flex items-start gap-space-md">
               <AppIcon icon={ShieldCheck} size={ICON_SIZES.lg} className="text-primary-600" />
               <div>
-                <h2 className="text-title font-semibold text-app-text">Verificación de Empresa</h2>
+                <h2 className="text-title font-semibold text-app-text">{verificationTitle}</h2>
                 <p className="mt-space-xs text-body-small text-app-muted">
-                  Obtén el distintivo de empresa verificada y genera confianza en candidatos.
+                  Obtén el distintivo de verificación y genera confianza en quienes visiten tu perfil.
                 </p>
               </div>
             </div>

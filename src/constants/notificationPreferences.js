@@ -72,14 +72,14 @@ const CANDIDATE_NOTIFICATION_GROUPS = [
   },
   {
     id: 'followed_companies',
-    title: 'Empresas que sigo',
-    description: 'Actividad de las empresas que sigues en TrabaGE.',
+    title: 'Cuentas que sigo',
+    description: 'Actividad de las cuentas Business y organizaciones que sigues en TrabaGE.',
     icon: Building2,
     items: [
       {
         key: 'activity_post_interactions',
-        title: 'Publicaciones de empresas seguidas',
-        description: 'Nuevas publicaciones de empresas a las que sigues.',
+        title: 'Publicaciones de cuentas seguidas',
+        description: 'Nuevas publicaciones de cuentas Business u organizaciones que sigues.',
         notificationTypes: NOTIFICATION_TYPE_MAP.activity_post_interactions,
       },
     ],

@@ -24,6 +24,7 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { validateFile } from '../../utils/validateFile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
 import { shareContent, getShareDescription } from '../../utils/shareContent';
+import { TOAST } from '../../utils/copyLabels';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -82,21 +83,21 @@ export default function Profile() {
         : { [field]: value };
     const { error } = await updateBasicInfo(payload);
     setSavingField(null);
-    showToast(error ? error.message : 'Guardado', error ? 'error' : 'success');
+    showToast(error ? error.message : TOAST.saved, error ? 'error' : 'success');
   };
 
   const handleSaveAbout = async (about) => {
     setAboutSaving(true);
     const { error } = await updateBasicInfo({ about });
     setAboutSaving(false);
-    showToast(error ? error.message : 'Descripción guardada', error ? 'error' : 'success');
+    showToast(error ? error.message : 'Descripción guardada.', error ? 'error' : 'success');
   };
 
   const handleSaveContact = async (data) => {
     setContactSaving(true);
     const { error } = await updateBasicInfo(data);
     setContactSaving(false);
-    showToast(error ? error.message : 'Contacto guardado', error ? 'error' : 'success');
+    showToast(error ? error.message : TOAST.contactSaved, error ? 'error' : 'success');
   };
 
   const handleAvatar = async (file) => {
@@ -108,7 +109,7 @@ export default function Profile() {
     setAvatarLoading(true);
     const { error } = await uploadAvatar(file);
     setAvatarLoading(false);
-    showToast(error ? error.message : 'Foto actualizada', error ? 'error' : 'success');
+    showToast(error ? error.message : 'Foto actualizada.', error ? 'error' : 'success');
   };
 
   const handleUploadCV = async (file, errorMsg) => {
@@ -116,7 +117,7 @@ export default function Profile() {
     setCvLoading(true);
     const { error } = await uploadCV(file);
     setCvLoading(false);
-    showToast(error ? error.message : 'CV subido', error ? 'error' : 'success');
+    showToast(error ? error.message : 'CV subido correctamente.', error ? 'error' : 'success');
   };
 
   const handleSaveCoverLetter = async (text) => {
@@ -218,7 +219,7 @@ export default function Profile() {
               onEdit={openLanguage}
               onDelete={async (id) => {
                 await deleteLanguage(id);
-                showToast('Idioma eliminado', 'success');
+                showToast('Idioma eliminado.', 'success');
               }}
             />
           </>

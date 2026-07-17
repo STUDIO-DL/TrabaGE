@@ -2,6 +2,7 @@ import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { GraduationCap } from '../../constants/icons';
 import { formatDateRange } from '../../utils/formatDate';
+import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
 const PREVIEW_COUNT = 2;
 
@@ -18,7 +19,7 @@ export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onD
       isOwn={isOwn}
       onAdd={onAdd}
       isEmpty={!items.length}
-      emptyText="Sin formación registrada."
+      emptyText={getProfileSectionEmptyCopy('education', isOwn)}
       footerLabel={footerLabel}
     >
       {preview.map((item) => (
