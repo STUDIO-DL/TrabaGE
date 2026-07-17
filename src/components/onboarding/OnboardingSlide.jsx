@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react';
+import Button from '../ui/Button';
 
 export default function OnboardingSlide({
   image,
@@ -95,16 +96,17 @@ export default function OnboardingSlide({
           </div>
 
           <div className="mx-auto flex w-[90%] flex-col gap-space-md">
-            <button
-              type="button"
+            <Button
               onClick={onNext}
-              className="relative inline-flex h-btn-primary w-full items-center justify-center rounded-radius-lg bg-primary-600 px-space-xl text-body font-semibold text-white shadow-elevation-3 transition-colors duration-fast ease-out hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2 active:scale-[0.99]"
+              size="lg"
+              fullWidth
+              className="relative shadow-elevation-2"
             >
               {nextLabel}
               {showNextArrow ? (
                 <ChevronRight className="absolute right-5 h-5 w-5" aria-hidden />
               ) : null}
-            </button>
+            </Button>
             {secondaryAction}
           </div>
         </div>
