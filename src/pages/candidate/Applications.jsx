@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import EmptyState from '../../components/common/EmptyState';
 import { ApplicationListSkeleton } from '../../components/common/Skeleton';
-import { NoApplications } from '../../assets/empty-states';
+import { FileText } from '../../constants/icons';
 import CompanyNameWithBadge from '../../components/company/CompanyNameWithBadge';
 import ApplicationStatusBadge from '../../components/apply/ApplicationStatusBadge';
 import Button from '../../components/ui/Button';
@@ -38,9 +38,10 @@ export default function Applications() {
           <ApplicationListSkeleton count={3} />
         ) : applications.length === 0 ? (
           <EmptyState
-            image={NoApplications}
+            variant="soft"
+            icon={FileText}
             title="No has aplicado a ninguna oferta"
-            description="Aún no has enviado solicitudes. Explora ofertas y aplica a las que te interesen."
+            description="Explora ofertas y aplica a las que te interesen."
             actionLabel="Ver empleos"
             onAction={() => navigate('/personal/jobs')}
           />

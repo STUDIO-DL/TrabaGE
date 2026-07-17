@@ -5,7 +5,7 @@ import FeedItemRenderer from '../../components/feed/FeedItemRenderer';
 import EmptyState from '../../components/common/EmptyState';
 import { PostListSkeleton } from '../../components/common/Skeleton';
 import Button from '../../components/ui/Button';
-import { NoPosts } from '../../assets/empty-states';
+import { Newspaper } from '../../constants/icons';
 import { useIntelligentFeed } from '../../hooks/useIntelligentFeed';
 
 export default function Feed() {
@@ -44,9 +44,10 @@ export default function Feed() {
           <PostListSkeleton count={3} />
         ) : items.length === 0 ? (
           <EmptyState
-            image={NoPosts}
-            title="No hay contenido"
-            description="Tu feed mostrará publicaciones, noticias y recomendaciones según tu perfil."
+            variant="soft"
+            icon={Newspaper}
+            title="Tu feed está vacío"
+            description="Aquí verás publicaciones, noticias y recomendaciones según tu perfil."
           />
         ) : (
           items.map((item, index) => (

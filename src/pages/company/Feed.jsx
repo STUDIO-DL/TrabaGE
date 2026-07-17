@@ -5,7 +5,7 @@ import FeedItemRenderer from '../../components/feed/FeedItemRenderer';
 import EmptyState from '../../components/common/EmptyState';
 import { PostListSkeleton } from '../../components/common/Skeleton';
 import Button from '../../components/ui/Button';
-import { NoPosts } from '../../assets/empty-states';
+import { Newspaper } from '../../constants/icons';
 import { useIntelligentFeed } from '../../hooks/useIntelligentFeed';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -90,8 +90,9 @@ export default function Feed() {
           <PostListSkeleton count={3} />
         ) : items.length === 0 ? (
           <EmptyState
-            image={NoPosts}
-            title="No hay contenido"
+            variant="soft"
+            icon={Newspaper}
+            title="Tu feed está vacío"
             description="Publicaciones, noticias del sector y candidatos recomendados aparecerán aquí."
           />
         ) : (
