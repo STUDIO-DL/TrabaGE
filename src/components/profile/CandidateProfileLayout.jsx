@@ -1,5 +1,5 @@
 import ProfilePageShell from './ProfilePageShell';
-import ProfileHero from './ProfileHero';
+import CandidateProfileHeader from './CandidateProfileHeader';
 import ProfileActionBar from './ProfileActionBar';
 import ProfileSidebar from './ProfileSidebar';
 import { hasCandidateContact } from '../../utils/contact';
@@ -12,6 +12,9 @@ export default function CandidateProfileLayout({
   isOwn = false,
   onAvatarChange,
   avatarLoading,
+  onCoverChange,
+  coverLoading,
+  coverSrc,
   onShare,
   shareUrl,
   shareTitle,
@@ -37,11 +40,14 @@ export default function CandidateProfileLayout({
       isOwn={isOwn}
       onSettings={onSettings}
     >
-      <ProfileHero
+      <CandidateProfileHeader
         profile={profile}
         isOwn={isOwn}
         onAvatarChange={onAvatarChange}
         avatarLoading={avatarLoading}
+        onCoverChange={onCoverChange}
+        coverLoading={coverLoading}
+        coverSrc={coverSrc}
         onSaveField={onSaveField}
         savingField={savingField}
       />
