@@ -95,12 +95,12 @@ export default function OnboardingSlide({
             ))}
           </div>
 
-          <div className="mx-auto flex w-[90%] flex-col gap-space-md">
+          <div className="mx-auto flex w-[min(86vw,23rem)] flex-col gap-space-md">
             <Button
               onClick={onNext}
-              size="lg"
+              size="md"
               fullWidth
-              className="relative shadow-elevation-2"
+              className="relative shadow-elevation-1"
             >
               {nextLabel}
               {showNextArrow ? (
