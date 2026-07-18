@@ -16,7 +16,7 @@ import { mapAuthError, isExpiredVerificationUserMessage } from '../../utils/erro
 import { getErrorMessage } from '../../utils/i18n';
 import { useAuth } from '../../hooks/useAuth';
 
-const MAX_ATTEMPTS = 15;
+const MAX_ATTEMPTS = 30;
 const RETRY_MS = 300;
 
 function isEmailVerificationFlow(queryParams, hashParams) {
@@ -81,7 +81,7 @@ export default function AuthCallback() {
         if (oauthIntent === OAUTH_INTENTS.LOGIN) {
           const registered = await isRegisteredTrabaGEAccount(session.user);
           if (!registered) {
-            await discardUnregisteredOAuthSession();
+            await discardUnregisteredOAuthSession(session.user);
             await logout();
             if (cancelled) return true;
             navigate('/login', {
@@ -112,7 +112,7 @@ export default function AuthCallback() {
         if (needsAccountTypeSelection) {
           if (cancelled) return true;
           if (oauthIntent === OAUTH_INTENTS.LOGIN) {
-            await discardUnregisteredOAuthSession();
+            await discardUnregisteredOAuthSession(session.user);
             await logout();
             navigate('/login', {
               replace: true,

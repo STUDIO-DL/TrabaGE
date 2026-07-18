@@ -20,6 +20,15 @@ function isPasswordValidationError(message, code) {
   );
 }
 
+function isUserAlreadyRegisteredError(message, code) {
+  return (
+    code === 'user_already_registered' ||
+    message.includes('user already registered') ||
+    message.includes('already been registered') ||
+    message.includes('already exists')
+  );
+}
+
 function isExpiredVerificationLink(message) {
   return (
     message.includes('otp_expired') ||
@@ -47,11 +56,7 @@ export function mapAuthError(error) {
   if (isEmailNotConfirmedError(message, code)) {
     return getErrorMessage('emailNotConfirmed');
   }
-  if (
-    message.includes('user already registered') ||
-    message.includes('already been registered') ||
-    message.includes('already exists')
-  ) {
+  if (isUserAlreadyRegisteredError(message, code)) {
     return getErrorMessage('userAlreadyRegistered');
   }
   if (isPasswordValidationError(message, code)) {

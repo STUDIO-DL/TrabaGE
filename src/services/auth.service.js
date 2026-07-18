@@ -172,18 +172,59 @@ function peekPendingAccountType() {
 function saveOAuthIntent(intent) {
   if (intent === OAUTH_INTENTS.LOGIN || intent === OAUTH_INTENTS.SIGNUP) {
     sessionStorage.setItem(OAUTH_INTENT_KEY, intent);
+    try {
+      localStorage.setItem(OAUTH_INTENT_KEY, intent);
+    } catch {
+      // Private mode / storage blocked — sessionStorage may still work.
+    }
     return;
   }
   sessionStorage.removeItem(OAUTH_INTENT_KEY);
+  try {
+    localStorage.removeItem(OAUTH_INTENT_KEY);
+  } catch {
+    // Ignore.
+  }
 }
 
 export function consumeOAuthIntent() {
-  const intent = sessionStorage.getItem(OAUTH_INTENT_KEY);
+  let intent = sessionStorage.getItem(OAUTH_INTENT_KEY);
+  if (!intent) {
+    try {
+      intent = localStorage.getItem(OAUTH_INTENT_KEY);
+    } catch {
+      intent = null;
+    }
+  }
   sessionStorage.removeItem(OAUTH_INTENT_KEY);
+  try {
+    localStorage.removeItem(OAUTH_INTENT_KEY);
+  } catch {
+    // Ignore.
+  }
   if (intent === OAUTH_INTENTS.LOGIN || intent === OAUTH_INTENTS.SIGNUP) return intent;
   // Pending account type implies signup even if intent was lost across redirect.
   if (peekPendingAccountType()) return OAUTH_INTENTS.SIGNUP;
   return null;
+}
+
+function isGoogleOnlyIdentity(user) {
+  const identities = user?.identities;
+  if (Array.isArray(identities) && identities.length > 0) {
+    return identities.every((identity) => identity?.provider === 'google');
+  }
+  return user?.app_metadata?.provider === 'google';
+}
+
+function hasSignupMetadata(user) {
+  const meta = user?.user_metadata || {};
+  return Boolean(
+    meta.role ||
+      meta.account_kind ||
+      meta.full_name ||
+      meta.company_name ||
+      meta.city,
+  );
 }
 
 async function getExistingProfileRole(userId) {
@@ -230,14 +271,22 @@ export function isBrandNewAuthUser(user) {
 
 /**
  * A TrabaGE account exists when the user already has a profile, is admin,
- * or is a returning auth user with a role (e.g. email signup before bootstrap).
- * A brand-new OAuth user with only the DB trigger's default role is NOT registered.
+ * has confirmed email (email signup), has signup metadata, or is a returning
+ * auth user with a role. Only a brand-new Google-only OAuth row (LOGIN without
+ * prior signup) is treated as unregistered — never delete confirmed users.
  */
 export async function isRegisteredTrabaGEAccount(user) {
   if (!user?.id) return false;
 
   const profileRole = await getExistingProfileRole(user.id);
   if (profileRole) return true;
+
+  // Email confirmation or prior signup metadata ⇒ real account, even inside
+  // the first-minute window (welcome email → Google login race).
+  if (user.email_confirmed_at || hasSignupMetadata(user)) return true;
+
+  const identities = user.identities || [];
+  if (identities.length > 1) return true;
 
   const { data: roleRow, error } = await supabase
     .from('user_roles')
@@ -249,22 +298,36 @@ export async function isRegisteredTrabaGEAccount(user) {
 
   const role = normalizeStoredRole(roleRow?.role);
   if (role === ROLES.ADMIN) return true;
+  if (!role) return false;
 
-  if (isBrandNewAuthUser(user)) return false;
+  // Accidental Google LOGIN creates a user + default role via trigger. Only
+  // reject when it is clearly a fresh Google-only identity.
+  if (isBrandNewAuthUser(user) && isGoogleOnlyIdentity(user)) return false;
 
-  return Boolean(role);
+  return true;
 }
 
 /**
  * Removes the orphan auth session created by Google OAuth when the user tried
  * to sign in without an existing TrabaGE account. Never leaves them logged in.
+ * Hard-delete only for brand-new Google-only orphans — never confirmed emails.
  */
-export async function discardUnregisteredOAuthSession() {
-  try {
-    await supabase.rpc('delete_own_account');
-  } catch {
-    // Fall through to signOut even if cleanup RPC fails.
+export async function discardUnregisteredOAuthSession(user = null) {
+  const canHardDelete =
+    user &&
+    !user.email_confirmed_at &&
+    !hasSignupMetadata(user) &&
+    isGoogleOnlyIdentity(user) &&
+    isBrandNewAuthUser(user);
+
+  if (canHardDelete) {
+    try {
+      await supabase.rpc('delete_own_account');
+    } catch {
+      // Fall through to signOut even if cleanup RPC fails.
+    }
   }
+
   try {
     await supabase.auth.signOut();
   } catch {
@@ -272,6 +335,11 @@ export async function discardUnregisteredOAuthSession() {
   }
   savePendingAccountType(null);
   sessionStorage.removeItem(OAUTH_INTENT_KEY);
+  try {
+    localStorage.removeItem(OAUTH_INTENT_KEY);
+  } catch {
+    // Ignore.
+  }
 }
 
 export async function setUserRole(_userId, role) {
@@ -387,6 +455,24 @@ export const authService = {
         emailRedirectTo: `${window.location.origin}/auth/confirm`,
       },
     });
+
+    if (result.error) {
+      return result;
+    }
+
+    // Supabase anti-enumeration: existing emails often return user with empty
+    // identities and no error. Treat that as already registered so we never
+    // send the user to Verify Email with a password that was not stored.
+    const identities = result.data?.user?.identities;
+    if (result.data?.user && Array.isArray(identities) && identities.length === 0) {
+      return {
+        data: { user: null, session: null },
+        error: {
+          code: 'user_already_registered',
+          message: 'User already registered',
+        },
+      };
+    }
 
     if (result.data?.session) {
       await supabase.auth.signOut({ scope: 'local' });

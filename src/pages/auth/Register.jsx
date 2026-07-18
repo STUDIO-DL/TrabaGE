@@ -34,7 +34,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
 import { mapAuthError } from '../../utils/errors';
-import { getErrorMessage } from '../../utils/i18n';
+import { getErrorMessage, t } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
 const fieldClassName =
@@ -519,7 +519,7 @@ export default function Register() {
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (password.trim() !== confirmPassword.trim()) {
       setError(getErrorMessage('passwordsMismatch'));
       return;
     }
@@ -691,6 +691,7 @@ export default function Register() {
                     show={showPassword}
                     onToggle={() => setShowPassword((prev) => !prev)}
                   />
+                  <p className="-mt-space-sm text-caption text-app-muted">{t('auth.passwordHint')}</p>
 
                   <PasswordField
                     id="register-confirm-password"

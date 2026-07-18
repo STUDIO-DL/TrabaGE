@@ -28,9 +28,11 @@ export function getAppUrl() {
 }
 
 export const CTA_PATHS: Record<WelcomeAccountType, string> = {
-  personal: '/setup/personal',
-  business: '/business/jobs/create',
-  organization: '/setup/organization',
+  // Land on login first so welcome CTA never hits protected setup routes while
+  // the first-session / Google-link race is still settling.
+  personal: '/login',
+  business: '/login',
+  organization: '/login',
 };
 
 export function buildCtaUrl(accountType: WelcomeAccountType) {
