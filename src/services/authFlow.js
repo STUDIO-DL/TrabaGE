@@ -1,5 +1,5 @@
 import { ROLES } from '../constants/roles';
-import { authService } from './auth.service';
+import { authService, resolveSignupRoleFromUser } from './auth.service';
 import { bootstrapProfile } from './profileBootstrap';
 import { ensureWelcomeEmailQueued } from './welcomeEmail.service';
 import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
@@ -25,7 +25,8 @@ export async function completePostAuthFlow(user, { preferProfile = true } = {}) 
     return { needsAccountTypeSelection: true, role: null, redirectTo: null };
   }
 
-  const role = accountTypeResult?.role ?? null;
+  const role =
+    accountTypeResult?.role ?? resolveSignupRoleFromUser(user) ?? null;
 
   if (role && role !== ROLES.ADMIN) {
     await bootstrapProfile({ user, role });

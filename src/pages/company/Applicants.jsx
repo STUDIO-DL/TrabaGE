@@ -14,7 +14,7 @@ import { applicationsService } from '../../services/applications.service';
 import { storageService } from '../../services/storage.service';
 import { resolveCvBucket } from '../../utils/storagePaths';
 import { profileService } from '../../services/profile.service';
-import { openCandidateContact } from '../../utils/contact';
+import useContactAction from '../../hooks/useContactAction';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { EMPLOYER_APPLICATION_STATUSES } from '../../constants/applicationStatuses';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -25,6 +25,7 @@ export default function Applicants() {
   const { isPreviewMode } = useAuth();
   const { profile } = useProfile();
   const { showToast } = useNotificationContext();
+  const { handleContact: runContactAction, contactPickerModal } = useContactAction({ showToast });
   const verified = isCompanyVerified(profile);
   const [updatingId, setUpdatingId] = useState(null);
   const [query, setQuery] = useState('');
@@ -69,9 +70,10 @@ export default function Applicants() {
       return;
     }
 
-    const { data: candidateProfile } = await profileService.getCandidateProfile(application.candidate_id);
-    const { ok, error } = openCandidateContact(candidateProfile);
-    if (!ok) showToast(error, 'error');
+    await runContactAction(async () => {
+      const { data } = await profileService.getCandidateProfile(application.candidate_id);
+      return data;
+    });
   };
 
   const handleStatusChange = async (applicationId, status) => {
@@ -149,6 +151,7 @@ export default function Applicants() {
           ))
         )}
       </div>
+      {contactPickerModal}
     </PageContainer>
   );
 }

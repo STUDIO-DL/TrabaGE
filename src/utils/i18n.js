@@ -16,6 +16,8 @@ const MESSAGES = {
       rateLimit: 'Has realizado demasiados intentos. Espera 1 minuto e inténtalo de nuevo.',
       expiredVerificationLink:
         'El enlace de verificación ha expirado o ya no es válido. Solicita uno nuevo.',
+      emailAlreadyVerified:
+        'Tu correo ya está verificado. Entrando en TrabaGE…',
       oauthCancelled: 'Inicio de sesión con Google cancelado. Inténtalo de nuevo cuando quieras.',
       oauthFailed: 'No se pudo completar el inicio de sesión con Google. Inténtalo de nuevo.',
       userBanned: 'Esta cuenta no está disponible. Contacta con soporte si crees que es un error.',
@@ -60,6 +62,7 @@ const MESSAGES = {
       emailConfirmationDisabled: 'Could not start email verification. Contact support.',
       rateLimit: 'Too many attempts. Wait 1 minute and try again.',
       expiredVerificationLink: 'The verification link has expired or is no longer valid. Request a new one.',
+      emailAlreadyVerified: 'Your email is already verified. Opening TrabaGE…',
       oauthCancelled: 'Google sign-in was cancelled. Try again whenever you are ready.',
       oauthFailed: 'Could not complete Google sign-in. Please try again.',
       userBanned: 'This account is not available. Contact support if you believe this is a mistake.',

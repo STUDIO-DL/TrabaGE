@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, CircleAlert } from 'lucide-react';
 import Spinner from '../../components/ui/Spinner';
@@ -6,35 +6,59 @@ import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
-import { mapAuthError } from '../../utils/errors';
+import { isExpiredVerificationUserMessage, mapAuthError } from '../../utils/errors';
+import { getErrorMessage } from '../../utils/i18n';
 import { clearPendingSignupEmail } from '../../utils/signupEmailCooldown';
+
+const PENDING_EMAIL_KEY = 'trabage_pending_verification_email';
+
+function readPendingVerificationEmail() {
+  try {
+    return String(sessionStorage.getItem(PENDING_EMAIL_KEY) || '').trim().toLowerCase();
+  } catch {
+    return '';
+  }
+}
 
 export default function AuthConfirm() {
   const navigate = useNavigate();
   const { refreshAuthState } = useAuth();
-  const started = useRef(false);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
+  const [pendingEmail, setPendingEmail] = useState(readPendingVerificationEmail);
+  const [alreadyVerified, setAlreadyVerified] = useState(false);
 
   useEffect(() => {
-    if (started.current) return undefined;
-    started.current = true;
     let cancelled = false;
     let redirectTimer;
 
+    const finishSuccess = async (redirectTo, wasAlreadyVerified = false) => {
+      setAlreadyVerified(wasAlreadyVerified);
+      setStatus('success');
+      redirectTimer = window.setTimeout(() => {
+        navigate(redirectTo || '/', { replace: true });
+      }, wasAlreadyVerified ? 600 : 1200);
+    };
+
     const confirm = async () => {
-      const { data, error: confirmationError } = await authService.confirmEmailFromUrl();
+      const {
+        data,
+        error: confirmationError,
+        alreadyVerified: wasAlreadyVerified,
+      } = await authService.confirmEmailFromUrl();
+
       if (cancelled) return;
+
+      const confirmedEmail = data?.user?.email ?? data?.session?.user?.email ?? '';
+      if (confirmedEmail) {
+        setPendingEmail(confirmedEmail.trim().toLowerCase());
+        clearPendingSignupEmail(confirmedEmail);
+      }
 
       if (confirmationError) {
         setError(mapAuthError(confirmationError));
         setStatus('error');
         return;
-      }
-
-      const confirmedEmail = data?.user?.email ?? data?.session?.user?.email;
-      if (confirmedEmail) {
-        clearPendingSignupEmail(confirmedEmail);
       }
 
       await refreshAuthState();
@@ -57,10 +81,7 @@ export default function AuthConfirm() {
       }
 
       await refreshAuthState();
-      setStatus('success');
-      redirectTimer = window.setTimeout(() => {
-        navigate(redirectTo || '/', { replace: true });
-      }, 1200);
+      await finishSuccess(redirectTo, wasAlreadyVerified);
     };
 
     void confirm();
@@ -70,6 +91,9 @@ export default function AuthConfirm() {
       if (redirectTimer) window.clearTimeout(redirectTimer);
     };
   }, [navigate, refreshAuthState]);
+
+  const isExpired = isExpiredVerificationUserMessage(error);
+  const resendEmail = pendingEmail;
 
   return (
     <main className="min-h-dvh bg-app-bg px-5 py-10 text-app-text">
@@ -90,9 +114,13 @@ export default function AuthConfirm() {
           {status === 'success' ? (
             <>
               <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" aria-hidden />
-              <h1 className="mt-5 text-xl font-bold">Correo verificado</h1>
+              <h1 className="mt-5 text-xl font-bold">
+                {alreadyVerified ? 'Correo ya verificado' : 'Correo verificado'}
+              </h1>
               <p className="mt-2 text-sm text-app-muted">
-                Tu cuenta está lista. Entrando en TrabaGE…
+                {alreadyVerified
+                  ? getErrorMessage('emailAlreadyVerified')
+                  : 'Tu cuenta está lista. Entrando en TrabaGE…'}
               </p>
             </>
           ) : null}
@@ -100,16 +128,27 @@ export default function AuthConfirm() {
           {status === 'error' ? (
             <>
               <CircleAlert className="mx-auto h-14 w-14 text-red-600" aria-hidden />
-              <h1 className="mt-5 text-xl font-bold">No pudimos verificar el correo</h1>
+              <h1 className="mt-5 text-xl font-bold">
+                {isExpired ? 'Enlace expirado' : 'No pudimos verificar el correo'}
+              </h1>
               <p role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
                 {error || 'El enlace es inválido o ha expirado.'}
               </p>
-              <Link
-                to="/login"
-                className="mt-6 inline-flex w-full items-center justify-center rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
-              >
-                Volver al inicio de sesión
-              </Link>
+              <div className="mt-6 flex w-full flex-col gap-3">
+                <Link
+                  to={resendEmail ? '/verify-email' : '/register'}
+                  state={resendEmail ? { email: resendEmail } : undefined}
+                  className="inline-flex w-full items-center justify-center rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-primary-700"
+                >
+                  {isExpired || resendEmail ? 'Solicitar nuevo enlace' : 'Volver al registro'}
+                </Link>
+                <Link
+                  to="/login"
+                  className="text-sm font-semibold text-primary-600 transition hover:text-primary-700"
+                >
+                  Volver al inicio de sesión
+                </Link>
+              </div>
             </>
           ) : null}
         </section>

@@ -42,6 +42,22 @@ function isExpiredVerificationLink(message) {
   );
 }
 
+function isAlreadyVerifiedConfirmationError(message, code) {
+  return (
+    code === 'email_already_confirmed' ||
+    message.includes('already been verified') ||
+    message.includes('email already confirmed') ||
+    message.includes('already confirmed') ||
+    message.includes('user already registered')
+  );
+}
+
+export function isRecoverableConfirmationError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  const code = String(error?.code || '').toLowerCase();
+  return isExpiredVerificationLink(message) || isAlreadyVerifiedConfirmationError(message, code);
+}
+
 function isOAuthCancelled(message) {
   return message.includes('access_denied') || message.includes('user cancelled');
 }
@@ -98,6 +114,11 @@ export function isAuthRateLimitError(error) {
 export function mapAuthError(error) {
   const message = error?.message?.toLowerCase() || '';
   const code = error?.code?.toLowerCase?.() || '';
+  const status = Number(error?.status || error?.statusCode || 0);
+
+  if (status === 502 || status === 503 || status === 504) {
+    return getErrorMessage('smtpError');
+  }
 
   if (message.includes('invalid login credentials') || code === 'invalid_credentials') {
     return getErrorMessage('invalidCredentials');
@@ -122,6 +143,9 @@ export function mapAuthError(error) {
   }
   if (code === 'email_confirmation_disabled') {
     return getErrorMessage('emailConfirmationDisabled');
+  }
+  if (code === 'confirmation_failed') {
+    return getErrorMessage('expiredVerificationLink');
   }
   if (code === 'signup_failed') {
     return getErrorMessage('registerFailed');

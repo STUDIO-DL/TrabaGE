@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../config/supabase';
 import { authService, isEmailVerified } from '../services/auth.service';
+import { isAuthConfirmPath } from '../constants/authUrls';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
 import { clearOneSignalUserId, setOneSignalUserId } from '../config/onesignal';
 import {
@@ -94,14 +95,21 @@ export function AuthProvider({ children }) {
 
     // Defense in depth: Supabase should not issue password sessions before
     // confirmation, but TrabaGE never hydrates an unverified session.
+    // On /auth/confirm, avoid signOut() while the page exchanges the token.
     if (!isEmailVerified(currentUser)) {
+      const onConfirmRoute =
+        typeof window !== 'undefined' && isAuthConfirmPath(window.location.pathname);
+
       setSession(null);
       setUser(null);
       setRole(null);
       setSetupComplete(false);
       clearSentryUser();
       void clearOneSignalUserId();
-      void supabase.auth.signOut({ scope: 'local' });
+
+      if (!onConfirmRoute) {
+        void supabase.auth.signOut({ scope: 'local' });
+      }
       return;
     }
 

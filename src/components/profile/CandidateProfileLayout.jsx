@@ -2,7 +2,6 @@ import ProfilePageShell from './ProfilePageShell';
 import CandidateProfileHeader from './CandidateProfileHeader';
 import ProfileActionBar from './ProfileActionBar';
 import ProfileSidebar from './ProfileSidebar';
-import { hasCandidateContact } from '../../utils/contact';
 
 export default function CandidateProfileLayout({
   title,
@@ -51,11 +50,7 @@ export default function CandidateProfileLayout({
         coverSrc={coverSrc}
         onEditIntro={onEditIntro}
       />
-      <ProfileActionBar
-        isOwn={isOwn}
-        onContact={onContact}
-        contactDisabled={!hasCandidateContact(profile)}
-      />
+      <ProfileActionBar isOwn={isOwn} onContact={onContact} />
       <div className="mx-auto max-w-5xl px-space-base py-space-lg">
         <div
           className={

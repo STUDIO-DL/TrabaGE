@@ -12,7 +12,7 @@ import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useProfile } from '../../hooks/useProfile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
-import { openCandidateContact } from '../../utils/contact';
+import useContactAction from '../../hooks/useContactAction';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { getDisplayName } from '../../utils/displayIdentity';
 import { ROLES } from '../../constants/roles';
@@ -21,16 +21,12 @@ export default function PublicProfile() {
   const { userId } = useParams();
   const { profile, loading, error, refetch } = useProfile(userId);
   const { showToast } = useNotificationContext();
+  const { handleContact, contactPickerModal } = useContactAction({ showToast });
 
   const displayName = getDisplayName(profile, ROLES.PERSONAL, {
     fallbackAuthorName: profile?.full_name,
     context: 'public_profile',
   });
-
-  const handleContact = () => {
-    const { ok, error: contactError } = openCandidateContact(profile);
-    if (!ok) showToast(contactError, 'error');
-  };
 
   if (loading) {
     return (
@@ -69,7 +65,7 @@ export default function PublicProfile() {
         shareUrl={generateProfileUrl(userId)}
         shareTitle={displayName || 'Perfil en TrabaGE'}
         reportTargetId={userId}
-        onContact={handleContact}
+        onContact={() => handleContact(profile)}
       >
         <AboutSection about={profile.about} />
         <ExperienceSection items={profile.experience} />
@@ -79,6 +75,7 @@ export default function PublicProfile() {
         <PortfolioLinksSection items={profile.candidate_links} />
         <ServicesSection items={profile.services} />
       </CandidateProfileLayout>
+      {contactPickerModal}
     </PageContainer>
   );
 }

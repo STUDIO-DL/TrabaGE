@@ -16,6 +16,8 @@
     "qa:http": "node scripts/qa-http-routes.mjs",
     "qa:smoke": "node scripts/qa-smoke-routes.mjs",
     "qa:e2e": "node scripts/qa-e2e-auth-flow.mjs",
+    "qa:email-verification": "node scripts/qa-email-verification.mjs",
+    "qa:register-verify-ui": "node scripts/qa-register-verify-ui.mjs",
     "generate-icons": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {

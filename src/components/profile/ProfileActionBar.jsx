@@ -6,7 +6,6 @@ import FollowButton from '../follow/FollowButton';
 export default function ProfileActionBar({
   isOwn = false,
   onContact,
-  contactDisabled,
   contactLabel = 'Contactar',
   showFollow = false,
   isFollowing = false,
@@ -33,7 +32,6 @@ export default function ProfileActionBar({
           <Button
             type="button"
             onClick={onContact}
-            disabled={contactDisabled}
             variant={showFollow ? 'secondary' : 'primary'}
             className="sm:flex-1"
             fullWidth
@@ -55,11 +53,6 @@ export default function ProfileActionBar({
           </Button>
         )}
       </div>
-      {contactDisabled && onContact && (
-        <p className="mx-auto mt-space-sm max-w-5xl text-center text-caption text-app-muted sm:text-left">
-          Esta empresa aún no ha configurado un medio de contacto.
-        </p>
-      )}
     </div>
   );
 }

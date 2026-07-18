@@ -1,5 +1,9 @@
 import { isSupabaseConfigured, supabase } from '../config/supabase';
 import {
+  getEmailConfirmRedirectUrl,
+  getOAuthCallbackRedirectUrl,
+} from '../constants/authUrls';
+import {
   accountKindToRole,
   isValidAccountKind,
   normalizeAccountKind,
@@ -23,7 +27,7 @@ import {
   markSignupInflight,
   normalizeSignupEmail,
 } from '../utils/signupEmailCooldown';
-import { isAuthRateLimitError } from '../utils/errors';
+import { isAuthRateLimitError, isRecoverableConfirmationError } from '../utils/errors';
 
 const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
@@ -41,6 +45,41 @@ function isExistingUnconfirmedUser(user) {
   if (!user?.id) return false;
   const identities = user.identities;
   return Array.isArray(identities) && identities.length === 0;
+}
+
+const SESSION_DETECT_WAIT_MS = 250;
+
+async function waitForInitialSessionDetection(ms = SESSION_DETECT_WAIT_MS) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function getVerifiedSessionFromClient() {
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    return { session: null, user: null, error };
+  }
+
+  const session = data?.session ?? null;
+  const user = session?.user ?? null;
+  if (user && isEmailVerified(user)) {
+    return { session, user, error: null };
+  }
+
+  return { session: null, user: null, error: null };
+}
+
+async function resolveVerifiedUserFromServer() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user || !isEmailVerified(data.user)) {
+    return null;
+  }
+
+  const verified = await getVerifiedSessionFromClient();
+  if (verified.user) {
+    return { user: verified.user, session: verified.session };
+  }
+
+  return { user: data.user, session: null };
 }
 
 function pendingVerificationResult(existingUnconfirmed = true, rateLimited = false) {
@@ -291,10 +330,19 @@ function hasSignupMetadata(user) {
   return Boolean(
     meta.role ||
       meta.account_kind ||
+      meta.account_type ||
       meta.full_name ||
       meta.company_name ||
       meta.city,
   );
+}
+
+/** Role chosen on the registration form — stored in auth.users metadata at signUp(). */
+export function resolveSignupRoleFromUser(user) {
+  const meta = user?.user_metadata ?? {};
+  const fromAccountKind = normalizeAccountKind(meta.account_kind || meta.account_type);
+  if (fromAccountKind) return accountKindToRole(fromAccountKind);
+  return normalizeAccountType(meta.role);
 }
 
 async function getExistingProfileRole(userId) {
@@ -491,7 +539,7 @@ export const authService = {
       type: 'signup',
       email: normalizeEmail(email),
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: getEmailConfirmRedirectUrl(),
       },
     });
   },
@@ -518,11 +566,13 @@ export const authService = {
 
     markSignupInflight(normalizedEmail);
 
+    const signupAccountKind = metadata.accountKind || role;
     const signupData = {
       role,
+      account_type: signupAccountKind,
       full_name: metadata.fullName?.trim() || undefined,
       city: metadata.city?.trim() || undefined,
-      account_kind: metadata.accountKind || undefined,
+      account_kind: signupAccountKind,
       company_name: metadata.orgDetails?.company_name?.trim() || undefined,
       sector: metadata.orgDetails?.sector?.trim() || undefined,
       company_type: metadata.orgDetails?.company_type?.trim() || undefined,
@@ -552,7 +602,7 @@ export const authService = {
         password: normalizePassword(password),
         options: {
           data: signupData,
-          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          emailRedirectTo: getEmailConfirmRedirectUrl(),
         },
       });
     } finally {
@@ -648,7 +698,7 @@ export const authService = {
       type: 'signup',
       email: normalizedEmail,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        emailRedirectTo: getEmailConfirmRedirectUrl(),
       },
     });
 
@@ -671,7 +721,26 @@ export const authService = {
     const errorDescription =
       query.get('error_description') || hash.get('error_description');
 
+    const successPayload = (user, session, { alreadyVerified = false } = {}) => ({
+      data: { user, session },
+      error: null,
+      alreadyVerified,
+    });
+
+    // Allow detectSessionInUrl / PKCE code exchange to finish first.
+    await waitForInitialSessionDetection();
+
+    let verified = await getVerifiedSessionFromClient();
+    if (verified.user) {
+      return successPayload(verified.user, verified.session, { alreadyVerified: true });
+    }
+
     if (errorDescription) {
+      const recovered = await resolveVerifiedUserFromServer();
+      if (recovered?.user) {
+        return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
+      }
+
       return {
         data: { user: null, session: null },
         error: {
@@ -683,17 +752,19 @@ export const authService = {
 
     const tokenHash = query.get('token_hash') || hash.get('token_hash');
     const code = query.get('code');
-    const confirmationType = query.get('type') === 'signup' ? 'signup' : 'email';
-    let result;
+    const typeParam = query.get('type') || hash.get('type');
 
-    if (tokenHash) {
-      result = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type: confirmationType,
-      });
-    } else if (code) {
-      result = await supabase.auth.exchangeCodeForSession(code);
-    } else {
+    if (!tokenHash && !code) {
+      verified = await getVerifiedSessionFromClient();
+      if (verified.user) {
+        return successPayload(verified.user, verified.session, { alreadyVerified: true });
+      }
+
+      const recovered = await resolveVerifiedUserFromServer();
+      if (recovered?.user) {
+        return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
+      }
+
       return {
         data: { user: null, session: null },
         error: {
@@ -703,11 +774,44 @@ export const authService = {
       };
     }
 
-    if (result.error) return result;
+    let result;
+    if (tokenHash) {
+      const confirmationType = typeParam === 'signup' ? 'signup' : 'email';
+      result = await supabase.auth.verifyOtp({
+        token_hash: tokenHash,
+        type: confirmationType,
+      });
+    } else {
+      result = await supabase.auth.exchangeCodeForSession(code);
+    }
 
-    const user = result.data?.user ?? result.data?.session?.user;
-    const session = result.data?.session ?? null;
+    if (result.error) {
+      await waitForInitialSessionDetection(150);
+      verified = await getVerifiedSessionFromClient();
+      if (verified.user) {
+        return successPayload(verified.user, verified.session, { alreadyVerified: true });
+      }
+
+      if (isRecoverableConfirmationError(result.error)) {
+        const recovered = await resolveVerifiedUserFromServer();
+        if (recovered?.user) {
+          return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
+        }
+      }
+
+      return result;
+    }
+
+    let user = result.data?.user ?? result.data?.session?.user ?? null;
+    let session = result.data?.session ?? null;
+
     if (!isEmailVerified(user)) {
+      await waitForInitialSessionDetection(150);
+      verified = await getVerifiedSessionFromClient();
+      if (verified.user) {
+        return successPayload(verified.user, verified.session);
+      }
+
       return {
         data: result.data,
         error: {
@@ -717,7 +821,13 @@ export const authService = {
       };
     }
 
-    return { data: { user, session }, error: null };
+    if (!session) {
+      verified = await getVerifiedSessionFromClient();
+      session = verified.session;
+      user = verified.user ?? user;
+    }
+
+    return successPayload(user, session);
   },
 
   applyPendingAccountType: async (userOrId) => {
@@ -726,8 +836,10 @@ export const authService = {
       return { data: null, error: { message: 'No se pudo identificar el usuario autenticado' } };
     }
 
-    const pendingRole = consumePendingAccountType();
     const currentUser = typeof userOrId === 'string' ? null : userOrId;
+    const signupRole = currentUser ? resolveSignupRoleFromUser(currentUser) : null;
+    const pendingRole = consumePendingAccountType();
+    const authoritativeRole = signupRole || pendingRole;
 
     const { data: existingRole, error: roleError } = await authService.getUserRole(userId);
     if (roleError) {
@@ -735,43 +847,33 @@ export const authService = {
     }
 
     const profileRole = await getExistingProfileRole(userId);
-    const storedRole = normalizeStoredRole(
-      existingRole?.role,
-      // company_type only needed for legacy `company` rows pre-migration
-    );
+    const storedRole = normalizeStoredRole(existingRole?.role);
 
     if (storedRole === ROLES.ADMIN) {
       return { data: existingRole, error: null };
     }
 
-    // OAuth signup: pending role from account-type selection overrides the
-    // default "personal" row inserted by handle_new_user for brand-new users.
-    if (
-      pendingRole &&
-      currentUser &&
-      isRecentOAuthSignup(currentUser) &&
-      storedRole &&
-      storedRole !== pendingRole
-    ) {
-      return setUserRole(userId, pendingRole);
+    // Registration form metadata wins over a stale/default DB role (e.g. personal).
+    if (storedRole && authoritativeRole && storedRole !== authoritativeRole) {
+      return setUserRole(userId, authoritativeRole);
     }
 
     if (storedRole) {
       return { data: { ...existingRole, role: storedRole }, error: null };
     }
 
+    if (authoritativeRole) {
+      return setUserRole(userId, authoritativeRole);
+    }
+
     if (profileRole) {
       return setUserRole(userId, profileRole);
     }
 
-    if (!pendingRole) {
-      return {
-        data: { role: null, needsAccountTypeSelection: true },
-        error: null,
-      };
-    }
-
-    return setUserRole(userId, pendingRole);
+    return {
+      data: { role: null, needsAccountTypeSelection: true },
+      error: null,
+    };
   },
 
   loginWithGoogle: async () => {
@@ -787,7 +889,7 @@ export const authService = {
     const result = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: getOAuthCallbackRedirectUrl(),
         queryParams: {
           prompt: 'select_account',
         },
@@ -806,13 +908,23 @@ export const authService = {
       return configError();
     }
 
-    savePendingAccountType(accountKind);
+    const normalizedRole = normalizeAccountType(accountKind);
+    if (normalizedRole !== ROLES.PERSONAL) {
+      return {
+        data: null,
+        error: {
+          message: 'El registro con Google solo está disponible para cuentas personales.',
+        },
+      };
+    }
+
+    savePendingAccountType(ROLES.PERSONAL);
     saveOAuthIntent(OAUTH_INTENTS.SIGNUP);
 
     const result = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: getOAuthCallbackRedirectUrl(),
         queryParams: {
           prompt: 'select_account',
         },
@@ -841,7 +953,7 @@ export const authService = {
 
   resetPassword: (email) =>
     supabase.auth.resetPasswordForEmail(normalizeEmail(email), {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: getOAuthCallbackRedirectUrl(),
     }),
 
   setPassword: (password) =>

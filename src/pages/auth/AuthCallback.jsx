@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
+import { AUTH_CONFIRM_PATH } from '../../constants/authUrls';
 import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
 import { clearPreviewMode } from '../../constants/preview';
 import {
@@ -54,6 +55,16 @@ export default function AuthCallback() {
       const isPasswordRecovery =
         queryParams.get('type') === 'recovery' || hashParams.get('type') === 'recovery';
       const emailVerification = isEmailVerificationFlow(queryParams, hashParams);
+      const tokenHash = queryParams.get('token_hash') || hashParams.get('token_hash');
+      const authCode = queryParams.get('code');
+
+      // Email verification links must use /auth/confirm (single handler).
+      if (emailVerification && (tokenHash || authCode) && !oauthError) {
+        navigate(`${AUTH_CONFIRM_PATH}${window.location.search}${window.location.hash}`, {
+          replace: true,
+        });
+        return;
+      }
 
       if (oauthError) {
         const decoded = decodeURIComponent(oauthError.replace(/\+/g, ' '));

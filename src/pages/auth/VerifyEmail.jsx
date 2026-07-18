@@ -29,7 +29,12 @@ export default function VerifyEmail() {
   const changeEmail = () => {
     sessionStorage.removeItem(PENDING_EMAIL_KEY);
     clearPendingSignupEmail(email);
-    navigate('/register', { state: { email } });
+    navigate('/register', {
+      state: {
+        email,
+        accountKind: location.state?.accountKind,
+      },
+    });
   };
 
   return (
