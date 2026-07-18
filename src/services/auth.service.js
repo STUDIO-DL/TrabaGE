@@ -13,6 +13,17 @@ import {
   ROLES,
 } from '../constants/roles';
 import { getErrorMessage } from '../utils/i18n';
+import {
+  clearSignupInflight,
+  isPendingSignupEmail,
+  isSignupEmailCooldownActive,
+  isSignupInflight,
+  markPendingSignupEmail,
+  markSignupEmailSent,
+  markSignupInflight,
+  normalizeSignupEmail,
+} from '../utils/signupEmailCooldown';
+import { isAuthRateLimitError } from '../utils/errors';
 
 const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
@@ -24,37 +35,6 @@ const VALID_STORED_ROLES = [...ASSIGNABLE_ROLES, ROLES.ADMIN];
 const NEW_OAUTH_USER_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** First Google sign-in: created_at and last_sign_in_at are nearly identical. */
 const FIRST_SIGNIN_WINDOW_MS = 60 * 1000;
-/** Aligns with Supabase auth.email.max_frequency (60s) — prevents duplicate signUp emails. */
-const SIGNUP_EMAIL_COOLDOWN_MS = 60 * 1000;
-const SIGNUP_COOLDOWN_PREFIX = 'trabage_signup_attempt:';
-const SIGNUP_INFLIGHT_PREFIX = 'trabage_signup_inflight:';
-
-function signupCooldownKey(email) {
-  return `${SIGNUP_COOLDOWN_PREFIX}${normalizeEmail(email)}`;
-}
-
-function signupInflightKey(email) {
-  return `${SIGNUP_INFLIGHT_PREFIX}${normalizeEmail(email)}`;
-}
-
-function readSignupCooldownDeadline(email) {
-  return Number(sessionStorage.getItem(signupCooldownKey(email)) || 0);
-}
-
-function isSignupEmailCooldownActive(email) {
-  return readSignupCooldownDeadline(email) > Date.now();
-}
-
-function markSignupEmailSent(email) {
-  sessionStorage.setItem(
-    signupCooldownKey(email),
-    String(Date.now() + SIGNUP_EMAIL_COOLDOWN_MS),
-  );
-}
-
-function clearSignupInflight(email) {
-  sessionStorage.removeItem(signupInflightKey(email));
-}
 
 function isExistingUnconfirmedUser(user) {
   if (!user?.id) return false;
@@ -62,17 +42,14 @@ function isExistingUnconfirmedUser(user) {
   return Array.isArray(identities) && identities.length === 0;
 }
 
-function isAuthRateLimitError(error) {
-  const message = String(error?.message || '').toLowerCase();
-  const code = String(error?.code || '').toLowerCase();
-  return (
-    code === 'over_email_send_rate_limit' ||
-    code === '429' ||
-    message.includes('rate limit') ||
-    message.includes('too many requests') ||
-    message.includes('too many attempts') ||
-    message.includes('email rate limit')
-  );
+function pendingVerificationResult(existingUnconfirmed = true, rateLimited = false) {
+  return {
+    data: { session: null, user: null },
+    error: null,
+    pendingVerification: true,
+    existingUnconfirmed,
+    rateLimited,
+  };
 }
 
 export const OAUTH_INTENTS = {
@@ -112,7 +89,7 @@ function toPendingAccountType(role) {
 }
 
 function normalizeEmail(email) {
-  return email.trim().toLowerCase();
+  return normalizeSignupEmail(email);
 }
 
 function normalizePassword(password) {
@@ -409,26 +386,17 @@ export const authService = {
     }
 
     const normalizedEmail = normalizeEmail(email);
-    const inflightKey = signupInflightKey(normalizedEmail);
 
-    if (sessionStorage.getItem(inflightKey) === '1') {
-      return {
-        data: { session: null, user: null },
-        error: null,
-        pendingVerification: true,
-      };
+    if (isSignupInflight(normalizedEmail)) {
+      return pendingVerificationResult(false);
     }
 
-    if (isSignupEmailCooldownActive(normalizedEmail)) {
-      return {
-        data: { session: null, user: null },
-        error: null,
-        pendingVerification: true,
-        existingUnconfirmed: true,
-      };
+    // Avoid repeat signUp() calls for the same pending email — each one triggers another auth email.
+    if (isPendingSignupEmail(normalizedEmail) || isSignupEmailCooldownActive(normalizedEmail)) {
+      return pendingVerificationResult(true);
     }
 
-    sessionStorage.setItem(inflightKey, '1');
+    markSignupInflight(normalizedEmail);
 
     const signupData = {
       role,
@@ -478,26 +446,26 @@ export const authService = {
     }
 
     if (result.error) {
-      if (isAuthRateLimitError(result.error) && isSignupEmailCooldownActive(normalizedEmail)) {
-        return {
-          data: { session: null, user: null },
-          error: null,
-          pendingVerification: true,
-          existingUnconfirmed: true,
-        };
+      if (isAuthRateLimitError(result.error)) {
+        markSignupEmailSent(normalizedEmail);
+        // Only treat as pending verification when Supabase already created the user.
+        if (result.data?.user?.id) {
+          markPendingSignupEmail(normalizedEmail);
+          return pendingVerificationResult(true, true);
+        }
+        return result;
       }
       return result;
     }
 
     if (result.data?.user) {
       markSignupEmailSent(normalizedEmail);
+      markPendingSignupEmail(normalizedEmail);
 
       if (isExistingUnconfirmedUser(result.data.user)) {
         return {
+          ...pendingVerificationResult(true),
           data: { ...result.data, session: null },
-          error: null,
-          pendingVerification: true,
-          existingUnconfirmed: true,
         };
       }
     }
@@ -530,7 +498,9 @@ export const authService = {
       },
     });
 
-    if (!result.error) {
+    if (result.error && isAuthRateLimitError(result.error)) {
+      markSignupEmailSent(normalizedEmail);
+    } else if (!result.error) {
       markSignupEmailSent(normalizedEmail);
     }
 
@@ -682,7 +652,6 @@ export const authService = {
       return configError();
     }
 
-    const normalizedRole = normalizeAccountType(accountKind) ?? ROLES.PERSONAL;
     savePendingAccountType(accountKind);
     saveOAuthIntent(OAUTH_INTENTS.SIGNUP);
 

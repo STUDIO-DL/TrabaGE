@@ -544,7 +544,7 @@ export default function Register() {
 
     const role = accountKindToRole(accountKind);
     const metadata = config.buildMetadata(typeValues, { city: city.trim() });
-    const { error: registerError, redirectTo, pendingVerification } = await register(
+    const { error: registerError, redirectTo, pendingVerification, rateLimited } = await register(
       submittedEmail,
       password,
       role,
@@ -566,12 +566,13 @@ export default function Register() {
     }
 
     setLoading(false);
-    navigate('/auth/verify-email', {
+    navigate('/verify-email', {
       replace: true,
       state: {
         email: submittedEmail,
         sentAt: Date.now(),
         pendingVerification: pendingVerification === true,
+        rateLimited: rateLimited === true,
       },
     });
   };

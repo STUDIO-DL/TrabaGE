@@ -53,7 +53,7 @@ function buildEquivalenceMap(groups) {
   return map;
 }
 
-const roleMap = buildEquivalenceMap(ROLE_EQUIVALENCE_GROUPS);
+export const roleEquivalenceMap = buildEquivalenceMap(ROLE_EQUIVALENCE_GROUPS);
 const skillMap = buildEquivalenceMap(SKILL_EQUIVALENCE_GROUPS);
 
 export function expandEquivalentTokens(tokens, map = skillMap) {

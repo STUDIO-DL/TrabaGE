@@ -258,7 +258,7 @@ export function AuthProvider({ children }) {
     clearPreviewMode();
     setIsPreviewMode(false);
 
-    const { data, error, pendingVerification } = await authService.register(
+    const { data, error, pendingVerification, rateLimited } = await authService.register(
       email,
       password,
       userRole,
@@ -267,7 +267,13 @@ export function AuthProvider({ children }) {
     if (error) return { data, error, redirectTo: null };
 
     if (pendingVerification || !data?.session?.user?.id) {
-      return { data, error: null, redirectTo: null, pendingVerification: true };
+      return {
+        data,
+        error: null,
+        redirectTo: null,
+        pendingVerification: true,
+        rateLimited: rateLimited === true,
+      };
     }
 
     await hydrateUser(data.session);

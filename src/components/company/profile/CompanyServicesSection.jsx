@@ -37,7 +37,7 @@ export default function CompanyServicesSection({
   readOnly = false,
   onAdd,
   onDelete,
-  variant = 'tab',
+  variant: _variant = 'tab',
 }) {
   const [serviceName, setServiceName] = useState('');
   const [adding, setAdding] = useState(false);

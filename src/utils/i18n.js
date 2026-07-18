@@ -13,7 +13,7 @@ const MESSAGES = {
       signupDisabled: 'El registro de nuevas cuentas no está disponible en este momento.',
       emailConfirmationDisabled:
         'No se pudo iniciar la verificación del correo. Contacta con soporte.',
-      rateLimit: 'Has realizado demasiados intentos. Espera unos minutos e inténtalo de nuevo.',
+      rateLimit: 'Has realizado demasiados intentos. Espera 1 minuto e inténtalo de nuevo.',
       expiredVerificationLink:
         'El enlace de verificación ha expirado o ya no es válido. Solicita uno nuevo.',
       oauthCancelled: 'Inicio de sesión con Google cancelado. Inténtalo de nuevo cuando quieras.',
@@ -58,7 +58,7 @@ const MESSAGES = {
         'Could not connect to the server. Check your internet connection and try again.',
       signupDisabled: 'New account registration is not available at this time.',
       emailConfirmationDisabled: 'Could not start email verification. Contact support.',
-      rateLimit: 'Too many attempts. Wait a few minutes and try again.',
+      rateLimit: 'Too many attempts. Wait 1 minute and try again.',
       expiredVerificationLink: 'The verification link has expired or is no longer valid. Request a new one.',
       oauthCancelled: 'Google sign-in was cancelled. Try again whenever you are ready.',
       oauthFailed: 'Could not complete Google sign-in. Please try again.',

@@ -16,7 +16,7 @@ import { Save, ICON_SIZES } from '../../../constants/icons';
 import CompanyProfileView from './CompanyProfileView';
 import { useFollow } from '../../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
-import { isOrganizationProfile, getOrgLabels } from '../../../utils/orgLabels';
+import { isOrganizationProfile } from '../../../utils/orgLabels';
 import { getCompanyDisplayName } from '../../../utils/companyProfile';
 import { TOAST } from '../../../utils/copyLabels';
 import { ProfilePageSkeleton } from '../../common/Skeleton';
@@ -360,7 +360,6 @@ export default function CompanyProfileLayout({
     setEditMode(mode);
   };
 
-  const orgLabels = getOrgLabels(profile);
   const fallbackCompanyName = getCompanyDisplayName(profile, { role, user });
 
   const uploadImage = async (file, type) => {
