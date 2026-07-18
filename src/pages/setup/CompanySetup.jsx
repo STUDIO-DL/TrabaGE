@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
@@ -17,6 +17,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { consumePendingOrgDetails, consumePendingOrgKind } from '../../services/auth.service';
 import { companyService } from '../../services/company.service';
+import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { getOrgLabels } from '../../utils/orgLabels';
 import { getCompanyRequiredMissing } from '../../utils/profileRequirements';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -45,23 +46,29 @@ export default function CompanySetup() {
     if (!user?.id) return undefined;
     let mounted = true;
 
-    // Pending values are a fallback for prefill; the bootstrap step usually
-    // already wrote them into the profile row, so the existing profile wins.
     const pendingOrgKind = consumePendingOrgKind();
     const pendingOrgDetails = consumePendingOrgDetails();
+    const identity = readIdentityFromUser(user);
 
     companyService.getCompanyProfile(user.id).then(({ data }) => {
       if (!mounted) return;
       const companyType =
-        data?.company_type || pendingOrgDetails.company_type || getDefaultCompanyType(pendingOrgKind);
+        data?.company_type ||
+        pendingOrgDetails.company_type ||
+        identity.company_type ||
+        getDefaultCompanyType(pendingOrgKind);
       const organizationType =
         ORGANIZATION_TYPE_OPTIONS.find((option) => option.companyType === companyType)?.value || '';
 
       setForm({
-        company_name: data?.company_name || pendingOrgDetails.company_name || '',
-        sector: data?.sector || pendingOrgDetails.sector || '',
+        company_name:
+          data?.company_name ||
+          pendingOrgDetails.company_name ||
+          identity.company_name ||
+          '',
+        sector: data?.sector || pendingOrgDetails.sector || identity.sector || '',
         description: data?.description || '',
-        city: data?.city || '',
+        city: data?.city || identity.city || '',
         company_type: companyType,
         organizationType,
       });
@@ -74,8 +81,13 @@ export default function CompanySetup() {
   }, [user]);
 
   const orgLabels = getOrgLabels({ company_type: form.company_type });
-  const isInstitution = orgLabels.entity === 'institución';
+  const isInstitution = orgLabels.entity === 'organización';
   const isOrganizationAccount = role === ROLES.ORGANIZATION;
+
+  const missingFields = useMemo(
+    () => getCompanyRequiredMissing({ ...form, company_type: form.company_type }),
+    [form],
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,8 +104,8 @@ export default function CompanySetup() {
     if (getCompanyRequiredMissing(trimmed).length > 0) {
       setError(
         isInstitution
-          ? 'Completa el nombre, el tipo, la ciudad y la descripción de tu institución.'
-          : 'Completa el nombre, el sector, la ciudad y la descripción de tu empresa.',
+          ? 'Completa los campos obligatorios de tu institución.'
+          : 'Completa los campos obligatorios de tu cuenta Business.',
       );
       return;
     }
@@ -137,13 +149,17 @@ export default function CompanySetup() {
       }
     >
       <form id="company-setup-form" onSubmit={handleSubmit} className="space-y-space-base p-space-base">
-        <Input
-          label={`Nombre de la ${orgLabels.entity}`}
-          value={form.company_name}
-          onChange={(e) => setForm({ ...form, company_name: e.target.value })}
-          required
-        />
-        {isOrganizationAccount ? (
+        {!missingFields.includes('company_name') && form.company_name ? (
+          <input type="hidden" name="company_name" value={form.company_name} />
+        ) : (
+          <Input
+            label={`Nombre de la ${orgLabels.entity}`}
+            value={form.company_name}
+            onChange={(e) => setForm({ ...form, company_name: e.target.value })}
+            required
+          />
+        )}
+        {isOrganizationAccount && missingFields.includes('company_type') ? (
           <Select
             label="Tipo de organización"
             value={form.organizationType}
@@ -165,7 +181,7 @@ export default function CompanySetup() {
             ]}
           />
         ) : null}
-        {!isInstitution ? (
+        {!isInstitution && missingFields.includes('sector') ? (
           <Select
             label="Sector"
             value={form.sector}
@@ -174,8 +190,27 @@ export default function CompanySetup() {
             options={[{ value: '', label: 'Seleccionar' }, ...SECTORS.map((s) => ({ value: s, label: s }))]}
           />
         ) : null}
-        <Textarea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
-        <Select label="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]} />
+        {!missingFields.includes('description') && form.description ? (
+          <input type="hidden" name="description" value={form.description} />
+        ) : (
+          <Textarea
+            label="Descripción"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            required
+          />
+        )}
+        {!missingFields.includes('city') && form.city ? (
+          <input type="hidden" name="city" value={form.city} />
+        ) : (
+          <Select
+            label="Ciudad"
+            value={form.city}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            required
+            options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]}
+          />
+        )}
       </form>
     </FormPageLayout>
   );

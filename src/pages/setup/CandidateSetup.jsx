@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
@@ -10,6 +10,7 @@ import { CITIES } from '../../constants/cities';
 import { ROLE_HOME, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { profileService } from '../../services/profile.service';
+import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { extractGoogleProfile } from '../../utils/googleProfile';
 import { getCandidateRequiredMissing } from '../../utils/profileRequirements';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -27,13 +28,15 @@ export default function CandidateSetup() {
     let mounted = true;
 
     const google = extractGoogleProfile(user);
+    const identity = readIdentityFromUser(user);
+
     profileService.getCandidateProfile(user.id).then(({ data }) => {
       if (!mounted) return;
       setForm({
-        full_name: data?.full_name || google.full_name || '',
+        full_name: data?.full_name || identity.full_name || google.full_name || '',
         headline: data?.headline || '',
         about: data?.about || '',
-        city: data?.city || '',
+        city: data?.city || identity.city || '',
       });
       setInitializing(false);
     });
@@ -42,6 +45,11 @@ export default function CandidateSetup() {
       mounted = false;
     };
   }, [user]);
+
+  const missingFields = useMemo(
+    () => getCandidateRequiredMissing(form),
+    [form],
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,7 +63,7 @@ export default function CandidateSetup() {
     };
 
     if (getCandidateRequiredMissing(trimmed).length > 0) {
-      setError('Completa tu nombre, tu profesión y tu ciudad para continuar.');
+      setError('Completa los campos obligatorios para continuar.');
       return;
     }
 
@@ -98,10 +106,39 @@ export default function CandidateSetup() {
       }
     >
       <form id="candidate-setup-form" onSubmit={handleSubmit} className="space-y-space-base p-space-base">
-        <Input label="Nombre completo" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required />
-        <Input label="Titular profesional" value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} placeholder="Ej. Desarrollador Frontend" required />
+        {!missingFields.includes('full_name') && form.full_name ? (
+          <input type="hidden" name="full_name" value={form.full_name} />
+        ) : (
+          <Input
+            label="Nombre completo"
+            value={form.full_name}
+            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+            required
+          />
+        )}
+        {!missingFields.includes('headline') && form.headline ? (
+          <input type="hidden" name="headline" value={form.headline} />
+        ) : (
+          <Input
+            label="Titular profesional"
+            value={form.headline}
+            onChange={(e) => setForm({ ...form, headline: e.target.value })}
+            placeholder="Ej. Desarrollador Frontend"
+            required
+          />
+        )}
         <Textarea label="Sobre mí" value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })} />
-        <Select label="Ciudad" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} required options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]} />
+        {!missingFields.includes('city') && form.city ? (
+          <input type="hidden" name="city" value={form.city} />
+        ) : (
+          <Select
+            label="Ciudad"
+            value={form.city}
+            onChange={(e) => setForm({ ...form, city: e.target.value })}
+            required
+            options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]}
+          />
+        )}
       </form>
     </FormPageLayout>
   );

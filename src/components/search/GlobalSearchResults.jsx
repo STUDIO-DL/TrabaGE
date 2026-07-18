@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Briefcase, Building2, Landmark, Loader2, User } from 'lucide-react';
 import AppAvatar from '../common/AppAvatar';
 import AppIcon from '../common/AppIcon';
@@ -7,6 +7,8 @@ import {
   SEARCH_ENTITY_TYPE_LABELS,
   groupSearchResults,
 } from '../../utils/globalSearch';
+import { resolveSearchResultPath } from '../../utils/profileRoutes';
+import { useAuth } from '../../hooks/useAuth';
 import { ICON_SIZES } from '../../constants/icons';
 import SearchSelfBadge from './SearchSelfBadge';
 import { useIsSearchSelf } from './useIsSearchSelf';
@@ -31,16 +33,16 @@ function isOrgType(type) {
   );
 }
 
-function SearchResultRow({ item, onSelect }) {
+function SearchResultRow({ item, path, onSelect }) {
   const Icon = ENTITY_ICONS[item.type] || User;
   const avatarType = avatarTypeFromSearchEntity(item.type);
   const isSelf = useIsSearchSelf(item);
 
   return (
-    <button
-      type="button"
+    <Link
+      to={path}
       onMouseDown={(event) => event.preventDefault()}
-      onClick={() => onSelect(item)}
+      onClick={() => onSelect?.(item)}
       className={[
         'flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none',
         isSelf ? 'bg-primary-50/70' : '',
@@ -76,7 +78,7 @@ function SearchResultRow({ item, onSelect }) {
           {isSelf ? 'Tu perfil' : (SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado')}
         </span>
       </span>
-    </button>
+    </Link>
   );
 }
 
@@ -88,14 +90,10 @@ export default function GlobalSearchResults({
   className = '',
   listId,
 }) {
-  const navigate = useNavigate();
+  const { user, role } = useAuth();
+  const viewer = user ? { id: user.id, role } : null;
   const trimmedQuery = query.trim();
   const groups = groupSearchResults(results);
-
-  const handleSelect = (item) => {
-    onSelect?.(item);
-    navigate(item.path);
-  };
 
   if (!trimmedQuery) {
     return null;
@@ -128,11 +126,14 @@ export default function GlobalSearchResults({
                 {group.label}
               </h3>
               <ul>
-                {group.items.map((item) => (
-                  <li key={`${item.type}-${item.id ?? item.result_id}`}>
-                    <SearchResultRow item={item} onSelect={handleSelect} />
-                  </li>
-                ))}
+                {group.items.map((item) => {
+                  const path = item.path ?? resolveSearchResultPath(item, viewer);
+                  return (
+                    <li key={`${item.type}-${item.id ?? item.result_id}`}>
+                      <SearchResultRow item={item} path={path} onSelect={onSelect} />
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           ))}

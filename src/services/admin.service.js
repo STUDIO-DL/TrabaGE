@@ -286,7 +286,7 @@ export const adminService = {
     return {
       data: posts.map((post) => ({
         ...post,
-        author: authors[post.author_id] ?? { name: 'Usuario', avatar: null, type: post.author_type },
+        author: authors[post.author_id] ?? { name: '', avatar: null, type: post.author_type },
         reports_count: counts[post.id] ?? 0,
       })),
       error: null,

@@ -31,6 +31,7 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { getCompanyDisplayName } from '../../utils/companyProfile';
+import { getDisplayName } from '../../utils/displayIdentity';
 import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -109,10 +110,10 @@ function Divider() {
   return <div className="mx-space-lg h-px bg-app-divider" />;
 }
 
-function AccountSummaryCard({ email, profile, loading, isCompany, accountType }) {
+function AccountSummaryCard({ email, profile, loading, isCompany, accountType, user, role }) {
   const displayName = isCompany
-    ? getCompanyDisplayName(profile)
-    : profile?.full_name?.trim() || 'Usuario';
+    ? getCompanyDisplayName(profile, { user, role, warnIfMissing: true })
+    : getDisplayName(profile, role, { user, context: 'settings', warnIfMissing: true });
 
   if (loading) {
     return (
@@ -231,6 +232,8 @@ export default function SettingsScreen({ accountType }) {
               loading={profileLoading}
               isCompany={isCompany}
               accountType={avatarType}
+              user={user}
+              role={role}
             />
 
             <SectionCard title="Cuenta">

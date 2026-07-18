@@ -111,8 +111,8 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
       key: 'location',
       icon: MapPin,
       label: 'Ubicación',
-      value: address || (location !== 'Ubicación no especificada' ? location : null),
-      show: Boolean(address) || (!excludeHeaderMeta && location !== 'Ubicación no especificada'),
+      value: address || location || null,
+      show: Boolean(address) || (!excludeHeaderMeta && Boolean(location)),
     },
     {
       key: 'founded',
@@ -132,8 +132,8 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
       key: 'sector',
       icon: Briefcase,
       label: 'Sector',
-      value: sector !== 'Sector no especificado' ? sector : null,
-      show: sector !== 'Sector no especificado' && !excludeHeaderMeta,
+      value: sector || null,
+      show: Boolean(sector) && !excludeHeaderMeta,
     },
   ];
 
@@ -170,10 +170,10 @@ export function hasVisibleCompanyInfoRows(profile, variant = 'minimal') {
     Boolean(website),
     Boolean(email),
     Boolean(phone),
-    Boolean(address) || (!excludeHeaderMeta && location !== 'Ubicación no especificada'),
+    Boolean(address) || (!excludeHeaderMeta && Boolean(location)),
     Boolean(profile?.founded_year),
     Boolean(profile?.company_size?.trim()) && !excludeHeaderMeta,
-    sector !== 'Sector no especificado' && !excludeHeaderMeta,
+    Boolean(sector) && !excludeHeaderMeta,
   ];
 
   return checks.some(Boolean);

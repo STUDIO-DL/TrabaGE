@@ -100,7 +100,7 @@ export default function CompanyPublicProfile() {
 
   if (loading) {
     return (
-      <PageContainer topBar={false} className="max-w-none">
+      <PageContainer topBar={false} bottomNav={false} className="max-w-none">
         <ProfilePageSkeleton />
       </PageContainer>
     );
@@ -108,7 +108,7 @@ export default function CompanyPublicProfile() {
 
   if (notFound || !profile) {
     return (
-      <PageContainer topBar={false} className="max-w-none">
+      <PageContainer topBar={false} bottomNav={false} className="max-w-none">
         <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-12 text-center">
           <p className="text-lg font-semibold text-app-text">{orgLabels.notFound}</p>
           <p className="mt-2 max-w-sm text-sm text-app-muted">
@@ -120,7 +120,7 @@ export default function CompanyPublicProfile() {
   }
 
   return (
-    <PageContainer topBar={false} className="max-w-none">
+    <PageContainer topBar={false} bottomNav={false} className="max-w-none">
       <ProfilePageShell
         hideHeader
         backButton={false}

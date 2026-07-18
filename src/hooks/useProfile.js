@@ -5,8 +5,7 @@ import { companyService } from '../services/company.service';
 import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewApplicantProfile, getPreviewProfile, PREVIEW_USER } from '../constants/preview';
 import {
-  beginProfileFetch,
-  commitProfileFetch,
+  fetchProfileCached,
   getCacheKey,
   getCachedProfile,
   subscribeProfileCache,
@@ -32,6 +31,11 @@ export function useProfile(userId) {
 
   useEffect(() => {
     if (!cacheKey) return undefined;
+
+    const cached = getCachedProfile(cacheKey);
+    setProfile(cached);
+    setLoading(!cached);
+
     return subscribeProfileCache(cacheKey, (nextProfile) => {
       setProfile(nextProfile);
       setLoading(false);
@@ -40,7 +44,7 @@ export function useProfile(userId) {
   }, [cacheKey]);
 
   const fetchProfile = useCallback(
-    async ({ background = false } = {}) => {
+    async ({ background = false, force = false } = {}) => {
       if (!targetId) return null;
 
       if (isPreviewMode) {
@@ -59,6 +63,10 @@ export function useProfile(userId) {
             setLoading(false);
             return preview;
           }
+          setProfile(null);
+          setError(null);
+          setLoading(false);
+          return null;
         } else {
           const preview = getPreviewProfile(role);
           setProfile(preview);
@@ -68,22 +76,31 @@ export function useProfile(userId) {
         }
       }
 
+      if (!cacheKey) {
+        if (!background) setLoading(false);
+        return null;
+      }
+
       if (!background && !getCachedProfile(cacheKey)) {
         setLoading(true);
       }
       setError(null);
 
-      const generation = beginProfileFetch(cacheKey);
       const isCandidate = userId ? true : !isEmployerRole(role);
       const viewingOther = Boolean(userId) && userId !== user?.id;
 
-      const { data, error: fetchError } = isCandidate
-        ? viewingOther
-          ? await profileService.getPublicCandidateFullProfile(targetId)
-          : await profileService.getCandidateFullProfile(targetId)
-        : userId && userId !== user?.id
-          ? await companyService.getPublicProfile(targetId)
-          : await companyService.getCompanyProfile(targetId);
+      const { data, error: fetchError } = await fetchProfileCached(
+        cacheKey,
+        () =>
+          isCandidate
+            ? viewingOther
+              ? profileService.getPublicCandidateFullProfile(targetId)
+              : profileService.getCandidateFullProfile(targetId)
+            : userId && userId !== user?.id
+              ? companyService.getPublicProfile(targetId)
+              : companyService.getCompanyProfile(targetId),
+        { force },
+      );
 
       if (fetchError) {
         setError(fetchError.message ?? null);
@@ -91,7 +108,7 @@ export function useProfile(userId) {
         return null;
       }
 
-      if (cacheKey && commitProfileFetch(cacheKey, generation, data)) {
+      if (data) {
         setProfile(data);
         setError(null);
         setLoading(false);
@@ -99,7 +116,7 @@ export function useProfile(userId) {
       }
 
       if (!background) setLoading(false);
-      return data;
+      return null;
     },
     [targetId, role, userId, user?.id, isPreviewMode, cacheKey],
   );
@@ -108,7 +125,7 @@ export function useProfile(userId) {
     fetchProfile();
   }, [fetchProfile]);
 
-  const refetch = useCallback(() => fetchProfile({ background: true }), [fetchProfile]);
+  const refetch = useCallback(() => fetchProfile({ background: true, force: true }), [fetchProfile]);
 
   return { profile, loading, error, refetch, cacheKey };
 }
@@ -120,10 +137,7 @@ export function useProfile(userId) {
 export async function refetchProfileCache(cacheKey, fetcher) {
   if (!cacheKey) return null;
 
-  const generation = beginProfileFetch(cacheKey);
-  const { data, error: fetchError } = await fetcher();
-
+  const { data, error: fetchError } = await fetchProfileCached(cacheKey, fetcher, { force: true });
   if (fetchError || !data) return null;
-  commitProfileFetch(cacheKey, generation, data);
   return data;
 }

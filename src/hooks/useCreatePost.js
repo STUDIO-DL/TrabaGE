@@ -11,6 +11,7 @@ import { useAuth } from './useAuth';
 import { useNotificationContext } from '../context/NotificationContext';
 import { GUEST_MODE_MESSAGE } from '../utils/guestMode';
 import { compressPostImage } from '../utils/imageCompression';
+import { getCompanyDisplayName } from '../utils/companyProfile';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import { TOAST } from '../utils/copyLabels';
@@ -76,7 +77,11 @@ export function useCreatePost() {
 
     if (isEmployerRole(role)) {
       const { data: companyProfile } = await companyService.getCompanyProfile(user.id);
-      const companyName = companyProfile?.company_name?.trim() || 'Business';
+      const companyName = getCompanyDisplayName(companyProfile, { role, user, warnIfMissing: true });
+      if (!companyName) {
+        setLoading(false);
+        return { ok: true, post };
+      }
       const preview = content.trim().slice(0, 120);
       const targetType = isOrganizationRole(role)
         ? FOLLOWS_TARGET.ORGANIZATION
@@ -86,7 +91,7 @@ export function useCreatePost() {
         targetType,
         targetId: user.id,
         type: 'new_post',
-        title: `Nueva publicación de ${companyName}`,
+        title: companyName ? `Nueva publicación de ${companyName}` : 'Nueva publicación',
         message: preview || 'Nueva actualización',
         link: `/companies/${user.id}`,
       });

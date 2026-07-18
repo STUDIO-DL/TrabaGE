@@ -182,7 +182,7 @@ export default function AdminPosts() {
                 variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
                 className="h-8 w-8"
               />
-              <span>{row.author?.name ?? 'Usuario'}</span>
+              <span>{row.author?.name?.trim() || row.author?.email || ''}</span>
             </div>
           );
         },

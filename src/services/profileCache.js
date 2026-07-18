@@ -1,11 +1,18 @@
 /**
  * Single in-memory profile cache shared by every useProfile subscriber.
- * Mutations merge here first; fetches use generation tokens to drop stale responses.
+ * Mutations merge here first; fetches are coalesced per cache key so concurrent
+ * mounts (FeedHeader, PostComposer, etc.) share one in-flight request.
  */
 
 const profileCache = new Map();
 const cacheListeners = new Map();
 const fetchGenerations = new Map();
+const inflightFetches = new Map();
+
+function omitUndefined(partial) {
+  if (!partial) return {};
+  return Object.fromEntries(Object.entries(partial).filter(([, value]) => value !== undefined));
+}
 
 export function getCacheKey(targetId, { role, isPreviewMode, viewingOtherCandidate, isEmployerRole }) {
   if (!targetId || isPreviewMode) return null;
@@ -31,8 +38,10 @@ export function setProfileCache(cacheKey, profile) {
 
 export function mergeProfileCache(cacheKey, partial) {
   if (!cacheKey || !partial) return getCachedProfile(cacheKey);
+  const patch = omitUndefined(partial);
+  if (Object.keys(patch).length === 0) return getCachedProfile(cacheKey);
   const current = profileCache.get(cacheKey);
-  const next = current ? { ...current, ...partial } : { ...partial };
+  const next = current ? { ...current, ...patch } : { ...patch };
   setProfileCache(cacheKey, next);
   return next;
 }
@@ -63,8 +72,43 @@ export function beginProfileFetch(cacheKey) {
 
 export function commitProfileFetch(cacheKey, generation, profile) {
   if (!cacheKey || fetchGenerations.get(cacheKey) !== generation) return false;
+  if (profile == null) return false;
   setProfileCache(cacheKey, profile);
   return true;
+}
+
+/**
+ * Coalesce concurrent reads for the same cache key. Pass force=true after
+ * mutations so post-save refetches are not deduped against the initial load.
+ */
+export async function fetchProfileCached(cacheKey, fetcher, { force = false } = {}) {
+  if (!cacheKey) return { data: null, error: null };
+
+  if (!force && inflightFetches.has(cacheKey)) {
+    return inflightFetches.get(cacheKey);
+  }
+
+  const generation = beginProfileFetch(cacheKey);
+
+  const promise = (async () => {
+    try {
+      const result = await fetcher();
+      const { data, error } = result ?? {};
+      if (!error && data != null && fetchGenerations.get(cacheKey) === generation) {
+        setProfileCache(cacheKey, data);
+      }
+      return { data: data ?? null, error: error ?? null };
+    } catch (error) {
+      return { data: null, error };
+    } finally {
+      if (inflightFetches.get(cacheKey) === promise) {
+        inflightFetches.delete(cacheKey);
+      }
+    }
+  })();
+
+  inflightFetches.set(cacheKey, promise);
+  return promise;
 }
 
 export function applyOptimisticUpdate(cacheKey, updater) {
@@ -74,7 +118,7 @@ export function applyOptimisticUpdate(cacheKey, updater) {
   const next =
     typeof updater === 'function'
       ? updater(current ? { ...current } : {})
-      : { ...(current ?? {}), ...updater };
+      : { ...(current ?? {}), ...omitUndefined(updater) };
   setProfileCache(cacheKey, next);
   return () => {
     if (snapshot) {

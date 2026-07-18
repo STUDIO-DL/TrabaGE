@@ -7,9 +7,11 @@ import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { logoPath, companyCoverPath } from '../constants/storage';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
+import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
 import {
   applyOptimisticUpdate,
   getCacheKey,
+  getCachedProfile,
   mergeProfileCache,
 } from '../services/profileCache';
 import { isEmployerRole } from '../constants/roles';
@@ -46,7 +48,11 @@ export function useCompanyProfile() {
 
   const runMutation = useCallback(
     async ({ optimistic, execute, mergeResult, resync = true }) => {
-      const rollback = optimistic && ownCacheKey ? applyOptimisticUpdate(ownCacheKey, optimistic) : null;
+      const hasCachedProfile = Boolean(getCachedProfile(ownCacheKey)?.user_id);
+      const rollback =
+        optimistic && ownCacheKey && hasCachedProfile
+          ? applyOptimisticUpdate(ownCacheKey, optimistic)
+          : null;
 
       try {
         const result = await execute();
@@ -76,21 +82,26 @@ export function useCompanyProfile() {
   );
 
   const updateCompanyProfile = useCallback(
-    async (data, { companyNameFallback } = {}) =>
-      runMutation({
+    async (data, { companyNameFallback } = {}) => {
+      const { error: saveError } = await runMutation({
         optimistic: data,
         execute: () =>
           companyService.upsertCompanyProfile({
             user_id: userId,
-            company_name:
-              data.company_name
-              || profile?.company_name?.trim()
-              || companyNameFallback
-              || 'Empresa',
             ...data,
+            ...(data.company_name ? {} : { company_name: profile?.company_name?.trim() || companyNameFallback || undefined }),
           }),
         mergeResult: (result) => result.data ?? data,
-      }).then(({ error: saveError }) => ({ error: saveError })),
+      }).then(({ error }) => ({ error }));
+
+      if (!saveError && (data.company_name || profile?.company_name)) {
+        void syncAuthIdentityMetadata({
+          company_name: data.company_name || profile?.company_name,
+        });
+      }
+
+      return { error: saveError };
+    },
     [profile?.company_name, runMutation, userId],
   );
 

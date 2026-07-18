@@ -17,9 +17,11 @@ import CompanyProfileView from './CompanyProfileView';
 import { useFollow } from '../../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
 import { isOrganizationProfile, getOrgLabels } from '../../../utils/orgLabels';
+import { getCompanyDisplayName } from '../../../utils/companyProfile';
 import { TOAST } from '../../../utils/copyLabels';
 import { ProfilePageSkeleton } from '../../common/Skeleton';
 import { useCompanyProfile } from '../../../hooks/useCompanyProfile';
+import { useAuth } from '../../../hooks/useAuth';
 
 const COMPANY_SIZE_OPTIONS = [
   '1-10',
@@ -295,6 +297,7 @@ export default function CompanyProfileLayout({
   onPreviewAction,
   onOpenSettings,
 }) {
+  const { user, role } = useAuth();
   const { showToast } = useNotificationContext();
   const {
     profile,
@@ -358,7 +361,7 @@ export default function CompanyProfileLayout({
   };
 
   const orgLabels = getOrgLabels(profile);
-  const fallbackCompanyName = profile?.company_name?.trim() || orgLabels.defaultName;
+  const fallbackCompanyName = getCompanyDisplayName(profile, { role, user });
 
   const uploadImage = async (file, type) => {
     const validation = validateFile(file, type === 'logo' ? 'logo' : 'image');

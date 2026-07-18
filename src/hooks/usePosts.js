@@ -8,6 +8,7 @@ import { getPreviewPosts } from '../constants/preview';
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { extractUserKeywords, calculateJobMatch } from '../utils/calculateJobMatch';
 import { jobsService } from '../services/jobs.service';
+import { resolvePostAuthorName } from '../utils/displayIdentity';
 
 const PAGE_SIZE = 30;
 
@@ -49,7 +50,7 @@ async function enrichPosts(posts, user) {
       const isCompanyOwner = isOwner && isEmployerRole(user?.role);
       return {
         ...post,
-        author_name: company?.company_name ?? post.author_name,
+        author_name: resolvePostAuthorName(post, company, ROLES.BUSINESS),
         author_avatar: resolveAuthorAvatar(post.author_type, {
           logoPath: company?.logo_path,
           companyType: company?.company_type,
@@ -64,7 +65,7 @@ async function enrichPosts(posts, user) {
     const isCandidateOwner = isOwner && user?.role === ROLES.PERSONAL;
     return {
       ...post,
-      author_name: candidate?.full_name ?? post.author_name,
+      author_name: resolvePostAuthorName(post, candidate, ROLES.PERSONAL),
       author_headline: candidate?.headline ?? post.author_headline,
       author_avatar: resolveAuthorAvatar(post.author_type, {
         avatarPath: candidate?.avatar_path,
@@ -208,7 +209,7 @@ export function usePosts(authorId, { enabled = true } = {}) {
         isEmployerAuthor(post.author_type)
           ? {
               ...post,
-              author_name: post.author_name ?? 'Empresa demo',
+              author_name: post.author_name ?? '',
               author_company: { is_verified: false, verification_status: 'not_submitted' },
             }
           : post,

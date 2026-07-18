@@ -2,18 +2,21 @@ import { useRef } from 'react';
 import AppAvatar from '../common/AppAvatar';
 import AppIcon from '../common/AppIcon';
 import { AvatarType } from '../../constants/avatarDefaults';
+import { ROLES } from '../../constants/roles';
 import { Briefcase, Building2, Camera, GraduationCap, MapPin, Pencil, ICON_SIZES } from '../../constants/icons';
 import {
   profileBannerGradientClass,
   profileCoverOverlayClass,
 } from '../company/profile/companyProfileStyles';
-import { EMPTY, formatYearsLabel, hasYearsExperience } from './ProfileHeroFields';
+import { formatYearsLabel, hasYearsExperience } from './ProfileHeroFields';
 import {
   formatCurrentPosition,
   formatLocation,
   getCurrentExperience,
   getIntroEducationLine,
 } from '../../utils/profileIntro';
+import { getDisplayName } from '../../utils/displayIdentity';
+import { useAuth } from '../../hooks/useAuth';
 
 export default function CandidateProfileHeader({
   profile,
@@ -23,13 +26,20 @@ export default function CandidateProfileHeader({
   coverSrc,
   onEditIntro,
 }) {
+  const { user, role } = useAuth();
   const avatarInputRef = useRef(null);
 
+  const displayName = getDisplayName(profile, role ?? ROLES.PERSONAL, {
+    user: isOwn ? user : null,
+    context: 'candidate_profile_header',
+    warnIfMissing: isOwn,
+  });
   const educationLine = getIntroEducationLine(profile);
   const locationText = formatLocation(profile);
   const currentPosition = formatCurrentPosition(getCurrentExperience(profile?.experience));
-  const showYearsBadge = hasYearsExperience(profile?.years_experience) || isOwn;
+  const showYearsBadge = hasYearsExperience(profile?.years_experience);
   const sector = profile?.sector?.trim();
+  const headline = profile?.headline?.trim();
 
   return (
     <section className="overflow-visible border-b border-app-border bg-app-card">
@@ -51,8 +61,8 @@ export default function CandidateProfileHeader({
                 <AppAvatar
                   type={AvatarType.PERSONAL}
                   src={profile?.avatar_path}
-                  name={profile?.full_name}
-                  alt={profile?.full_name}
+                  name={displayName}
+                  alt={displayName}
                   size="xl"
                   className="sm:!h-[7rem] sm:!w-[7rem]"
                 />
@@ -92,12 +102,22 @@ export default function CandidateProfileHeader({
           <div className="min-w-0 pt-10 sm:pt-14">
             <div className="flex items-start gap-space-sm">
               <div className="min-w-0 flex-1">
-                <h1 className="text-title font-bold leading-tight text-app-text sm:text-heading-m">
-                  {profile?.full_name?.trim() || (isOwn ? EMPTY.name : null)}
-                </h1>
+                {displayName ? (
+                  <h1 className="text-title font-bold leading-tight text-app-text sm:text-heading-m">
+                    {displayName}
+                  </h1>
+                ) : isOwn ? (
+                  <button
+                    type="button"
+                    onClick={onEditIntro}
+                    className="text-left text-title font-bold leading-tight text-app-subtle hover:text-primary-600"
+                  >
+                    Añade tu nombre
+                  </button>
+                ) : null}
               </div>
 
-              {isOwn && onEditIntro && (
+              {isOwn && onEditIntro && displayName && (
                 <button
                   type="button"
                   onClick={onEditIntro}
@@ -109,48 +129,46 @@ export default function CandidateProfileHeader({
               )}
             </div>
 
-            {(profile?.headline?.trim() || isOwn) && (
-              <p className="mt-space-xs text-body-small text-app-muted sm:text-body">
-                {profile?.headline?.trim() || EMPTY.headline}
-              </p>
-            )}
+            {headline ? (
+              <p className="mt-space-xs text-body-small text-app-muted sm:text-body">{headline}</p>
+            ) : null}
 
-            {currentPosition || isOwn ? (
+            {currentPosition ? (
               <p className="mt-space-xs flex items-start gap-1.5 text-caption text-app-muted">
                 <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
-                <span>{currentPosition || EMPTY.position}</span>
+                <span>{currentPosition}</span>
               </p>
             ) : null}
 
-            {sector || isOwn ? (
+            {sector ? (
               <p className="mt-space-xs flex items-start gap-1.5 text-caption text-app-muted">
                 <AppIcon icon={Building2} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
-                <span>{sector || EMPTY.sector}</span>
+                <span>{sector}</span>
               </p>
             ) : null}
 
-            {educationLine || (isOwn && profile?.show_education_in_intro) ? (
+            {educationLine ? (
               <p className="mt-space-xs flex items-start gap-1.5 text-caption text-app-muted">
                 <AppIcon icon={GraduationCap} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
-                <span>{educationLine || EMPTY.education}</span>
+                <span>{educationLine}</span>
               </p>
             ) : null}
 
-            {(locationText || isOwn) && (
+            {locationText ? (
               <p className="mt-space-sm flex items-center gap-1.5 text-caption text-app-muted">
                 <AppIcon icon={MapPin} size={ICON_SIZES.default} className="shrink-0" />
-                {locationText || EMPTY.city}
+                {locationText}
               </p>
-            )}
+            ) : null}
 
-            {showYearsBadge && (
+            {showYearsBadge && formatYearsLabel(profile?.years_experience) ? (
               <ul className="mt-space-sm flex flex-wrap gap-space-sm">
                 <li className="inline-flex items-center gap-1.5 rounded-radius-full border border-app-border bg-app-surface px-3 py-1.5 text-caption text-app-muted">
                   <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0" />
                   {formatYearsLabel(profile?.years_experience)}
                 </li>
               </ul>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

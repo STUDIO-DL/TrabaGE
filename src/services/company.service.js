@@ -74,6 +74,7 @@ function normalizeCompanyProfile(data) {
   if (!data) return data;
   return {
     ...data,
+    cover_url: data.cover_url ?? data.cover_path ?? null,
     company_services: Array.isArray(data.company_services) ? data.company_services : [],
   };
 }

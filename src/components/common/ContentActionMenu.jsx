@@ -20,7 +20,10 @@ export default function ContentActionMenu({
   const { isPreviewMode, user } = useAuth();
   const { showToast } = useNotificationContext();
 
-  const resolvedUrl = shareUrl.startsWith('http') ? shareUrl : generateShareUrl(shareUrl);
+  const resolvedUrl =
+    typeof shareUrl === 'string' && shareUrl.startsWith('http')
+      ? shareUrl
+      : generateShareUrl(typeof shareUrl === 'string' ? shareUrl : '');
   const description = shareText || getShareDescription(targetType);
 
   const handleShare = () => {

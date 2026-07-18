@@ -7,7 +7,8 @@ import PostCard from '../components/feed/PostCard';
 import { postsService } from '../services/posts.service';
 import { supabase } from '../config/supabase';
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';
-import { PostCardSkeleton } from '../components/common/Skeleton';
+import { resolvePostAuthorName } from '../utils/displayIdentity';
+import { ROLES } from '../constants/roles';
 
 async function enrichPost(post) {
   if (!post) return post;
@@ -21,7 +22,7 @@ async function enrichPost(post) {
 
     return {
       ...post,
-      author_name: company?.company_name ?? 'Empresa',
+      author_name: resolvePostAuthorName(post, company, ROLES.BUSINESS),
       author_avatar: resolveAuthorAvatar(post.author_type, {
         logoPath: company?.logo_path,
         companyType: company?.company_type,
@@ -39,7 +40,7 @@ async function enrichPost(post) {
 
   return {
     ...post,
-    author_name: candidate?.full_name ?? 'Usuario',
+    author_name: resolvePostAuthorName(post, candidate, ROLES.PERSONAL),
     author_headline: candidate?.headline ?? '',
     author_avatar: resolveAuthorAvatar(post.author_type, {
       avatarPath: candidate?.avatar_path,

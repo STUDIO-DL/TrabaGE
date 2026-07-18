@@ -67,7 +67,8 @@ export default function EditIntro() {
   const [modalSaving, setModalSaving] = useState(false);
 
   useEffect(() => {
-    if (!profile || formInitializedRef.current) return;
+    if (!profile) return;
+    if (formInitializedRef.current && form.full_name) return;
     formInitializedRef.current = true;
     setForm({
       full_name: profile.full_name || '',

@@ -80,7 +80,7 @@ export function useIntelligentFeed({ authorId } = {}) {
           sort_at: post.created_at,
           payload: {
             ...post,
-            author_name: post.author_name ?? (isEmployerRole(role) ? 'Empresa demo' : 'Usuario'),
+            author_name: post.author_name ?? '',
             author_company: isEmployerAuthor(post.author_type)
               ? { is_verified: false, verification_status: 'not_submitted' }
               : null,

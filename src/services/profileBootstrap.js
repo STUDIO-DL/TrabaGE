@@ -9,25 +9,20 @@ import {
   peekPendingOrgKind,
 } from './auth.service';
 import { extractGoogleProfile } from '../utils/googleProfile';
+import { nameFromEmail, readIdentityFromUser, warnMissingDisplayName } from '../utils/displayIdentity';
 import { reportError } from '../utils/logger';
 import { isOrganizationKind } from '../utils/orgLabels';
 
 const ORGANIZATION_DEFAULT_COMPANY_TYPE = 'Institucion publica';
 
-function fallbackNameFromEmail(email) {
-  const handle = String(email ?? '')
-    .split('@')[0]
-    ?.replace(/[._-]+/g, ' ')
-    .trim();
-  if (!handle) return 'Usuario';
-  return handle.replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
 function readSignupMetadata(user) {
-  const meta = user?.user_metadata ?? {};
+  const identity = readIdentityFromUser(user);
   return {
-    full_name: String(meta.full_name || meta.name || '').trim() || null,
-    city: String(meta.city || '').trim() || null,
+    full_name: identity.full_name,
+    city: identity.city,
+    company_name: identity.company_name,
+    sector: identity.sector,
+    company_type: identity.company_type,
   };
 }
 
@@ -39,8 +34,10 @@ async function ensureCandidateProfile(userId, user, metadata) {
 
   if (existing?.user_id) {
     const patch = {};
-    if (!existing.full_name && (google.full_name || metadata.full_name)) {
-      patch.full_name = google.full_name || metadata.full_name;
+    if (!existing.full_name) {
+      const backfillName =
+        google.full_name || metadata.full_name || nameFromEmail(google.email || user?.email);
+      if (backfillName) patch.full_name = backfillName;
     }
     if (!existing.avatar_path && google.avatar_url) patch.avatar_path = google.avatar_url;
     if (!existing.city && metadata.city) patch.city = metadata.city;
@@ -53,7 +50,11 @@ async function ensureCandidateProfile(userId, user, metadata) {
   const fullName =
     google.full_name ||
     metadata.full_name ||
-    fallbackNameFromEmail(google.email || user?.email);
+    nameFromEmail(google.email || user?.email);
+
+  if (!fullName) {
+    warnMissingDisplayName('profile_bootstrap_candidate', { userId });
+  }
 
   await profileService.upsertCandidateProfile({
     user_id: userId,
@@ -69,14 +70,20 @@ async function ensureCandidateProfile(userId, user, metadata) {
 async function ensureCompanyProfile(userId, user, metadata, orgKind, orgDetails) {
   const { data: existing } = await companyService.getCompanyProfile(userId);
 
+  const resolvedOrgDetails = {
+    company_name: orgDetails.company_name || metadata.company_name || null,
+    sector: orgDetails.sector || metadata.sector || null,
+    company_type: orgDetails.company_type || metadata.company_type || null,
+  };
+
   if (existing?.user_id) {
     const patch = {};
-    if (!existing.company_name && orgDetails.company_name) {
-      patch.company_name = orgDetails.company_name;
+    if (!existing.company_name && resolvedOrgDetails.company_name) {
+      patch.company_name = resolvedOrgDetails.company_name;
     }
-    if (!existing.sector && orgDetails.sector) patch.sector = orgDetails.sector;
-    if (!existing.company_type && orgDetails.company_type) {
-      patch.company_type = orgDetails.company_type;
+    if (!existing.sector && resolvedOrgDetails.sector) patch.sector = resolvedOrgDetails.sector;
+    if (!existing.company_type && resolvedOrgDetails.company_type) {
+      patch.company_type = resolvedOrgDetails.company_type;
     }
     if (!existing.city && metadata.city) patch.city = metadata.city;
     if (Object.keys(patch).length > 0) {
@@ -87,12 +94,16 @@ async function ensureCompanyProfile(userId, user, metadata, orgKind, orgDetails)
 
   const isOrganization = isOrganizationKind(orgKind) || orgKind === ACCOUNT_KINDS.ORGANIZATION;
   const companyType =
-    orgDetails.company_type || (isOrganization ? ORGANIZATION_DEFAULT_COMPANY_TYPE : null);
+    resolvedOrgDetails.company_type || (isOrganization ? ORGANIZATION_DEFAULT_COMPANY_TYPE : null);
+
+  if (!resolvedOrgDetails.company_name) {
+    warnMissingDisplayName('profile_bootstrap_company', { userId });
+  }
 
   await companyService.upsertCompanyProfile({
     user_id: userId,
-    company_name: orgDetails.company_name || '',
-    sector: orgDetails.sector || null,
+    company_name: resolvedOrgDetails.company_name || '',
+    sector: resolvedOrgDetails.sector || null,
     company_type: companyType,
     city: metadata.city || null,
   });

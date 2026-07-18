@@ -2,22 +2,26 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 import AppIcon from '../common/AppIcon';
 import { Briefcase, MapPin, Pencil, Save, X, ICON_SIZES } from '../../constants/icons';
 
-export const EMPTY = {
-  name: 'Nombre no especificado',
-  headline: 'Titular no especificado',
-  city: 'Ubicación no especificada',
-  years: 'Años de experiencia no especificados',
-  sector: 'Sector no especificado',
-  position: 'Puesto actual no especificado',
-  education: 'Centro educativo no seleccionado',
+/** Input hints for editable hero fields — never shown as visible placeholder text to visitors. */
+export const EDITOR_HINTS = {
+  name: 'Añade tu nombre completo',
+  headline: 'Añade tu titular profesional',
+  city: 'Añade tu ubicación',
+  years: 'Selecciona años de experiencia',
+  sector: 'Añade tu sector',
+  position: 'Añade tu puesto actual',
+  education: 'Selecciona un centro educativo',
 };
+
+/** @deprecated Use EDITOR_HINTS */
+export const EMPTY = EDITOR_HINTS;
 
 export const YEAR_OPTIONS = Array.from({ length: 51 }, (_, i) => i);
 
 export function formatYearsLabel(years) {
-  if (years == null || years === '') return EMPTY.years;
+  if (years == null || years === '') return null;
   const n = Number(years);
-  if (Number.isNaN(n)) return EMPTY.years;
+  if (Number.isNaN(n)) return null;
   if (n === 0) return 'Sin experiencia previa';
   return `${n} ${n === 1 ? 'año' : 'años'} de experiencia`;
 }

@@ -1,3 +1,5 @@
+import { getDisplayName } from './displayIdentity';
+
 export const COMPANY_INFO_ROWS = [
   { key: 'company_type', label: 'Tipo de empresa' },
   { key: 'sector', label: 'Sector' },
@@ -18,28 +20,30 @@ export const COMPANY_DETAIL_ROWS = [
   { key: 'website', label: 'Sitio web' },
 ];
 
-export function displayCompanyValue(value, fallback = 'No especificado') {
+export function displayCompanyValue(value, fallback = '') {
   if (value === null || value === undefined || String(value).trim() === '') {
     return fallback;
   }
   return value;
 }
 
-export function getCompanyDisplayName(profile) {
-  const name = profile?.company_name?.trim();
-  return name || 'Nombre de la empresa';
+export function getCompanyDisplayName(profile, options = {}) {
+  return getDisplayName(profile, options.role, {
+    user: options.user,
+    context: options.context ?? 'company_profile',
+    warnIfMissing: options.warnIfMissing ?? false,
+  });
 }
 
 export function getCompanySectorText(profile) {
-  const sector = profile?.sector?.trim();
-  return sector || 'Sector no especificado';
+  return profile?.sector?.trim() || null;
 }
 
 export function getCompanyLocationText(profile) {
   const city = profile?.city?.trim();
   const country = profile?.country?.trim();
   const parts = [city, country].filter(Boolean);
-  return parts.length ? parts.join(', ') : 'Ubicación no especificada';
+  return parts.length ? parts.join(', ') : null;
 }
 
 export function hasCompanyDescription(profile) {

@@ -21,6 +21,7 @@ import {
   setPreviewRoleStorage,
 } from '../constants/preview';
 import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
+import { bootstrapProfile } from '../services/profileBootstrap';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
 import { isProfileSetupComplete } from '../utils/profileRequirements';
@@ -135,10 +136,19 @@ export function AuthProvider({ children }) {
 
     setRole(userRole);
 
+    if (userRole && userRole !== ROLES.ADMIN) {
+      await bootstrapProfile({ user: currentUser, role: userRole });
+    }
+
     if (isPersonalRole(userRole)) {
-      setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, candidateResult?.data));
+      const { data: candidateAfterBootstrap } = await profileService.getCandidateProfile(currentUser.id);
+      setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, candidateAfterBootstrap));
     } else if (isEmployerRole(userRole)) {
-      setSetupComplete(isProfileSetupComplete(userRole, companyResult?.data));
+      const { data: companyAfterBootstrap } = await companyService.getCompanyProfile(currentUser.id);
+      const resolvedRole =
+        normalizeRole(userRole, { companyType: companyAfterBootstrap?.company_type }) ?? userRole;
+      setRole(resolvedRole);
+      setSetupComplete(isProfileSetupComplete(resolvedRole, companyAfterBootstrap));
     } else if (userRole === ROLES.ADMIN) {
       setSetupComplete(true);
     } else {

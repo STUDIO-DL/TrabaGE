@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth';
-
 import { useProfile } from '../hooks/useProfile';
 
 import { searchService } from '../services/search.service';
@@ -35,13 +34,14 @@ import {
   groupSearchResults,
 
 } from '../utils/globalSearch';
+import { resolveSearchResultPath } from '../utils/profileRoutes';
 
 
 
-function SearchResultItem({ item }) {
-
+function SearchResultItem({ item, viewer }) {
   const avatarType = avatarTypeFromSearchEntity(item.type);
   const isSelf = useIsSearchSelf(item);
+  const path = item.path ?? resolveSearchResultPath(item, viewer);
   const isOrgAvatar =
     item.type === 'company' ||
     item.type === 'institution' ||
@@ -51,7 +51,7 @@ function SearchResultItem({ item }) {
 
   return (
     <Link
-      to={item.path}
+      to={path}
       className={[
         'flex gap-space-md border-b border-app-border p-space-base transition-colors duration-fast hover:bg-app-surface',
         isSelf ? 'bg-primary-50/60' : '',
@@ -101,6 +101,7 @@ export default function SearchResults() {
   const { user, role } = useAuth();
 
   const { profile } = useProfile();
+  const viewer = user ? { id: user.id, role } : null;
 
   const query = searchParams.get('q');
 
@@ -252,7 +253,7 @@ export default function SearchResults() {
 
         {group.items.map((item) => (
 
-          <SearchResultItem key={`${item.type}-${item.id}`} item={item} />
+          <SearchResultItem key={`${item.type}-${item.id}`} item={item} viewer={viewer} />
 
         ))}
 

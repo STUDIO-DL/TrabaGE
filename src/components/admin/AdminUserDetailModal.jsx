@@ -70,7 +70,12 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
   if (!user) return null;
 
   const displayName =
-    detail?.full_name || detail?.company_name || user.full_name || user.company_name || 'Usuario';
+    detail?.full_name ||
+    detail?.company_name ||
+    user.full_name ||
+    user.company_name ||
+    user.email ||
+    '';
   const avatarType = isCompany
     ? avatarTypeFromRole(user.role, { companyType: detail?.company_type ?? user.company_type })
     : AvatarType.PERSONAL;

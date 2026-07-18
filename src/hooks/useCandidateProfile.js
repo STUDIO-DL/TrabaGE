@@ -8,9 +8,11 @@ import { cvPath, avatarPath } from '../constants/storage';
 import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { reportError } from '../utils/logger';
+import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
 import {
   applyOptimisticUpdate,
   getCacheKey,
+  getCachedProfile,
   mergeProfileCache,
 } from '../services/profileCache';
 import { isEmployerRole } from '../constants/roles';
@@ -62,7 +64,11 @@ export function useCandidateProfile() {
 
   const runMutation = useCallback(
     async ({ optimistic, execute, mergeResult, resync = true }) => {
-      const rollback = optimistic && ownCacheKey ? applyOptimisticUpdate(ownCacheKey, optimistic) : null;
+      const hasCachedProfile = Boolean(getCachedProfile(ownCacheKey)?.user_id);
+      const rollback =
+        optimistic && ownCacheKey && hasCachedProfile
+          ? applyOptimisticUpdate(ownCacheKey, optimistic)
+          : null;
 
       try {
         const result = await execute();
@@ -95,13 +101,20 @@ export function useCandidateProfile() {
   );
 
   const updateBasicInfo = useCallback(
-    async (data) =>
-      runMutation({
+    async (data) => {
+      const { error: saveError } = await runMutation({
         optimistic: data,
         execute: () => profileService.updateCandidateProfile(userId, data),
         mergeResult: (result) => result.data ?? data,
         resync: true,
-      }).then(({ error: saveError }) => ({ error: saveError })),
+      }).then(({ error }) => ({ error }));
+
+      if (!saveError && data.full_name) {
+        void syncAuthIdentityMetadata({ full_name: data.full_name });
+      }
+
+      return { error: saveError };
+    },
     [runMutation, userId],
   );
 

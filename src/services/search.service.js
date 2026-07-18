@@ -1,6 +1,9 @@
 import { supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
-import { ROLES, isEmployerRole, isPersonalRole, rolePath } from '../constants/roles';
+import {
+  normalizeSearchEntityType,
+  resolveSearchResultPath,
+} from '../utils/profileRoutes';
 import {
   rankSearchCandidatesForCompany,
   rankSearchJobsForCandidate,
@@ -9,46 +12,18 @@ import {
 const RESULT_LIMIT = 8;
 const GLOBAL_SEARCH_LIMIT_PER_TYPE = 5;
 
-function normalizeResultType(type) {
-  if (type === 'candidate') return 'personal';
-  if (type === 'company') return 'business';
-  if (type === 'institution') return 'organization';
-  return type;
-}
-
-function roleAwareJobPath(jobId, user) {
-  return isPersonalRole(user?.role) ? `/personal/jobs/${jobId}` : `/jobs/${jobId}`;
-}
-
-function roleAwareCandidatePath(userId, user) {
-  const isOwner = isPersonalRole(user?.role) && user?.id === userId;
-  return isOwner ? '/personal/profile' : `/profile/${userId}`;
-}
-
-function roleAwareCompanyPath(companyId, user) {
-  const isOwner = isEmployerRole(user?.role) && user?.id === companyId;
-  if (!isOwner) return `/companies/${companyId}`;
-  return rolePath(user.role === ROLES.ORGANIZATION ? ROLES.ORGANIZATION : ROLES.BUSINESS, '/profile');
-}
-
 function isOwnSearchResult(type, resultId, user) {
   if (!user?.id || !resultId) return false;
   // Profile result_id is always the auth user id for personal/business/organization.
   if (type !== 'personal' && type !== 'business' && type !== 'organization') return false;
   return String(user.id).toLowerCase() === String(resultId).toLowerCase();
 }
-
 function mapGlobalSearchRow(item, user) {
-  const type = normalizeResultType(item.result_type);
-  let path = item.path;
-
-  if (type === 'job') {
-    path = roleAwareJobPath(item.result_id, user);
-  } else if (type === 'personal') {
-    path = roleAwareCandidatePath(item.result_id, user);
-  } else if (type === 'business' || type === 'organization') {
-    path = roleAwareCompanyPath(item.result_id, user);
-  }
+  const type = normalizeSearchEntityType(item.result_type);
+  const path = resolveSearchResultPath(
+    { type, id: item.result_id, result_type: item.result_type, result_id: item.result_id },
+    user,
+  );
 
   return {
     type,

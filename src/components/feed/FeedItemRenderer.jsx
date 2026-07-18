@@ -3,7 +3,6 @@ import FeedNewsCard from './FeedNewsCard';
 import FeedEventCard from './FeedEventCard';
 import FeedCourseCard from './FeedCourseCard';
 import FeedRecommendationCard from './FeedRecommendationCard';
-import { FEED_CONTENT_TYPES } from '../../constants/feedContentTypes';
 
 // The Home feed is social/informational only. Job offers are intentionally not
 // rendered here — the entire vacancy experience lives in the Empleos section.
@@ -35,7 +34,7 @@ export default function FeedItemRenderer({
         <PostCard
           post={post}
           authorId={post.author_id}
-          authorName={post.author_name ?? 'Usuario'}
+          authorName={post.author_name?.trim() || ''}
           authorHeadline={post.author_headline ?? ''}
           authorAvatar={post.author_avatar}
           authorType={post.author_type ?? 'personal'}

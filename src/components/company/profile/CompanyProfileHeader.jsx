@@ -21,7 +21,6 @@ import { avatarTypeFromCompanyProfile } from '../../../constants/avatarDefaults'
 import { getCompanyCoverUrl } from '../../../constants/images';
 import {
   getCompanyDisplayName,
-  getCompanyLocationText,
   getCompanySectorText,
 } from '../../../utils/companyProfile';
 import { isCompanyVerified } from '../../../utils/companyVerification';
@@ -86,9 +85,7 @@ function buildHeaderMeta(profile) {
   const employees = formatEmployeeCount(profile?.company_size);
 
   return [
-    sector !== 'Sector no especificado'
-      ? { key: 'sector', icon: Briefcase, text: sector }
-      : null,
+    sector ? { key: 'sector', icon: Briefcase, text: sector } : null,
     location ? { key: 'location', icon: MapPin, text: location } : null,
     employees ? { key: 'size', icon: Users, text: employees } : null,
   ].filter(Boolean);
@@ -126,7 +123,7 @@ export default function CompanyProfileHeader({
   const [logoOwnershipOpen, setLogoOwnershipOpen] = useState(false);
   const coverInputId = 'company-cover-input';
 
-  const name = getCompanyDisplayName(profile);
+  const name = getCompanyDisplayName(profile, { warnIfMissing: !readOnly });
   const avatarType = avatarTypeFromCompanyProfile(profile);
   const coverSrc = getCompanyCoverUrl(profile?.cover_url);
   const metaItems = buildHeaderMeta(profile);
@@ -287,11 +284,7 @@ export default function CompanyProfileHeader({
                       </span>
                     ))}
                   </div>
-                ) : (
-                  <p className="mt-space-sm text-caption text-white/80">
-                    {getCompanyLocationText(profile)}
-                  </p>
-                )}
+                ) : null}
 
                 {showFollowerCount && followerCount > 0 && (
                   <p className="mt-space-sm text-caption font-medium tabular-nums text-white/90">

@@ -358,6 +358,9 @@ export const authService = {
       full_name: metadata.fullName?.trim() || undefined,
       city: metadata.city?.trim() || undefined,
       account_kind: metadata.accountKind || undefined,
+      company_name: metadata.orgDetails?.company_name?.trim() || undefined,
+      sector: metadata.orgDetails?.sector?.trim() || undefined,
+      company_type: metadata.orgDetails?.company_type?.trim() || undefined,
     };
 
     if (metadata.accountKind) {

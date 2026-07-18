@@ -13,6 +13,7 @@ import { jobsService } from './jobs.service';
 import { followsService, FOLLOWS_TARGET } from './follows.service';
 import { profileService } from './profile.service';
 import { dedupeFeedItems } from '../utils/feedRanking';
+import { resolvePostAuthorName } from '../utils/displayIdentity';
 
 // The Home (Inicio) feed is purely social/informational. Job offers live
 // exclusively in the Empleos section, so we strip any job items that a data
@@ -117,7 +118,7 @@ async function enrichPosts(posts, user) {
       const company = companies.get(post.author_id);
       enriched.set(post.id, {
         ...post,
-        author_name: company?.company_name ?? post.author_name,
+        author_name: resolvePostAuthorName(post, company, ROLES.BUSINESS),
         author_avatar: resolveAuthorAvatar(post.author_type, {
           logoPath: company?.logo_path,
           companyType: company?.company_type,
@@ -132,7 +133,7 @@ async function enrichPosts(posts, user) {
     const candidate = candidates.get(post.author_id);
     enriched.set(post.id, {
       ...post,
-      author_name: candidate?.full_name ?? post.author_name,
+      author_name: resolvePostAuthorName(post, candidate, ROLES.PERSONAL),
       author_headline: candidate?.headline ?? post.author_headline,
       author_avatar: resolveAuthorAvatar(post.author_type, {
         avatarPath: candidate?.avatar_path,

@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase';
 import { notificationsService } from './notifications.service';
 import { jobRecommendationsService } from './jobRecommendations.service';
 import { FOLLOWS_TARGET } from './follows.service';
+import { getCompanyDisplayName } from '../utils/companyProfile';
 import { reportError } from '../utils/logger';
 import { enrichJobMatchingFields } from '../utils/inferJobMatchingFields';
 
@@ -116,14 +117,14 @@ export const jobsService = {
       .eq('user_id', job.company_id)
       .maybeSingle();
 
-    const companyName = companyProfile?.company_name?.trim() || 'Empresa';
+    const companyName = getCompanyDisplayName(companyProfile, { warnIfMissing: true });
     const citySuffix = job.city ? ` - ${job.city}` : '';
 
     const notifyResult = await notificationsService.notifyFollowers({
       targetType: FOLLOWS_TARGET.BUSINESS,
       targetId: job.company_id,
       type: 'new_job',
-      title: `Nueva oferta de ${companyName}`,
+      title: companyName ? `Nueva oferta de ${companyName}` : 'Nueva oferta publicada',
       message: `${job.title}${citySuffix}`,
       link: `/personal/jobs/${job.id}`,
     });
