@@ -31,6 +31,15 @@ function roleAwareCompanyPath(companyId, user) {
   return rolePath(user.role === ROLES.ORGANIZATION ? ROLES.ORGANIZATION : ROLES.BUSINESS, '/profile');
 }
 
+function isOwnSearchResult(type, resultId, user) {
+  if (!user?.id || !resultId) return false;
+  if (type === 'personal') return isPersonalRole(user.role) && user.id === resultId;
+  if (type === 'business' || type === 'organization') {
+    return isEmployerRole(user.role) && user.id === resultId;
+  }
+  return false;
+}
+
 function mapGlobalSearchRow(item, user) {
   const type = normalizeResultType(item.result_type);
   let path = item.path;
@@ -51,6 +60,7 @@ function mapGlobalSearchRow(item, user) {
     path,
     avatar_path: item.avatar_path,
     rank: item.rank,
+    isSelf: isOwnSearchResult(type, item.result_id, user),
   };
 }
 

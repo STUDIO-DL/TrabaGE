@@ -21,6 +21,7 @@ import AppAvatar from '../components/common/AppAvatar';
 import { SearchResultsSkeleton } from '../components/common/Skeleton';
 
 import DirectoryBrandDisclaimer from '../components/legal/DirectoryBrandDisclaimer';
+import SearchSelfBadge from '../components/search/SearchSelfBadge';
 
 import { Search } from '../constants/icons';
 
@@ -39,67 +40,49 @@ import {
 function SearchResultItem({ item }) {
 
   const avatarType = avatarTypeFromSearchEntity(item.type);
-
-
+  const isOrgAvatar =
+    item.type === 'company' ||
+    item.type === 'institution' ||
+    item.type === 'business' ||
+    item.type === 'organization' ||
+    item.type === 'job';
 
   return (
-
     <Link
-
       to={item.path}
-
-      className="flex gap-space-md border-b border-app-border p-space-base transition-colors duration-fast hover:bg-app-surface"
-
+      className={[
+        'flex gap-space-md border-b border-app-border p-space-base transition-colors duration-fast hover:bg-app-surface',
+        item.isSelf ? 'bg-primary-50/60' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
-
       <AppAvatar
-
         type={avatarType}
-
         src={item.avatar_path}
-
         name={item.title}
-
         alt={item.title}
-
         size="sm"
-
         variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
-
-        className={
-
-          item.type === 'company' || item.type === 'institution' || item.type === 'job'
-
-            ? '!rounded-radius-md shrink-0'
-
-            : 'shrink-0'
-
-        }
-
+        className={isOrgAvatar ? '!rounded-radius-md shrink-0' : 'shrink-0'}
       />
 
       <div className="min-w-0 flex-1">
-
         <p className="text-caption font-semibold uppercase tracking-wide text-primary-600">
-
-          {SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado'}
-
+          {item.isSelf ? 'Tu perfil' : (SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado')}
         </p>
 
-        <p className="mt-space-xs truncate text-body font-semibold text-app-text">{item.title}</p>
+        <div className="mt-space-xs flex min-w-0 items-center gap-space-sm">
+          <p className="truncate text-body font-semibold text-app-text">{item.title}</p>
+          {item.isSelf ? <SearchSelfBadge /> : null}
+        </div>
 
-        {item.subtitle && (
-
+        {item.subtitle ? (
           <p className="mt-space-xs truncate text-body-small text-app-muted">{item.subtitle}</p>
-
-        )}
-
+        ) : null}
       </div>
-
     </Link>
-
   );
-
 }
 
 

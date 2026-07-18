@@ -8,6 +8,7 @@ import {
   groupSearchResults,
 } from '../../utils/globalSearch';
 import { ICON_SIZES } from '../../constants/icons';
+import SearchSelfBadge from './SearchSelfBadge';
 
 const ENTITY_ICONS = {
   personal: User,
@@ -38,7 +39,12 @@ function SearchResultRow({ item, onSelect }) {
       type="button"
       onMouseDown={(event) => event.preventDefault()}
       onClick={() => onSelect(item)}
-      className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none"
+      className={[
+        'flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none',
+        item.isSelf ? 'bg-primary-50/70' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       <AppAvatar
         type={avatarType}
@@ -52,13 +58,16 @@ function SearchResultRow({ item, onSelect }) {
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
           <span className="truncate font-medium text-gray-900">{item.title}</span>
+          {item.isSelf ? <SearchSelfBadge /> : null}
           <AppIcon icon={Icon} size={ICON_SIZES.sm} className="shrink-0 text-gray-400" />
         </span>
         {item.subtitle ? (
           <span className="mt-0.5 block truncate text-xs text-gray-500">{item.subtitle}</span>
         ) : null}
         <span className="mt-1 inline-block text-[10px] font-semibold uppercase tracking-wide text-primary-600">
-          {SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado'}
+          {item.isSelf
+            ? 'Tu perfil'
+            : (SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado')}
         </span>
       </span>
     </button>
