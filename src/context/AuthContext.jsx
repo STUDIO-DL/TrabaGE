@@ -137,7 +137,11 @@ export function AuthProvider({ children }) {
 
     setRole(userRole);
 
-    if (userRole && userRole !== ROLES.ADMIN) {
+    const pendingRole = authService.getPendingAccountType();
+    const shouldDeferProfileBootstrap =
+      pendingRole && normalizeRole(pendingRole) !== normalizeRole(userRole);
+
+    if (userRole && userRole !== ROLES.ADMIN && !shouldDeferProfileBootstrap) {
       await bootstrapProfile({ user: currentUser, role: userRole });
     }
 

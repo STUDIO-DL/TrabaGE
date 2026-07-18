@@ -341,6 +341,8 @@ export const authService = {
     }
   },
 
+  getPendingAccountType: peekPendingAccountType,
+
   rememberOrgDetails(details) {
     savePendingOrgDetails(details);
   },
@@ -602,8 +604,15 @@ export const authService = {
       return { data: null, error: { message: 'No se pudo identificar el usuario autenticado' } };
     }
 
-    const pendingRole = consumePendingAccountType();
+    // Keep this value available to auth hydration until role correction
+    // succeeds, so hydration cannot bootstrap a profile for the default role.
+    const pendingRole = peekPendingAccountType();
     const currentUser = typeof userOrId === 'string' ? null : userOrId;
+    const finishPending = async (resultOrPromise) => {
+      const result = await resultOrPromise;
+      if (!result?.error) consumePendingAccountType();
+      return result;
+    };
 
     const { data: existingRole, error: roleError } = await authService.getUserRole(userId);
     if (roleError) {
@@ -617,7 +626,7 @@ export const authService = {
     );
 
     if (storedRole === ROLES.ADMIN) {
-      return { data: existingRole, error: null };
+      return finishPending({ data: existingRole, error: null });
     }
 
     // OAuth signup: pending role from account-type selection overrides the
@@ -629,15 +638,15 @@ export const authService = {
       storedRole &&
       storedRole !== pendingRole
     ) {
-      return setUserRole(userId, pendingRole);
+      return finishPending(setUserRole(userId, pendingRole));
     }
 
     if (storedRole) {
-      return { data: { ...existingRole, role: storedRole }, error: null };
+      return finishPending({ data: { ...existingRole, role: storedRole }, error: null });
     }
 
     if (profileRole) {
-      return setUserRole(userId, profileRole);
+      return finishPending(setUserRole(userId, profileRole));
     }
 
     if (!pendingRole) {
@@ -647,7 +656,7 @@ export const authService = {
       };
     }
 
-    return setUserRole(userId, pendingRole);
+    return finishPending(setUserRole(userId, pendingRole));
   },
 
   loginWithGoogle: async () => {
@@ -682,7 +691,6 @@ export const authService = {
       return configError();
     }
 
-    const normalizedRole = normalizeAccountType(accountKind) ?? ROLES.PERSONAL;
     savePendingAccountType(accountKind);
     saveOAuthIntent(OAUTH_INTENTS.SIGNUP);
 
