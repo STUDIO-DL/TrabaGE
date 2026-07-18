@@ -29,6 +29,7 @@ const PENDING_ACCOUNT_TYPE_KEY = 'pending_account_type';
 const LEGACY_PENDING_ACCOUNT_TYPE_KEY = 'trabage_pending_account_type';
 const PENDING_ORG_KIND_KEY = 'pending_org_kind';
 const PENDING_ORG_DETAILS_KEY = 'pending_org_details';
+const PENDING_SIGNUP_DETAILS_KEY = 'pending_signup_details';
 const OAUTH_INTENT_KEY = 'trabage_oauth_intent';
 const VALID_ACCOUNT_TYPES = ASSIGNABLE_ROLES;
 const VALID_STORED_ROLES = [...ASSIGNABLE_ROLES, ROLES.ADMIN];
@@ -124,6 +125,48 @@ export function consumePendingOrgKind() {
   const kind = peekPendingOrgKind();
   sessionStorage.removeItem(PENDING_ORG_KIND_KEY);
   return kind;
+}
+
+// Unified signup context persisted across OAuth redirect and email verification.
+// Stores identity fields collected on the registration form before auth completes.
+function savePendingSignupDetails(details) {
+  if (details && typeof details === 'object') {
+    const clean = {};
+    if (details.full_name?.trim()) clean.full_name = details.full_name.trim();
+    if (details.company_name?.trim()) clean.company_name = details.company_name.trim();
+    if (details.sector?.trim()) clean.sector = details.sector.trim();
+    if (details.company_type?.trim()) clean.company_type = details.company_type.trim();
+    if (details.city?.trim()) clean.city = details.city.trim();
+    if (details.avatar_path?.trim()) clean.avatar_path = details.avatar_path.trim();
+
+    if (Object.keys(clean).length > 0) {
+      sessionStorage.setItem(PENDING_SIGNUP_DETAILS_KEY, JSON.stringify(clean));
+      savePendingOrgDetails(clean);
+      return;
+    }
+  }
+  sessionStorage.removeItem(PENDING_SIGNUP_DETAILS_KEY);
+  sessionStorage.removeItem(PENDING_ORG_DETAILS_KEY);
+}
+
+export function peekPendingSignupDetails() {
+  try {
+    const raw = sessionStorage.getItem(PENDING_SIGNUP_DETAILS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') return parsed;
+    }
+  } catch {
+    // Fall through to legacy org details storage.
+  }
+  return peekPendingOrgDetails();
+}
+
+export function consumePendingSignupDetails() {
+  const details = peekPendingSignupDetails();
+  sessionStorage.removeItem(PENDING_SIGNUP_DETAILS_KEY);
+  consumePendingOrgDetails();
+  return details;
 }
 
 // Mirrors the pending_org_kind pattern: stores only the org-specific profile
@@ -388,7 +431,16 @@ export const authService = {
 
   rememberOrgDetails(details) {
     savePendingOrgDetails(details);
+    savePendingSignupDetails(details);
   },
+
+  rememberSignupDetails(details) {
+    savePendingSignupDetails(details);
+  },
+
+  peekPendingSignupDetails,
+
+  consumePendingSignupDetails,
 
   consumePendingOrgKind,
 
@@ -483,8 +535,14 @@ export const authService = {
       savePendingAccountType(role);
     }
 
-    // Persist org-only profile details (never personal data) so CompanySetup
-    // can pre-fill them after email verification.
+    // Persist signup identity for profile provisioning after email verification.
+    savePendingSignupDetails({
+      full_name: signupData.full_name,
+      city: signupData.city,
+      company_name: signupData.company_name,
+      sector: signupData.sector,
+      company_type: signupData.company_type,
+    });
     savePendingOrgDetails(metadata.orgDetails);
 
     let result;
@@ -542,6 +600,16 @@ export const authService = {
         return result;
       }
       return result;
+    }
+
+    if (!result.data?.user?.id) {
+      return {
+        data: { session: null, user: null },
+        error: {
+          code: 'signup_failed',
+          message: 'No se pudo crear la cuenta. Inténtalo de nuevo.',
+        },
+      };
     }
 
     if (result.data?.user) {

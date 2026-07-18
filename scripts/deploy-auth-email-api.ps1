@@ -40,7 +40,9 @@ try {
   $files = @(
     @{ Path = (Join-Path $functionDir "index.ts"); Name = "index.ts" },
     @{ Path = (Join-Path $functionDir "templates.ts"); Name = "templates.ts" },
-    @{ Path = (Join-Path $sharedDir "resend.ts"); Name = "../_shared/resend.ts" }
+    @{ Path = (Join-Path $sharedDir "resend.ts"); Name = "../_shared/resend.ts" },
+    @{ Path = (Join-Path $sharedDir "smtp.ts"); Name = "../_shared/smtp.ts" },
+    @{ Path = (Join-Path $sharedDir "authEmailDelivery.ts"); Name = "../_shared/authEmailDelivery.ts" }
   )
 
   foreach ($file in $files) {

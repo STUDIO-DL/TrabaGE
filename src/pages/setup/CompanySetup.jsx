@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -17,6 +18,7 @@ import { companyService } from '../../services/company.service';
 import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { getOrgLabels } from '../../utils/orgLabels';
 import { getCompanyBootstrapMissing } from '../../utils/profileRequirements';
+import { getOwnCompanyProfileKey } from '../../constants/profileQueryKeys';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 function getDefaultCompanyType(orgKind) {
@@ -31,6 +33,7 @@ function getDefaultCompanyType(orgKind) {
  */
 export default function CompanySetup() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, role, refreshSetupStatus } = useAuth();
   const [form, setForm] = useState({
     company_name: '',
@@ -130,6 +133,7 @@ export default function CompanySetup() {
       return;
     }
 
+    await queryClient.invalidateQueries({ queryKey: getOwnCompanyProfileKey(user.id) });
     await refreshSetupStatus();
     const homeRole = role === ROLES.ORGANIZATION ? ROLES.ORGANIZATION : ROLES.BUSINESS;
     navigate(ROLE_PROFILE[homeRole], { replace: true });

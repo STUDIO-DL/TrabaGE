@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { normalizeSkillName } from '../utils/normalizeSkill';
+import { executeDelete, executeWrite } from '../utils/supabaseMutation';
 
 /** Never request onesignal_player_id — column is revoked for clients. */
 export const CANDIDATE_PROFILE_COLUMNS = [
@@ -98,22 +99,25 @@ export const profileService = {
   upsertCandidateProfile: (data) => {
     const safeData = { ...(data ?? {}) };
     delete safeData.onesignal_player_id;
-    return supabase
-      .from('candidate_profiles')
-      .upsert(safeData, { onConflict: 'user_id' })
-      .select(CANDIDATE_PROFILE_COLUMNS)
-      .maybeSingle();
+    return executeWrite(
+      supabase
+        .from('candidate_profiles')
+        .upsert(safeData, { onConflict: 'user_id' })
+        .select(CANDIDATE_PROFILE_COLUMNS)
+        .maybeSingle(),
+    );
   },
 
   updateCandidateProfile: (userId, data) => {
     const safeData = { ...(data ?? {}) };
     delete safeData.onesignal_player_id;
-    return supabase
-      .from('candidate_profiles')
-      .update(safeData)
-      .eq('user_id', userId)
-      .select(CANDIDATE_PROFILE_COLUMNS)
-      .maybeSingle();
+    return executeWrite(
+      supabase
+        .from('candidate_profiles')
+        .upsert({ user_id: userId, ...safeData }, { onConflict: 'user_id' })
+        .select(CANDIDATE_PROFILE_COLUMNS)
+        .maybeSingle(),
+    );
   },
 
   updateOneSignalPlayerId: async (_userId, playerId) =>
@@ -139,17 +143,26 @@ export const profileService = {
     return { data: full, error: null };
   },
 
-  addEducation: (data) => supabase.from('education').insert(data).select('*').maybeSingle(),
-  updateEducation: (id, data) => supabase.from('education').update(data).eq('id', id).select('*').maybeSingle(),
-  deleteEducation: (id) => supabase.from('education').delete().eq('id', id),
+  addEducation: (data) =>
+    executeWrite(supabase.from('education').insert(data).select('*').maybeSingle()),
+  updateEducation: (id, data) =>
+    executeWrite(supabase.from('education').update(data).eq('id', id).select('*').maybeSingle()),
+  deleteEducation: (id) => executeDelete(supabase.from('education').delete().eq('id', id)),
 
-  addExperience: (data) => supabase.from('experience').insert(data).select('*').maybeSingle(),
-  updateExperience: (id, data) => supabase.from('experience').update(data).eq('id', id).select('*').maybeSingle(),
-  deleteExperience: (id) => supabase.from('experience').delete().eq('id', id),
+  addExperience: (data) =>
+    executeWrite(supabase.from('experience').insert(data).select('*').maybeSingle()),
+  updateExperience: (id, data) =>
+    executeWrite(supabase.from('experience').update(data).eq('id', id).select('*').maybeSingle()),
+  deleteExperience: (id) => executeDelete(supabase.from('experience').delete().eq('id', id)),
 
-  addCertification: (data) => supabase.from('certifications').insert(data).select('*').maybeSingle(),
-  updateCertification: (id, data) => supabase.from('certifications').update(data).eq('id', id).select('*').maybeSingle(),
-  deleteCertification: (id) => supabase.from('certifications').delete().eq('id', id),
+  addCertification: (data) =>
+    executeWrite(supabase.from('certifications').insert(data).select('*').maybeSingle()),
+  updateCertification: (id, data) =>
+    executeWrite(
+      supabase.from('certifications').update(data).eq('id', id).select('*').maybeSingle(),
+    ),
+  deleteCertification: (id) =>
+    executeDelete(supabase.from('certifications').delete().eq('id', id)),
 
   addSkill: async (data) => {
     const normalized = normalizeSkillName(data?.name);
@@ -170,24 +183,34 @@ export const profileService = {
     );
     if (duplicate) return { data: duplicate, error: null };
 
-    return supabase
-      .from('skills')
-      .insert({ ...data, name: normalized })
-      .select('*')
-      .maybeSingle();
+    return executeWrite(
+      supabase
+        .from('skills')
+        .insert({ ...data, name: normalized })
+        .select('*')
+        .maybeSingle(),
+    );
   },
-  deleteSkill: (id) => supabase.from('skills').delete().eq('id', id),
+  deleteSkill: (id) => executeDelete(supabase.from('skills').delete().eq('id', id)),
 
-  addCandidateLink: (data) => supabase.from('candidate_links').insert(data).select('*').maybeSingle(),
-  updateCandidateLink: (id, data) => supabase.from('candidate_links').update(data).eq('id', id).select('*').maybeSingle(),
-  deleteCandidateLink: (id) => supabase.from('candidate_links').delete().eq('id', id),
+  addCandidateLink: (data) =>
+    executeWrite(supabase.from('candidate_links').insert(data).select('*').maybeSingle()),
+  updateCandidateLink: (id, data) =>
+    executeWrite(
+      supabase.from('candidate_links').update(data).eq('id', id).select('*').maybeSingle(),
+    ),
+  deleteCandidateLink: (id) =>
+    executeDelete(supabase.from('candidate_links').delete().eq('id', id)),
 
-  addService: (data) => supabase.from('services').insert(data).select('*').maybeSingle(),
-  deleteService: (id) => supabase.from('services').delete().eq('id', id),
+  addService: (data) =>
+    executeWrite(supabase.from('services').insert(data).select('*').maybeSingle()),
+  deleteService: (id) => executeDelete(supabase.from('services').delete().eq('id', id)),
 
-  addLanguage: (data) => supabase.from('languages').insert(data).select('*').maybeSingle(),
-  updateLanguage: (id, data) => supabase.from('languages').update(data).eq('id', id).select('*').maybeSingle(),
-  deleteLanguage: (id) => supabase.from('languages').delete().eq('id', id),
+  addLanguage: (data) =>
+    executeWrite(supabase.from('languages').insert(data).select('*').maybeSingle()),
+  updateLanguage: (id, data) =>
+    executeWrite(supabase.from('languages').update(data).eq('id', id).select('*').maybeSingle()),
+  deleteLanguage: (id) => executeDelete(supabase.from('languages').delete().eq('id', id)),
 
   searchCandidates: (query, limit = 20) => {
     const term = query?.trim();

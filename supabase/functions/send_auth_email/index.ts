@@ -1,5 +1,5 @@
 import { Webhook } from 'https://esm.sh/standardwebhooks@1.0.0';
-import { sendViaResend, formatResendError, getResendAuthFromAddress } from '../_shared/resend.ts';
+import { deliverAuthEmail, formatResendError } from '../_shared/authEmailDelivery.ts';
 import {
   buildRecoveryConfirmUrl,
   buildRecoveryEmail,
@@ -105,9 +105,7 @@ Deno.serve(async (req) => {
 
   try {
     const emailContent = buildAuthEmail(payload);
-
-    await sendViaResend({
-      from: getResendAuthFromAddress(),
+    const provider = await deliverAuthEmail({
       to: payload.user.email,
       subject: emailContent.subject,
       html: emailContent.html,
@@ -118,6 +116,7 @@ Deno.serve(async (req) => {
       '[send_auth_email] sent:',
       payload.user.email,
       payload.email_data.email_action_type,
+      `via ${provider}`,
     );
 
     return hookSuccessResponse();

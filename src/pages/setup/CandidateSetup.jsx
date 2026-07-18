@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
 import { ROLE_PROFILE, ROLES } from '../../constants/roles';
+import { getOwnCandidateProfileKey } from '../../constants/profileQueryKeys';
 import { useAuth } from '../../hooks/useAuth';
 import { profileService } from '../../services/profile.service';
 import { readIdentityFromUser } from '../../utils/displayIdentity';
@@ -19,6 +21,7 @@ import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
  */
 export default function CandidateSetup() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, refreshSetupStatus } = useAuth();
   const [form, setForm] = useState({ full_name: '' });
   const [initializing, setInitializing] = useState(true);
@@ -88,6 +91,7 @@ export default function CandidateSetup() {
       return;
     }
 
+    await queryClient.invalidateQueries({ queryKey: getOwnCandidateProfileKey(user.id) });
     await refreshSetupStatus();
     navigate(ROLE_PROFILE[ROLES.PERSONAL], { replace: true });
   };

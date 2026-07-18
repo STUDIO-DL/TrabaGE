@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { normalizeJobPreferences } from '../constants/jobPreferences';
+import { executeDelete, executeWrite } from '../utils/supabaseMutation';
 
 /** Never request onesignal_player_id — column is revoked for clients. */
 const COMPANY_PROFILE_COLUMNS = [
@@ -79,6 +80,16 @@ function normalizeCompanyProfile(data) {
   };
 }
 
+function stripClientForbiddenFields(data) {
+  const safeData = { ...(data ?? {}) };
+  delete safeData.onesignal_player_id;
+  delete safeData.cover_url;
+  if (safeData.cover_path == null && data?.cover_url) {
+    safeData.cover_path = data.cover_url;
+  }
+  return safeData;
+}
+
 async function fetchCompanyProfile(userId) {
   const result = await supabase
     .from('company_profiles')
@@ -109,13 +120,14 @@ export const companyService = {
   getCompanyProfile: (userId) => fetchCompanyProfile(userId),
 
   upsertCompanyProfile: async (data) => {
-    const safeData = { ...(data ?? {}) };
-    delete safeData.onesignal_player_id;
-    const result = await supabase
-      .from('company_profiles')
-      .upsert(safeData, { onConflict: 'user_id' })
-      .select(COMPANY_PROFILE_COLUMNS)
-      .maybeSingle();
+    const safeData = stripClientForbiddenFields(data);
+    const result = await executeWrite(
+      supabase
+        .from('company_profiles')
+        .upsert(safeData, { onConflict: 'user_id' })
+        .select(COMPANY_PROFILE_COLUMNS)
+        .maybeSingle(),
+    );
 
     return {
       ...result,
@@ -155,13 +167,13 @@ export const companyService = {
     };
   },
   addCompanyService: (data) =>
-    supabase.from('company_services').insert(data).select('*').maybeSingle(),
+    executeWrite(supabase.from('company_services').insert(data).select('*').maybeSingle()),
 
   deleteCompanyService: (id) =>
-    supabase.from('company_services').delete().eq('id', id),
+    executeDelete(supabase.from('company_services').delete().eq('id', id)),
 
   submitVerification: (data) =>
-    supabase.from('verification_requests').insert(data).select('*').maybeSingle(),
+    executeWrite(supabase.from('verification_requests').insert(data).select('*').maybeSingle()),
 
   getVerificationStatus: (companyId) =>
     supabase

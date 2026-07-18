@@ -1,20 +1,16 @@
 import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
-import { refetchProfileCache, useProfile } from './useProfile';
+import { useProfile } from './useProfile';
 import { companyService } from '../services/company.service';
 import { storageService } from '../services/storage.service';
 import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
-import { logoPath, companyCoverPath } from '../constants/storage';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
-import {
-  applyOptimisticUpdate,
-  getCacheKey,
-  getCachedProfile,
-  mergeProfileCache,
-} from '../services/profileCache';
+import { getOwnCompanyProfileKey, getProfileQueryKey } from '../constants/profileQueryKeys';
 import { isEmployerRole } from '../constants/roles';
+import { logoPath, companyCoverPath } from '../constants/storage';
 
 function friendlyCompanyError(error) {
   if (!error) return null;
@@ -23,75 +19,85 @@ function friendlyCompanyError(error) {
   if (message.includes('violates row-level security')) {
     return { ...error, message: 'No tienes permisos para modificar este dato.' };
   }
+  if (error.code === 'WRITE_NO_ROW') {
+    return error;
+  }
 
   return { ...error, message: getSupabaseErrorMessage(error) };
 }
 
+function mergeBaseProfileRow(current, row) {
+  if (!row) return current ?? null;
+  if (!current) return row;
+  return { ...current, ...row };
+}
+
 export function useCompanyProfile() {
+  const queryClient = useQueryClient();
   const { user, role, isPreviewMode } = useAuth();
-  const { profile, loading, error, refetch, cacheKey } = useProfile();
+  const { profile, loading, error, refetch, queryKey } = useProfile();
 
   const userId = user?.id;
-  const ownCacheKey =
-    cacheKey ??
-    getCacheKey(userId, {
+  const ownQueryKey =
+    queryKey ??
+    getProfileQueryKey(userId, {
       role,
       isPreviewMode,
       viewingOtherCandidate: false,
-      isEmployerRole,
-    });
+      viewingOtherCompany: false,
+    }) ??
+    getOwnCompanyProfileKey(userId);
 
   const syncFullProfile = useCallback(async () => {
-    if (!userId || !ownCacheKey) return null;
-    return refetchProfileCache(ownCacheKey, () => companyService.getCompanyProfile(userId));
-  }, [ownCacheKey, userId]);
+    if (!ownQueryKey) return null;
+    await queryClient.invalidateQueries({ queryKey: ownQueryKey });
+    const result = await refetch();
+    return result.data ?? null;
+  }, [ownQueryKey, queryClient, refetch]);
 
   const runMutation = useCallback(
-    async ({ optimistic, execute, mergeResult, resync = true }) => {
-      const hasCachedProfile = Boolean(getCachedProfile(ownCacheKey)?.user_id);
-      const rollback =
-        optimistic && ownCacheKey && hasCachedProfile
-          ? applyOptimisticUpdate(ownCacheKey, optimistic)
-          : null;
-
+    async ({ execute, patchCache, resync = true }) => {
       try {
         const result = await execute();
         if (result?.error) {
-          rollback?.();
           await syncFullProfile();
           return { data: result.data ?? null, error: friendlyCompanyError(result.error) };
         }
 
-        if (ownCacheKey && mergeResult) {
-          const patch = mergeResult(result);
-          if (patch) mergeProfileCache(ownCacheKey, patch);
+        if (ownQueryKey && patchCache) {
+          queryClient.setQueryData(ownQueryKey, (current) => patchCache(current, result.data));
+        } else if (ownQueryKey && result.data) {
+          queryClient.setQueryData(ownQueryKey, (current) =>
+            mergeBaseProfileRow(current, result.data),
+          );
         }
 
         if (resync) {
-          void syncFullProfile();
+          await syncFullProfile();
         }
 
         return { data: result?.data ?? null, error: null };
       } catch (mutationError) {
-        rollback?.();
         await syncFullProfile();
         return { data: null, error: friendlyCompanyError(mutationError) };
       }
     },
-    [ownCacheKey, syncFullProfile],
+    [ownQueryKey, queryClient, syncFullProfile],
   );
 
   const updateCompanyProfile = useCallback(
     async (data, { companyNameFallback } = {}) => {
+      const payload = {
+        user_id: userId,
+        ...data,
+        ...(data.company_name
+          ? {}
+          : { company_name: profile?.company_name?.trim() || companyNameFallback || undefined }),
+      };
+
       const { error: saveError } = await runMutation({
-        optimistic: data,
-        execute: () =>
-          companyService.upsertCompanyProfile({
-            user_id: userId,
-            ...data,
-            ...(data.company_name ? {} : { company_name: profile?.company_name?.trim() || companyNameFallback || undefined }),
-          }),
-        mergeResult: (result) => result.data ?? data,
+        execute: () => companyService.upsertCompanyProfile(payload),
+        patchCache: (current, row) => mergeBaseProfileRow(current, row),
       }).then(({ error }) => ({ error }));
 
       if (!saveError && (data.company_name || profile?.company_name)) {
@@ -144,34 +150,35 @@ export function useCompanyProfile() {
       const { error: uploadError } = await storageService.uploadCompanyCover(
         userId,
         compressed,
-        profile?.cover_url,
+        profile?.cover_path ?? profile?.cover_url,
       );
       if (uploadError) return { error: friendlyCompanyError(uploadError) };
 
-      return updateCompanyProfile({ cover_url: companyCoverPath(userId) });
+      return updateCompanyProfile({ cover_path: companyCoverPath(userId) });
     },
-    [profile?.cover_url, updateCompanyProfile, userId],
+    [profile?.cover_path, profile?.cover_url, updateCompanyProfile, userId],
   );
 
   const addCompanyService = useCallback(
     async (name) =>
       runMutation({
         execute: () => companyService.addCompanyService({ company_id: userId, name }),
-        mergeResult: (result) =>
-          result.data
-            ? { company_services: [...(profile?.company_services ?? []), result.data] }
-            : null,
+        patchCache: (current, row) => ({
+          ...current,
+          company_services: [...(current.company_services ?? []), row],
+        }),
       }).then(({ error: saveError }) => ({ error: saveError })),
-    [profile?.company_services, runMutation, userId],
+    [runMutation, userId],
   );
 
   const deleteCompanyService = useCallback(
     async (id) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => companyService.deleteCompanyService(id),
+        patchCache: (current) => ({
+          ...current,
           company_services: (current.company_services ?? []).filter((item) => item.id !== id),
         }),
-        execute: () => companyService.deleteCompanyService(id),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );

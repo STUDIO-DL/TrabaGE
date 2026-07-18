@@ -107,6 +107,9 @@ export function mapAuthError(error) {
   if (code === 'email_confirmation_disabled') {
     return getErrorMessage('emailConfirmationDisabled');
   }
+  if (code === 'signup_failed') {
+    return getErrorMessage('registerFailed');
+  }
   if (isRateLimitError(message, code)) {
     return getErrorMessage('rateLimit');
   }

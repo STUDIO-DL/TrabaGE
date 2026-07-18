@@ -1,143 +1,104 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
 import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewApplicantProfile, getPreviewProfile, PREVIEW_USER } from '../constants/preview';
-import {
-  fetchProfileCached,
-  getCacheKey,
-  getCachedProfile,
-  subscribeProfileCache,
-} from '../services/profileCache';
+import { getProfileQueryKey } from '../constants/profileQueryKeys';
 
-export { mergeOwnCandidateProfile, mergeOwnCompanyProfile } from '../services/profileCache';
+async function fetchProfileForKey(targetId, { role, userId, currentUserId }) {
+  const isCandidate = userId ? true : !isEmployerRole(role);
+  const viewingOther = Boolean(userId) && userId !== currentUserId;
+
+  const result = isCandidate
+    ? viewingOther
+      ? await profileService.getPublicCandidateFullProfile(targetId)
+      : await profileService.getCandidateFullProfile(targetId)
+    : viewingOther
+      ? await companyService.getPublicProfile(targetId)
+      : await companyService.getCompanyProfile(targetId);
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  return result.data ?? null;
+}
 
 export function useProfile(userId) {
   const { user, role, isPreviewMode } = useAuth();
   const targetId = userId || user?.id;
-  const viewingOtherCandidate = Boolean(userId) && userId !== user?.id;
-  const cacheKey = getCacheKey(targetId, {
+  const viewingOther = Boolean(userId) && userId !== user?.id;
+  const isCandidate = userId ? true : !isEmployerRole(role);
+  const viewingOtherCandidate = viewingOther && isCandidate;
+  const viewingOtherCompany = viewingOther && !isCandidate;
+
+  const queryKey = getProfileQueryKey(targetId, {
     role,
     isPreviewMode,
     viewingOtherCandidate,
-    isEmployerRole,
+    viewingOtherCompany,
   });
-  const cachedProfile = getCachedProfile(cacheKey);
 
-  const [profile, setProfile] = useState(cachedProfile);
-  const [loading, setLoading] = useState(!cachedProfile);
-  const [error, setError] = useState(null);
+  const query = useQuery({
+    queryKey: queryKey ?? ['profile', 'disabled'],
+    enabled: Boolean(queryKey) && Boolean(targetId) && !isPreviewMode,
+    queryFn: () =>
+      fetchProfileForKey(targetId, {
+        role,
+        userId,
+        currentUserId: user?.id,
+      }),
+  });
 
-  useEffect(() => {
-    if (!cacheKey) return undefined;
-
-    const cached = getCachedProfile(cacheKey);
-    setProfile(cached);
-    setLoading(!cached);
-
-    return subscribeProfileCache(cacheKey, (nextProfile) => {
-      setProfile(nextProfile);
-      setLoading(false);
-      setError(null);
-    });
-  }, [cacheKey]);
-
-  const fetchProfile = useCallback(
-    async ({ background = false, force = false } = {}) => {
-      if (!targetId) return null;
-
-      if (isPreviewMode) {
-        if (userId) {
-          const applicantProfile = getPreviewApplicantProfile(userId);
-          if (applicantProfile) {
-            setProfile(applicantProfile);
-            setError(null);
-            setLoading(false);
-            return applicantProfile;
-          }
-          if (userId === PREVIEW_USER.id) {
-            const preview = getPreviewProfile(ROLES.BUSINESS);
-            setProfile(preview);
-            setError(null);
-            setLoading(false);
-            return preview;
-          }
-          setProfile(null);
-          setError(null);
-          setLoading(false);
-          return null;
-        } else {
-          const preview = getPreviewProfile(role);
-          setProfile(preview);
-          setError(null);
-          setLoading(false);
-          return preview;
-        }
+  if (isPreviewMode) {
+    if (userId) {
+      const applicantProfile = getPreviewApplicantProfile(userId);
+      if (applicantProfile) {
+        return {
+          profile: applicantProfile,
+          loading: false,
+          error: null,
+          refetch: async () => applicantProfile,
+          queryKey: null,
+        };
       }
-
-      if (!cacheKey) {
-        if (!background) setLoading(false);
-        return null;
+      if (userId === PREVIEW_USER.id) {
+        const preview = getPreviewProfile(ROLES.BUSINESS);
+        return {
+          profile: preview,
+          loading: false,
+          error: null,
+          refetch: async () => preview,
+          queryKey: null,
+        };
       }
+      return {
+        profile: null,
+        loading: false,
+        error: null,
+        refetch: async () => null,
+        queryKey: null,
+      };
+    }
 
-      if (!background && !getCachedProfile(cacheKey)) {
-        setLoading(true);
-      }
-      setError(null);
+    const preview = getPreviewProfile(role);
+    return {
+      profile: preview,
+      loading: false,
+      error: null,
+      refetch: async () => preview,
+      queryKey: null,
+    };
+  }
 
-      const isCandidate = userId ? true : !isEmployerRole(role);
-      const viewingOther = Boolean(userId) && userId !== user?.id;
-
-      const { data, error: fetchError } = await fetchProfileCached(
-        cacheKey,
-        () =>
-          isCandidate
-            ? viewingOther
-              ? profileService.getPublicCandidateFullProfile(targetId)
-              : profileService.getCandidateFullProfile(targetId)
-            : userId && userId !== user?.id
-              ? companyService.getPublicProfile(targetId)
-              : companyService.getCompanyProfile(targetId),
-        { force },
-      );
-
-      if (fetchError) {
-        setError(fetchError.message ?? null);
-        if (!background) setLoading(false);
-        return null;
-      }
-
-      if (data) {
-        setProfile(data);
-        setError(null);
-        setLoading(false);
-        return data;
-      }
-
-      if (!background) setLoading(false);
-      return null;
-    },
-    [targetId, role, userId, user?.id, isPreviewMode, cacheKey],
-  );
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
-
-  const refetch = useCallback(() => fetchProfile({ background: true, force: true }), [fetchProfile]);
-
-  return { profile, loading, error, refetch, cacheKey };
+  return {
+    profile: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error?.message ?? null,
+    refetch: query.refetch,
+    queryKey,
+  };
 }
 
-/**
- * Imperative refetch for mutation hooks — keeps cache subscribers in sync without
- * requiring a mounted useProfile instance.
- */
-export async function refetchProfileCache(cacheKey, fetcher) {
-  if (!cacheKey) return null;
-
-  const { data, error: fetchError } = await fetchProfileCached(cacheKey, fetcher, { force: true });
-  if (fetchError || !data) return null;
-  return data;
-}
+export { getProfileQueryKey } from '../constants/profileQueryKeys';

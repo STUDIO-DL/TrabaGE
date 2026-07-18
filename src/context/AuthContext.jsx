@@ -27,6 +27,7 @@ import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
 import { isProfileSetupComplete } from '../utils/profileRequirements';
 import { reportError } from '../utils/logger';
+import { queryClient } from '../config/queryClient';
 
 const AuthContext = createContext(null);
 
@@ -292,10 +293,12 @@ export function AuthProvider({ children }) {
       setUser(null);
       setRole(null);
       setSetupComplete(false);
+      queryClient.clear();
       return;
     }
 
     await authService.logout();
+    queryClient.clear();
     setSession(null);
     setUser(null);
     setRole(null);

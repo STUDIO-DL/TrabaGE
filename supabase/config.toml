@@ -234,11 +234,13 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Auth emails are sent via Resend (Send Email Hook → send_auth_email Edge Function).
-# Configure in Supabase Dashboard → Authentication → Hooks → Send Email.
-# [auth.email.smtp] is not used when the Send Email hook is enabled.
+# Auth verification emails:
+#   - Resend (preferred): Send Email Hook → send_auth_email when RESEND_API_KEY is set.
+#   - Supabase SMTP fallback: same hook sends via SMTP_* secrets when Resend is absent.
+#   - Native Auth SMTP only applies when the Send Email hook is disabled in Dashboard.
+# Configure hook in Supabase Dashboard → Authentication → Hooks → Send Email.
 #
-# Local dev hook (optional — requires RESEND_API_KEY + SEND_EMAIL_HOOK_SECRET):
+# Local dev hook (optional — requires SEND_EMAIL_HOOK_SECRET + RESEND_API_KEY or SMTP_*):
 # [auth.hook.send_email]
 # enabled = true
 # uri = "http://host.docker.internal:54321/functions/v1/send_auth_email"
@@ -294,7 +296,8 @@ max_frequency = "5s"
 # enabled = true
 # uri = "pg-functions://<database>/<schema>/<hook_name>"
 
-# Send Email hook — Resend via send_auth_email Edge Function (production: configure in Dashboard).
+# Send Email hook — send_auth_email Edge Function (production: configure in Dashboard).
+# Resend when RESEND_API_KEY is set; otherwise Supabase SMTP via SMTP_* secrets.
 # [auth.hook.send_email]
 # enabled = true
 # uri = "http://host.docker.internal:54321/functions/v1/send_auth_email"

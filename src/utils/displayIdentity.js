@@ -77,6 +77,7 @@ export function getDisplayName(profile, accountTypeOrRole, options = {}) {
     context = 'display',
     warnIfMissing = false,
     fallbackAuthorName = null,
+    profileOnly = false,
   } = options;
 
   const accountType = resolveAccountType(accountTypeOrRole, profile);
@@ -88,12 +89,12 @@ export function getDisplayName(profile, accountTypeOrRole, options = {}) {
 
   if (employer) {
     name = profile?.company_name?.trim() || '';
-    if (!name && user) {
+    if (!name && user && !profileOnly) {
       name = readIdentityFromUser(user).company_name || '';
     }
   } else {
     name = profile?.full_name?.trim() || '';
-    if (!name && user) {
+    if (!name && user && !profileOnly) {
       const identity = readIdentityFromUser(user);
       name = identity.full_name || nameFromEmail(identity.email) || '';
     }

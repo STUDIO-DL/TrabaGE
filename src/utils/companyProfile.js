@@ -32,6 +32,7 @@ export function getCompanyDisplayName(profile, options = {}) {
     user: options.user,
     context: options.context ?? 'company_profile',
     warnIfMissing: options.warnIfMissing ?? false,
+    profileOnly: options.profileOnly ?? false,
   });
 }
 

@@ -1,4 +1,4 @@
-/** Official TrabaGE email sender — configured via Resend Edge Function secrets. */
+/** Official TrabaGE email sender — Resend (welcome) or Supabase SMTP (auth verification fallback). */
 export const EMAIL_SENDER_NAME = 'TrabaGE';
 
 /** Auth emails: verification, password recovery. */

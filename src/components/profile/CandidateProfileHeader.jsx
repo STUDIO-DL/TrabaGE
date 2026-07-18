@@ -59,14 +59,14 @@ export default function CandidateProfileHeader({
   coverSrc: coverSrcProp,
   onEditIntro,
 }) {
-  const { user, role } = useAuth();
+  const { role } = useAuth();
   const avatarInputRef = useRef(null);
   const coverInputId = 'candidate-cover-input';
 
   const displayName = getDisplayName(profile, role ?? ROLES.PERSONAL, {
-    user: isOwn ? user : null,
     context: 'candidate_profile_header',
     warnIfMissing: isOwn,
+    profileOnly: true,
   });
   const educationLine = getIntroEducationLine(profile);
   const locationText = formatLocation(profile);

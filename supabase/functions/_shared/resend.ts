@@ -38,6 +38,10 @@ export function getResendWelcomeFromAddress() {
   return formatFromAddress(email);
 }
 
+export function isResendConfigured() {
+  return Boolean(Deno.env.get('RESEND_API_KEY')?.trim());
+}
+
 function getResendApiKey() {
   const key = Deno.env.get('RESEND_API_KEY')?.trim();
   if (!key) {

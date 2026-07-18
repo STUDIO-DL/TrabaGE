@@ -246,7 +246,7 @@ export default function CompanyProfileHeader({
 
 
 
-  const name = getCompanyDisplayName(profile, { warnIfMissing: !readOnly });
+  const name = getCompanyDisplayName(profile, { warnIfMissing: !readOnly, profileOnly: true });
 
   const avatarType = avatarTypeFromCompanyProfile(profile);
 

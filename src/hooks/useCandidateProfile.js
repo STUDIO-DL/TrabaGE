@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
-import { refetchProfileCache, useProfile } from './useProfile';
+import { useProfile } from './useProfile';
 import { profileService } from '../services/profile.service';
 import { storageService } from '../services/storage.service';
 import { jobMatchesService } from '../services/jobMatches.service';
@@ -9,13 +10,7 @@ import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { reportError } from '../utils/logger';
 import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
-import {
-  applyOptimisticUpdate,
-  getCacheKey,
-  getCachedProfile,
-  mergeProfileCache,
-} from '../services/profileCache';
-import { isEmployerRole } from '../constants/roles';
+import { getOwnCandidateProfileKey, getProfileQueryKey } from '../constants/profileQueryKeys';
 
 function friendlyProfileError(error) {
   if (!error) return null;
@@ -30,28 +25,49 @@ function friendlyProfileError(error) {
   if (message.includes('storage') || message.includes('bucket')) {
     return { ...error, message: 'No se pudo subir el archivo. Inténtalo de nuevo.' };
   }
+  if (error.code === 'WRITE_NO_ROW') {
+    return error;
+  }
 
-  return { ...error, message: 'No se pudo guardar el cambio. Inténtalo de nuevo.' };
+  return { ...error, message: error.message || 'No se pudo guardar el cambio. Inténtalo de nuevo.' };
+}
+
+function mergeBaseProfileRow(current, row) {
+  if (!row) return current ?? null;
+  if (!current) return row;
+  return { ...current, ...row };
 }
 
 export function useCandidateProfile() {
+  const queryClient = useQueryClient();
   const { user, role, isPreviewMode } = useAuth();
-  const { profile, loading, error, refetch, cacheKey } = useProfile();
+  const { profile, loading, error, refetch, queryKey } = useProfile();
 
   const userId = user?.id;
-  const ownCacheKey =
-    cacheKey ??
-    getCacheKey(userId, {
+  const ownQueryKey =
+    queryKey ??
+    getProfileQueryKey(userId, {
       role,
       isPreviewMode,
       viewingOtherCandidate: false,
-      isEmployerRole,
-    });
+      viewingOtherCompany: false,
+    }) ??
+    getOwnCandidateProfileKey(userId);
 
   const syncFullProfile = useCallback(async () => {
-    if (!userId || !ownCacheKey) return null;
-    return refetchProfileCache(ownCacheKey, () => profileService.getCandidateFullProfile(userId));
-  }, [ownCacheKey, userId]);
+    if (!ownQueryKey) return null;
+    await queryClient.invalidateQueries({ queryKey: ownQueryKey });
+    const result = await refetch();
+    return result.data ?? null;
+  }, [ownQueryKey, queryClient, refetch]);
+
+  const patchProfileCache = useCallback(
+    (patchFn) => {
+      if (!ownQueryKey) return;
+      queryClient.setQueryData(ownQueryKey, (current) => patchFn(current ?? {}));
+    },
+    [ownQueryKey, queryClient],
+  );
 
   const afterCandidateProfileChanged = useCallback(async () => {
     await syncFullProfile();
@@ -63,33 +79,26 @@ export function useCandidateProfile() {
   }, [syncFullProfile, userId]);
 
   const runMutation = useCallback(
-    async ({ optimistic, execute, mergeResult, resync = true }) => {
-      const hasCachedProfile = Boolean(getCachedProfile(ownCacheKey)?.user_id);
-      const rollback =
-        optimistic && ownCacheKey && hasCachedProfile
-          ? applyOptimisticUpdate(ownCacheKey, optimistic)
-          : null;
-
+    async ({ execute, patchCache, resync = true }) => {
       try {
         const result = await execute();
         if (result?.error) {
-          rollback?.();
           await syncFullProfile();
           return { data: result.data ?? null, error: friendlyProfileError(result.error) };
         }
 
-        if (ownCacheKey && mergeResult) {
-          const patch = mergeResult(result);
-          if (patch) mergeProfileCache(ownCacheKey, patch);
+        if (ownQueryKey && patchCache) {
+          queryClient.setQueryData(ownQueryKey, (current) => patchCache(current, result.data));
+        } else if (ownQueryKey && result.data && !Array.isArray(result.data)) {
+          queryClient.setQueryData(ownQueryKey, (current) => mergeBaseProfileRow(current, result.data));
         }
 
         if (resync) {
-          void afterCandidateProfileChanged();
+          await afterCandidateProfileChanged();
         }
 
         return { data: result?.data ?? null, error: null };
       } catch (mutationError) {
-        rollback?.();
         await syncFullProfile();
         return {
           data: null,
@@ -97,15 +106,14 @@ export function useCandidateProfile() {
         };
       }
     },
-    [afterCandidateProfileChanged, ownCacheKey, syncFullProfile],
+    [afterCandidateProfileChanged, ownQueryKey, queryClient, syncFullProfile],
   );
 
   const updateBasicInfo = useCallback(
     async (data) => {
       const { error: saveError } = await runMutation({
-        optimistic: data,
         execute: () => profileService.updateCandidateProfile(userId, data),
-        mergeResult: (result) => result.data ?? data,
+        patchCache: (current, row) => mergeBaseProfileRow(current, row),
         resync: true,
       }).then(({ error }) => ({ error }));
 
@@ -206,10 +214,11 @@ export function useCandidateProfile() {
   const addExperience = useCallback(
     async (data) =>
       runMutation({
-        optimistic: (current) => ({
-          experience: [...(current.experience ?? []), { ...data, user_id: userId, id: `temp-${Date.now()}` }],
-        }),
         execute: () => profileService.addExperience({ ...data, user_id: userId }),
+        patchCache: (current, row) => ({
+          ...current,
+          experience: [...(current.experience ?? []), row],
+        }),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation, userId],
   );
@@ -217,31 +226,25 @@ export function useCandidateProfile() {
   const updateExperience = useCallback(
     async (id, data) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.updateExperience(id, data),
+        patchCache: (current, row) => ({
+          ...current,
           experience: (current.experience ?? []).map((item) =>
-            item.id === id ? { ...item, ...data } : item,
+            item.id === id ? { ...item, ...row } : item,
           ),
         }),
-        execute: () => profileService.updateExperience(id, data),
-        mergeResult: (result) =>
-          result.data
-            ? {
-                experience: (profile?.experience ?? []).map((item) =>
-                  item.id === id ? { ...item, ...result.data } : item,
-                ),
-              }
-            : null,
       }).then(({ error: saveError }) => ({ error: saveError })),
-    [profile?.experience, runMutation],
+    [runMutation],
   );
 
   const deleteExperience = useCallback(
     async (id) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.deleteExperience(id),
+        patchCache: (current) => ({
+          ...current,
           experience: (current.experience ?? []).filter((item) => item.id !== id),
         }),
-        execute: () => profileService.deleteExperience(id),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -249,51 +252,37 @@ export function useCandidateProfile() {
   const addEducation = useCallback(
     async (data) =>
       runMutation({
-        optimistic: (current) => ({
-          education: [...(current.education ?? []), { ...data, user_id: userId, id: `temp-${Date.now()}` }],
-        }),
         execute: () => profileService.addEducation({ ...data, user_id: userId }),
-        mergeResult: (result) =>
-          result.data
-            ? {
-                education: [
-                  ...(profile?.education ?? []).filter((item) => !String(item.id).startsWith('temp-')),
-                  result.data,
-                ],
-              }
-            : null,
+        patchCache: (current, row) => ({
+          ...current,
+          education: [...(current.education ?? []), row],
+        }),
       }),
-    [profile?.education, runMutation, userId],
+    [runMutation, userId],
   );
 
   const updateEducation = useCallback(
     async (id, data) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.updateEducation(id, data),
+        patchCache: (current, row) => ({
+          ...current,
           education: (current.education ?? []).map((item) =>
-            item.id === id ? { ...item, ...data } : item,
+            item.id === id ? { ...item, ...row } : item,
           ),
         }),
-        execute: () => profileService.updateEducation(id, data),
-        mergeResult: (result) =>
-          result.data
-            ? {
-                education: (profile?.education ?? []).map((item) =>
-                  item.id === id ? { ...item, ...result.data } : item,
-                ),
-              }
-            : null,
       }),
-    [profile?.education, runMutation],
+    [runMutation],
   );
 
   const deleteEducation = useCallback(
     async (id) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.deleteEducation(id),
+        patchCache: (current) => ({
+          ...current,
           education: (current.education ?? []).filter((item) => item.id !== id),
         }),
-        execute: () => profileService.deleteEducation(id),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -301,13 +290,11 @@ export function useCandidateProfile() {
   const addCertification = useCallback(
     async (data) =>
       runMutation({
-        optimistic: (current) => ({
-          certifications: [
-            ...(current.certifications ?? []),
-            { ...data, user_id: userId, id: `temp-${Date.now()}` },
-          ],
-        }),
         execute: () => profileService.addCertification({ ...data, user_id: userId }),
+        patchCache: (current, row) => ({
+          ...current,
+          certifications: [...(current.certifications ?? []), row],
+        }),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation, userId],
   );
@@ -315,12 +302,13 @@ export function useCandidateProfile() {
   const updateCertification = useCallback(
     async (id, data) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.updateCertification(id, data),
+        patchCache: (current, row) => ({
+          ...current,
           certifications: (current.certifications ?? []).map((item) =>
-            item.id === id ? { ...item, ...data } : item,
+            item.id === id ? { ...item, ...row } : item,
           ),
         }),
-        execute: () => profileService.updateCertification(id, data),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -328,10 +316,11 @@ export function useCandidateProfile() {
   const deleteCertification = useCallback(
     async (id) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.deleteCertification(id),
+        patchCache: (current) => ({
+          ...current,
           certifications: (current.certifications ?? []).filter((item) => item.id !== id),
         }),
-        execute: () => profileService.deleteCertification(id),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -340,21 +329,22 @@ export function useCandidateProfile() {
     async (name) =>
       runMutation({
         execute: () => profileService.addSkill({ user_id: userId, name }),
-        mergeResult: (result) =>
-          result.data
-            ? { skills: [...(profile?.skills ?? []), result.data].filter(Boolean) }
-            : null,
+        patchCache: (current, row) => ({
+          ...current,
+          skills: [...(current.skills ?? []), row].filter(Boolean),
+        }),
       }).then(({ error: saveError }) => ({ error: saveError })),
-    [profile?.skills, runMutation, userId],
+    [runMutation, userId],
   );
 
   const deleteSkill = useCallback(
     async (id) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.deleteSkill(id),
+        patchCache: (current) => ({
+          ...current,
           skills: (current.skills ?? []).filter((item) => item.id !== id),
         }),
-        execute: () => profileService.deleteSkill(id),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -363,21 +353,22 @@ export function useCandidateProfile() {
     async (name) =>
       runMutation({
         execute: () => profileService.addService({ user_id: userId, name }),
-        mergeResult: (result) =>
-          result.data
-            ? { services: [...(profile?.services ?? []), result.data] }
-            : null,
+        patchCache: (current, row) => ({
+          ...current,
+          services: [...(current.services ?? []), row],
+        }),
       }).then(({ error: saveError }) => ({ error: saveError })),
-    [profile?.services, runMutation, userId],
+    [runMutation, userId],
   );
 
   const deleteService = useCallback(
     async (id) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.deleteService(id),
+        patchCache: (current) => ({
+          ...current,
           services: (current.services ?? []).filter((item) => item.id !== id),
         }),
-        execute: () => profileService.deleteService(id),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -385,10 +376,11 @@ export function useCandidateProfile() {
   const addLanguage = useCallback(
     async (data) =>
       runMutation({
-        optimistic: (current) => ({
-          languages: [...(current.languages ?? []), { ...data, user_id: userId, id: `temp-${Date.now()}` }],
-        }),
         execute: () => profileService.addLanguage({ ...data, user_id: userId }),
+        patchCache: (current, row) => ({
+          ...current,
+          languages: [...(current.languages ?? []), row],
+        }),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation, userId],
   );
@@ -396,12 +388,13 @@ export function useCandidateProfile() {
   const updateLanguage = useCallback(
     async (id, data) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.updateLanguage(id, data),
+        patchCache: (current, row) => ({
+          ...current,
           languages: (current.languages ?? []).map((item) =>
-            item.id === id ? { ...item, ...data } : item,
+            item.id === id ? { ...item, ...row } : item,
           ),
         }),
-        execute: () => profileService.updateLanguage(id, data),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -409,10 +402,11 @@ export function useCandidateProfile() {
   const deleteLanguage = useCallback(
     async (id) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.deleteLanguage(id),
+        patchCache: (current) => ({
+          ...current,
           languages: (current.languages ?? []).filter((item) => item.id !== id),
         }),
-        execute: () => profileService.deleteLanguage(id),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -421,23 +415,24 @@ export function useCandidateProfile() {
     async (data) =>
       runMutation({
         execute: () => profileService.addCandidateLink({ ...data, user_id: userId }),
-        mergeResult: (result) =>
-          result.data
-            ? { candidate_links: [...(profile?.candidate_links ?? []), result.data] }
-            : null,
+        patchCache: (current, row) => ({
+          ...current,
+          candidate_links: [...(current.candidate_links ?? []), row],
+        }),
       }).then(({ error: saveError }) => ({ error: saveError })),
-    [profile?.candidate_links, runMutation, userId],
+    [runMutation, userId],
   );
 
   const updateCandidateLink = useCallback(
     async (id, data) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.updateCandidateLink(id, data),
+        patchCache: (current, row) => ({
+          ...current,
           candidate_links: (current.candidate_links ?? []).map((item) =>
-            item.id === id ? { ...item, ...data } : item,
+            item.id === id ? { ...item, ...row } : item,
           ),
         }),
-        execute: () => profileService.updateCandidateLink(id, data),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );
@@ -445,10 +440,11 @@ export function useCandidateProfile() {
   const deleteCandidateLink = useCallback(
     async (id) =>
       runMutation({
-        optimistic: (current) => ({
+        execute: () => profileService.deleteCandidateLink(id),
+        patchCache: (current) => ({
+          ...current,
           candidate_links: (current.candidate_links ?? []).filter((item) => item.id !== id),
         }),
-        execute: () => profileService.deleteCandidateLink(id),
       }).then(({ error: saveError }) => ({ error: saveError })),
     [runMutation],
   );

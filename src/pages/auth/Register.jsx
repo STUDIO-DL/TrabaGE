@@ -419,34 +419,35 @@ export default function Register() {
       return;
     }
 
-    if (isEmployerAccountKind) {
-      for (const field of config.fields) {
-        if (field.required) {
-          const value = typeValues[field.key];
-          if (!value || !String(value).trim()) {
-            setError(getErrorMessage(field.errorKey));
-            return;
-          }
+    for (const field of config.fields) {
+      if (field.required) {
+        const value = typeValues[field.key];
+        if (!value || !String(value).trim()) {
+          setError(getErrorMessage(field.errorKey));
+          return;
         }
       }
-
-      if (!city.trim()) {
-        setError(getErrorMessage('selectCity'));
-        return;
-      }
-
-      if (!acceptedTerms) {
-        setError(getErrorMessage('acceptTerms'));
-        return;
-      }
-
-      const metadata = config.buildMetadata(typeValues, { city: city.trim() });
-      authService.rememberAccountKind(accountKind);
-      authService.rememberOrgDetails({
-        ...metadata.orgDetails,
-        city: metadata.city,
-      });
     }
+
+    if (!city.trim()) {
+      setError(getErrorMessage('selectCity'));
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError(getErrorMessage('acceptTerms'));
+      return;
+    }
+
+    const metadata = config.buildMetadata(typeValues, { city: city.trim() });
+    authService.rememberAccountKind(accountKind);
+    authService.rememberSignupDetails({
+      full_name: metadata.fullName?.trim() || typeValues.fullName?.trim() || undefined,
+      city: metadata.city,
+      company_name: metadata.orgDetails?.company_name,
+      sector: metadata.orgDetails?.sector,
+      company_type: metadata.orgDetails?.company_type,
+    });
 
     clearPreviewMode();
 
