@@ -9,7 +9,7 @@ import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 const DEFAULTS = {
   platform_name: 'TrabaGE',
-  support_email: 'soporte.trabage@gmail.com',
+  support_email: 'support@trabage.org',
   maintenance_mode: false,
 };
 

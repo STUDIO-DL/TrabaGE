@@ -101,7 +101,12 @@ export default function OnboardingCarousel({ slides, onFinish, onSkip }) {
   };
 
   return (
-    <div className="onboarding-screen flex min-h-dvh flex-col overflow-hidden">
+    <div className="onboarding-screen relative flex min-h-dvh flex-col overflow-hidden">
+      {onSkip ? (
+        <button type="button" onClick={onSkip} className="onboarding-skip-btn">
+          Saltar
+        </button>
+      ) : null}
       <OnboardingSlide
         key={step}
         image={slide.image}
@@ -113,7 +118,6 @@ export default function OnboardingCarousel({ slides, onFinish, onSkip }) {
         currentStep={step}
         totalSteps={totalSteps}
         onSelectStep={goToStep}
-        onSkip={onSkip}
         onFinish={isLastStep ? onFinish : undefined}
         isLastStep={isLastStep}
         swipeHandlers={swipeHandlers}

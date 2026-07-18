@@ -40,10 +40,204 @@ import { validateStrongPassword } from '../../utils/passwordValidation';
 const fieldClassName =
   'h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base text-body-small text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
 
+const REGISTER_EMAIL_SUFFIXES = [
+  { value: 'gmail.com', label: '@gmail.com' },
+  { value: 'outlook.com', label: '@outlook.com' },
+  { value: 'hotmail.com', label: '@hotmail.com' },
+  { value: 'icloud.com', label: '@icloud.com' },
+  { value: '__custom__', label: 'Otro…' },
+];
+
+const KNOWN_REGISTER_SUFFIXES = REGISTER_EMAIL_SUFFIXES.filter(
+  (option) => option.value !== '__custom__',
+).map((option) => option.value);
+
+function parseRegisterEmail(value) {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed) {
+    return { mode: 'split', local: '', suffix: 'gmail.com' };
+  }
+
+  const at = trimmed.indexOf('@');
+  if (at === -1) {
+    return { mode: 'split', local: trimmed, suffix: 'gmail.com' };
+  }
+
+  const local = trimmed.slice(0, at);
+  const suffix = trimmed.slice(at + 1).toLowerCase();
+  if (KNOWN_REGISTER_SUFFIXES.includes(suffix)) {
+    return { mode: 'split', local, suffix };
+  }
+
+  return { mode: 'full', full: trimmed };
+}
+
+function resolveRegisterEmail(mode, localPart, suffix, fullEmail) {
+  if (mode === 'full') {
+    return fullEmail.trim();
+  }
+
+  const local = localPart.trim();
+  if (!local) {
+    return '';
+  }
+
+  return `${local}@${suffix}`;
+}
+
+function RegisterEmailField({ id, label, value, onChange, placeholder }) {
+  const initial = parseRegisterEmail(value);
+  const [mode, setMode] = useState(initial.mode);
+  const [localPart, setLocalPart] = useState(initial.mode === 'split' ? initial.local : '');
+  const [suffix, setSuffix] = useState(initial.mode === 'split' ? initial.suffix : 'gmail.com');
+  const [fullEmail, setFullEmail] = useState(initial.mode === 'full' ? initial.full : '');
+
+  const resolvedEmail = resolveRegisterEmail(mode, localPart, suffix, fullEmail);
+
+  const switchToFullMode = (nextValue) => {
+    setMode('full');
+    setFullEmail(nextValue);
+    onChange(nextValue.trim());
+  };
+
+  const handleLocalChange = (next) => {
+    if (next.includes('@')) {
+      switchToFullMode(next);
+      return;
+    }
+
+    setLocalPart(next);
+    onChange(resolveRegisterEmail('split', next, suffix, ''));
+  };
+
+  const handleSuffixChange = (nextSuffix) => {
+    if (nextSuffix === '__custom__') {
+      const seed = localPart.trim() ? `${localPart.trim()}@` : '';
+      switchToFullMode(seed);
+      return;
+    }
+
+    setSuffix(nextSuffix);
+    onChange(resolveRegisterEmail('split', localPart, nextSuffix, ''));
+  };
+
+  const handleFullChange = (next) => {
+    setFullEmail(next);
+    onChange(next.trim());
+  };
+
+  const handleUseSuggestion = () => {
+    const parsed = parseRegisterEmail(fullEmail);
+    if (parsed.mode === 'split') {
+      setMode('split');
+      setLocalPart(parsed.local);
+      setSuffix(parsed.suffix);
+      onChange(resolveRegisterEmail('split', parsed.local, parsed.suffix, ''));
+      return;
+    }
+
+    setMode('split');
+    setLocalPart('');
+    setSuffix('gmail.com');
+    onChange('');
+  };
+
+  return (
+    <RegisterField label={label} id={id}>
+      <input
+        type="email"
+        autoComplete="email"
+        tabIndex={-1}
+        aria-hidden="true"
+        value={resolvedEmail}
+        readOnly
+        className="pointer-events-none absolute h-0 w-0 opacity-0"
+      />
+
+      {mode === 'split' ? (
+        <>
+          <div className="flex overflow-hidden rounded-radius-md border border-app-border bg-app-card transition-colors duration-fast ease-out focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100">
+            <input
+              id={id}
+              type="text"
+              inputMode="email"
+              autoComplete="off"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder={placeholder || 'tu.nombre'}
+              value={localPart}
+              onChange={(e) => handleLocalChange(e.target.value)}
+              className="h-input-md min-w-0 flex-1 border-0 bg-transparent px-space-base text-body-small text-app-text outline-none placeholder:text-app-subtle"
+            />
+            <div className="relative shrink-0 border-l border-app-border">
+              <select
+                aria-label="Dominio del correo"
+                value={suffix}
+                onChange={(e) => handleSuffixChange(e.target.value)}
+                className="h-input-md appearance-none border-0 bg-app-surface pl-space-sm pr-9 text-body-small text-app-muted outline-none"
+              >
+                {REGISTER_EMAIL_SUFFIXES.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <AppIcon
+                icon={ChevronDown}
+                size={ICON_SIZES.sm}
+                className="pointer-events-none absolute right-space-sm top-1/2 -translate-y-1/2 text-app-subtle"
+                aria-hidden
+              />
+            </div>
+          </div>
+          <p className="mt-space-xs text-caption text-app-subtle">
+            ¿Otro proveedor? Elige &quot;Otro…&quot; o escribe tu correo completo (p. ej.{' '}
+            <span className="text-app-muted">tu@empresa.com</span>).
+          </p>
+        </>
+      ) : (
+        <>
+          <div className="relative">
+            <input
+              id={id}
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              placeholder={placeholder || 'tu@correo.com'}
+              value={fullEmail}
+              onChange={(e) => handleFullChange(e.target.value)}
+              className={`${fieldClassName} pr-11`}
+            />
+            <FieldIcon icon={Mail} />
+          </div>
+          <button
+            type="button"
+            onClick={handleUseSuggestion}
+            className="mt-space-xs text-caption text-primary-600 transition-colors duration-fast ease-out hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+          >
+            Usar sugerencia @gmail.com
+          </button>
+        </>
+      )}
+    </RegisterField>
+  );
+}
+
 const AUTH_ALERT_ERROR =
   'rounded-radius-md border border-error-200 bg-error-50 px-space-md py-space-sm text-body-small text-error-700';
 const AUTH_ALERT_WARNING =
   'rounded-radius-md border border-warning-200 bg-warning-50 px-space-md py-space-sm text-body-small text-warning-800';
+
+function resolveSubmittedEmail(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  if (trimmed.includes('@')) return trimmed.toLowerCase();
+  return `${trimmed}@gmail.com`.toLowerCase();
+}
 
 function RegisterField({ label, id, children }) {
   return (
@@ -317,6 +511,8 @@ export default function Register() {
       return;
     }
 
+    const submittedEmail = resolveSubmittedEmail(email);
+
     const passwordValidation = validateStrongPassword(password);
     if (!passwordValidation.valid) {
       setError(passwordValidation.error);
@@ -343,7 +539,12 @@ export default function Register() {
 
     const role = accountKindToRole(accountKind);
     const metadata = config.buildMetadata(typeValues, { city: city.trim() });
-    const { error: registerError, redirectTo } = await register(email, password, role, metadata);
+    const { error: registerError, redirectTo } = await register(
+      submittedEmail,
+      password,
+      role,
+      metadata,
+    );
 
     if (registerError) {
       setError(mapAuthError(registerError));
@@ -361,7 +562,7 @@ export default function Register() {
     navigate('/auth/verify-email', {
       replace: true,
       state: {
-        email: email.trim().toLowerCase(),
+        email: submittedEmail,
         sentAt: Date.now(),
       },
     });
@@ -472,13 +673,10 @@ export default function Register() {
                     })}
                   </div>
 
-                  <TextField
+                  <RegisterEmailField
                     id="register-email"
-                    type="email"
                     label={config.emailLabel}
-                    icon={Mail}
                     placeholder={config.emailPlaceholder}
-                    autoComplete="email"
                     value={email}
                     onChange={setEmail}
                   />

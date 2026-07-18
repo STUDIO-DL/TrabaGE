@@ -1,3 +1,5 @@
+import { SUPPORT_EMAIL } from '../../constants/support';
+
 /** Política de Privacidad — TrabaGE v2.0 (formato Q&A) */
 
 export const PRIVACY_INTRO = {
@@ -219,7 +221,7 @@ export const PRIVACY_ARTICLES = [
       },
       {
         type: 'p',
-        text: 'También puedes escribir a soporte.trabage@gmail.com si necesitas ayuda con el proceso.',
+        text: `También puedes escribir a ${SUPPORT_EMAIL} si necesitas ayuda con el proceso.`,
       },
     ],
   },
@@ -244,7 +246,7 @@ export const PRIVACY_ARTICLES = [
       },
       {
         type: 'p',
-        text: 'Para ejercer estos derechos, contacta con soporte.trabage@gmail.com o usa los canales de la plataforma. Responderemos en los plazos legalmente establecidos.',
+        text: `Para ejercer estos derechos, contacta con ${SUPPORT_EMAIL} o usa los canales de la plataforma. Responderemos en los plazos legalmente establecidos.`,
       },
     ],
   },
@@ -259,7 +261,7 @@ export const PRIVACY_ARTICLES = [
       {
         type: 'ul',
         items: [
-          'Correo: soporte.trabage@gmail.com',
+          `Correo: ${SUPPORT_EMAIL}`,
           'Centro de ayuda dentro de TrabaGE',
         ],
       },

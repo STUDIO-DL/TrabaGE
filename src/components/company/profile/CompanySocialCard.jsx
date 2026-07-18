@@ -4,16 +4,7 @@ import AppIcon from '../../common/AppIcon';
 import { ExternalLink, ICON_SIZES } from '../../../constants/icons';
 import { premiumCardClass, sectionLinkClass } from './companyProfileStyles';
 import SectionTitle from './SectionTitle';
-
-function safeSocialHref(href) {
-  if (!href) return null;
-  try {
-    const url = new URL(String(href).trim());
-    return url.protocol === 'https:' ? url.href : null;
-  } catch {
-    return null;
-  }
-}
+import { safeExternalUrl } from '../../../utils/safeUrl';
 
 function extractSocialHandle(url, networkKey, label) {
   if (!url) return label;
@@ -73,7 +64,7 @@ const SOCIAL_NETWORKS = [
 ];
 
 function SocialListRow({ network, href }) {
-  const safeHref = safeSocialHref(href);
+  const safeHref = safeExternalUrl(href);
   if (!safeHref) return null;
 
   const handle = extractSocialHandle(safeHref, network.key, network.label);
@@ -104,7 +95,7 @@ function SocialListRow({ network, href }) {
 }
 
 function SocialIconButton({ label, href, children, activeClass, compact = false }) {
-  const safeHref = safeSocialHref(href);
+  const safeHref = safeExternalUrl(href);
   if (!safeHref) return null;
 
   const sizeClass = compact ? 'h-9 w-9 min-h-0 min-w-0' : 'min-h-touch min-w-touch';

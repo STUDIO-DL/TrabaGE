@@ -302,7 +302,7 @@ export const TERMS_ARTICLES = [
       {
         type: 'ul',
         items: [
-          'Correo: soporte.trabage@gmail.com',
+          `Correo: ${SUPPORT_EMAIL}`,
           'Centro de ayuda dentro de TrabaGE',
         ],
       },

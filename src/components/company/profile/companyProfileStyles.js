@@ -31,6 +31,39 @@ export const profileCoverOverlayClass =
 export const profileBannerGradientClass =
   'absolute inset-0 bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500';
 
+/** Shared cover height across personal, business, and organization profiles */
+export const profileCoverHeightClass = 'h-[7.5rem] sm:h-[9rem] md:h-[10rem]';
+
+/** Padding for the info block below the cover */
+export const profileHeaderContentClass = 'px-space-base pb-space-md sm:px-space-lg';
+
+/** Avatar/logo + info row — stacks on mobile, side-by-side from sm */
+export const profileHeaderBodyClass =
+  'flex flex-col gap-space-md sm:flex-row sm:items-start sm:gap-space-lg md:gap-space-xl';
+
+/** Pull personal avatar up ~50% into the cover (4.5rem mobile / 7rem sm+) */
+export const profilePersonalAvatarOverlapClass = '-mt-[2.25rem] sm:-mt-[3.5rem]';
+
+/** Pull company logo up ~50% into the cover (7rem) */
+export const profileCompanyLogoOverlapClass = '-mt-[3.5rem] sm:-mt-[3.5rem]';
+
+export const profilePersonalAvatarFrameClass =
+  'rounded-radius-circular bg-app-card p-0.5 ring-4 ring-app-card shadow-elevation-2';
+
+export const profileCompanyLogoFrameClass =
+  'rounded-radius-md bg-app-card p-1 ring-4 ring-app-card shadow-elevation-2';
+
+export const profileNameHeadingClass =
+  'break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
+
+export const profileCompanyNameHeadingClass =
+  'break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
+
+export const profileHeadlineClass =
+  'mt-space-xs break-words text-body-small text-app-muted sm:text-body';
+
+export const profileHeaderInfoClass = 'min-w-0 flex-1 sm:pt-space-md';
+
 export const profileActionButtonClass =
   'h-10 min-h-0 shrink-0 px-space-md text-body-small font-medium';
 

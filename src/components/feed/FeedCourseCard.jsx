@@ -1,10 +1,11 @@
 import Card from '../ui/Card';
 import TimeAgo from '../common/TimeAgo';
+import { safeExternalUrl } from '../../utils/safeUrl';
 
 export default function FeedCourseCard({ course }) {
   if (!course) return null;
 
-  const externalUrl = course.url?.startsWith('http') ? course.url : null;
+  const externalUrl = safeExternalUrl(course.url);
   const tags = (course.skills_tags ?? []).filter(Boolean);
 
   return (

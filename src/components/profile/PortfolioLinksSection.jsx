@@ -7,6 +7,7 @@ import AppIcon from '../common/AppIcon';
 import { Trash2, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
+import { normalizeHttpsUrl, safeExternalUrl } from '../../utils/safeUrl';
 
 const LINK_TYPE_OPTIONS = [
   { value: 'github', label: 'GitHub' },
@@ -18,13 +19,6 @@ const LINK_TYPE_OPTIONS = [
   { value: 'other', label: 'Otro' },
 ];
 
-function normalizeUrl(raw) {
-  const value = String(raw ?? '').trim();
-  if (!value) return '';
-  if (/^https?:\/\//i.test(value)) return value;
-  return `https://${value}`;
-}
-
 export default function PortfolioLinksSection({ items = [], isOwn, onAdd, onDelete }) {
   const [draft, setDraft] = useState({ type: 'portfolio', label: '', url: '' });
   const [saving, setSaving] = useState(false);
@@ -35,7 +29,7 @@ export default function PortfolioLinksSection({ items = [], isOwn, onAdd, onDele
   );
 
   const handleAdd = async () => {
-    const url = normalizeUrl(draft.url);
+    const url = normalizeHttpsUrl(draft.url);
     if (!url) return;
     setSaving(true);
     await onAdd?.({
@@ -58,18 +52,26 @@ export default function PortfolioLinksSection({ items = [], isOwn, onAdd, onDele
       emptyText={getProfileSectionEmptyCopy('portfolio', isOwn)}
     >
       <div className="space-y-2">
-        {sortedItems.map((item) => (
+        {sortedItems.map((item) => {
+          const safeHref = safeExternalUrl(item.url);
+          return (
           <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2">
+            {safeHref ? (
             <a
-              href={item.url}
+              href={safeHref}
               target="_blank"
               rel="noopener noreferrer"
               className="min-w-0 flex-1 truncate text-sm text-primary-700 hover:underline"
             >
               {(item.label || item.type || 'Enlace').toString()}
               {' · '}
-              {item.url}
+              {safeHref}
             </a>
+            ) : (
+              <span className="min-w-0 flex-1 truncate text-sm text-gray-500">
+                {(item.label || item.type || 'Enlace').toString()}
+              </span>
+            )}
             {isOwn && (
               <button
                 type="button"
@@ -81,7 +83,8 @@ export default function PortfolioLinksSection({ items = [], isOwn, onAdd, onDele
               </button>
             )}
           </div>
-        ))}
+        );
+        })}
       </div>
 
       {isOwn && (

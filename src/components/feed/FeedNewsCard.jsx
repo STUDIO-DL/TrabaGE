@@ -1,10 +1,11 @@
 import Card from '../ui/Card';
 import TimeAgo from '../common/TimeAgo';
+import { safeExternalUrl } from '../../utils/safeUrl';
 
 export default function FeedNewsCard({ article }) {
   if (!article) return null;
 
-  const externalUrl = article.url?.startsWith('http') ? article.url : null;
+  const externalUrl = safeExternalUrl(article.url);
 
   return (
     <Card className="mb-3">

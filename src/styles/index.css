@@ -258,6 +258,52 @@
     background-attachment: fixed;
   }
 
+  .onboarding-skip-btn {
+    position: absolute;
+    z-index: 20;
+    top: max(0.625rem, env(safe-area-inset-top, 0px));
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem 0.875rem;
+    border: none;
+    border-radius: 9999px;
+    background: transparent;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    color: rgb(var(--app-muted));
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color var(--motion-fast) var(--ease-out),
+      background-color var(--motion-fast) var(--ease-out),
+      opacity var(--motion-fast) var(--ease-out);
+  }
+
+  .onboarding-skip-btn:hover {
+    color: rgb(var(--app-text));
+    background: rgb(var(--app-shadow) / 0.05);
+  }
+
+  .onboarding-skip-btn:active {
+    opacity: 0.72;
+  }
+
+  .onboarding-skip-btn:focus-visible {
+    outline: none;
+    box-shadow:
+      0 0 0 2px rgb(var(--app-bg)),
+      0 0 0 4px rgb(var(--app-primary-soft));
+  }
+
+  .dark .onboarding-skip-btn:hover {
+    background: rgb(255 255 255 / 0.08);
+  }
+
   .dark .onboarding-screen {
     --onboarding-bg-top: rgb(30 58 138 / 0.28);
     --onboarding-bg-bottom: rgb(var(--app-bg));

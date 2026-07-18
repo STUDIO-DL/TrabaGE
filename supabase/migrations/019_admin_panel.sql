@@ -25,7 +25,7 @@ ALTER TABLE public.reports
 CREATE TABLE IF NOT EXISTS public.platform_settings (
   id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
   platform_name TEXT NOT NULL DEFAULT 'TrabaGE',
-  support_email TEXT NOT NULL DEFAULT 'soporte.trabage@gmail.com',
+  support_email TEXT NOT NULL DEFAULT 'support@trabage.org',
   maintenance_mode BOOLEAN NOT NULL DEFAULT FALSE,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

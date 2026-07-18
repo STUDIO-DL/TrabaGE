@@ -10,7 +10,6 @@ export default function OnboardingSlide({
   currentStep,
   totalSteps,
   onSelectStep,
-  onSkip,
   onFinish,
   isLastStep = false,
   swipeHandlers = null,
@@ -100,12 +99,6 @@ export default function OnboardingSlide({
               Desliza para continuar
             </span>
           )}
-
-          {onSkip ? (
-            <Button type="button" variant="secondary" size="md" fullWidth onClick={onSkip}>
-              Omitir
-            </Button>
-          ) : null}
         </div>
       </div>
     </>
