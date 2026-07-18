@@ -49,6 +49,9 @@ function isOAuthCancelled(message) {
 function isAuthHookError(message, code) {
   return (
     code === 'unexpected_failure' ||
+    code === 'hook_timeout_after_retry' ||
+    message.includes('failed to reach hook') ||
+    message.includes('hook_timeout') ||
     message.includes('error sending confirmation email') ||
     message.includes('error running hook') ||
     message.includes('hook requires authorization token') ||
@@ -57,7 +60,20 @@ function isAuthHookError(message, code) {
     message.includes('service currently unavailable due to hook') ||
     message.includes('secreto del hook') ||
     message.includes('send_email_hook_secret') ||
-    message.includes('resend_api_key')
+    message.includes('resend_api_key') ||
+    message.includes('verificación por correo no configurada')
+  );
+}
+
+function isRoleProvisioningError(message) {
+  return (
+    message.includes('authentication required') ||
+    message.includes('invalid role') ||
+    message.includes('account has multiple profile types') ||
+    message.includes('role already bound') ||
+    message.includes('role/profile mismatch') ||
+    message.includes('role cannot be changed') ||
+    message.includes('cannot provision profile')
   );
 }
 
@@ -132,6 +148,17 @@ export function mapAuthError(error) {
     return getErrorMessage('smtpError');
   }
   if (message.includes('database error saving new user')) {
+    return getErrorMessage('registerFailed');
+  }
+  if (isRoleProvisioningError(message)) {
+    return getErrorMessage('registerFailed');
+  }
+  if (
+    message.includes('no se pudo identificar el usuario') ||
+    message.includes('no se pudo crear la cuenta') ||
+    message.includes('no se pudo confirmar el correo') ||
+    message.includes('tipo de cuenta inválido')
+  ) {
     return getErrorMessage('registerFailed');
   }
 
