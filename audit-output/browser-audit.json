@@ -1,22 +1,13 @@
 {
-  "base": "http://localhost:5175",
-  "timestamp": "2026-07-17T16:30:17.243Z",
+  "base": "http://localhost:5176",
+  "timestamp": "2026-07-18T15:07:53.926Z",
   "results": [
     {
       "routePath": "/",
       "label": "splash",
       "viewport": "320",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\320\\splash.png"
     },
@@ -25,16 +16,7 @@
       "label": "onboarding",
       "viewport": "320",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\320\\onboarding.png"
     },
@@ -43,16 +25,7 @@
       "label": "login",
       "viewport": "320",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\320\\login.png"
     },
@@ -61,16 +34,7 @@
       "label": "register",
       "viewport": "320",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\320\\register.png"
     },
@@ -79,16 +43,7 @@
       "label": "forgot-password",
       "viewport": "320",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\320\\forgot-password.png"
     },
@@ -97,16 +52,7 @@
       "label": "explore",
       "viewport": "320",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\320\\explore.png"
     },
@@ -115,16 +61,7 @@
       "label": "privacy",
       "viewport": "320",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\320\\privacy.png"
     },
@@ -133,16 +70,7 @@
       "label": "terms",
       "viewport": "320",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\320\\terms.png"
     },
@@ -151,16 +79,7 @@
       "label": "splash",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\splash.png"
     },
@@ -169,16 +88,7 @@
       "label": "onboarding",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\onboarding.png"
     },
@@ -187,16 +97,7 @@
       "label": "login",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\login.png"
     },
@@ -205,16 +106,7 @@
       "label": "register",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\register.png"
     },
@@ -223,16 +115,7 @@
       "label": "forgot-password",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\forgot-password.png"
     },
@@ -241,16 +124,7 @@
       "label": "explore",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\explore.png"
     },
@@ -259,16 +133,7 @@
       "label": "privacy",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\privacy.png"
     },
@@ -277,16 +142,7 @@
       "label": "terms",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\terms.png"
     },
@@ -295,16 +151,7 @@
       "label": "preview-personal_feed",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\preview-personal_feed.png"
     },
@@ -313,90 +160,8 @@
       "label": "preview-personal_jobs",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        },
-        {
-          "type": "error",
-          "text": "Failed to load resource: the server responded with a status of 401 ()"
-        },
-        {
-          "type": "error",
-          "text": "Failed to load resource: the server responded with a status of 401 ()"
-        },
-        {
-          "type": "error",
-          "text": "Failed to load resource: the server responded with a status of 401 ()"
-        },
-        {
-          "type": "error",
-          "text": "Failed to load resource: the server responded with a status of 401 ()"
-        },
-        {
-          "type": "error",
-          "text": "Failed to load resource: the server responded with a status of 401 ()"
-        },
-        {
-          "type": "error",
-          "text": "Failed to load resource: the server responded with a status of 401 ()"
-        },
-        {
-          "type": "error",
-          "text": "Failed to load resource: the server responded with a status of 401 ()"
-        },
-        {
-          "type": "error",
-          "text": "Failed to load resource: the server responded with a status of 401 ()"
-        }
-      ],
-      "networkFails": [
-        {
-          "kind": "401",
-          "status": 401,
-          "url": "https://jqzbpdojwzopwuaapqgl.supabase.co/rest/v1/rpc/upsert_job_matches"
-        },
-        {
-          "kind": "401",
-          "status": 401,
-          "url": "https://jqzbpdojwzopwuaapqgl.supabase.co/rest/v1/rpc/upsert_job_matches"
-        },
-        {
-          "kind": "401",
-          "status": 401,
-          "url": "https://jqzbpdojwzopwuaapqgl.supabase.co/rest/v1/rpc/upsert_job_matches"
-        },
-        {
-          "kind": "401",
-          "status": 401,
-          "url": "https://jqzbpdojwzopwuaapqgl.supabase.co/rest/v1/rpc/upsert_job_matches"
-        },
-        {
-          "kind": "401",
-          "status": 401,
-          "url": "https://jqzbpdojwzopwuaapqgl.supabase.co/rest/v1/rpc/upsert_job_match"
-        },
-        {
-          "kind": "401",
-          "status": 401,
-          "url": "https://jqzbpdojwzopwuaapqgl.supabase.co/rest/v1/rpc/upsert_job_match"
-        },
-        {
-          "kind": "401",
-          "status": 401,
-          "url": "https://jqzbpdojwzopwuaapqgl.supabase.co/rest/v1/rpc/upsert_job_match"
-        },
-        {
-          "kind": "401",
-          "status": 401,
-          "url": "https://jqzbpdojwzopwuaapqgl.supabase.co/rest/v1/rpc/upsert_job_match"
-        }
-      ],
+      "consoleLogs": [],
+      "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\preview-personal_jobs.png"
     },
     {
@@ -404,16 +169,7 @@
       "label": "preview-login",
       "viewport": "375",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\375\\preview-login.png"
     },
@@ -422,16 +178,7 @@
       "label": "splash",
       "viewport": "768",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\768\\splash.png"
     },
@@ -440,16 +187,7 @@
       "label": "onboarding",
       "viewport": "768",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\768\\onboarding.png"
     },
@@ -458,16 +196,7 @@
       "label": "login",
       "viewport": "768",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\768\\login.png"
     },
@@ -476,16 +205,7 @@
       "label": "register",
       "viewport": "768",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\768\\register.png"
     },
@@ -494,16 +214,7 @@
       "label": "forgot-password",
       "viewport": "768",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\768\\forgot-password.png"
     },
@@ -512,16 +223,7 @@
       "label": "explore",
       "viewport": "768",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\768\\explore.png"
     },
@@ -530,16 +232,7 @@
       "label": "privacy",
       "viewport": "768",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\768\\privacy.png"
     },
@@ -548,16 +241,7 @@
       "label": "terms",
       "viewport": "768",
       "navError": null,
-      "consoleLogs": [
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: React Router will begin wrapping state updates in `React.startTransition` in v7. You can use the `v7_startTransition` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_starttransition."
-        },
-        {
-          "type": "warning",
-          "text": "⚠️ React Router Future Flag Warning: Relative route resolution within Splat routes is changing in v7. You can use the `v7_relativeSplatPath` future flag to opt-in early. For more information, see https://reactrouter.com/v6/upgrading/future#v7_relativesplatpath."
-        }
-      ],
+      "consoleLogs": [],
       "networkFails": [],
       "shotPath": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\audit-output\\screenshots\\768\\terms.png"
     }
@@ -565,8 +249,8 @@
   "summary": {
     "routes": 27,
     "navErrors": 0,
-    "consoleErrors": 8,
-    "consoleWarnings": 54,
-    "networkIssues": 8
+    "consoleErrors": 0,
+    "consoleWarnings": 0,
+    "networkIssues": 0
   }
 }
