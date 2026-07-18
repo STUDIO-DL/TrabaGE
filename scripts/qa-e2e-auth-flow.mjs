@@ -146,8 +146,15 @@ async function testRegisterAccountTypes(page, results) {
       await waitForAuthShell(page);
       await page.getByRole('button', { name: new RegExp(accountCase.label, 'i') }).first().click();
       await page.getByText(accountCase.expectedField, { exact: true }).waitFor({ timeout: 5000 });
-      await page.getByRole('button', { name: 'Continuar con Google' }).waitFor({ timeout: 5000 });
       await page.getByRole('button', { name: 'Crear cuenta' }).waitFor({ timeout: 5000 });
+
+      const googleButton = page.getByRole('button', { name: 'Continuar con Google' });
+      if (accountCase.id === 'personal') {
+        await googleButton.waitFor({ timeout: 5000 });
+      } else if (await googleButton.count()) {
+        throw new Error('Google signup must not appear for business/organization');
+      }
+
       record(results, name, 'pass');
     } catch (err) {
       record(results, name, 'fail', err.message);

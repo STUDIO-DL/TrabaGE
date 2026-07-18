@@ -224,12 +224,16 @@ export default function Register() {
   const handleGoogleRegister = async () => {
     setError('');
 
+    if (accountKind !== ACCOUNT_KINDS.PERSONAL) {
+      return;
+    }
+
     if (!accountKind) {
       setError(getErrorMessage('selectAccountType'));
       return;
     }
 
-    // Google signup: only account type is required. Identity (name, email, avatar)
+    // Google signup: personal accounts only. Identity (name, email, avatar)
     // comes from Google after OAuth — no registration form fields.
     authService.rememberAccountKind(accountKind);
     authService.rememberPendingAccountType(accountKind);
@@ -550,19 +554,23 @@ export default function Register() {
                   </Button>
                 </form>
 
-                <div className="relative my-space-lg">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-app-border" />
-                  </div>
-                  <div className="relative flex justify-center text-caption text-app-subtle">
-                    <span className="bg-app-card px-space-md">o regístrate con</span>
-                  </div>
-                </div>
+                {accountKind === ACCOUNT_KINDS.PERSONAL ? (
+                  <>
+                    <div className="relative my-space-lg">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-app-border" />
+                      </div>
+                      <div className="relative flex justify-center text-caption text-app-subtle">
+                        <span className="bg-app-card px-space-md">o regístrate con</span>
+                      </div>
+                    </div>
 
-                <GoogleAuthButton
-                  onClick={handleGoogleRegister}
-                  label="Continuar con Google"
-                />
+                    <GoogleAuthButton
+                      onClick={handleGoogleRegister}
+                      label="Continuar con Google"
+                    />
+                  </>
+                ) : null}
 
                 <p className="mt-space-lg text-center text-body-small text-app-subtle">
                   ¿Ya tienes cuenta?{' '}

@@ -77,7 +77,7 @@ function loadEnv() {
   return {
     url: read('VITE_SUPABASE_URL'),
     anonKey: read('VITE_SUPABASE_ANON_KEY'),
-    serviceRoleKey: read('SUPABASE_SERVICE_ROLE_KEY'),
+    serviceRoleKey: read('SUPABASE_SERVICE_ROLE_KEY') || process.env.SUPABASE_SERVICE_ROLE_KEY?.trim(),
   };
 }
 
@@ -168,7 +168,7 @@ async function createAndConfirmUser(admin, anon, testCase, baseUrl) {
 
   return {
     email,
-    userId: signupData.user.id,
+    userId: createData.user.id,
     confirmUrl: buildConfirmUrl(baseUrl, tokenHash),
   };
 }
