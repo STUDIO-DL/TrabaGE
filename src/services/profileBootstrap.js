@@ -1,6 +1,8 @@
 import { supabase } from '../config/supabase';
 import { ROLES } from '../constants/roles';
 import { consumePendingSignupDetails, peekPendingSignupDetails } from './auth.service';
+import { nameFromEmail } from '../utils/displayIdentity';
+import { extractGoogleProfile } from '../utils/googleProfile';
 import { reportError } from '../utils/logger';
 
 function buildProvisionOverrides(role, pendingDetails) {
@@ -13,6 +15,34 @@ function buildProvisionOverrides(role, pendingDetails) {
   if (pendingDetails.company_type?.trim()) overrides.company_type = pendingDetails.company_type.trim();
   if (pendingDetails.city?.trim()) overrides.city = pendingDetails.city.trim();
   if (pendingDetails.avatar_path?.trim()) overrides.avatar_path = pendingDetails.avatar_path.trim();
+
+  return overrides;
+}
+
+/** Derive profile fields from OAuth/email auth metadata when the registration form was skipped. */
+function buildIdentityOverrides(user, role, pendingDetails) {
+  const fromForm = buildProvisionOverrides(role, pendingDetails);
+  if (Object.keys(fromForm).length > 0) return fromForm;
+
+  const meta = user?.user_metadata ?? {};
+  const google = extractGoogleProfile(user);
+  const overrides = {};
+
+  const fullName = String(
+    meta.full_name || meta.name || google.full_name || nameFromEmail(user?.email) || '',
+  ).trim();
+  const avatarUrl = String(meta.avatar_url || meta.picture || google.avatar_url || '').trim();
+
+  if (fullName) overrides.full_name = fullName;
+  if (avatarUrl) overrides.avatar_path = avatarUrl;
+
+  if (role === ROLES.BUSINESS || role === ROLES.ORGANIZATION) {
+    const companyName = String(meta.company_name || '').trim() || fullName;
+    if (companyName) overrides.company_name = companyName;
+    if (role === ROLES.ORGANIZATION && !String(meta.company_type || '').trim()) {
+      overrides.company_type = 'Institucion publica';
+    }
+  }
 
   return overrides;
 }
@@ -30,7 +60,7 @@ export async function bootstrapProfile({ user, role }) {
   }
 
   const pendingDetails = peekPendingSignupDetails();
-  const overrides = buildProvisionOverrides(role, pendingDetails);
+  const overrides = buildIdentityOverrides(user, role, pendingDetails);
 
   try {
     const { data, error } = await supabase.rpc('provision_user_profile', {
