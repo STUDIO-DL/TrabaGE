@@ -35,17 +35,6 @@ export const CANDIDATE_PROFILE_COLUMNS = [
   'updated_at',
 ].join(', ');
 
-const FULL_PROFILE_SELECT = `
-  ${CANDIDATE_PROFILE_COLUMNS},
-  education(*),
-  experience(*),
-  certifications(*),
-  skills(*),
-  candidate_links(*),
-  services(*),
-  languages(*)
-`;
-
 const PUBLIC_PROFILE_SELECT = `
   user_id, full_name, headline, about, city, province, country, sector, avatar_path, cover_path,
   years_experience, show_education_in_intro, intro_education_id,
@@ -125,12 +114,19 @@ export const profileService = {
   updateOneSignalPlayerId: async (_userId, playerId) =>
     supabase.rpc('set_onesignal_player_id', { p_player_id: playerId ?? '' }),
 
-  getCandidateFullProfile: (userId) =>
-    supabase
+  /** Avoid nested embeds: intro_education_id FK makes education(*) ambiguous (PGRST201). */
+  getCandidateFullProfile: async (userId) => {
+    const { data, error } = await supabase
       .from('candidate_profiles')
-      .select(FULL_PROFILE_SELECT)
+      .select(CANDIDATE_PROFILE_COLUMNS)
       .eq('user_id', userId)
-      .maybeSingle(),
+      .maybeSingle();
+
+    if (error || !data) return { data, error };
+
+    const full = await attachCandidateSections(data);
+    return { data: full, error: null };
+  },
 
   getPublicCandidateFullProfile: async (userId) => {
     const { data, error } = await supabase
