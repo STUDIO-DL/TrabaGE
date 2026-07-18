@@ -39,6 +39,10 @@ export function resolveCompanyCoverUrl(coverPath) {
   return resolvePublicStorageUrl(STORAGE_BUCKETS.COMPANY_LOGOS, coverPath);
 }
 
+export function resolveCandidateCoverUrl(coverPath) {
+  return resolvePublicStorageUrl(STORAGE_BUCKETS.CANDIDATE_AVATARS, coverPath);
+}
+
 export function resolveCvBucket(path) {
   if (!path) return STORAGE_BUCKETS.CANDIDATE_CVS;
   if (path.includes('/applications/')) return 'candidate-documents';

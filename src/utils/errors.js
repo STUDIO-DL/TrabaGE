@@ -71,6 +71,7 @@ export function mapAuthError(error) {
   }
   if (
     message.includes('rate limit') ||
+    message.includes('too many attempts') ||
     message.includes('too many requests') ||
     message.includes('email rate limit') ||
     message.includes('over_email_send_rate_limit')

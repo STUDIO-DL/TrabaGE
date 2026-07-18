@@ -36,6 +36,8 @@ export default function Profile() {
     updateBasicInfo,
     uploadAvatar,
     uploadCV,
+    uploadCover,
+    removeCover,
     saveCoverLetter,
     addExperience,
     updateExperience,
@@ -69,6 +71,7 @@ export default function Profile() {
   const [aboutSaving, setAboutSaving] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
+  const [coverPhotoLoading, setCoverPhotoLoading] = useState(false);
   const [cvLoading, setCvLoading] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
 
@@ -105,6 +108,25 @@ export default function Profile() {
     const { error } = await uploadAvatar(file);
     setAvatarLoading(false);
     showToast(error ? error.message : 'Foto actualizada.', error ? 'error' : 'success');
+  };
+
+  const handleCoverPhoto = async (file) => {
+    const validation = validateFile(file, 'image');
+    if (!validation.valid) {
+      showToast(validation.error, 'error');
+      return;
+    }
+    setCoverPhotoLoading(true);
+    const { error } = await uploadCover(file);
+    setCoverPhotoLoading(false);
+    showToast(error ? error.message : 'Portada actualizada.', error ? 'error' : 'success');
+  };
+
+  const handleRemoveCoverPhoto = async () => {
+    setCoverPhotoLoading(true);
+    const { error } = await removeCover();
+    setCoverPhotoLoading(false);
+    showToast(error ? error.message : 'Portada eliminada.', error ? 'error' : 'success');
   };
 
   const handleUploadCV = async (file, errorMsg) => {
@@ -200,6 +222,9 @@ export default function Profile() {
         isOwn={canEdit}
         onAvatarChange={canEdit ? handleAvatar : undefined}
         avatarLoading={avatarLoading}
+        onCoverChange={canEdit ? handleCoverPhoto : undefined}
+        onCoverRemove={canEdit ? handleRemoveCoverPhoto : undefined}
+        coverLoading={coverPhotoLoading}
         onShare={handleShare}
         onSettings={canEdit ? () => navigate('/personal/settings') : undefined}
         onEditIntro={canEdit ? () => navigate('/personal/profile/edit-intro') : undefined}

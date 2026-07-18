@@ -9,6 +9,7 @@ export const STORAGE_BUCKETS = {
 
 export const cvPath = (userId) => `${userId}/cv.pdf`;
 export const avatarPath = (userId) => `${userId}/avatar.webp`;
+export const candidateCoverPath = (userId) => `${userId}/cover.webp`;
 export const logoPath = (companyId) => `${companyId}/logo.webp`;
 export const companyCoverPath = (companyId) => `${companyId}/cover.webp`;
 export const postImagePath = (userId, postId) => `${userId}/${postId}.webp`;

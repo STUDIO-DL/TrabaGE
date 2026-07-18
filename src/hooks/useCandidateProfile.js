@@ -4,7 +4,7 @@ import { refetchProfileCache, useProfile } from './useProfile';
 import { profileService } from '../services/profile.service';
 import { storageService } from '../services/storage.service';
 import { jobMatchesService } from '../services/jobMatches.service';
-import { cvPath, avatarPath } from '../constants/storage';
+import { cvPath, avatarPath, candidateCoverPath } from '../constants/storage';
 import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { reportError } from '../utils/logger';
@@ -166,6 +166,42 @@ export function useCandidateProfile() {
     async (text) => updateBasicInfo({ cover_letter: text?.trim() || null }),
     [updateBasicInfo],
   );
+
+  const uploadCover = useCallback(
+    async (file) => {
+      const validation = validateFile(file, 'image');
+      if (!validation.valid) return { error: { message: validation.error } };
+
+      let compressed;
+      try {
+        compressed = await compressProfileImage(file);
+      } catch (compressError) {
+        return { error: { message: compressError.message } };
+      }
+
+      const { error: uploadError } = await storageService.uploadCandidateCover(
+        userId,
+        compressed,
+        profile?.cover_path,
+      );
+      if (uploadError) return { error: friendlyProfileError(uploadError) };
+
+      return updateBasicInfo({ cover_path: candidateCoverPath(userId) });
+    },
+    [userId, profile?.cover_path, updateBasicInfo],
+  );
+
+  const removeCover = useCallback(async () => {
+    if (!profile?.cover_path) return { error: null };
+
+    const { error: deleteError } = await storageService.deleteCandidateCover(
+      userId,
+      profile.cover_path,
+    );
+    if (deleteError) return { error: friendlyProfileError(deleteError) };
+
+    return updateBasicInfo({ cover_path: null });
+  }, [profile?.cover_path, updateBasicInfo, userId]);
 
   const addExperience = useCallback(
     async (data) =>
@@ -425,6 +461,8 @@ export function useCandidateProfile() {
     updateBasicInfo,
     uploadAvatar,
     uploadCV,
+    uploadCover,
+    removeCover,
     saveCoverLetter,
     addExperience,
     updateExperience,

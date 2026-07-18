@@ -16,6 +16,7 @@ export default function VerifyEmail() {
     return String(value).trim().toLowerCase();
   });
   const sentAt = location.state?.sentAt || null;
+  const resumedPending = location.state?.pendingVerification === true;
   const { resend, remaining, sending, message, error, canResend } =
     useEmailVerificationResend(email, sentAt);
 
@@ -53,6 +54,12 @@ export default function VerifyEmail() {
             Revisa tu bandeja de entrada (y la carpeta de spam si es necesario) para activar tu
             cuenta.
           </p>
+          {resumedPending ? (
+            <p className="mt-3 text-sm leading-relaxed text-app-muted">
+              Si ya solicitaste el registro, el enlace anterior sigue siendo válido. Puedes reenviar
+              uno nuevo cuando termine la espera.
+            </p>
+          ) : null}
 
           {message ? (
             <p role="status" className="mt-4 rounded-xl border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700">

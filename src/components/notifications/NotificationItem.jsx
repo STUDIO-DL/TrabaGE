@@ -16,7 +16,7 @@ export default function NotificationItem({
   actorAvatar,
   actorName,
 }) {
-  const avatarSrc = actorAvatar ?? notification.metadata?.avatar_url;
+  const avatarSrc = actorAvatar ?? notification.metadata?.avatar_path ?? notification.metadata?.avatar_url;
   const avatarAlt = actorName ?? notification.metadata?.actor_name ?? notification.title;
   const actorId = notification.metadata?.actor_id;
   const actorType = notification.metadata?.actor_type ?? 'candidate';

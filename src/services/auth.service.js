@@ -24,6 +24,56 @@ const VALID_STORED_ROLES = [...ASSIGNABLE_ROLES, ROLES.ADMIN];
 const NEW_OAUTH_USER_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** First Google sign-in: created_at and last_sign_in_at are nearly identical. */
 const FIRST_SIGNIN_WINDOW_MS = 60 * 1000;
+/** Aligns with Supabase auth.email.max_frequency (60s) — prevents duplicate signUp emails. */
+const SIGNUP_EMAIL_COOLDOWN_MS = 60 * 1000;
+const SIGNUP_COOLDOWN_PREFIX = 'trabage_signup_attempt:';
+const SIGNUP_INFLIGHT_PREFIX = 'trabage_signup_inflight:';
+
+function signupCooldownKey(email) {
+  return `${SIGNUP_COOLDOWN_PREFIX}${normalizeEmail(email)}`;
+}
+
+function signupInflightKey(email) {
+  return `${SIGNUP_INFLIGHT_PREFIX}${normalizeEmail(email)}`;
+}
+
+function readSignupCooldownDeadline(email) {
+  return Number(sessionStorage.getItem(signupCooldownKey(email)) || 0);
+}
+
+function isSignupEmailCooldownActive(email) {
+  return readSignupCooldownDeadline(email) > Date.now();
+}
+
+function markSignupEmailSent(email) {
+  sessionStorage.setItem(
+    signupCooldownKey(email),
+    String(Date.now() + SIGNUP_EMAIL_COOLDOWN_MS),
+  );
+}
+
+function clearSignupInflight(email) {
+  sessionStorage.removeItem(signupInflightKey(email));
+}
+
+function isExistingUnconfirmedUser(user) {
+  if (!user?.id) return false;
+  const identities = user.identities;
+  return Array.isArray(identities) && identities.length === 0;
+}
+
+function isAuthRateLimitError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  const code = String(error?.code || '').toLowerCase();
+  return (
+    code === 'over_email_send_rate_limit' ||
+    code === '429' ||
+    message.includes('rate limit') ||
+    message.includes('too many requests') ||
+    message.includes('too many attempts') ||
+    message.includes('email rate limit')
+  );
+}
 
 export const OAUTH_INTENTS = {
   LOGIN: 'login',
@@ -358,6 +408,28 @@ export const authService = {
       return configError();
     }
 
+    const normalizedEmail = normalizeEmail(email);
+    const inflightKey = signupInflightKey(normalizedEmail);
+
+    if (sessionStorage.getItem(inflightKey) === '1') {
+      return {
+        data: { session: null, user: null },
+        error: null,
+        pendingVerification: true,
+      };
+    }
+
+    if (isSignupEmailCooldownActive(normalizedEmail)) {
+      return {
+        data: { session: null, user: null },
+        error: null,
+        pendingVerification: true,
+        existingUnconfirmed: true,
+      };
+    }
+
+    sessionStorage.setItem(inflightKey, '1');
+
     const signupData = {
       role,
       full_name: metadata.fullName?.trim() || undefined,
@@ -379,14 +451,19 @@ export const authService = {
     // can pre-fill them after email verification.
     savePendingOrgDetails(metadata.orgDetails);
 
-    const result = await supabase.auth.signUp({
-      email: normalizeEmail(email),
-      password: normalizePassword(password),
-      options: {
-        data: signupData,
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
-    });
+    let result;
+    try {
+      result = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password: normalizePassword(password),
+        options: {
+          data: signupData,
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+        },
+      });
+    } finally {
+      clearSignupInflight(normalizedEmail);
+    }
 
     if (result.data?.session) {
       await supabase.auth.signOut({ scope: 'local' });
@@ -400,21 +477,64 @@ export const authService = {
       };
     }
 
+    if (result.error) {
+      if (isAuthRateLimitError(result.error) && isSignupEmailCooldownActive(normalizedEmail)) {
+        return {
+          data: { session: null, user: null },
+          error: null,
+          pendingVerification: true,
+          existingUnconfirmed: true,
+        };
+      }
+      return result;
+    }
+
+    if (result.data?.user) {
+      markSignupEmailSent(normalizedEmail);
+
+      if (isExistingUnconfirmedUser(result.data.user)) {
+        return {
+          data: { ...result.data, session: null },
+          error: null,
+          pendingVerification: true,
+          existingUnconfirmed: true,
+        };
+      }
+    }
+
     return result;
   },
 
-  resendSignupConfirmation: (email) => {
+  resendSignupConfirmation: async (email) => {
     if (!isSupabaseConfigured) {
       return configError();
     }
 
-    return supabase.auth.resend({
+    const normalizedEmail = normalizeEmail(email);
+
+    if (isSignupEmailCooldownActive(normalizedEmail)) {
+      return {
+        data: null,
+        error: {
+          code: 'over_email_send_rate_limit',
+          message: getErrorMessage('rateLimit'),
+        },
+      };
+    }
+
+    const result = await supabase.auth.resend({
       type: 'signup',
-      email: normalizeEmail(email),
+      email: normalizedEmail,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/confirm`,
       },
     });
+
+    if (!result.error) {
+      markSignupEmailSent(normalizedEmail);
+    }
+
+    return result;
   },
 
   confirmEmailFromUrl: async () => {
