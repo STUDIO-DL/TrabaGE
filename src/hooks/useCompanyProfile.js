@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
@@ -7,7 +7,7 @@ import { storageService } from '../services/storage.service';
 import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
-import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
+import { syncAuthIdentityMetadata, readIdentityFromUser } from '../utils/displayIdentity';
 import { getOwnCompanyProfileKey, getProfileQueryKey } from '../constants/profileQueryKeys';
 import { withSetupComplete } from '../utils/profilePersistence';
 import { logoPath, companyCoverPath } from '../constants/storage';
@@ -36,6 +36,7 @@ export function useCompanyProfile() {
   const queryClient = useQueryClient();
   const { user, role, isPreviewMode, refreshSetupStatus } = useAuth();
   const { profile, loading, error, refetch, queryKey } = useProfile();
+  const nameHydratedRef = useRef(false);
 
   const userId = user?.id;
   const ownQueryKey =
@@ -119,6 +120,17 @@ export function useCompanyProfile() {
     [profile, refreshSetupStatus, role, runMutation, userId],
   );
 
+  useEffect(() => {
+    if (isPreviewMode || nameHydratedRef.current || !userId || !user || loading) return;
+    if (profile?.company_name?.trim()) return;
+
+    const identityName = readIdentityFromUser(user).company_name;
+    if (!identityName) return;
+
+    nameHydratedRef.current = true;
+    void updateCompanyProfile({ company_name: identityName }, { companyNameFallback: identityName });
+  }, [isPreviewMode, loading, profile?.company_name, updateCompanyProfile, user, userId]);
+
   const uploadLogo = useCallback(
     async (file) => {
       const validation = validateFile(file, 'logo');
@@ -138,9 +150,15 @@ export function useCompanyProfile() {
       );
       if (uploadError) return { error: friendlyCompanyError(uploadError) };
 
-      return updateCompanyProfile({ logo_path: logoPath(userId) });
+      const companyNameFallback =
+        profile?.company_name?.trim() || readIdentityFromUser(user).company_name || undefined;
+
+      return updateCompanyProfile(
+        { logo_path: logoPath(userId) },
+        { companyNameFallback },
+      );
     },
-    [profile?.logo_path, updateCompanyProfile, userId],
+    [profile?.company_name, profile?.logo_path, updateCompanyProfile, user, userId],
   );
 
   const uploadCover = useCallback(

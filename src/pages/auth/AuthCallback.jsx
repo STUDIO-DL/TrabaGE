@@ -13,6 +13,7 @@ import {
   OAUTH_INTENTS,
 } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
+import { queueWelcomeEmailOnRegistrationComplete } from '../../services/welcomeEmail.service';
 import { mapAuthError, isExpiredVerificationUserMessage } from '../../utils/errors';
 import { getErrorMessage } from '../../utils/i18n';
 import { useAuth } from '../../hooks/useAuth';
@@ -136,6 +137,10 @@ export default function AuthCallback() {
           }
           navigate('/register', { replace: true, state: { fromOAuth: true } });
           return true;
+        }
+
+        if (oauthIntent === OAUTH_INTENTS.SIGNUP) {
+          await queueWelcomeEmailOnRegistrationComplete();
         }
 
         await refreshAuthState();

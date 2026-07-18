@@ -57,13 +57,9 @@ export const storageService = {
   },
 
   deleteOldLogo: async (companyId, oldPath) => {
-    const paths = [
-      oldPath,
-      logoPath(companyId),
-      `${companyId}/logo.png`,
-      `${companyId}/logo.jpg`,
-    ].filter(Boolean);
-    const unique = [...new Set(paths)];
+    const paths = [logoPath(companyId)];
+    if (oldPath?.endsWith('.webp')) paths.unshift(oldPath);
+    const unique = [...new Set(paths.filter(Boolean))];
     if (!unique.length) return { error: null };
     const { error } = await supabase.storage.from(STORAGE_BUCKETS.COMPANY_LOGOS).remove(unique);
     return { error };

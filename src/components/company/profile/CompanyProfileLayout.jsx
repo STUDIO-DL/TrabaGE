@@ -17,7 +17,7 @@ import CompanyProfileView from './CompanyProfileView';
 import { useFollow } from '../../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
 import { isOrganizationProfile } from '../../../utils/orgLabels';
-import { getCompanyDisplayName } from '../../../utils/companyProfile';
+import { resolveCompanyHeaderName } from '../../../utils/companyProfile';
 import { TOAST } from '../../../utils/copyLabels';
 import { ProfilePageSkeleton } from '../../common/Skeleton';
 import FetchErrorBanner from '../../common/FetchErrorBanner';
@@ -363,7 +363,7 @@ export default function CompanyProfileLayout({
     setEditMode(mode);
   };
 
-  const fallbackCompanyName = getCompanyDisplayName(profile, { role, user });
+  const fallbackCompanyName = resolveCompanyHeaderName(profile, { role, user, readOnly: false });
 
   const uploadImage = async (file, type) => {
     const validation = validateFile(file, type === 'logo' ? 'logo' : 'image');

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import VerifiedBadge from './VerifiedBadge';
+import CompanyVerificationBadge from './CompanyVerificationBadge';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { getUserProfilePath } from '../../utils/profileRoutes';
 import { getOrgLabels, isOrganizationProfile } from '../../utils/orgLabels';
@@ -13,15 +13,19 @@ export default function CompanyNameWithBadge({
   className = '',
   nameClassName = 'text-sm text-gray-500',
   showUnverifiedLabel = false,
+  showVerificationBadge = true,
+  showOwnerVerificationBadge = false,
+  readOnly = false,
+  linkToProfile = true,
 }) {
-  const companyName = name ?? company?.company_name ?? 'Perfil Business';
+  const companyName = name ?? company?.company_name ?? '';
   const verified = isCompanyVerified(company);
   const orgLabels = getOrgLabels(company);
   const unverifiedLabel = isOrganizationProfile(company)
     ? 'Organización no verificada'
     : 'Cuenta Business no verificada';
   const size = profile ? 'md' : badgeSize;
-  const profilePath = getUserProfilePath(userId ?? company?.user_id, 'company');
+  const profilePath = linkToProfile ? getUserProfilePath(userId ?? company?.user_id, 'company') : null;
 
   const nameElement = profilePath ? (
     <Link
@@ -34,12 +38,15 @@ export default function CompanyNameWithBadge({
     <span className={nameClassName}>{companyName}</span>
   );
 
+  const showBadge =
+    showVerificationBadge && (verified || (!readOnly && showOwnerVerificationBadge));
+
   return (
-    <span className={`inline-flex flex-wrap items-center gap-1.5 ${className}`}>
+    <span className={`inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 ${className}`}>
       {nameElement}
-      {verified ? (
-        <VerifiedBadge size={size} tooltip={orgLabels.verified} />
-      ) : showUnverifiedLabel ? (
+      {showBadge ? (
+        <CompanyVerificationBadge profile={company} readOnly={readOnly} size={size} />
+      ) : showUnverifiedLabel && !verified ? (
         <span className="text-xs text-gray-400">{unverifiedLabel}</span>
       ) : null}
     </span>

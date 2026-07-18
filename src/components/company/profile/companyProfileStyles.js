@@ -62,7 +62,7 @@ export const profileCompanyNameHeadingClass =
 export const profileHeadlineClass =
   'mt-space-xs break-words text-body-small text-app-muted sm:text-body';
 
-export const profileHeaderInfoClass = 'min-w-0 flex-1 sm:pt-space-md';
+export const profileHeaderInfoClass = 'min-w-0 flex-1 pt-space-xs sm:pt-space-md';
 
 export const profileActionButtonClass =
   'h-10 min-h-0 shrink-0 px-space-md text-body-small font-medium';

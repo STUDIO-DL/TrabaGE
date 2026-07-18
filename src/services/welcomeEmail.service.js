@@ -2,11 +2,13 @@ import { supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
 
 /**
- * Ensures a welcome email outbox row exists for the current user.
- * The Database Webhook on welcome_email_outbox INSERT invokes send_welcome_email.
- * Idempotent: safe to call after every successful email verification / login.
+ * Queues the one-time welcome email after registration completes.
+ * Call only from registration completion handlers (email verify, OAuth signup finish).
+ * Never call from login, session restore, refresh, or OAuth login.
+ *
+ * Idempotent via DB checks on welcome_emails_sent + welcome_email_outbox.
  */
-export async function ensureWelcomeEmailQueued() {
+export async function queueWelcomeEmailOnRegistrationComplete() {
   try {
     const { error } = await supabase.rpc('request_welcome_email_if_needed');
     if (error) {

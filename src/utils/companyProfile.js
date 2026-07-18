@@ -36,6 +36,17 @@ export function getCompanyDisplayName(profile, options = {}) {
   });
 }
 
+/** Resolve header-visible company name: DB first, auth metadata on own profile. */
+export function resolveCompanyHeaderName(profile, { user, role, readOnly = false } = {}) {
+  return getCompanyDisplayName(profile, {
+    role,
+    user: readOnly ? null : user,
+    profileOnly: readOnly,
+    warnIfMissing: !readOnly,
+    context: readOnly ? 'company_public_profile_header' : 'company_profile_header',
+  });
+}
+
 export function getCompanySectorText(profile) {
   return profile?.sector?.trim() || null;
 }

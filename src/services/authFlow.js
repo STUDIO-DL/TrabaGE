@@ -1,13 +1,12 @@
 import { ROLES } from '../constants/roles';
 import { authService, resolveSignupRoleFromUser } from './auth.service';
 import { bootstrapProfile } from './profileBootstrap';
-import { ensureWelcomeEmailQueued } from './welcomeEmail.service';
 import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
 
 /**
- * Central post-auth pipeline used by OAuth callback and email verification:
+ * Central post-auth pipeline used by login, OAuth callback, and email verification:
  * resolve role → bootstrap profile → compute home/setup redirect.
- * Does not navigate; callers own navigation and auth-context refresh.
+ * Does not queue welcome email or navigate; callers own those steps.
  */
 export async function completePostAuthFlow(user, { preferProfile = true } = {}) {
   if (!user?.id) {
@@ -31,8 +30,6 @@ export async function completePostAuthFlow(user, { preferProfile = true } = {}) 
   if (role && role !== ROLES.ADMIN) {
     await bootstrapProfile({ user, role });
   }
-
-  void ensureWelcomeEmailQueued();
 
   const redirectTo = await resolvePostAuthRedirect(user.id, role, { preferProfile });
   return { role, redirectTo, error: null };

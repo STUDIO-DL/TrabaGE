@@ -1,0 +1,119 @@
+{
+  "baseUrl": "http://localhost:5173",
+  "timestamp": "2026-07-18T19:57:13.103Z",
+  "checklist": [
+    {
+      "section": "organization",
+      "name": "Create temp user (admin API + company_name metadata)",
+      "status": "pass",
+      "note": "email=qa-organization-mrqse7rh-1vviw@trabage-qa.test role=organization company_name=ZARREL"
+    },
+    {
+      "section": "organization",
+      "name": "Playwright login",
+      "status": "pass",
+      "note": ""
+    },
+    {
+      "section": "organization",
+      "name": "Visit /organization/profile",
+      "status": "fail",
+      "note": "/login"
+    },
+    {
+      "section": "organization",
+      "name": "Company name \"ZARREL\" in profile header",
+      "status": "pass",
+      "note": "in header (CompanyNameWithBadge)"
+    },
+    {
+      "section": "organization",
+      "name": "Owner verification badge visible (gray/unverified)",
+      "status": "fail",
+      "note": "not found"
+    },
+    {
+      "section": "organization",
+      "name": "Logo upload button present",
+      "status": "fail",
+      "note": "missing"
+    },
+    {
+      "section": "organization",
+      "name": "Logo upload without permissions error (migration 080)",
+      "status": "fail",
+      "note": "skipped — no upload button"
+    },
+    {
+      "section": "organization",
+      "name": "Logo persists after refresh",
+      "status": "skip",
+      "note": "upload did not succeed"
+    },
+    {
+      "section": "organization",
+      "name": "Cleanup test user",
+      "status": "pass",
+      "note": ""
+    },
+    {
+      "section": "business",
+      "name": "Create temp user (admin API + company_name metadata)",
+      "status": "pass",
+      "note": "email=qa-business-mrqsf5e2-x2s9p@trabage-qa.test role=business company_name=ZARREL Business QA"
+    },
+    {
+      "section": "business",
+      "name": "Playwright login",
+      "status": "pass",
+      "note": ""
+    },
+    {
+      "section": "business",
+      "name": "Visit /business/profile",
+      "status": "fail",
+      "note": "/login"
+    },
+    {
+      "section": "business",
+      "name": "Company name \"ZARREL Business QA\" in profile header",
+      "status": "fail",
+      "note": "h1=\"Bienvenido\""
+    },
+    {
+      "section": "business",
+      "name": "Owner verification badge visible (gray/unverified)",
+      "status": "fail",
+      "note": "not found"
+    },
+    {
+      "section": "business",
+      "name": "Logo upload button present",
+      "status": "fail",
+      "note": "missing"
+    },
+    {
+      "section": "business",
+      "name": "Logo upload without permissions error (migration 080)",
+      "status": "fail",
+      "note": "skipped — no upload button"
+    },
+    {
+      "section": "business",
+      "name": "Logo persists after refresh",
+      "status": "skip",
+      "note": "upload did not succeed"
+    },
+    {
+      "section": "business",
+      "name": "Cleanup test user",
+      "status": "pass",
+      "note": ""
+    }
+  ],
+  "summary": {
+    "pass": 7,
+    "fail": 9,
+    "skip": 2
+  }
+}

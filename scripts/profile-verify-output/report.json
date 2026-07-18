@@ -1,0 +1,38 @@
+{
+  "accounts": [
+    {
+      "email": "le***@gmail.com",
+      "loginOk": false,
+      "loginError": "Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.",
+      "afterLogin": "/login",
+      "isEmployer": false
+    },
+    {
+      "email": "je***@gmail.com",
+      "loginOk": false,
+      "loginError": "Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.",
+      "afterLogin": "/login",
+      "isEmployer": false
+    },
+    {
+      "email": "jo***@gmail.com",
+      "loginOk": false,
+      "loginError": "Correo o contraseña incorrectos. Por favor, inténtalo de nuevo.",
+      "afterLogin": "/login",
+      "isEmployer": false
+    }
+  ],
+  "preview": {
+    "label": "preview-organization",
+    "url": "/organization/profile",
+    "h1": null,
+    "hasLogoUpload": false,
+    "logoBtnDisabled": null,
+    "hasVerifiedBadge": false,
+    "hasUnverifiedIndicator": false,
+    "headerGap": null,
+    "logoOverlapBanner": null,
+    "screenshot": "C:\\Users\\user\\Desktop\\TrabaGE\\TrabaGE\\scripts\\profile-verify-output\\preview-organization.png"
+  },
+  "logoUpload": null
+}

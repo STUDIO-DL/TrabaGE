@@ -8,8 +8,6 @@ import BrandLogoOwnershipModal from '../BrandLogoOwnershipModal';
 
 import {
 
-  AlertTriangle,
-
   ArrowLeft,
 
   Briefcase,
@@ -22,8 +20,6 @@ import {
 
   Settings,
 
-  Upload,
-
   Users,
 
   ICON_SIZES,
@@ -32,7 +28,7 @@ import {
 
 import CompanyVerificationStatus from './CompanyVerificationStatus';
 
-import VerifiedBadge from '../VerifiedBadge';
+import CompanyNameWithBadge from '../CompanyNameWithBadge';
 
 import AppAvatar from '../../common/AppAvatar';
 
@@ -42,13 +38,11 @@ import { getCompanyCoverUrl } from '../../../constants/images';
 
 import {
 
-  getCompanyDisplayName,
-
   getCompanySectorText,
 
-} from '../../../utils/companyProfile';
+  resolveCompanyHeaderName,
 
-import { isCompanyVerified } from '../../../utils/companyVerification';
+} from '../../../utils/companyProfile';
 
 import { formatFollowerNumber } from '../../../utils/formatFollowerCount';
 
@@ -236,7 +230,7 @@ export default function CompanyProfileHeader({
 
   const navigate = useNavigate();
 
-  const { role, getHomePath } = useAuth();
+  const { role, user, getHomePath } = useAuth();
 
   const logoInputRef = useRef(null);
 
@@ -246,17 +240,13 @@ export default function CompanyProfileHeader({
 
 
 
-  const name = getCompanyDisplayName(profile, { warnIfMissing: !readOnly, profileOnly: true });
+  const name = resolveCompanyHeaderName(profile, { user, role, readOnly });
 
   const avatarType = avatarTypeFromCompanyProfile(profile);
 
   const coverSrc = getCompanyCoverUrl(profile?.cover_url);
 
   const metaItems = buildHeaderMeta(profile);
-
-  const verified = isCompanyVerified(profile);
-
-
 
   const handleLogoChange = (event) => {
 
@@ -438,20 +428,6 @@ export default function CompanyProfileHeader({
 
 
 
-            {verified && (
-
-              <span
-
-                className="absolute bottom-1.5 right-1.5 h-4 w-4 rounded-full bg-emerald-500 ring-2 ring-app-card"
-
-                aria-hidden
-
-              />
-
-            )}
-
-
-
             {!readOnly && (
 
               <>
@@ -478,13 +454,21 @@ export default function CompanyProfileHeader({
 
                   disabled={logoLoading}
 
-                  className="absolute bottom-1 right-1 flex min-h-touch min-w-touch items-center justify-center rounded-full bg-primary-600 text-white shadow-elevation-1 ring-2 ring-app-card transition-colors duration-fast hover:bg-primary-700 disabled:opacity-60"
+                  className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-radius-circular bg-app-card text-app-muted shadow-elevation-1 ring-2 ring-app-card transition-colors duration-fast hover:bg-app-surface hover:text-app-text disabled:opacity-60"
 
                   aria-label="Subir logo"
 
                 >
 
-                  <AppIcon icon={Upload} size={ICON_SIZES.sm} className="text-white" />
+                  {logoLoading ? (
+
+                    <span className="text-[10px] font-semibold">…</span>
+
+                  ) : (
+
+                    <AppIcon icon={Camera} size={ICON_SIZES.sm} />
+
+                  )}
 
                 </button>
 
@@ -498,25 +482,41 @@ export default function CompanyProfileHeader({
 
           <div className={profileHeaderInfoClass}>
 
-            <div className="flex items-start gap-space-sm">
+            <div className="flex items-center gap-space-sm">
 
-              <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-space-sm gap-y-space-xs">
+              <div className="min-w-0 flex-1">
 
-                <h1 className={profileCompanyNameHeadingClass}>{name}</h1>
+                {name ? (
 
-                {verified && <VerifiedBadge size="sm" />}
+                  <CompanyNameWithBadge
 
-                {readOnly && !verified && (
+                    company={profile}
 
-                  <span className="inline-flex items-center gap-space-xs rounded-radius-full bg-amber-50 px-space-sm py-space-xs text-caption font-medium text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-800/60">
+                    name={name}
 
-                    <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-amber-600 dark:text-amber-300" />
+                    profile
 
-                    No verificada
+                    readOnly={readOnly}
 
-                  </span>
+                    showOwnerVerificationBadge={!readOnly}
 
-                )}
+                    linkToProfile={false}
+
+                    nameClassName={profileCompanyNameHeadingClass}
+
+                    className="items-center"
+
+                  />
+
+                ) : !readOnly ? (
+
+                  <h1 className={`${profileCompanyNameHeadingClass} text-app-subtle`}>
+
+                    Añade el nombre de tu cuenta
+
+                  </h1>
+
+                ) : null}
 
               </div>
 

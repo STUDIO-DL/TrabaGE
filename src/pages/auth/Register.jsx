@@ -34,6 +34,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { getOnboardingComplete } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
+import { queueWelcomeEmailOnRegistrationComplete } from '../../services/welcomeEmail.service';
 import { mapAuthError } from '../../utils/errors';
 import { getErrorMessage } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
@@ -273,6 +274,7 @@ export default function Register() {
       return;
     }
 
+    await queueWelcomeEmailOnRegistrationComplete();
     await refreshAuthState();
     navigate(redirectTo || '/', { replace: true });
     setLoading(false);

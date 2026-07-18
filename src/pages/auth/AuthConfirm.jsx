@@ -6,6 +6,7 @@ import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
+import { queueWelcomeEmailOnRegistrationComplete } from '../../services/welcomeEmail.service';
 import { isExpiredVerificationUserMessage, mapAuthError } from '../../utils/errors';
 import { getErrorMessage } from '../../utils/i18n';
 import { clearPendingSignupEmail } from '../../utils/signupEmailCooldown';
@@ -78,6 +79,10 @@ export default function AuthConfirm() {
       if (needsAccountTypeSelection) {
         navigate('/register', { replace: true, state: { fromEmailVerification: true } });
         return;
+      }
+
+      if (!wasAlreadyVerified) {
+        await queueWelcomeEmailOnRegistrationComplete();
       }
 
       await refreshAuthState();
