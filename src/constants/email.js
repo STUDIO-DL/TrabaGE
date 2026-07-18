@@ -1,7 +1,11 @@
-/** Official TrabaGE email sender (dev phase). Change SMTP_FROM_EMAIL in Supabase secrets for production domain. */
+/** Official TrabaGE email sender — configured via Resend Edge Function secrets. */
 export const EMAIL_SENDER_NAME = 'TrabaGE';
 
-export const DEFAULT_AUTH_FROM_EMAIL = 'noreply.trabage@gmail.com';
+/** Auth emails: verification, password recovery. */
+export const DEFAULT_AUTH_FROM_EMAIL = 'noreply@trabage.org';
 
-/** Future production sender — set via Supabase SMTP / Edge Function secrets only. */
-export const PRODUCTION_AUTH_FROM_EMAIL = 'noreply@trabage.org';
+/** Welcome email after account confirmation. */
+export const DEFAULT_WELCOME_FROM_EMAIL = 'welcome@trabage.org';
+
+/** @deprecated Use DEFAULT_AUTH_FROM_EMAIL or DEFAULT_WELCOME_FROM_EMAIL. */
+export const PRODUCTION_AUTH_FROM_EMAIL = DEFAULT_AUTH_FROM_EMAIL;

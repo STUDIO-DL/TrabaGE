@@ -28,7 +28,7 @@ export async function resolvePostAuthRedirect(userId, knownRole = null, { prefer
     userRole = roleData?.role;
   }
 
-  if (!userRole) return '/login';
+  if (!userRole) return '/register';
 
   if (userRole === ROLES.ADMIN) return ROLE_HOME[ROLES.ADMIN];
 

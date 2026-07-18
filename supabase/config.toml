@@ -182,7 +182,7 @@ enable_manual_linking = false
 minimum_password_length = 6
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
-password_requirements = "lower_upper_letters_digits_symbols"
+password_requirements = "lower_upper_letters_digits"
 
 # Configure passkey sign-ins.
 # [auth.passkey]
@@ -233,20 +233,18 @@ otp_length = 6
 # Number of seconds before the email OTP expires (defaults to 1 hour).
 otp_expiry = 3600
 
-# Use a production-ready SMTP server (Supabase Dashboard → Authentication → SMTP)
-# Dev phase sender: TrabaGE <noreply.trabage@gmail.com>
-# Production: change admin_email to noreply@trabage.org (no code changes needed)
-# [auth.email.smtp]
+# Auth emails are sent via Resend (Send Email Hook → send_auth_email Edge Function).
+# Configure in Supabase Dashboard → Authentication → Hooks → Send Email.
+# [auth.email.smtp] is not used when the Send Email hook is enabled.
+#
+# Local dev hook (optional — requires RESEND_API_KEY + SEND_EMAIL_HOOK_SECRET):
+# [auth.hook.send_email]
 # enabled = true
-# host = "smtp.gmail.com"
-# port = 587
-# user = "env(SMTP_USER)"
-# pass = "env(SMTP_PASS)"
-# admin_email = "noreply.trabage@gmail.com"
-# sender_name = "TrabaGE"
+# uri = "http://host.docker.internal:54321/functions/v1/send_auth_email"
+# secrets = "env(SEND_EMAIL_HOOK_SECRET)"
 
 [auth.email.template.confirmation]
-subject = "Verifica tu correo en TrabaGE"
+subject = "Verifica tu correo electrónico"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
@@ -294,6 +292,12 @@ max_frequency = "5s"
 # [auth.hook.custom_access_token]
 # enabled = true
 # uri = "pg-functions://<database>/<schema>/<hook_name>"
+
+# Send Email hook — Resend via send_auth_email Edge Function (production: configure in Dashboard).
+# [auth.hook.send_email]
+# enabled = true
+# uri = "http://host.docker.internal:54321/functions/v1/send_auth_email"
+# secrets = "env(SEND_EMAIL_HOOK_SECRET)"
 
 # Configure one of the supported SMS providers: `twilio`, `twilio_verify`, `messagebird`, `textlocal`, `vonage`.
 [auth.sms.twilio]

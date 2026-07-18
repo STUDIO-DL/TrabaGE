@@ -203,11 +203,17 @@
   }
 
   .onboarding-title-in {
-    animation: onboardingFadeUp var(--motion-slow) var(--ease-out) 0.1s forwards;
+    animation: onboardingFadeUp var(--motion-slow) var(--ease-out) 0.1s both;
+    opacity: 0;
   }
 
   .onboarding-body-in {
     animation: onboardingFadeUp var(--motion-slow) var(--ease-out) 0.2s forwards;
+  }
+
+  .onboarding-desc-in {
+    animation: onboardingFadeUp var(--motion-slow) var(--ease-out) 0.18s both;
+    opacity: 0;
   }
 
   .onboarding-btn-in {
@@ -499,8 +505,25 @@
   }
 }
 
-.onboarding-hero-in {
+.onboarding-hero-in,
+.onboarding-hero-in--forward {
   animation: onboardingCarouselIn var(--motion-slow) var(--ease-out) both;
+}
+
+.onboarding-hero-in--backward {
+  animation: onboardingCarouselInBackward var(--motion-slow) var(--ease-out) both;
+}
+
+@keyframes onboardingCarouselInBackward {
+  from {
+    opacity: 0;
+    transform: translateX(-18px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
 }
 
 @keyframes onboardingFadeUp {
@@ -638,9 +661,12 @@
   .login-fade-in-delayed,
   .register-fields-in,
   .onboarding-hero-in,
+  .onboarding-hero-in--forward,
+  .onboarding-hero-in--backward,
   .onboarding-illustration-in,
   .onboarding-title-in,
   .onboarding-body-in,
+  .onboarding-desc-in,
   .onboarding-btn-in {
     animation: none !important;
     opacity: 1 !important;

@@ -48,6 +48,7 @@ icacls "%SUPABASE_TOKEN_FILE%" /inheritance:r /grant:r "%USERNAME%:R" >nul 2>nul
 echo.
 echo Login correcto. Ya puedes usar:
 echo   scripts\supabase.cmd link --project-ref jqzbpdojwzopwuaapqgl
+echo   scripts\supabase.cmd functions deploy send_auth_email --no-verify-jwt
 echo   scripts\supabase.cmd functions deploy send_welcome_email
 echo.
 endlocal

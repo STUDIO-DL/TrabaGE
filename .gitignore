@@ -30,3 +30,6 @@ Thumbs.db
 scripts/admins.local.json
 
 
+
+# Local Netlify folder
+.netlify

@@ -27,10 +27,7 @@ import { useProfile } from '../../hooks/useProfile';
 import { useAuth } from '../../hooks/useAuth';
 
 import { applyJobRecommendations } from '../../utils/jobMatching';
-
 import { buildJobFilters, matchCityFromQuery } from '../../utils/jobFilters';
-
-import { jobMatchesService } from '../../services/jobMatches.service';
 import { applicationsService } from '../../services/applications.service';
 import { useSavedJobs } from '../../hooks/useSavedJobs';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -164,15 +161,6 @@ export default function Jobs() {
       setApplicationHistory(data ?? []);
     });
   }, [user?.id, isPreviewMode]);
-
-  useEffect(() => {
-    if (isPreviewMode || !user?.id || !profile || loading || !scoredJobs.length) return;
-    jobMatchesService.cacheUserJobScores(
-      user.id,
-      scoredJobs.map(({ job }) => job),
-      userProfile,
-    );
-  }, [isPreviewMode, user?.id, profile, loading, scoredJobs, userProfile]);
 
   const showRecommendedSection =
     showRecommendations && recommendationMode === 'recommended' && recommendedJobs.length > 0;

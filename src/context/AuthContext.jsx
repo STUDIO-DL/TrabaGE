@@ -21,6 +21,7 @@ import {
   setPreviewRoleStorage,
 } from '../constants/preview';
 import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
+import { completePostAuthFlow } from '../services/authFlow';
 import { bootstrapProfile } from '../services/profileBootstrap';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
@@ -181,8 +182,9 @@ export function AuthProvider({ children }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (getPreviewMode()) return;
+      if (event === 'TOKEN_REFRESHED') return;
       // Defer Supabase API calls: awaiting them inside this callback deadlocks
       // the auth client during OAuth (SIGNED_IN on /auth/callback).
       setTimeout(() => {
@@ -238,11 +240,15 @@ export function AuthProvider({ children }) {
 
     await hydrateUser(session);
 
-    const redirectTo = await resolvePostAuthRedirect(session.user.id, null, {
-      preferProfile: false,
-    });
+    const flow = await completePostAuthFlow(session.user, { preferProfile: false });
+    if (flow.error) return { data, error: flow.error, redirectTo: null };
+    if (flow.needsAccountTypeSelection) {
+      return { data, error: null, redirectTo: '/register' };
+    }
 
-    return { data, error: null, redirectTo };
+    await hydrateUser(session);
+
+    return { data, error: null, redirectTo: flow.redirectTo };
   }, [hydrateUser]);
 
   const register = useCallback(async (email, password, userRole, metadata = {}) => {

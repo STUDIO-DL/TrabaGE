@@ -212,12 +212,44 @@ export default function Register() {
     setTypeValues((prev) => ({ ...prev, [key]: value }));
   };
 
+  const isEmployerAccountKind =
+    accountKind === ACCOUNT_KINDS.BUSINESS || accountKind === ACCOUNT_KINDS.ORGANIZATION;
+
   const handleGoogleRegister = async () => {
     setError('');
 
     if (!accountKind) {
       setError(getErrorMessage('selectAccountType'));
       return;
+    }
+
+    if (isEmployerAccountKind) {
+      for (const field of config.fields) {
+        if (field.required) {
+          const value = typeValues[field.key];
+          if (!value || !String(value).trim()) {
+            setError(getErrorMessage(field.errorKey));
+            return;
+          }
+        }
+      }
+
+      if (!city.trim()) {
+        setError(getErrorMessage('selectCity'));
+        return;
+      }
+
+      if (!acceptedTerms) {
+        setError(getErrorMessage('acceptTerms'));
+        return;
+      }
+
+      const metadata = config.buildMetadata(typeValues, { city: city.trim() });
+      authService.rememberAccountKind(accountKind);
+      authService.rememberOrgDetails({
+        ...metadata.orgDetails,
+        city: metadata.city,
+      });
     }
 
     clearPreviewMode();

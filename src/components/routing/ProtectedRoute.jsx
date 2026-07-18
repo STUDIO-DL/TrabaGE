@@ -17,7 +17,13 @@ export default function ProtectedRoute() {
   }
 
   if (!emailVerified && !previewActive) {
-    return <Navigate to="/login" replace state={{ emailVerificationRequired: true }} />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location, emailVerificationRequired: true }}
+      />
+    );
   }
 
   return <Outlet />;

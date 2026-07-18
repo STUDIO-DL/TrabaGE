@@ -61,7 +61,7 @@ export const searchService = {
 
     if (rpcResult.error) {
       reportError(rpcResult.error, { area: 'global_search_rpc', query: trimmedQuery });
-      return { data: [], error: null };
+      return { data: [], error: rpcResult.error };
     }
 
     let data = (rpcResult.data || [])

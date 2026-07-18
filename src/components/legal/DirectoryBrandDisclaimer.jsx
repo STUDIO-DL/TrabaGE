@@ -15,7 +15,7 @@ export default function DirectoryBrandDisclaimer({ className = '' }) {
       role="note"
     >
       {DIRECTORY_BRAND_DISCLAIMER}{' '}
-      <LegalInlineLink to={LEGAL_ROUTES.legalNotice}>Más información</LegalInlineLink>.
+      <LegalInlineLink to={LEGAL_ROUTES.termsThirdPartyMarks}>Más información</LegalInlineLink>.
     </p>
   );
 }

@@ -28,6 +28,7 @@ import {
   isEmailNotVerifiedError,
 } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
+import { resolveLoginRedirectPath } from '../../utils/resolveLoginRedirect';
 import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
 
 const AUTH_ALERT_SUCCESS =
@@ -429,7 +430,7 @@ export default function Login() {
       return false;
     }
 
-    navigate(redirectTo || '/', { replace: true });
+    navigate(resolveLoginRedirectPath(location, redirectTo || '/'), { replace: true });
     setLoading(false);
     return true;
   };
@@ -467,9 +468,9 @@ export default function Login() {
     return <Navigate to={getHomePath() || '/'} replace />;
   }
 
-  // Session present but role still resolving — avoid the register flicker.
+  // Session present but role still missing — send to registration instead of spinning forever.
   if (isAuthenticated && !isPreviewMode && !role) {
-    return <AuthLoadingScreen />;
+    return <Navigate to="/register" replace state={{ resumeAccountSetup: true }} />;
   }
 
   return (

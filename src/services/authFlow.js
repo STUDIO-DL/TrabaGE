@@ -8,7 +8,7 @@ import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
  * resolve role → bootstrap profile → compute home/setup redirect.
  * Does not navigate; callers own navigation and auth-context refresh.
  */
-export async function completePostAuthFlow(user) {
+export async function completePostAuthFlow(user, { preferProfile = true } = {}) {
   if (!user?.id) {
     return { error: { message: 'No se pudo identificar el usuario autenticado' } };
   }

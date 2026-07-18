@@ -20,8 +20,4 @@
     <loc>https://trabage.org/terms</loc>
     <priority>0.5</priority>
   </url>
-  <url>
-    <loc>https://trabage.org/aviso-legal</loc>
-    <priority>0.5</priority>
-  </url>
 </urlset>

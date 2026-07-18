@@ -13,7 +13,7 @@ import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { CITIES } from '../../constants/cities';
 import { WORK_MODES } from '../../constants/workModes';
 import { useAuth } from '../../hooks/useAuth';
-import { ROLE_SETUP, ROLES, rolePath } from '../../constants/roles';
+import { ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
 import { companyService } from '../../services/company.service';
@@ -237,7 +237,7 @@ export default function PublishJob() {
             title="Completa tu perfil para publicar"
             description="Antes de publicar ofertas, completa los datos requeridos de tu cuenta Business u organización."
           />
-          <Link to={ROLE_SETUP[role] || ROLE_SETUP[ROLES.BUSINESS]} className="mt-md block">
+          <Link to={`${rolePath(role || ROLES.BUSINESS, '/profile')}?complete=publish`} className="mt-md block">
             <Button fullWidth className="btn-primary-mobile !rounded-btn-primary !py-0">
               Completar perfil
             </Button>

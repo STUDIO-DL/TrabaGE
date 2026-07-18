@@ -1,7 +1,8 @@
 export const LEGAL_ROUTES = {
   privacy: '/privacy',
   terms: '/terms',
-  legalNotice: '/aviso-legal',
+  termsThirdPartyMarks: '/terms#marcas-terceros-uso',
+  termsLogoPolicy: '/terms#politica-logotipos',
 };
 
 export const LEGAL_VERSION = '2.1';

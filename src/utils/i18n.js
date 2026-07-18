@@ -6,7 +6,7 @@ const MESSAGES = {
         'Tu correo electrónico aún no ha sido verificado. Revisa tu bandeja de entrada y activa tu cuenta antes de iniciar sesión.',
       userAlreadyRegistered: 'Ya existe una cuenta registrada con este correo electrónico.',
       strongPassword:
-        'La contraseña debe tener al menos 6 caracteres e incluir mayúscula, minúscula y símbolo.',
+        'La contraseña debe tener al menos 6 caracteres e incluir mayúscula, minúscula y número.',
       invalidEmail: 'El formato del correo electrónico no es válido.',
       networkError:
         'No se pudo conectar con el servidor. Comprueba tu conexión a internet e inténtalo de nuevo.',
@@ -42,7 +42,7 @@ const MESSAGES = {
       supabaseFallback: 'No hemos podido completar la operación. Inténtalo de nuevo.',
     },
     auth: {
-      passwordHint: 'Mínimo 6 caracteres con mayúscula, minúscula y símbolo.',
+      passwordHint: 'Mínimo 6 caracteres con mayúscula, minúscula y número.',
     },
   },
   en: {
@@ -52,7 +52,7 @@ const MESSAGES = {
         'Your email has not been verified yet. Check your inbox and activate your account before signing in.',
       userAlreadyRegistered: 'An account with this email address already exists.',
       strongPassword:
-        'Password must be at least 6 characters and include an uppercase letter, a lowercase letter, and a symbol.',
+        'Password must be at least 6 characters and include an uppercase letter, a lowercase letter, and a number.',
       invalidEmail: 'The email address format is not valid.',
       networkError:
         'Could not connect to the server. Check your internet connection and try again.',
@@ -86,7 +86,7 @@ const MESSAGES = {
       supabaseFallback: 'Could not complete the action. Please try again.',
     },
     auth: {
-      passwordHint: 'Minimum 6 characters with uppercase, lowercase, and a symbol.',
+      passwordHint: 'Minimum 6 characters with uppercase, lowercase, and a number.',
     },
   },
 };

@@ -13,9 +13,11 @@ export function validateStrongPassword(password) {
 
   const hasLowercase = /[a-z]/.test(password);
   const hasUppercase = /[A-Z]/.test(password);
-  const hasSymbol = /[^A-Za-z0-9]/.test(password);
+  const hasDigit = /\d/.test(password);
 
-  if (!hasLowercase || !hasUppercase || !hasSymbol) {
+  // Google Password Manager and similar tools often generate strong alphanumeric
+  // passwords without symbols. Match Supabase "lower_upper_letters_digits".
+  if (!hasLowercase || !hasUppercase || !hasDigit) {
     return { valid: false, error: errorMessage };
   }
 

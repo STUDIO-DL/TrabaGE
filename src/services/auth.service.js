@@ -21,7 +21,7 @@ const PENDING_ORG_DETAILS_KEY = 'pending_org_details';
 const OAUTH_INTENT_KEY = 'trabage_oauth_intent';
 const VALID_ACCOUNT_TYPES = ASSIGNABLE_ROLES;
 const VALID_STORED_ROLES = [...ASSIGNABLE_ROLES, ROLES.ADMIN];
-const NEW_OAUTH_USER_WINDOW_MS = 10 * 60 * 1000;
+const NEW_OAUTH_USER_WINDOW_MS = 24 * 60 * 60 * 1000;
 /** First Google sign-in: created_at and last_sign_in_at are nearly identical. */
 const FIRST_SIGNIN_WINDOW_MS = 60 * 1000;
 
@@ -108,6 +108,7 @@ function savePendingOrgDetails(details) {
     if (details.company_name) clean.company_name = details.company_name;
     if (details.sector) clean.sector = details.sector;
     if (details.company_type) clean.company_type = details.company_type;
+    if (details.city) clean.city = details.city;
 
     if (Object.keys(clean).length > 0) {
       sessionStorage.setItem(PENDING_ORG_DETAILS_KEY, JSON.stringify(clean));
@@ -290,6 +291,10 @@ export const authService = {
     }
   },
 
+  rememberOrgDetails(details) {
+    savePendingOrgDetails(details);
+  },
+
   consumePendingOrgKind,
 
   consumePendingOrgDetails,
@@ -445,19 +450,19 @@ export const authService = {
     } else if (code) {
       result = await supabase.auth.exchangeCodeForSession(code);
     } else {
-      const sessionResult = await supabase.auth.getSession();
-      result = {
-        data: {
-          session: sessionResult.data?.session ?? null,
-          user: sessionResult.data?.session?.user ?? null,
+      return {
+        data: { user: null, session: null },
+        error: {
+          code: 'confirmation_failed',
+          message: 'El enlace de verificación no es válido o ha expirado.',
         },
-        error: sessionResult.error,
       };
     }
 
     if (result.error) return result;
 
     const user = result.data?.user ?? result.data?.session?.user;
+    const session = result.data?.session ?? null;
     if (!isEmailVerified(user)) {
       return {
         data: result.data,
@@ -468,9 +473,7 @@ export const authService = {
       };
     }
 
-    // Confirmation is complete, but TrabaGE requires an explicit login after it.
-    await supabase.auth.signOut({ scope: 'local' });
-    return { data: { user, session: null }, error: null };
+    return { data: { user, session }, error: null };
   },
 
   applyPendingAccountType: async (userOrId) => {
@@ -569,10 +572,6 @@ export const authService = {
         redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           prompt: 'select_account',
-        },
-        data: {
-          role: normalizedRole,
-          account_kind: normalizeAccountKind(accountKind) || undefined,
         },
       },
     });

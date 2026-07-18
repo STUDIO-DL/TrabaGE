@@ -118,7 +118,7 @@ export default function CompanyProfileHeader({
   onSettings,
 }) {
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { role, getHomePath } = useAuth();
   const logoInputRef = useRef(null);
   const [logoOwnershipOpen, setLogoOwnershipOpen] = useState(false);
   const coverInputId = 'company-cover-input';
@@ -141,6 +141,15 @@ export default function CompanyProfileHeader({
     event.target.value = '';
   };
 
+  const handleBack = () => {
+    const idx = window.history.state?.idx;
+    if (typeof idx === 'number' && idx > 0) {
+      navigate(-1);
+      return;
+    }
+    navigate(getHomePath?.() || '/explore', { replace: true });
+  };
+
   return (
     <section className="overflow-visible bg-app-card">
       <div className="relative overflow-visible">
@@ -157,7 +166,7 @@ export default function CompanyProfileHeader({
           {showBackButton && (
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={handleBack}
               className="absolute left-space-sm top-space-sm z-20 inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-sm p-space-sm text-white transition-colors duration-fast hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label="Volver"
             >

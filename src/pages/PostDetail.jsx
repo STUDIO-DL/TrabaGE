@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
 import EmptyState from '../components/common/EmptyState';
 import PostCard from '../components/feed/PostCard';
+import { PostCardSkeleton } from '../components/common/Skeleton';
 import { postsService } from '../services/posts.service';
 import { supabase } from '../config/supabase';
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';

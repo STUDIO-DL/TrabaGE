@@ -74,23 +74,8 @@ export const jobMatchesService = {
       }))
       .filter((item) => item.score > 0);
 
-    if (!matches.length) return { data: [], error: null };
-
-    const { error } = await supabase.rpc('upsert_job_matches', {
-      p_matches: matches,
-    });
-
-    if (error?.code === 'PGRST202' || error?.message?.includes('upsert_job_matches')) {
-      const results = await Promise.all(
-        matches.map((item) =>
-          jobMatchesService.upsertMatch(item.user_id, item.job_id, item.score),
-        ),
-      );
-      const fallbackError = results.find((result) => result.error)?.error ?? null;
-      return { data: matches, error: fallbackError };
-    }
-
-    return { data: matches, error };
+    // Match scores are computed client-side for display; persistence is server-side only.
+    return { data: matches, error: null };
   },
 
   cacheJobCandidateScores: async (job, candidates) => {
@@ -140,10 +125,6 @@ export const jobMatchesService = {
         score: calculateJobMatch(candidate, job),
       }))
       .filter((item) => item.score >= MATCH_THRESHOLD);
-
-    if (jobMatches.length) {
-      await supabase.rpc('upsert_job_matches', { p_matches: jobMatches });
-    }
 
     await jobMatchesService.cacheJobCandidateScores(job, candidates ?? []);
 

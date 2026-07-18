@@ -24,10 +24,8 @@ Use this list before inviting real users. Items marked **OPS** require Dashboard
   - Redirect URLs include `/auth/callback` and `/auth/confirm` for apex + www + localhost
 - [ ] **OPS** Auth → Providers → Google enabled with production redirect URI
 - [ ] **OPS** Auth → Email: **Confirm email = ON**
-- [ ] **OPS** Auth → SMTP configured (custom SMTP, not default rate-limited)
-- [ ] **OPS** Auth email templates:
-  - Confirmation link uses `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=email`
-  - Recovery template active (repo: `supabase/templates/recovery.html`)
+- [ ] **OPS** Auth → Hooks → **Send Email** → `send_auth_email` (Resend, not Supabase SMTP)
+- [ ] **OPS** Resend: domain `trabage.org` verified, API key in Edge Function secrets
 - [ ] **OPS** Storage buckets present & policies applied: `candidate-avatars`, `company-logos`, `post-images`, `candidate-cvs`, `company-verifications`
 - [ ] **OPS** Verify RLS smoke tests (other user cannot read CVs / edit foreign profiles / open admin)
 
@@ -36,6 +34,7 @@ Use this list before inviting real users. Items marked **OPS** require Dashboard
 Deploy:
 
 ```bash
+supabase functions deploy send_auth_email --no-verify-jwt
 supabase functions deploy send_welcome_email
 supabase functions deploy send_push
 supabase functions deploy match_job_recommendations
@@ -47,10 +46,11 @@ supabase functions deploy process_matching_recalc
   - `SUPABASE_URL` / `SUPABASE_ANON_KEY` (if not auto-injected)
   - `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_KEY`
   - `TRABAGE_ALLOWED_ORIGIN=https://trabage.org`
-  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (or `SMTP_PASSWORD`)
-  - `SMTP_FROM_EMAIL`, `SMTP_FROM_NAME`
+  - `RESEND_API_KEY`, `RESEND_AUTH_FROM_EMAIL`, `RESEND_WELCOME_FROM_EMAIL`, `RESEND_FROM_NAME`
+  - `SEND_EMAIL_HOOK_SECRET`
   - `WELCOME_WEBHOOK_SECRET`
   - `MATCHING_RECALC_SECRET`
+- [ ] **OPS** Auth Hook: Send Email → `send_auth_email` with generated secret
 - [ ] **OPS** Database Webhook on `welcome_email_outbox` INSERT → `send_welcome_email` with secret header
 - [ ] **OPS** Cron/scheduler for `process_matching_recalc` with service role or matching secret (never public)
 

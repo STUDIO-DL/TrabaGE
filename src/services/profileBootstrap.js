@@ -88,7 +88,9 @@ async function ensureCompanyProfile(userId, user, metadata, orgKind, orgDetails)
     if (!existing.company_type && resolvedOrgDetails.company_type) {
       patch.company_type = resolvedOrgDetails.company_type;
     }
-    if (!existing.city && metadata.city) patch.city = metadata.city;
+    if (!existing.city && (metadata.city || orgDetails.city)) {
+      patch.city = metadata.city || orgDetails.city;
+    }
     if (Object.keys(patch).length > 0) {
       await companyService.upsertCompanyProfile({ user_id: userId, ...patch });
     }
@@ -108,7 +110,7 @@ async function ensureCompanyProfile(userId, user, metadata, orgKind, orgDetails)
     company_name: resolvedOrgDetails.company_name || '',
     sector: resolvedOrgDetails.sector || null,
     company_type: companyType,
-    city: metadata.city || null,
+    city: metadata.city || orgDetails.city || null,
   });
 }
 

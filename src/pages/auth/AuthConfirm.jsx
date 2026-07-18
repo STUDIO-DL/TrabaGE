@@ -3,11 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, CircleAlert } from 'lucide-react';
 import Spinner from '../../components/ui/Spinner';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
+import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
+import { completePostAuthFlow } from '../../services/authFlow';
 import { mapAuthError } from '../../utils/errors';
 
 export default function AuthConfirm() {
   const navigate = useNavigate();
+  const { refreshAuthState } = useAuth();
   const started = useRef(false);
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
@@ -19,7 +22,7 @@ export default function AuthConfirm() {
     let redirectTimer;
 
     const confirm = async () => {
-      const { error: confirmationError } = await authService.confirmEmailFromUrl();
+      const { data, error: confirmationError } = await authService.confirmEmailFromUrl();
       if (cancelled) return;
 
       if (confirmationError) {
@@ -28,13 +31,30 @@ export default function AuthConfirm() {
         return;
       }
 
+      await refreshAuthState();
+
+      const user = data?.user ?? data?.session?.user;
+      const { error: flowError, needsAccountTypeSelection, redirectTo } =
+        await completePostAuthFlow(user, { preferProfile: true });
+
+      if (cancelled) return;
+
+      if (flowError) {
+        setError(mapAuthError(flowError));
+        setStatus('error');
+        return;
+      }
+
+      if (needsAccountTypeSelection) {
+        navigate('/register', { replace: true, state: { fromEmailVerification: true } });
+        return;
+      }
+
+      await refreshAuthState();
       setStatus('success');
       redirectTimer = window.setTimeout(() => {
-        navigate('/login', {
-          replace: true,
-          state: { emailVerificationSuccess: true },
-        });
-      }, 1800);
+        navigate(redirectTo || '/', { replace: true });
+      }, 1200);
     };
 
     void confirm();
@@ -43,7 +63,7 @@ export default function AuthConfirm() {
       cancelled = true;
       if (redirectTimer) window.clearTimeout(redirectTimer);
     };
-  }, [navigate]);
+  }, [navigate, refreshAuthState]);
 
   return (
     <main className="min-h-dvh bg-app-bg px-5 py-10 text-app-text">
@@ -66,7 +86,7 @@ export default function AuthConfirm() {
               <CheckCircle2 className="mx-auto h-14 w-14 text-green-600" aria-hidden />
               <h1 className="mt-5 text-xl font-bold">Correo verificado</h1>
               <p className="mt-2 text-sm text-app-muted">
-                Tu cuenta ha sido activada correctamente. Te llevamos al inicio de sesión.
+                Tu cuenta está lista. Entrando en TrabaGE…
               </p>
             </>
           ) : null}

@@ -32,8 +32,14 @@ export default function CandidateSetup() {
     const google = extractGoogleProfile(user);
     const identity = readIdentityFromUser(user);
 
-    profileService.getCandidateProfile(user.id).then(({ data }) => {
+    profileService.getCandidateProfile(user.id).then(({ data, error: profileError }) => {
       if (!mounted) return;
+
+      if (profileError) {
+        setError(getSupabaseErrorMessage(profileError));
+        setInitializing(false);
+        return;
+      }
 
       if (getCandidateBootstrapMissing(data).length === 0) {
         navigate(ROLE_PROFILE[ROLES.PERSONAL], { replace: true });

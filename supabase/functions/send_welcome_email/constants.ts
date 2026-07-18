@@ -7,7 +7,7 @@ export const FALLBACK_ACCOUNT_TYPE: WelcomeAccountType = 'personal';
 
 export const EMAIL_SENDER_NAME = 'TrabaGE';
 
-export const DEFAULT_FROM_EMAIL = 'noreply.trabage@gmail.com';
+export const DEFAULT_FROM_EMAIL = 'welcome@trabage.org';
 
 export const BRAND_BLUE = '#2563eb';
 export const BRAND_BLUE_DARK = '#1d4ed8';

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 import { Link, useSearchParams } from 'react-router-dom';
 
@@ -111,6 +111,8 @@ export default function SearchResults() {
 
   const [loading, setLoading] = useState(true);
 
+  const [error, setError] = useState(null);
+
   const [companyJobs, setCompanyJobs] = useState([]);
 
 
@@ -137,87 +139,70 @@ export default function SearchResults() {
 
 
 
-  useEffect(() => {
-
+  const performSearch = useCallback(async () => {
     if (!query?.trim()) {
-
       setResults([]);
-
+      setError(null);
       setLoading(false);
-
-      return undefined;
-
+      return;
     }
 
+    setLoading(true);
+    setError(null);
 
+    const matchingContext =
+      role === ROLES.PERSONAL && profile
+        ? { userProfile: profile }
+        : isEmployerRole(role) && companyJobs.length
+          ? { companyJobs }
+          : null;
 
-    let cancelled = false;
+    const { data, error: searchError } = await searchService.search({
+      query,
+      user: user ? { id: user.id, role } : null,
+      matchingContext,
+    });
 
+    if (searchError) {
+      setResults([]);
+      setError(searchError.message || 'No se pudo completar la búsqueda.');
+      setLoading(false);
+      return;
+    }
 
-
-    const performSearch = async () => {
-
-      setLoading(true);
-
-      const matchingContext =
-
-        role === ROLES.PERSONAL && profile
-
-          ? { userProfile: profile }
-
-          : isEmployerRole(role) && companyJobs.length
-
-            ? { companyJobs }
-
-            : null;
-
-
-
-      const { data } = await searchService.search({
-
-        query,
-
-        user: user ? { id: user.id, role } : null,
-
-        matchingContext,
-
-      });
-
-
-
-      if (!cancelled) {
-
-        setResults(data || []);
-
-        setLoading(false);
-
-      }
-
-    };
-
-
-
-    performSearch();
-
-
-
-    return () => {
-
-      cancelled = true;
-
-    };
-
+    setResults(data || []);
+    setLoading(false);
   }, [companyJobs, profile, query, role, user]);
 
-
+  useEffect(() => {
+    void performSearch();
+  }, [performSearch]);
 
   const groupedResults = groupSearchResults(results);
 
 
 
   const renderResults = () => {
-
     if (loading) return <SearchResultsSkeleton count={6} />;
+
+    if (error) {
+      return (
+        <div
+          className="mx-space-base my-space-md rounded-radius-lg border border-error-100 bg-error-50 px-space-base py-space-md text-body-small text-error-800"
+          role="alert"
+        >
+          <p>No se pudo cargar la búsqueda. Inténtalo de nuevo.</p>
+          <button
+            type="button"
+            onClick={performSearch}
+            className="mt-space-sm font-medium text-error-700 underline transition-colors duration-fast hover:text-error-900"
+            aria-label="Reintentar búsqueda"
+          >
+            Reintentar
+          </button>
+        </div>
+      );
+    }
 
     if (results.length === 0) {
 

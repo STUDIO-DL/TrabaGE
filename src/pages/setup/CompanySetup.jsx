@@ -49,8 +49,14 @@ export default function CompanySetup() {
     const pendingOrgDetails = consumePendingOrgDetails();
     const identity = readIdentityFromUser(user);
 
-    companyService.getCompanyProfile(user.id).then(({ data }) => {
+    companyService.getCompanyProfile(user.id).then(({ data, error: profileError }) => {
       if (!mounted) return;
+
+      if (profileError) {
+        setError(getSupabaseErrorMessage(profileError));
+        setInitializing(false);
+        return;
+      }
 
       const resolvedRole =
         role === ROLES.ORGANIZATION ? ROLES.ORGANIZATION : ROLES.BUSINESS;

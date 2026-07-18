@@ -1,13 +1,11 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-import nodemailer from 'npm:nodemailer@6.9.10';
+import { formatResendError, getResendWelcomeFromAddress, sendViaResend } from '../_shared/resend.ts';
 import type { WelcomeAccountType } from './constants.ts';
 import {
   buildWelcomeEmailContent,
   buildWelcomeEmailHtml,
   buildWelcomeEmailText,
-  DEFAULT_FROM_EMAIL,
-  EMAIL_SENDER_NAME,
 } from './emailTemplate.ts';
 import { resolveWelcomeAccountType } from './resolveAccountType.ts';
 
@@ -22,14 +20,6 @@ function jsonResponse(body: Record<string, unknown>, status = 200) {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
-}
-
-function getFromAddress() {
-  return Deno.env.get('SMTP_FROM_EMAIL')?.trim() || DEFAULT_FROM_EMAIL;
-}
-
-function getSmtpPassword() {
-  return Deno.env.get('SMTP_PASS')?.trim() || Deno.env.get('SMTP_PASSWORD')?.trim() || '';
 }
 
 function isAuthorizedWebhook(req: Request) {
@@ -93,56 +83,20 @@ async function logWelcomeEmailEvent(
   }
 }
 
-function formatSmtpError(error: unknown): string {
-  if (error instanceof Error) {
-    const smtpError = error as Error & { code?: string; response?: string; responseCode?: number };
-    const parts = [error.message];
-    if (smtpError.code) parts.push(`code=${smtpError.code}`);
-    if (smtpError.responseCode) parts.push(`responseCode=${smtpError.responseCode}`);
-    if (smtpError.response) parts.push(`response=${smtpError.response}`);
-    return parts.join(' | ');
-  }
-  return String(error);
-}
-
-async function sendViaSmtp(
+async function sendWelcomeEmail(
   to: string,
   userName: string,
   accountType: WelcomeAccountType,
 ) {
-  const host = Deno.env.get('SMTP_HOST')?.trim();
-  const user = Deno.env.get('SMTP_USER')?.trim();
-  const pass = getSmtpPassword();
-
-  if (!host || !user || !pass) {
-    throw new Error('SMTP no configurado en la Edge Function');
-  }
-
-  const port = Number(Deno.env.get('SMTP_PORT') ?? 587);
-  const fromEmail = getFromAddress();
-  const fromName = Deno.env.get('SMTP_FROM_NAME')?.trim() || EMAIL_SENDER_NAME;
-  const secure = port === 465;
-
   const content = buildWelcomeEmailContent(accountType, userName);
 
-  const transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: { user, pass },
+  await sendViaResend({
+    from: getResendWelcomeFromAddress(),
+    to,
+    subject: content.subject,
+    text: buildWelcomeEmailText(content),
+    html: buildWelcomeEmailHtml(content),
   });
-
-  try {
-    await transporter.sendMail({
-      from: `"${fromName}" <${fromEmail}>`,
-      to,
-      subject: content.subject,
-      text: buildWelcomeEmailText(content),
-      html: buildWelcomeEmailHtml(content),
-    });
-  } finally {
-    transporter.close();
-  }
 }
 
 serve(async (req) => {
@@ -248,11 +202,11 @@ serve(async (req) => {
     );
 
     try {
-      await sendViaSmtp(email, userName, accountType);
-    } catch (smtpError) {
-      const errorMessage = formatSmtpError(smtpError);
+      await sendWelcomeEmail(email, userName, accountType);
+    } catch (sendError) {
+      const errorMessage = formatResendError(sendError);
       await admin.rpc('release_welcome_email_claim', { p_user_id: userId });
-      console.error('[send_welcome_email] SMTP error:', errorMessage);
+      console.error('[send_welcome_email] Resend error:', errorMessage);
       await logWelcomeEmailEvent(admin, userId, 'failed', {
         email,
         accountType,

@@ -5,6 +5,11 @@ import ProfileSettingsButton from './ProfileSettingsButton';
 import ContentActionMenu from '../common/ContentActionMenu';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
+import { useAuth } from '../../hooks/useAuth';
+
+function profileBackFallback(getHomePath) {
+  return getHomePath?.() || '/explore';
+}
 
 export default function ProfilePageShell({
   title,
@@ -19,7 +24,17 @@ export default function ProfilePageShell({
   children,
 }) {
   const navigate = useNavigate();
+  const { getHomePath } = useAuth();
   const showReportMenu = !isOwn && shareUrl && reportTargetId;
+
+  const handleBack = () => {
+    const idx = window.history.state?.idx;
+    if (typeof idx === 'number' && idx > 0) {
+      navigate(-1);
+      return;
+    }
+    navigate(profileBackFallback(getHomePath), { replace: true });
+  };
 
   return (
     <div className="profile-page min-h-full bg-app-surface">
@@ -29,7 +44,7 @@ export default function ProfilePageShell({
           {backButton ? (
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={handleBack}
               className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface"
               aria-label="Volver"
             >

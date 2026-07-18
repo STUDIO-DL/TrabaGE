@@ -23,9 +23,10 @@ function excludeJobItems(items) {
 }
 
 async function fetchFeedPool(userId, role, { limit = FEED_PAGE_SIZE, offset = 0 } = {}) {
+  const rpcRole = isEmployerRole(role) ? 'company' : role;
   const { data, error } = await supabase.rpc('get_personalized_feed', {
     p_user_id: userId,
-    p_role: role,
+    p_role: rpcRole,
     p_limit: limit,
     p_offset: offset,
   });

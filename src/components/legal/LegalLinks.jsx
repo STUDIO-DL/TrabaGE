@@ -22,12 +22,6 @@ export function LegalFooterLinks({ className = '' }) {
       <span className="text-slate-300" aria-hidden>
         ·
       </span>
-      <LegalInlineLink to={LEGAL_ROUTES.legalNotice}>
-        Aviso Legal / Propiedad Intelectual
-      </LegalInlineLink>
-      <span className="text-slate-300" aria-hidden>
-        ·
-      </span>
       <LegalInlineLink to={LEGAL_ROUTES.privacy}>Política de Privacidad</LegalInlineLink>
     </nav>
   );

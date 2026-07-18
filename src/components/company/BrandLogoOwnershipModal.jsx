@@ -42,9 +42,9 @@ export default function BrandLogoOwnershipModal({
         />
         <span className="text-caption leading-relaxed text-app-text">
           Declaro ser el titular legítimo de esta marca o disponer de autorización suficiente para
-          subir y mostrar este logotipo en TrabaGE. He leído el{' '}
-          <LegalInlineLink to={LEGAL_ROUTES.legalNotice}>
-            Aviso Legal / Propiedad Intelectual
+          subir y mostrar este logotipo en TrabaGE. He leído la sección sobre logotipos en los{' '}
+          <LegalInlineLink to={LEGAL_ROUTES.termsLogoPolicy}>
+            Términos y Condiciones
           </LegalInlineLink>
           .
         </span>

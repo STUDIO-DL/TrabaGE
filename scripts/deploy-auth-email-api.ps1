@@ -5,8 +5,9 @@ param(
 $ErrorActionPreference = "Stop"
 
 $tokenPath = Join-Path $env:USERPROFILE ".supabase\access-token.txt"
-$functionName = "send_welcome_email"
+$functionName = "send_auth_email"
 $functionDir = Resolve-Path (Join-Path $PSScriptRoot "..\supabase\functions\$functionName")
+$sharedDir = Resolve-Path (Join-Path $PSScriptRoot "..\supabase\functions\_shared")
 
 if (-not (Test-Path $tokenPath)) {
   throw "No se encontro $tokenPath. Ejecuta scripts\supabase-login.cmd primero."
@@ -30,42 +31,29 @@ try {
   $metadata = @{
     name = $functionName
     entrypoint_path = "index.ts"
-    verify_jwt = $true
+    verify_jwt = $false
   } | ConvertTo-Json -Compress
 
   $metadataContent = [System.Net.Http.StringContent]::new($metadata)
   $form.Add($metadataContent, "metadata")
 
-  foreach ($fileName in @(
-    "index.ts",
-    "emailTemplate.ts",
-    "constants.ts",
-    "layout.ts",
-    "templates.ts",
-    "resolveAccountType.ts"
-  )) {
-    $filePath = Join-Path $functionDir $fileName
-    if (-not (Test-Path $filePath)) {
-      throw "No se encontro $filePath"
+  $files = @(
+    @{ Path = (Join-Path $functionDir "index.ts"); Name = "index.ts" },
+    @{ Path = (Join-Path $functionDir "templates.ts"); Name = "templates.ts" },
+    @{ Path = (Join-Path $sharedDir "resend.ts"); Name = "../_shared/resend.ts" }
+  )
+
+  foreach ($file in $files) {
+    if (-not (Test-Path $file.Path)) {
+      throw "No se encontro $($file.Path)"
     }
 
-    $bytes = [System.IO.File]::ReadAllBytes($filePath)
+    $bytes = [System.IO.File]::ReadAllBytes($file.Path)
     $fileContent = [System.Net.Http.ByteArrayContent]::new($bytes)
     $fileContent.Headers.ContentType =
       [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse("application/typescript")
-    $form.Add($fileContent, "file", $fileName)
+    $form.Add($fileContent, "file", $file.Name)
   }
-
-  $sharedResendPath = Join-Path (Join-Path $PSScriptRoot "..\supabase\functions\_shared") "resend.ts"
-  if (-not (Test-Path $sharedResendPath)) {
-    throw "No se encontro $sharedResendPath"
-  }
-
-  $sharedBytes = [System.IO.File]::ReadAllBytes($sharedResendPath)
-  $sharedContent = [System.Net.Http.ByteArrayContent]::new($sharedBytes)
-  $sharedContent.Headers.ContentType =
-    [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse("application/typescript")
-  $form.Add($sharedContent, "file", "../_shared/resend.ts")
 
   Write-Host "Desplegando $functionName en $ProjectRef via Supabase Management API..."
   $response = $client.PostAsync($url, $form).GetAwaiter().GetResult()
