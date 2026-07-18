@@ -8,6 +8,7 @@ export const SECTION_ICON_TONES = {
   contact: 'bg-cyan-50 text-cyan-700 ring-cyan-100',
   language: 'bg-indigo-50 text-indigo-700 ring-indigo-100',
   service: 'bg-orange-50 text-orange-700 ring-orange-100',
+  social: 'bg-pink-50 text-pink-700 ring-pink-100',
   preferences: 'bg-teal-50 text-teal-700 ring-teal-100',
 };
 

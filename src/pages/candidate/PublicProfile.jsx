@@ -8,6 +8,7 @@ import CertificationsSection from '../../components/profile/CertificationsSectio
 import SkillsSection from '../../components/profile/SkillsSection';
 import ServicesSection from '../../components/profile/ServicesSection';
 import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
+import PersonalSocialSection from '../../components/profile/PersonalSocialSection';
 import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useProfile } from '../../hooks/useProfile';
@@ -68,6 +69,7 @@ export default function PublicProfile() {
         onContact={() => handleContact(profile)}
       >
         <AboutSection about={profile.about} />
+        <PersonalSocialSection socialLinks={profile.social_links} />
         <ExperienceSection items={profile.experience} />
         <EducationSection items={profile.education} />
         <CertificationsSection items={profile.certifications} />

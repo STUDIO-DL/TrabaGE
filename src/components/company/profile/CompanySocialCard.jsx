@@ -5,30 +5,9 @@ import { ExternalLink, ICON_SIZES } from '../../../constants/icons';
 import { premiumCardClass, sectionLinkClass } from './companyProfileStyles';
 import SectionTitle from './SectionTitle';
 import { safeExternalUrl } from '../../../utils/safeUrl';
+import { extractSocialHandle, hasCompanySocialLinks } from '../../../utils/socialLinks';
 
-function extractSocialHandle(url, networkKey, label) {
-  if (!url) return label;
-  try {
-    const parsed = new URL(url);
-    const parts = parsed.pathname.split('/').filter(Boolean);
-    if (networkKey === 'linkedin') {
-      if (parts[0] === 'company' && parts[1]) return parts[1];
-      return parts[parts.length - 1] || label;
-    }
-    if (networkKey === 'instagram' || networkKey === 'x') {
-      const handle = parts[0]?.replace(/^@/, '');
-      return handle ? `@${handle}` : label;
-    }
-    if (networkKey === 'youtube') {
-      if (parts[0] === 'channel' && parts[1]) return parts[1];
-      if (parts[0]?.startsWith('@')) return parts[0];
-      return parts[0] || label;
-    }
-    return parts[0] || parsed.hostname.replace(/^www\./, '') || label;
-  } catch {
-    return label;
-  }
-}
+export { hasCompanySocialLinks };
 
 const SOCIAL_NETWORKS = [
   {
@@ -48,6 +27,12 @@ const SOCIAL_NETWORKS = [
     label: 'Instagram',
     icon: InstagramIcon,
     activeClass: 'bg-[#E4405F]/10 text-[#E4405F]',
+  },
+  {
+    key: 'tiktok',
+    label: 'TikTok',
+    icon: TikTokIcon,
+    activeClass: 'bg-app-surface text-app-text',
   },
   {
     key: 'x',
@@ -146,6 +131,14 @@ function InstagramIcon({ className }) {
   );
 }
 
+function TikTokIcon({ className }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48V13.4a8.28 8.28 0 005.58 2.17V12.1a4.85 4.85 0 01-3.77-1.75V6.69h3.77z" />
+    </svg>
+  );
+}
+
 function XIcon({ className }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
@@ -160,11 +153,6 @@ function YoutubeIcon({ className }) {
       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
     </svg>
   );
-}
-
-export function hasCompanySocialLinks(profile) {
-  const links = profile?.social_links ?? {};
-  return Object.values(links).some(Boolean);
 }
 
 export default function CompanySocialCard({

@@ -21,6 +21,7 @@ export default function CompanyProfileView({
   jobs = [],
   companyId,
   onEditName,
+  onEditIntro,
   onEditAbout,
   onEditDetails,
   onUploadLogo,
@@ -87,6 +88,7 @@ export default function CompanyProfileView({
         readOnly={readOnly}
         showBackButton={showBackButton}
         onEditName={onEditName}
+        onEditIntro={onEditIntro}
         onUploadLogo={onUploadLogo}
         onUploadCover={onUploadCover}
         logoLoading={logoLoading}

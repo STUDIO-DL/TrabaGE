@@ -5,6 +5,7 @@ import CandidateProfileLayout from '../../components/profile/CandidateProfileLay
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import AboutSection from '../../components/profile/AboutSection';
 import ContactSection from '../../components/profile/ContactSection';
+import PersonalSocialSection from '../../components/profile/PersonalSocialSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
@@ -73,6 +74,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
+  const [socialSaving, setSocialSaving] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [coverPhotoLoading, setCoverPhotoLoading] = useState(false);
   const [cvLoading, setCvLoading] = useState(false);
@@ -100,6 +102,14 @@ export default function Profile() {
     const { error } = await updateBasicInfo(data);
     setContactSaving(false);
     showToast(error ? error.message : TOAST.contactSaved, error ? 'error' : 'success');
+    return { error };
+  };
+
+  const handleSaveSocial = async (data) => {
+    setSocialSaving(true);
+    const { error } = await updateBasicInfo(data);
+    setSocialSaving(false);
+    showToast(error ? error.message : 'Redes sociales guardadas.', error ? 'error' : 'success');
     return { error };
   };
 
@@ -275,6 +285,13 @@ export default function Profile() {
           isOwn={canEdit}
           onSave={handleSaveContact}
           loading={contactSaving}
+        />
+
+        <PersonalSocialSection
+          socialLinks={profile?.social_links}
+          isOwn={canEdit}
+          onSave={handleSaveSocial}
+          loading={socialSaving}
         />
 
         <EducationSection

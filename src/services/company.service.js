@@ -9,6 +9,7 @@ const COMPANY_PROFILE_COLUMNS = [
   'company_type',
   'sector',
   'description',
+  'intro',
   'city',
   'country',
   'address',

@@ -38,6 +38,8 @@ import { getCompanyCoverUrl } from '../../../constants/images';
 
 import {
 
+  getCompanyIntroText,
+
   getCompanySectorText,
 
   resolveCompanyHeaderName,
@@ -71,6 +73,8 @@ import {
   profileHeaderContentClass,
 
   profileHeaderInfoClass,
+
+  profileHeadlineClass,
 
   profileMetaItemClass,
 
@@ -186,6 +190,8 @@ export default function CompanyProfileHeader({
 
   onEditName,
 
+  onEditIntro,
+
   onUploadLogo,
 
   onUploadCover,
@@ -241,6 +247,8 @@ export default function CompanyProfileHeader({
 
 
   const name = resolveCompanyHeaderName(profile, { user, role, readOnly });
+
+  const introText = getCompanyIntroText(profile);
 
   const avatarType = avatarTypeFromCompanyProfile(profile);
 
@@ -522,6 +530,32 @@ export default function CompanyProfileHeader({
 
 
 
+              {!readOnly && onEditIntro && name ? (
+
+                <button
+
+                  type="button"
+
+                  onClick={onEditIntro}
+
+                  className="inline-flex min-h-touch shrink-0 items-center gap-space-xs rounded-radius-sm px-space-sm text-caption font-medium text-app-muted transition-colors duration-fast hover:bg-app-surface hover:text-primary-600"
+
+                  aria-label="Editar intro"
+
+                  title="Editar intro"
+
+                >
+
+                  <AppIcon icon={Pencil} size={ICON_SIZES.sm} aria-hidden />
+
+                  <span>Editar intro</span>
+
+                </button>
+
+              ) : null}
+
+
+
               {!readOnly && onEditName && (
 
                 <button
@@ -543,6 +577,30 @@ export default function CompanyProfileHeader({
               )}
 
             </div>
+
+
+
+            {introText ? <p className={profileHeadlineClass}>{introText}</p> : null}
+
+
+
+            {!readOnly && !introText && onEditIntro && name ? (
+
+              <button
+
+                type="button"
+
+                onClick={onEditIntro}
+
+                className="mt-space-xs text-left text-body-small text-app-subtle transition-colors duration-fast hover:text-primary-600"
+
+              >
+
+                Añade un eslogan o frase introductoria
+
+              </button>
+
+            ) : null}
 
 
 

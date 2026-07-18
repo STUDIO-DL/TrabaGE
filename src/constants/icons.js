@@ -168,6 +168,7 @@ export const PROFILE_SECTION_ICONS = {
   service: Wrench,
   document: FileText,
   contact: Mail,
+  social: Share2,
   language: Languages,
   preferences: Target,
 };

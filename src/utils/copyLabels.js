@@ -59,6 +59,7 @@ const PROFILE_SECTION_OWN = {
   services: 'Aún no has añadido servicios.',
   languages: 'Aún no has añadido idiomas.',
   contact: 'Aún no has añadido datos de contacto.',
+  social: 'Aún no has añadido redes sociales.',
 };
 
 export function getEmptyPostsCopy(viewer) {

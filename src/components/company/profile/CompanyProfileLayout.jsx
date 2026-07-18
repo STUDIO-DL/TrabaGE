@@ -23,6 +23,14 @@ import { ProfilePageSkeleton } from '../../common/Skeleton';
 import FetchErrorBanner from '../../common/FetchErrorBanner';
 import { useCompanyProfile } from '../../../hooks/useCompanyProfile';
 import { useAuth } from '../../../hooks/useAuth';
+import {
+  cleanCompanySocialLinks,
+  cleanHttpsUrl,
+} from '../../../utils/socialLinks';
+import {
+  COMPANY_INTRO_MAX_LENGTH,
+  validateCompanyIntro,
+} from '../../../utils/companyProfile';
 
 const COMPANY_SIZE_OPTIONS = [
   '1-10',
@@ -54,55 +62,18 @@ function cleanInteger(value) {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
-const SOCIAL_ALLOWED_HOSTS = {
-  linkedin: ['linkedin.com'],
-  facebook: ['facebook.com'],
-  instagram: ['instagram.com'],
-  x: ['x.com', 'twitter.com'],
-  youtube: ['youtube.com', 'youtu.be'],
-};
-
-function cleanHttpsUrl(value, allowedHosts = null) {
-  const trimmed = cleanText(value);
-  if (!trimmed) return null;
-
-  try {
-    const url = new URL(trimmed);
-    if (url.protocol !== 'https:') return null;
-
-    if (allowedHosts?.length) {
-      const hostname = url.hostname.toLowerCase().replace(/^www\./, '');
-      const allowed = allowedHosts.some((host) => hostname === host || hostname.endsWith(`.${host}`));
-      if (!allowed) return null;
-    }
-
-    return url.href;
-  } catch {
-    return null;
-  }
-}
-
-function cleanSocialLinks(form) {
-  const links = {
-    linkedin: cleanHttpsUrl(form.linkedin, SOCIAL_ALLOWED_HOSTS.linkedin),
-    facebook: cleanHttpsUrl(form.facebook, SOCIAL_ALLOWED_HOSTS.facebook),
-    instagram: cleanHttpsUrl(form.instagram, SOCIAL_ALLOWED_HOSTS.instagram),
-    x: cleanHttpsUrl(form.x, SOCIAL_ALLOWED_HOSTS.x),
-    youtube: cleanHttpsUrl(form.youtube, SOCIAL_ALLOWED_HOSTS.youtube),
-  };
-
-  return Object.fromEntries(Object.entries(links).filter(([, value]) => Boolean(value)));
-}
-
 function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
   const isOpen = Boolean(mode);
   const [form, setForm] = useState({});
+  const [introError, setIntroError] = useState('');
 
   useEffect(() => {
     if (!isOpen) return;
 
+    setIntroError('');
     setForm({
       company_name: profile?.company_name || '',
+      intro: profile?.intro || '',
       description: profile?.description || '',
       city: profile?.city || '',
       country: profile?.country || 'Guinea Ecuatorial',
@@ -115,6 +86,7 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
       linkedin: profile?.social_links?.linkedin || '',
       facebook: profile?.social_links?.facebook || '',
       instagram: profile?.social_links?.instagram || '',
+      tiktok: profile?.social_links?.tiktok || '',
       x: profile?.social_links?.x || '',
       youtube: profile?.social_links?.youtube || '',
     });
@@ -127,9 +99,11 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
   const title =
     mode === 'name'
       ? 'Editar nombre'
-      : mode === 'about'
-        ? 'Editar descripcion'
-        : 'Editar informacion';
+      : mode === 'intro'
+        ? 'Editar intro'
+        : mode === 'about'
+          ? 'Editar descripcion'
+          : 'Editar informacion';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -138,6 +112,16 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
       const companyName = cleanText(form.company_name);
       if (!companyName) return;
       await onSave({ company_name: companyName });
+      return;
+    }
+
+    if (mode === 'intro') {
+      const introValidation = validateCompanyIntro(form.intro);
+      if (introValidation) {
+        setIntroError(introValidation);
+        return;
+      }
+      await onSave({ intro: cleanText(form.intro) });
       return;
     }
 
@@ -155,7 +139,7 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
       company_size: cleanText(form.company_size),
       founded_year: cleanInteger(form.founded_year),
       website: cleanHttpsUrl(form.website),
-      social_links: cleanSocialLinks(form),
+      social_links: cleanCompanySocialLinks(form),
     });
   };
 
@@ -169,6 +153,23 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
             onChange={setField('company_name')}
             required
           />
+        )}
+
+        {mode === 'intro' && (
+          <>
+            <Textarea
+              label="Eslogan o frase introductoria"
+              rows={3}
+              value={form.intro || ''}
+              onChange={setField('intro')}
+              error={introError}
+              placeholder="Ej.: Innovación en servicios financieros desde 2010"
+              maxLength={COMPANY_INTRO_MAX_LENGTH}
+            />
+            <p className="text-caption text-app-subtle">
+              {(form.intro || '').length}/{COMPANY_INTRO_MAX_LENGTH}
+            </p>
+          </>
         )}
 
         {mode === 'about' && (
@@ -265,6 +266,13 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
               value={form.instagram || ''}
               onChange={setField('instagram')}
               placeholder="https://instagram.com/..."
+            />
+            <Input
+              label="TikTok"
+              type="url"
+              value={form.tiktok || ''}
+              onChange={setField('tiktok')}
+              placeholder="https://tiktok.com/@tuusuario"
             />
             <Input
               label="X / Twitter"
@@ -500,6 +508,7 @@ export default function CompanyProfileLayout({
         isOwn={!readOnly}
         onSettings={readOnly ? undefined : onOpenSettings}
         onEditName={readOnly ? undefined : () => openEdit('name')}
+        onEditIntro={readOnly ? undefined : () => openEdit('intro')}
         onEditAbout={readOnly ? undefined : () => openEdit('about')}
         onEditDetails={readOnly ? undefined : () => openEdit('details')}
         onUploadLogo={readOnly ? undefined : (file) => uploadImage(file, 'logo')}

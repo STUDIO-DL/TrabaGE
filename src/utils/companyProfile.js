@@ -1,5 +1,7 @@
 import { getDisplayName } from './displayIdentity';
 
+export const COMPANY_INTRO_MAX_LENGTH = 220;
+
 export const COMPANY_INFO_ROWS = [
   { key: 'company_type', label: 'Tipo de empresa' },
   { key: 'sector', label: 'Sector' },
@@ -49,6 +51,19 @@ export function resolveCompanyHeaderName(profile, { user, role, readOnly = false
 
 export function getCompanySectorText(profile) {
   return profile?.sector?.trim() || null;
+}
+
+export function getCompanyIntroText(profile) {
+  return profile?.intro?.trim() || null;
+}
+
+export function validateCompanyIntro(intro) {
+  const trimmed = intro?.trim?.() ?? '';
+  if (!trimmed) return null;
+  if (trimmed.length > COMPANY_INTRO_MAX_LENGTH) {
+    return `Máximo ${COMPANY_INTRO_MAX_LENGTH} caracteres.`;
+  }
+  return null;
 }
 
 export function getCompanyLocationText(profile) {
