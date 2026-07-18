@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
 import { mapAuthError } from '../../utils/errors';
+import { clearPendingSignupEmail } from '../../utils/signupEmailCooldown';
 
 export default function AuthConfirm() {
   const navigate = useNavigate();
@@ -29,6 +30,11 @@ export default function AuthConfirm() {
         setError(mapAuthError(confirmationError));
         setStatus('error');
         return;
+      }
+
+      const confirmedEmail = data?.user?.email ?? data?.session?.user?.email;
+      if (confirmedEmail) {
+        clearPendingSignupEmail(confirmedEmail);
       }
 
       await refreshAuthState();

@@ -1,6 +1,7 @@
 import { ROLES } from '../constants/roles';
 import { authService } from './auth.service';
 import { bootstrapProfile } from './profileBootstrap';
+import { ensureWelcomeEmailQueued } from './welcomeEmail.service';
 import { resolvePostAuthRedirect } from '../utils/resolvePostAuthRedirect';
 
 /**
@@ -30,6 +31,8 @@ export async function completePostAuthFlow(user, { preferProfile = true } = {}) 
     await bootstrapProfile({ user, role });
   }
 
-  const redirectTo = await resolvePostAuthRedirect(user.id, role, { preferProfile: true });
+  void ensureWelcomeEmailQueued();
+
+  const redirectTo = await resolvePostAuthRedirect(user.id, role, { preferProfile });
   return { role, redirectTo, error: null };
 }

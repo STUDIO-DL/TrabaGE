@@ -140,7 +140,7 @@ function AppRoutes() {
             <Route path="/register" element={<Register />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/auth/confirm" element={<AuthConfirm />} />
-            <Route path="/auth/verify-email" element={<VerifyEmail />} />
+            <Route path="/auth/verify-email" element={<Navigate to="/verify-email" replace />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/account-type" element={<Navigate to="/register" replace />} />
             <Route path="/register-method" element={<Navigate to="/register" replace />} />

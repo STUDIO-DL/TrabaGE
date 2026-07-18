@@ -3,6 +3,7 @@ import FeedNewsCard from './FeedNewsCard';
 import FeedEventCard from './FeedEventCard';
 import FeedCourseCard from './FeedCourseCard';
 import FeedRecommendationCard from './FeedRecommendationCard';
+import { FEED_CONTENT_TYPES } from '../../constants/feedContentTypes';
 
 // The Home feed is social/informational only. Job offers are intentionally not
 // rendered here — the entire vacancy experience lives in the Empleos section.

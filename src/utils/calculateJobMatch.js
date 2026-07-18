@@ -3,7 +3,7 @@ import { SCORE_WEIGHTS, MATCH_THRESHOLD } from '../constants/recommendationPrefe
 import { getCandidateCompletenessWeight } from './profileCompleteness';
 import {
   countEquivalentMatches,
-  ROLE_EQUIVALENCE_GROUPS,
+  roleEquivalenceMap,
 } from '../constants/matchingEquivalences';
 import { normalizeText, tokenize, uniqueTokens } from './matchingTokens';
 import { parseRequirements } from './jobParsing';
@@ -183,16 +183,7 @@ function roleScore(user, job) {
   const jobRoleTokens = extractJobRoleTokens(job);
   if (!userRoleTokens.length || !jobRoleTokens.length) return 0;
 
-  const roleMap = new Map();
-  ROLE_EQUIVALENCE_GROUPS.forEach((group) => {
-    const normalized = group.map((item) => item.toLowerCase().trim());
-    normalized.forEach((token) => {
-      if (!roleMap.has(token)) roleMap.set(token, new Set());
-      normalized.forEach((alias) => roleMap.get(token).add(alias));
-    });
-  });
-
-  const matches = countEquivalentMatches(userRoleTokens, jobRoleTokens, roleMap);
+  const matches = countEquivalentMatches(userRoleTokens, jobRoleTokens, roleEquivalenceMap);
   const directTitleMatch = userRoleTokens.some((token) => jobRoleTokens.includes(token));
   const bonus = directTitleMatch ? 0.15 : 0;
 

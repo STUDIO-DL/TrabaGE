@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import AppIcon from '../../components/common/AppIcon';
@@ -31,6 +31,7 @@ import {
 import { clearPreviewMode } from '../../constants/preview';
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
 import { useAuth } from '../../hooks/useAuth';
+import { getOnboardingComplete } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
 import { mapAuthError } from '../../utils/errors';
@@ -393,6 +394,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const submitLockRef = useRef(false);
 
   const config = getRegisterConfig(accountKind);
 
@@ -490,6 +492,8 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (submitLockRef.current || loading) return;
+
     if (!accountKind) {
       setError(getErrorMessage('selectAccountType'));
       return;
@@ -536,15 +540,18 @@ export default function Register() {
 
     setLoading(true);
     setError('');
+    submitLockRef.current = true;
 
     const role = accountKindToRole(accountKind);
     const metadata = config.buildMetadata(typeValues, { city: city.trim() });
-    const { error: registerError, redirectTo } = await register(
+    const { error: registerError, redirectTo, pendingVerification, rateLimited } = await register(
       submittedEmail,
       password,
       role,
       metadata,
     );
+
+    submitLockRef.current = false;
 
     if (registerError) {
       setError(mapAuthError(registerError));
@@ -559,11 +566,13 @@ export default function Register() {
     }
 
     setLoading(false);
-    navigate('/auth/verify-email', {
+    navigate('/verify-email', {
       replace: true,
       state: {
         email: submittedEmail,
         sentAt: Date.now(),
+        pendingVerification: pendingVerification === true,
+        rateLimited: rateLimited === true,
       },
     });
   };
@@ -571,6 +580,10 @@ export default function Register() {
   // Already signed-in users should never see the registration form after login.
   if (authLoading) {
     return <AuthLoadingScreen />;
+  }
+
+  if (!isAuthenticated && !isPreviewMode && !oauthCompletion && !getOnboardingComplete()) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   if (isAuthenticated && !isPreviewMode && role && !oauthCompletion) {

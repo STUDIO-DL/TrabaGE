@@ -1,6 +1,8 @@
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import OnboardingCarousel from '../../components/onboarding/OnboardingCarousel';
-import { setOnboardingComplete } from '../../context/AuthContext';
+import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
+import { getOnboardingComplete, setOnboardingComplete } from '../../context/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 
 const SLIDES = [
   {
@@ -27,6 +29,20 @@ const SLIDES = [
 
 export default function OnboardingFlow() {
   const navigate = useNavigate();
+  const { isAuthenticated, role, getHomePath, loading, isPreviewMode } = useAuth();
+
+  if (loading && !isPreviewMode) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (isAuthenticated && !isPreviewMode && role) {
+    const home = getHomePath();
+    if (home) return <Navigate to={home} replace />;
+  }
+
+  if (getOnboardingComplete()) {
+    return <Navigate to="/login" replace />;
+  }
 
   const finish = () => {
     setOnboardingComplete();

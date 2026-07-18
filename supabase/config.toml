@@ -227,6 +227,7 @@ enable_confirmations = true
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = true
 # Controls the minimum amount of time that must pass before sending another signup confirmation or password reset email.
+# Production: keep at 60s. Repeated signUp() for the same unconfirmed email triggers this limit — client dedupes in auth.service.js.
 max_frequency = "60s"
 # Number of characters used in the email OTP.
 otp_length = 6

@@ -2,8 +2,18 @@ import { useRef } from 'react';
 import AppAvatar from '../common/AppAvatar';
 import AppIcon from '../common/AppIcon';
 import { AvatarType } from '../../constants/avatarDefaults';
+import { getCandidateCoverUrl } from '../../constants/images';
 import { ROLES } from '../../constants/roles';
-import { Briefcase, Building2, Camera, GraduationCap, MapPin, Pencil, ICON_SIZES } from '../../constants/icons';
+import {
+  Briefcase,
+  Building2,
+  Camera,
+  GraduationCap,
+  MapPin,
+  Pencil,
+  Trash2,
+  ICON_SIZES,
+} from '../../constants/icons';
 import {
   profileBannerGradientClass,
   profileCoverHeightClass,
@@ -26,16 +36,32 @@ import {
 import { getDisplayName } from '../../utils/displayIdentity';
 import { useAuth } from '../../hooks/useAuth';
 
+function CoverUploadButton({ label, loading, inputId, className = '' }) {
+  return (
+    <label
+      htmlFor={inputId}
+      className={`inline-flex min-h-touch cursor-pointer items-center gap-space-xs rounded-radius-full bg-white/15 px-space-md py-space-xs text-caption font-semibold text-white shadow-elevation-1 ring-1 ring-inset ring-white/40 backdrop-blur transition-colors duration-fast hover:bg-white/25 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 ${className}`}
+    >
+      <AppIcon icon={Camera} size={ICON_SIZES.sm} className="text-white" />
+      {loading ? 'Subiendo…' : label}
+    </label>
+  );
+}
+
 export default function CandidateProfileHeader({
   profile,
   isOwn = false,
   onAvatarChange,
   avatarLoading = false,
-  coverSrc,
+  onCoverChange,
+  onCoverRemove,
+  coverLoading = false,
+  coverSrc: coverSrcProp,
   onEditIntro,
 }) {
   const { user, role } = useAuth();
   const avatarInputRef = useRef(null);
+  const coverInputId = 'candidate-cover-input';
 
   const displayName = getDisplayName(profile, role ?? ROLES.PERSONAL, {
     user: isOwn ? user : null,
@@ -49,6 +75,8 @@ export default function CandidateProfileHeader({
   const sector = profile?.sector?.trim();
   const headline = profile?.headline?.trim();
 
+  const coverSrc = coverSrcProp ?? getCandidateCoverUrl(profile?.cover_path);
+
   return (
     <section className="overflow-hidden border-b border-app-border bg-app-card">
       <div className={`relative ${profileCoverHeightClass} overflow-hidden`}>
@@ -58,6 +86,42 @@ export default function CandidateProfileHeader({
           <div className={profileBannerGradientClass} aria-hidden />
         )}
         <div className={profileCoverOverlayClass} aria-hidden />
+
+        {isOwn && onCoverChange ? (
+          <>
+            <input
+              id={coverInputId}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="sr-only"
+              disabled={coverLoading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) onCoverChange(file);
+                e.target.value = '';
+              }}
+            />
+            <div className="absolute bottom-space-sm right-space-base z-20 flex items-center gap-space-xs">
+              {coverSrc && onCoverRemove ? (
+                <button
+                  type="button"
+                  disabled={coverLoading}
+                  onClick={onCoverRemove}
+                  className="inline-flex min-h-touch items-center gap-space-xs rounded-radius-full bg-white/15 px-space-md py-space-xs text-caption font-semibold text-white shadow-elevation-1 ring-1 ring-inset ring-white/40 backdrop-blur transition-colors hover:bg-white/25 disabled:opacity-60"
+                  aria-label="Eliminar portada"
+                >
+                  <AppIcon icon={Trash2} size={ICON_SIZES.sm} className="text-white" />
+                  {coverLoading ? '…' : 'Quitar'}
+                </button>
+              ) : null}
+              <CoverUploadButton
+                label={coverSrc ? 'Cambiar portada' : 'Añadir portada'}
+                inputId={coverInputId}
+                loading={coverLoading}
+              />
+            </div>
+          </>
+        ) : null}
       </div>
 
       <div className={profileHeaderContentClass}>
@@ -124,10 +188,12 @@ export default function CandidateProfileHeader({
                 <button
                   type="button"
                   onClick={onEditIntro}
-                  className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
+                  className="inline-flex min-h-touch shrink-0 items-center gap-space-xs rounded-radius-sm px-space-sm text-caption font-medium text-app-muted transition-colors duration-fast hover:bg-app-surface hover:text-primary-600"
                   aria-label="Editar intro"
+                  title="Editar intro"
                 >
-                  <AppIcon icon={Pencil} size={ICON_SIZES.md} />
+                  <AppIcon icon={Pencil} size={ICON_SIZES.sm} aria-hidden />
+                  <span>Editar intro</span>
                 </button>
               )}
             </div>

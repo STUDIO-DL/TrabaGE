@@ -184,7 +184,10 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (getPreviewMode()) return;
-      if (event === 'TOKEN_REFRESHED') return;
+      if (event === 'TOKEN_REFRESHED') {
+        if (newSession) setSession(newSession);
+        return;
+      }
       // Defer Supabase API calls: awaiting them inside this callback deadlocks
       // the auth client during OAuth (SIGNED_IN on /auth/callback).
       setTimeout(() => {
@@ -255,19 +258,26 @@ export function AuthProvider({ children }) {
     clearPreviewMode();
     setIsPreviewMode(false);
 
-    const { data, error } = await authService.register(email, password, userRole, metadata);
+    const { data, error, pendingVerification, rateLimited } = await authService.register(
+      email,
+      password,
+      userRole,
+      metadata,
+    );
     if (error) return { data, error, redirectTo: null };
 
-    // Per the new flow, email sign-up always requires verification. `register`
-    // no longer returns a session. The UI is responsible for showing the
-    // "check your email" message. `redirectTo` will be null here.
-    const session = data?.session;
-    if (!session?.user?.id) {
-      return { data, error: null, redirectTo: null };
+    if (pendingVerification || !data?.session?.user?.id) {
+      return {
+        data,
+        error: null,
+        redirectTo: null,
+        pendingVerification: true,
+        rateLimited: rateLimited === true,
+      };
     }
 
-    await hydrateUser(session);
-    const redirectTo = await resolvePostAuthRedirect(session.user.id, null, {
+    await hydrateUser(data.session);
+    const redirectTo = await resolvePostAuthRedirect(data.session.user.id, null, {
       preferProfile: true,
     });
 

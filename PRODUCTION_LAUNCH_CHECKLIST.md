@@ -2,6 +2,8 @@
 
 Use this list before inviting real users. Items marked **OPS** require Dashboard/Netlify actions (cannot be completed from code alone).
 
+**Runbook detallado (pasos Dashboard):** [`docs/OPS_LAUNCH.md`](docs/OPS_LAUNCH.md)
+
 ## 1. Frontend / Netlify
 
 - [ ] **OPS** Site domain: `trabage.org` (+ `www` → apex redirect already in `netlify.toml`)
@@ -18,7 +20,15 @@ Use this list before inviting real users. Items marked **OPS** require Dashboard
 
 ## 2. Supabase (Database + Auth + Storage)
 
-- [ ] **OPS** `supabase db push` (or linked migrate) through **065_production_security_hardening.sql**
+- [ ] **OPS** `supabase db push` (or linked migrate) through **073_candidate_cover_path.sql**
+  - **066** — Admin RPCs aligned with personal/business/organization roles (post-064)
+  - **067** — Structured job `role` field ("El puesto")
+  - **068** — Welcome email personalization by account type
+  - **069** — Education form enhancements + `candidate-education-files` storage bucket
+  - **070** — Candidate intro fields (sector, education in header)
+  - **071** — Prelaunch audit: follow policies + feed RPC employer role fixes
+  - **072** — Revoke client access to `upsert_job_matches` (server-side only)
+  - **073** — Candidate profile cover image (`cover_path`)
 - [ ] **OPS** Auth → URL Configuration:
   - Site URL: `https://trabage.org`
   - Redirect URLs include `/auth/callback` and `/auth/confirm` for apex + www + localhost
@@ -26,7 +36,7 @@ Use this list before inviting real users. Items marked **OPS** require Dashboard
 - [ ] **OPS** Auth → Email: **Confirm email = ON**
 - [ ] **OPS** Auth → Hooks → **Send Email** → `send_auth_email` (Resend, not Supabase SMTP)
 - [ ] **OPS** Resend: domain `trabage.org` verified, API key in Edge Function secrets
-- [ ] **OPS** Storage buckets present & policies applied: `candidate-avatars`, `company-logos`, `post-images`, `candidate-cvs`, `company-verifications`
+- [ ] **OPS** Storage buckets present & policies applied: `candidate-avatars`, `company-logos`, `post-images`, `candidate-cvs`, `company-verifications`, `candidate-education-files`
 - [ ] **OPS** Verify RLS smoke tests (other user cannot read CVs / edit foreign profiles / open admin)
 
 ## 3. Edge Functions + Secrets
@@ -40,6 +50,8 @@ supabase functions deploy send_push
 supabase functions deploy match_job_recommendations
 supabase functions deploy process_matching_recalc
 ```
+
+Windows: `scripts\deploy-all-edge-functions.cmd`
 
 - [ ] **OPS** Secrets set:
   - `SUPABASE_SERVICE_ROLE_KEY`
@@ -58,7 +70,7 @@ supabase functions deploy process_matching_recalc
 
 - [ ] **OPS** Register → receive confirmation → `/auth/confirm` succeeds
 - [ ] **OPS** Forgot password → recovery email → set new password
-- [ ] **OPS** Welcome email after signup (outbox + function)
+- [ ] **OPS** Welcome email after signup (outbox + function; account type from **068**)
 - [ ] **OPS** Account deletion path still works (no orphaned private files)
 
 ## 5. OneSignal
@@ -84,7 +96,7 @@ supabase functions deploy process_matching_recalc
 ## 8. Security gate (must pass)
 
 - [ ] No `SERVICE_ROLE` / SMTP / OneSignal REST in frontend bundle
-- [ ] Migration **065** applied on remote (OneSignal column revoke + public views)
+- [ ] Migration **065–073** applied on remote (OneSignal column revoke, public views, admin/feed fixes, job matches revoke)
 - [ ] Admin routes unreachable for non-admin (RLS + RoleRoute)
 - [ ] CSP + HSTS headers live on Netlify
 

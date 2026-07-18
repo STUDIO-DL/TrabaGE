@@ -8,13 +8,16 @@ import Textarea from '../../components/ui/Textarea';
 import Spinner from '../../components/ui/Spinner';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
+import { ProfileEntryRow } from '../../components/profile/ProfileSectionCard';
 import { CITIES } from '../../constants/cities';
 import { COUNTRIES, DEFAULT_COUNTRY } from '../../constants/countries';
 import { SECTORS } from '../../constants/sectors';
+import { GraduationCap } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { readIdentityFromUser } from '../../utils/displayIdentity';
+import { formatDateRange } from '../../utils/formatDate';
 import {
   buildEducationSelectOptions,
   getCurrentExperience,
@@ -35,12 +38,26 @@ function EditIntroSection({ title, description, children }) {
   );
 }
 
+function buildEducationMeta(item) {
+  const dateRange = formatDateRange(
+    item.start_date,
+    item.is_current ? null : item.end_date,
+  );
+  const extras = [item.grade, item.skills?.length ? `${item.skills.length} habilidades` : null]
+    .filter(Boolean)
+    .join(' · ');
+  return [dateRange, extras].filter(Boolean).join(' · ');
+}
+
 const emptyForm = {
   full_name: '',
   headline: '',
+  about: '',
   sector: '',
   country: DEFAULT_COUNTRY,
   city: '',
+  contact_email: '',
+  contact_whatsapp: '',
   show_education_in_intro: false,
   intro_education_id: '',
 };
@@ -65,6 +82,8 @@ export default function EditIntro() {
   const formInitializedRef = useRef(false);
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
+  const [editingExperience, setEditingExperience] = useState(null);
+  const [editingEducation, setEditingEducation] = useState(null);
   const [modalSaving, setModalSaving] = useState(false);
 
   useEffect(() => {
@@ -76,9 +95,12 @@ export default function EditIntro() {
     setForm({
       full_name: profile?.full_name || identity.full_name || '',
       headline: profile?.headline || '',
+      about: profile?.about || '',
       sector: profile?.sector || '',
       country: profile?.country || DEFAULT_COUNTRY,
       city: profile?.city || identity.city || '',
+      contact_email: profile?.contact_email || '',
+      contact_whatsapp: profile?.contact_whatsapp || '',
       show_education_in_intro: Boolean(profile?.show_education_in_intro),
       intro_education_id: profile?.intro_education_id || '',
     });
@@ -101,6 +123,16 @@ export default function EditIntro() {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
+  const openExperience = (item = null) => {
+    setEditingExperience(item);
+    setExperienceOpen(true);
+  };
+
+  const openEducation = (item = null) => {
+    setEditingEducation(item);
+    setEducationOpen(true);
+  };
+
   const handleSave = async (event) => {
     event.preventDefault();
     const nextErrors = validateIntroForm(form);
@@ -117,9 +149,12 @@ export default function EditIntro() {
     const payload = {
       full_name: form.full_name.trim(),
       headline: form.headline.trim(),
+      about: form.about.trim() || null,
       sector: form.sector.trim(),
       country: form.country.trim(),
       city: form.city.trim(),
+      contact_email: form.contact_email.trim() || null,
+      contact_whatsapp: form.contact_whatsapp.trim() || null,
       show_education_in_intro: form.show_education_in_intro,
       intro_education_id: form.show_education_in_intro ? form.intro_education_id || null : null,
     };
@@ -211,6 +246,17 @@ export default function EditIntro() {
             </div>
           </EditIntroSection>
 
+          <EditIntroSection title="Sobre mí">
+            <Textarea
+              label="Descripción"
+              name="about"
+              rows={5}
+              value={form.about}
+              onChange={setField('about')}
+              placeholder="Cuéntanos sobre ti…"
+            />
+          </EditIntroSection>
+
           <EditIntroSection title="Puesto actual">
             {currentExperience ? (
               <div className="rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
@@ -224,9 +270,21 @@ export default function EditIntro() {
                 Aún no has añadido ningún puesto.
               </p>
             )}
-            <Button type="button" variant="outlined" fullWidth onClick={() => setExperienceOpen(true)}>
-              + Añadir puesto
-            </Button>
+            <div className="flex flex-col gap-space-sm sm:flex-row">
+              {currentExperience ? (
+                <Button
+                  type="button"
+                  variant="outlined"
+                  fullWidth
+                  onClick={() => openExperience(currentExperience)}
+                >
+                  Editar puesto
+                </Button>
+              ) : null}
+              <Button type="button" variant="outlined" fullWidth onClick={() => openExperience()}>
+                + Añadir puesto
+              </Button>
+            </div>
           </EditIntroSection>
 
           <EditIntroSection title="Sector">
@@ -246,6 +304,29 @@ export default function EditIntro() {
 
           <EditIntroSection title="Educación">
             {profile?.education?.length ? (
+              <div className="rounded-radius-md border border-app-border bg-app-surface px-space-md">
+                {profile.education.map((item) => (
+                  <ProfileEntryRow
+                    key={item.id}
+                    title={item.institution}
+                    subtitle={[item.program, item.specialty].filter(Boolean).join(' · ')}
+                    meta={buildEducationMeta(item)}
+                    entryIcon={GraduationCap}
+                    entryIconTone="education"
+                    isOwn
+                    onEdit={() => openEducation(item)}
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className="text-body-small text-app-muted">
+                Añade tu formación para mostrarla en la intro.
+              </p>
+            )}
+            <Button type="button" variant="outlined" fullWidth onClick={() => openEducation()}>
+              + Añadir educación
+            </Button>
+            {profile?.education?.length ? (
               <Select
                 label="Centro educativo principal"
                 name="intro_education_id"
@@ -254,14 +335,7 @@ export default function EditIntro() {
                 error={errors.intro_education_id}
                 options={educationOptions}
               />
-            ) : (
-              <p className="text-body-small text-app-muted">
-                Añade tu formación para mostrarla en la intro.
-              </p>
-            )}
-            <Button type="button" variant="outlined" fullWidth onClick={() => setEducationOpen(true)}>
-              + Añadir educación
-            </Button>
+            ) : null}
             <label className="flex min-h-touch cursor-pointer items-center gap-space-sm rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
               <input
                 id="show_education_in_intro"
@@ -310,14 +384,24 @@ export default function EditIntro() {
             title="Datos de contacto"
             description="Tu correo y WhatsApp de contacto se muestran cuando alguien pulsa «Contactar» en tu perfil."
           >
-            <Button
-              type="button"
-              variant="text"
-              className="!justify-start px-0"
-              onClick={() => navigate('/personal/profile#contacto')}
-            >
-              Editar datos de contacto
-            </Button>
+            <Input
+              label="Correo de contacto (Gmail u otro)"
+              name="contact_email"
+              type="email"
+              placeholder="tu@email.com"
+              value={form.contact_email}
+              onChange={setField('contact_email')}
+              autoComplete="email"
+            />
+            <Input
+              label="WhatsApp (con código de país)"
+              name="contact_whatsapp"
+              type="tel"
+              placeholder="240XXXXXXXX"
+              value={form.contact_whatsapp}
+              onChange={setField('contact_whatsapp')}
+              autoComplete="tel"
+            />
           </EditIntroSection>
         </form>
       </FormPageLayout>
@@ -325,12 +409,14 @@ export default function EditIntro() {
       <ExperienceModal
         isOpen={experienceOpen}
         onClose={() => setExperienceOpen(false)}
+        initial={editingExperience}
         onSave={saveExperience}
         loading={modalSaving}
       />
       <EducationModal
         isOpen={educationOpen}
         onClose={() => setEducationOpen(false)}
+        initial={editingEducation}
         onSave={saveEducation}
         loading={modalSaving}
         userId={user?.id}

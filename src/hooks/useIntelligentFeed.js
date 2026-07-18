@@ -2,7 +2,7 @@ import { isEmployerAuthor } from '../constants/authorTypes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { feedService } from '../services/feed.service';
 import { useAuth } from './useAuth';
-import { ROLES, isEmployerRole } from '../constants/roles';
+import { ROLES } from '../constants/roles';
 import { FEED_CONTENT_TYPES, FEED_PAGE_SIZE } from '../constants/feedContentTypes';
 import { getPreviewPosts } from '../constants/preview';
 import { rankAndInterleaveFeed, dedupeFeedItems } from '../utils/feedRanking';

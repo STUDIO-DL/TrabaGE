@@ -46,6 +46,39 @@ function isOAuthCancelled(message) {
   return message.includes('access_denied') || message.includes('user cancelled');
 }
 
+function isAuthHookError(message, code) {
+  return (
+    code === 'unexpected_failure' ||
+    message.includes('error sending confirmation email') ||
+    message.includes('error running hook') ||
+    message.includes('hook requires authorization token') ||
+    message.includes('invalid payload sent to hook') ||
+    message.includes('unexpected status code returned from hook') ||
+    message.includes('service currently unavailable due to hook') ||
+    message.includes('secreto del hook') ||
+    message.includes('send_email_hook_secret') ||
+    message.includes('resend_api_key')
+  );
+}
+
+function isRateLimitError(message, code) {
+  return (
+    code === 'over_email_send_rate_limit' ||
+    code === '429' ||
+    message.includes('rate limit') ||
+    message.includes('too many attempts') ||
+    message.includes('too many requests') ||
+    message.includes('email rate limit') ||
+    message.includes('over_email_send_rate_limit')
+  );
+}
+
+export function isAuthRateLimitError(error) {
+  const message = String(error?.message || '').toLowerCase();
+  const code = String(error?.code || '').toLowerCase();
+  return isRateLimitError(message, code);
+}
+
 export function mapAuthError(error) {
   const message = error?.message?.toLowerCase() || '';
   const code = error?.code?.toLowerCase?.() || '';
@@ -74,12 +107,7 @@ export function mapAuthError(error) {
   if (code === 'email_confirmation_disabled') {
     return getErrorMessage('emailConfirmationDisabled');
   }
-  if (
-    message.includes('rate limit') ||
-    message.includes('too many requests') ||
-    message.includes('email rate limit') ||
-    message.includes('over_email_send_rate_limit')
-  ) {
+  if (isRateLimitError(message, code)) {
     return getErrorMessage('rateLimit');
   }
   if (isExpiredVerificationLink(message)) {
@@ -97,8 +125,11 @@ export function mapAuthError(error) {
   if (message.includes('session missing') || message.includes('auth session missing')) {
     return getErrorMessage('sessionExpired');
   }
-  if (message.includes('smtp') || message.includes('error sending confirmation email')) {
+  if (message.includes('smtp') || isAuthHookError(message, code)) {
     return getErrorMessage('smtpError');
+  }
+  if (message.includes('database error saving new user')) {
+    return getErrorMessage('registerFailed');
   }
 
   return getErrorMessage('unexpected');

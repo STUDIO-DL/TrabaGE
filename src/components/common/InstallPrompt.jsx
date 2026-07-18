@@ -2,7 +2,7 @@ import { useState } from 'react';
 import AppIcon from './AppIcon';
 import Button from '../ui/Button';
 import { Download, X, ICON_SIZES } from '../../constants/icons';
-import { useInstallPrompt } from '../../hooks/useInstallPrompt';
+import { isPwaInstalled, useInstallPrompt } from '../../hooks/useInstallPrompt';
 
 const DISMISS_KEY = 'trabage_install_prompt_dismissed';
 
@@ -10,7 +10,7 @@ export default function InstallPrompt() {
   const { canInstall, install } = useInstallPrompt();
   const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY) === 'true');
 
-  if (!canInstall || dismissed) return null;
+  if (isPwaInstalled() || !canInstall || dismissed) return null;
 
   const dismiss = () => {
     localStorage.setItem(DISMISS_KEY, 'true');
@@ -18,33 +18,26 @@ export default function InstallPrompt() {
   };
 
   return (
-    <div className="fixed bottom-20 left-4 right-4 z-[70] mx-auto max-w-lg sm:bottom-6">
-      <div className="flex items-start gap-3 rounded-2xl border border-primary-100 bg-white p-4 shadow-lg">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50">
-          <AppIcon icon={Download} size={ICON_SIZES.default} className="text-primary-600" />
+    <div
+      className="pointer-events-none fixed bottom-20 left-0 right-0 z-[70] flex justify-center px-4 sm:bottom-6"
+      role="region"
+      aria-label="Instalar aplicación"
+    >
+      <div className="pointer-events-auto flex max-w-sm items-center gap-3 rounded-xl border border-app-border bg-app-card/95 p-3 shadow-elevation-2 backdrop-blur-sm">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-50">
+          <AppIcon icon={Download} size={ICON_SIZES.sm} className="text-primary-600" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-gray-900">Instalar TrabaGE</p>
-          <p className="mt-1 text-xs text-gray-500">
-            Añade la app a tu pantalla de inicio para acceder más rápido.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Button type="button" className="rounded-xl px-4 py-2 text-sm" onClick={install}>
-              Instalar
-            </Button>
-            <button
-              type="button"
-              onClick={dismiss}
-              className="rounded-xl px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100"
-            >
-              Ahora no
-            </button>
-          </div>
+          <p className="text-caption font-semibold text-app-text">Instalar TrabaGE</p>
+          <p className="text-caption text-app-subtle">Acceso rápido desde tu pantalla de inicio</p>
         </div>
+        <Button type="button" size="sm" className="!rounded-lg !px-3 !py-1.5 text-caption" onClick={install}>
+          Instalar
+        </Button>
         <button
           type="button"
           onClick={dismiss}
-          className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+          className="rounded-lg p-1 text-app-subtle transition-colors hover:bg-app-surface hover:text-app-muted"
           aria-label="Cerrar"
         >
           <AppIcon icon={X} size={ICON_SIZES.sm} />

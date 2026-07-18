@@ -14,6 +14,7 @@ export default function CandidateProfileLayout({
   avatarLoading,
   onCoverChange,
   coverLoading,
+  onCoverRemove,
   coverSrc,
   onShare,
   shareUrl,
@@ -45,6 +46,7 @@ export default function CandidateProfileLayout({
         onAvatarChange={onAvatarChange}
         avatarLoading={avatarLoading}
         onCoverChange={onCoverChange}
+        onCoverRemove={onCoverRemove}
         coverLoading={coverLoading}
         coverSrc={coverSrc}
         onEditIntro={onEditIntro}

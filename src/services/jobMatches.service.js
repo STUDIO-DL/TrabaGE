@@ -89,7 +89,7 @@ export const jobMatchesService = {
 
     if (!matches.length) return { data: [], error: null };
 
-    const { data, error } = await jobMatchesService.upsertCandidateMatches(matches);
+    const { error } = await jobMatchesService.upsertCandidateMatches(matches);
     if (error) {
       reportError(error, { area: 'cache_job_candidate_scores', jobId: job.id });
     }

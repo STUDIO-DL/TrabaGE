@@ -29,21 +29,30 @@ function getHookSecret() {
   if (!secret) {
     throw new Error('SEND_EMAIL_HOOK_SECRET no configurado');
   }
-  return secret.replace(/^v1,whsec_/, '');
+  return secret.startsWith('v1,whsec_') ? secret.slice('v1,whsec_'.length) : secret;
 }
 
-function jsonError(message: string, status: number) {
+/** Supabase Auth only reads hook error bodies on HTTP 200/202 — not on 4xx/5xx. */
+function hookErrorResponse(message: string, httpCode = 500) {
   return new Response(
     JSON.stringify({
       error: {
+        http_code: httpCode,
         message,
       },
     }),
     {
-      status,
+      status: 200,
       headers: { 'Content-Type': 'application/json' },
     },
   );
+}
+
+function hookSuccessResponse() {
+  return new Response(JSON.stringify({}), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
 function buildAuthEmail(payload: AuthEmailPayload) {
@@ -82,11 +91,16 @@ Deno.serve(async (req) => {
   } catch (error) {
     const message = formatResendError(error);
     console.error('[send_auth_email] hook verification error:', message);
-    return jsonError(message, 401);
+    return hookErrorResponse(
+      message.includes('no configurado')
+        ? message
+        : 'Secreto del hook de correo inválido. Revisa SEND_EMAIL_HOOK_SECRET en Supabase.',
+      401,
+    );
   }
 
   if (!payload.user?.email) {
-    return jsonError('Email de destino ausente', 400);
+    return hookErrorResponse('Email de destino ausente', 400);
   }
 
   try {
@@ -106,13 +120,10 @@ Deno.serve(async (req) => {
       payload.email_data.email_action_type,
     );
 
-    return new Response(JSON.stringify({}), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return hookSuccessResponse();
   } catch (error) {
     const message = formatResendError(error);
     console.error('[send_auth_email] send error:', message);
-    return jsonError(message, 502);
+    return hookErrorResponse(message, 502);
   }
 });

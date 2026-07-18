@@ -20,6 +20,7 @@ import {
 } from '../../constants/icons';
 import { clearPreviewMode } from '../../constants/preview';
 import { useAuth } from '../../hooks/useAuth';
+import { getOnboardingComplete } from '../../context/AuthContext';
 import useEmailVerificationResend from '../../hooks/useEmailVerificationResend';
 import {
   authService,
@@ -461,6 +462,10 @@ export default function Login() {
 
   if (authLoading) {
     return <AuthLoadingScreen />;
+  }
+
+  if (!isAuthenticated && !isPreviewMode && !getOnboardingComplete()) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Authenticated users with a resolved role go straight home.

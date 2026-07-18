@@ -1,4 +1,4 @@
-import { resolveCompanyCoverUrl } from '../utils/storagePaths';
+import { resolveCompanyCoverUrl, resolveCandidateCoverUrl } from '../utils/storagePaths';
 import {
   AvatarType,
   DEFAULT_COMPANY_LOGO,
@@ -29,6 +29,12 @@ export function getCompanyCoverUrl(coverPath) {
   if (!coverPath?.trim()) return null;
   if (coverPath.trim().startsWith('http')) return coverPath.trim();
   return resolveCompanyCoverUrl(coverPath) || coverPath;
+}
+
+export function getCandidateCoverUrl(coverPath) {
+  if (!coverPath?.trim()) return null;
+  if (coverPath.trim().startsWith('http')) return coverPath.trim();
+  return resolveCandidateCoverUrl(coverPath) || coverPath;
 }
 
 export function hasCompanyCover(coverUrl) {

@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase';
 import {
   STORAGE_BUCKETS,
   avatarPath,
+  candidateCoverPath,
   companyCoverPath,
   cvPath,
   logoPath,
@@ -84,6 +85,20 @@ export const storageService = {
   uploadAvatar: async (userId, file, oldPath) => {
     await storageService.deleteOldAvatar(userId, oldPath);
     const path = avatarPath(userId);
+    return uploadReplace(STORAGE_BUCKETS.CANDIDATE_AVATARS, path, file, WEBP_CONTENT_TYPE);
+  },
+
+  deleteCandidateCover: async (userId, oldPath) => {
+    const paths = [oldPath, candidateCoverPath(userId)].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.CANDIDATE_AVATARS).remove(unique);
+    return { error };
+  },
+
+  uploadCandidateCover: async (userId, file, oldPath) => {
+    if (oldPath) await removeIfExists(STORAGE_BUCKETS.CANDIDATE_AVATARS, oldPath);
+    const path = candidateCoverPath(userId);
     return uploadReplace(STORAGE_BUCKETS.CANDIDATE_AVATARS, path, file, WEBP_CONTENT_TYPE);
   },
 
