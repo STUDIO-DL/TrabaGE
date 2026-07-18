@@ -9,6 +9,7 @@ import {
 } from '../../utils/globalSearch';
 import { ICON_SIZES } from '../../constants/icons';
 import SearchSelfBadge from './SearchSelfBadge';
+import { useIsSearchSelf } from './useIsSearchSelf';
 
 const ENTITY_ICONS = {
   personal: User,
@@ -33,6 +34,7 @@ function isOrgType(type) {
 function SearchResultRow({ item, onSelect }) {
   const Icon = ENTITY_ICONS[item.type] || User;
   const avatarType = avatarTypeFromSearchEntity(item.type);
+  const isSelf = useIsSearchSelf(item);
 
   return (
     <button
@@ -41,7 +43,7 @@ function SearchResultRow({ item, onSelect }) {
       onClick={() => onSelect(item)}
       className={[
         'flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none',
-        item.isSelf ? 'bg-primary-50/70' : '',
+        isSelf ? 'bg-primary-50/70' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -50,24 +52,28 @@ function SearchResultRow({ item, onSelect }) {
         type={avatarType}
         src={item.avatar_path}
         name={item.title}
-        alt={item.title}
+        alt={isSelf ? 'Tú' : item.title}
         size="sm"
         variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
         className={isOrgType(item.type) ? '!rounded-xl' : ''}
       />
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-1.5">
-          <span className="truncate font-medium text-gray-900">{item.title}</span>
-          {item.isSelf ? <SearchSelfBadge /> : null}
+          <span className="truncate font-medium text-gray-900">{isSelf ? 'Tú' : item.title}</span>
+          {isSelf ? <SearchSelfBadge /> : null}
           <AppIcon icon={Icon} size={ICON_SIZES.sm} className="shrink-0 text-gray-400" />
         </span>
-        {item.subtitle ? (
+        {isSelf ? (
+          <span className="mt-0.5 block truncate text-xs text-gray-500">{item.title}</span>
+        ) : null}
+        {!isSelf && item.subtitle ? (
           <span className="mt-0.5 block truncate text-xs text-gray-500">{item.subtitle}</span>
         ) : null}
+        {isSelf && item.subtitle ? (
+          <span className="mt-0.5 block truncate text-xs text-gray-400">{item.subtitle}</span>
+        ) : null}
         <span className="mt-1 inline-block text-[10px] font-semibold uppercase tracking-wide text-primary-600">
-          {item.isSelf
-            ? 'Tu perfil'
-            : (SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado')}
+          {isSelf ? 'Tu perfil' : (SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado')}
         </span>
       </span>
     </button>

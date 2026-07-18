@@ -33,11 +33,9 @@ function roleAwareCompanyPath(companyId, user) {
 
 function isOwnSearchResult(type, resultId, user) {
   if (!user?.id || !resultId) return false;
-  if (type === 'personal') return isPersonalRole(user.role) && user.id === resultId;
-  if (type === 'business' || type === 'organization') {
-    return isEmployerRole(user.role) && user.id === resultId;
-  }
-  return false;
+  // Profile result_id is always the auth user id for personal/business/organization.
+  if (type !== 'personal' && type !== 'business' && type !== 'organization') return false;
+  return String(user.id).toLowerCase() === String(resultId).toLowerCase();
 }
 
 function mapGlobalSearchRow(item, user) {

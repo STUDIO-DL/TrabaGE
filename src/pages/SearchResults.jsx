@@ -22,6 +22,7 @@ import { SearchResultsSkeleton } from '../components/common/Skeleton';
 
 import DirectoryBrandDisclaimer from '../components/legal/DirectoryBrandDisclaimer';
 import SearchSelfBadge from '../components/search/SearchSelfBadge';
+import { useIsSearchSelf } from '../components/search/useIsSearchSelf';
 
 import { Search } from '../constants/icons';
 
@@ -40,6 +41,7 @@ import {
 function SearchResultItem({ item }) {
 
   const avatarType = avatarTypeFromSearchEntity(item.type);
+  const isSelf = useIsSearchSelf(item);
   const isOrgAvatar =
     item.type === 'company' ||
     item.type === 'institution' ||
@@ -52,7 +54,7 @@ function SearchResultItem({ item }) {
       to={item.path}
       className={[
         'flex gap-space-md border-b border-app-border p-space-base transition-colors duration-fast hover:bg-app-surface',
-        item.isSelf ? 'bg-primary-50/60' : '',
+        isSelf ? 'bg-primary-50/60' : '',
       ]
         .filter(Boolean)
         .join(' ')}
@@ -61,7 +63,7 @@ function SearchResultItem({ item }) {
         type={avatarType}
         src={item.avatar_path}
         name={item.title}
-        alt={item.title}
+        alt={isSelf ? 'Tú' : item.title}
         size="sm"
         variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
         className={isOrgAvatar ? '!rounded-radius-md shrink-0' : 'shrink-0'}
@@ -69,13 +71,19 @@ function SearchResultItem({ item }) {
 
       <div className="min-w-0 flex-1">
         <p className="text-caption font-semibold uppercase tracking-wide text-primary-600">
-          {item.isSelf ? 'Tu perfil' : (SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado')}
+          {isSelf ? 'Tu perfil' : (SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado')}
         </p>
 
         <div className="mt-space-xs flex min-w-0 items-center gap-space-sm">
-          <p className="truncate text-body font-semibold text-app-text">{item.title}</p>
-          {item.isSelf ? <SearchSelfBadge /> : null}
+          <p className="truncate text-body font-semibold text-app-text">
+            {isSelf ? 'Tú' : item.title}
+          </p>
+          {isSelf ? <SearchSelfBadge /> : null}
         </div>
+
+        {isSelf ? (
+          <p className="mt-space-xs truncate text-body-small text-app-muted">{item.title}</p>
+        ) : null}
 
         {item.subtitle ? (
           <p className="mt-space-xs truncate text-body-small text-app-muted">{item.subtitle}</p>
