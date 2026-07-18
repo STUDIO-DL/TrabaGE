@@ -16,7 +16,8 @@ export default function GuestOnlyRoute() {
   if (isAuthenticated && !isPreviewMode) {
     const home = getHomePath();
     if (home) return <Navigate to={home} replace />;
-    if (!role) return <AuthLoadingScreen />;
+    // Session exists but role never hydrated — finish account setup instead of spinning forever.
+    if (!role) return <Navigate to="/register" replace state={{ resumeAccountSetup: true }} />;
   }
 
   return <Outlet />;

@@ -464,7 +464,13 @@ export default function Login() {
     return <AuthLoadingScreen />;
   }
 
-  if (!isAuthenticated && !isPreviewMode && !getOnboardingComplete()) {
+  // First-time visitors see onboarding before login; deep links from protected routes skip it.
+  if (
+    !isAuthenticated &&
+    !isPreviewMode &&
+    !getOnboardingComplete() &&
+    !location.state?.from
+  ) {
     return <Navigate to="/onboarding" replace />;
   }
 

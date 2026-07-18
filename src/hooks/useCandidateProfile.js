@@ -11,6 +11,7 @@ import { validateFile } from '../utils/validateFile';
 import { reportError } from '../utils/logger';
 import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
 import { getOwnCandidateProfileKey, getProfileQueryKey } from '../constants/profileQueryKeys';
+import { withSetupComplete } from '../utils/profilePersistence';
 
 function friendlyProfileError(error) {
   if (!error) return null;
@@ -40,7 +41,7 @@ function mergeBaseProfileRow(current, row) {
 
 export function useCandidateProfile() {
   const queryClient = useQueryClient();
-  const { user, role, isPreviewMode } = useAuth();
+  const { user, role, isPreviewMode, refreshSetupStatus } = useAuth();
   const { profile, loading, error, refetch, queryKey } = useProfile();
 
   const userId = user?.id;
@@ -61,22 +62,20 @@ export function useCandidateProfile() {
     return result.data ?? null;
   }, [ownQueryKey, queryClient, refetch]);
 
-  const patchProfileCache = useCallback(
-    (patchFn) => {
-      if (!ownQueryKey) return;
-      queryClient.setQueryData(ownQueryKey, (current) => patchFn(current ?? {}));
-    },
-    [ownQueryKey, queryClient],
-  );
+  const invalidateProfileQueries = useCallback(async () => {
+    if (!userId) return null;
+    await queryClient.invalidateQueries({ queryKey: ['profile', 'public', 'candidate', userId] });
+    return syncFullProfile();
+  }, [queryClient, syncFullProfile, userId]);
 
   const afterCandidateProfileChanged = useCallback(async () => {
-    await syncFullProfile();
+    await invalidateProfileQueries();
     if (userId) {
       jobMatchesService.recalculateForCandidate(userId).catch((recalcError) => {
         reportError(recalcError, { area: 'candidate_match_recalculation', userId });
       });
     }
-  }, [syncFullProfile, userId]);
+  }, [invalidateProfileQueries, userId]);
 
   const runMutation = useCallback(
     async ({ execute, patchCache, resync = true }) => {
@@ -111,8 +110,9 @@ export function useCandidateProfile() {
 
   const updateBasicInfo = useCallback(
     async (data) => {
+      const payload = withSetupComplete(role, profile, data);
       const { error: saveError } = await runMutation({
-        execute: () => profileService.updateCandidateProfile(userId, data),
+        execute: () => profileService.updateCandidateProfile(userId, payload),
         patchCache: (current, row) => mergeBaseProfileRow(current, row),
         resync: true,
       }).then(({ error }) => ({ error }));
@@ -121,9 +121,13 @@ export function useCandidateProfile() {
         void syncAuthIdentityMetadata({ full_name: data.full_name });
       }
 
+      if (!saveError) {
+        void refreshSetupStatus();
+      }
+
       return { error: saveError };
     },
-    [runMutation, userId],
+    [profile, refreshSetupStatus, role, runMutation, userId],
   );
 
   const uploadAvatar = useCallback(

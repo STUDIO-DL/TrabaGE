@@ -20,7 +20,7 @@ Use this list before inviting real users. Items marked **OPS** require Dashboard
 
 ## 2. Supabase (Database + Auth + Storage)
 
-- [ ] **OPS** `supabase db push` (or linked migrate) through **073_candidate_cover_path.sql**
+- [ ] **OPS** `supabase db push` (or linked migrate) through **076_profile_persistence_fixes.sql**
   - **066** — Admin RPCs aligned with personal/business/organization roles (post-064)
   - **067** — Structured job `role` field ("El puesto")
   - **068** — Welcome email personalization by account type
@@ -28,7 +28,9 @@ Use this list before inviting real users. Items marked **OPS** require Dashboard
   - **070** — Candidate intro fields (sector, education in header)
   - **071** — Prelaunch audit: follow policies + feed RPC employer role fixes
   - **072** — Revoke client access to `upsert_job_matches` (server-side only)
-  - **073** — Candidate profile cover image (`cover_path`)
+  - **074** — Welcome email client fallback
+  - **075** — Unified profile provisioning
+  - **076** — Profile persistence fixes
 - [ ] **OPS** Auth → URL Configuration:
   - Site URL: `https://trabage.org`
   - Redirect URLs include `/auth/callback` and `/auth/confirm` for apex + www + localhost
@@ -96,7 +98,7 @@ Windows: `scripts\deploy-all-edge-functions.cmd`
 ## 8. Security gate (must pass)
 
 - [ ] No `SERVICE_ROLE` / SMTP / OneSignal REST in frontend bundle
-- [ ] Migration **065–073** applied on remote (OneSignal column revoke, public views, admin/feed fixes, job matches revoke)
+- [ ] Migration **065–076** applied on remote (OneSignal column revoke, public views, admin/feed fixes, job matches revoke, profile persistence)
 - [ ] Admin routes unreachable for non-admin (RLS + RoleRoute)
 - [ ] CSP + HSTS headers live on Netlify
 

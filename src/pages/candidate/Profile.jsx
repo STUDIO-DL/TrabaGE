@@ -17,6 +17,7 @@ import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import CertificationModal from '../../components/profile/modals/CertificationModal';
 import LanguageModal from '../../components/profile/modals/LanguageModal';
+import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
@@ -33,6 +34,8 @@ export default function Profile() {
   const {
     profile,
     loading,
+    error,
+    refetch,
     updateBasicInfo,
     uploadAvatar,
     uploadCV,
@@ -89,6 +92,7 @@ export default function Profile() {
     const { error } = await updateBasicInfo({ about });
     setAboutSaving(false);
     showToast(error ? error.message : 'Descripción guardada.', error ? 'error' : 'success');
+    return { error };
   };
 
   const handleSaveContact = async (data) => {
@@ -96,6 +100,7 @@ export default function Profile() {
     const { error } = await updateBasicInfo(data);
     setContactSaving(false);
     showToast(error ? error.message : TOAST.contactSaved, error ? 'error' : 'success');
+    return { error };
   };
 
   const handleAvatar = async (file) => {
@@ -209,6 +214,19 @@ export default function Profile() {
     return (
       <PageContainer topBar={false} className="max-w-none">
         <ProfilePageSkeleton />
+      </PageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageContainer topBar={false} className="max-w-none">
+        <div className="p-space-base">
+          <FetchErrorBanner
+            message="No se pudo cargar tu perfil. Inténtalo de nuevo."
+            onRetry={() => refetch()}
+          />
+        </div>
       </PageContainer>
     );
   }

@@ -77,14 +77,16 @@ export default function CompanyContactSection({
   };
 
   const handleSave = async () => {
-    await onSave?.({
+    const result = await onSave?.({
       contact_name: name.trim() || null,
       contact_role: role.trim() || null,
       contact_email: email.trim() || null,
       contact_whatsapp: whatsapp.trim() || null,
       contact_phone: phone.trim() || null,
     });
-    setDirty(false);
+    if (!result?.error) {
+      setDirty(false);
+    }
   };
 
   const whatsappDigits = profile?.contact_whatsapp?.replace(/\D/g, '');

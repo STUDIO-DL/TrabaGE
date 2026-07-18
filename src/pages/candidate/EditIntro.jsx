@@ -88,11 +88,9 @@ export default function EditIntro() {
 
   useEffect(() => {
     if (!user || loading) return;
-    if (formInitializedRef.current) return;
-    formInitializedRef.current = true;
 
     const identity = readIdentityFromUser(user);
-    setForm({
+    const nextForm = {
       full_name: profile?.full_name || identity.full_name || '',
       headline: profile?.headline || '',
       about: profile?.about || '',
@@ -103,6 +101,17 @@ export default function EditIntro() {
       contact_whatsapp: profile?.contact_whatsapp || '',
       show_education_in_intro: Boolean(profile?.show_education_in_intro),
       intro_education_id: profile?.intro_education_id || '',
+    };
+
+    if (!formInitializedRef.current) {
+      formInitializedRef.current = true;
+      setForm(nextForm);
+      return;
+    }
+
+    setForm((prev) => {
+      const unchanged = Object.keys(nextForm).every((key) => prev[key] === nextForm[key]);
+      return unchanged ? prev : nextForm;
     });
   }, [profile, user, loading]);
 

@@ -8,6 +8,7 @@ import Card from '../../components/ui/Card';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import Button from '../../components/ui/Button';
 import AppIcon from '../../components/common/AppIcon';
+import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { JobDetailSkeleton } from '../../components/common/Skeleton';
 import TimeAgo from '../../components/common/TimeAgo';
 import { Bookmark, Clock, FileText, ICON_SIZES } from '../../constants/icons';
@@ -110,7 +111,7 @@ export default function JobDetail() {
   const navigate = useNavigate();
   const { isPreviewMode, user, role } = useAuth();
   const { showToast } = useNotificationContext();
-  const { job, loading } = useJob(id);
+  const { job, loading, error } = useJob(id, { viewerId: user?.id });
   const { isSaved, toggleSavedJob, actionLoadingId } = useSavedJobs();
   const [applicationCount, setApplicationCount] = useState(0);
   const [application, setApplication] = useState(null);
@@ -164,6 +165,16 @@ export default function JobDetail() {
     return (
       <FormPageLayout backButton>
         <JobDetailSkeleton />
+      </FormPageLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <FormPageLayout backButton>
+        <div className="p-space-base">
+          <FetchErrorBanner message="No se pudo cargar la oferta. Inténtalo de nuevo." />
+        </div>
       </FormPageLayout>
     );
   }

@@ -13,6 +13,7 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
   const [companyJobs, setCompanyJobs] = useState([]);
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const requestIdRef = useRef(0);
 
   useEffect(() => {
@@ -32,12 +33,14 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
     if (!enabled || !trimmed) {
       setResults([]);
       setLoading(false);
+      setError(null);
       return undefined;
     }
 
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
     setLoading(true);
+    setError(null);
 
     const matchingContext =
       role === ROLES.PERSONAL && profile
@@ -47,7 +50,7 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
           : null;
 
     const timer = window.setTimeout(async () => {
-      const { data } = await searchService.globalSearch({
+      const { data, error: searchError } = await searchService.globalSearch({
         query: trimmed,
         limitPerType,
         user: user ? { id: user.id, role } : null,
@@ -56,12 +59,18 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
 
       if (requestIdRef.current !== requestId) return;
 
-      setResults(data || []);
+      if (searchError) {
+        setResults([]);
+        setError(searchError.message ?? 'No se pudo completar la búsqueda.');
+      } else {
+        setResults(data || []);
+        setError(null);
+      }
       setLoading(false);
     }, DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
   }, [companyJobs, profile, query, enabled, limitPerType, user, role]);
 
-  return { results, loading };
+  return { results, loading, error };
 }

@@ -22,7 +22,7 @@ export function useJobs(filters = {}) {
   return { jobs, loading, error, refetch: fetchJobs };
 }
 
-export function useJob(jobId) {
+export function useJob(jobId, { viewerId = null } = {}) {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,11 +31,13 @@ export function useJob(jobId) {
     if (!jobId) return;
     setLoading(true);
     jobsService.getJobById(jobId).then(({ data, error: fetchError }) => {
-      setJob(data);
+      const visible =
+        data && (data.status === 'active' || (viewerId && data.company_id === viewerId));
+      setJob(visible ? data : null);
       setError(fetchError?.message ?? null);
       setLoading(false);
     });
-  }, [jobId]);
+  }, [jobId, viewerId]);
 
   return { job, loading, error };
 }

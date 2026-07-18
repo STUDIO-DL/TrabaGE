@@ -18,7 +18,7 @@ export default function GlobalSearch({
   const rootRef = useRef(null);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
-  const { results, loading } = useGlobalSearch(query, {
+  const { results, loading, error } = useGlobalSearch(query, {
     enabled: showResults && open,
     limitPerType,
   });
@@ -83,6 +83,7 @@ export default function GlobalSearch({
           query={query}
           results={results}
           loading={loading}
+          error={error}
           onSelect={handleSelect}
         />
       ) : null}

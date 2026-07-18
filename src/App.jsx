@@ -9,6 +9,7 @@ import { KeyboardProvider } from './context/KeyboardContext';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import GuestOnlyRoute from './components/routing/GuestOnlyRoute';
 import RoleRoute from './components/routing/RoleRoute';
+import { RouteSectionLayout } from './components/routing/RouteErrorBoundary';
 import GuestBar from './components/common/GuestBar';
 import InstallPrompt from './components/common/InstallPrompt';
 import { ToastContainer } from './components/ui/Toast';
@@ -134,47 +135,54 @@ function AppRoutes() {
         <Routes>
             <Route path="/" element={<SplashScreen />} />
             <Route path="/onboarding" element={<OnboardingFlow />} />
-            <Route element={<GuestOnlyRoute />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
+
+            <Route element={<RouteSectionLayout />}>
+              <Route element={<GuestOnlyRoute />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+              </Route>
+              <Route path="/register" element={<Register />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/auth/confirm" element={<AuthConfirm />} />
+              <Route path="/auth/verify-email" element={<Navigate to="/verify-email" replace />} />
+              <Route path="/explore" element={<Explore />} />
+              <Route path="/account-type" element={<Navigate to="/register" replace />} />
+              <Route path="/register-method" element={<Navigate to="/register" replace />} />
+              <Route path="/demo/company" element={<DemoCompanyEntry />} />
+              <Route path="/jobs/:id" element={<JobDetail />} />
             </Route>
-            <Route path="/register" element={<Register />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route path="/auth/confirm" element={<AuthConfirm />} />
-            <Route path="/auth/verify-email" element={<Navigate to="/verify-email" replace />} />
-            <Route path="/explore" element={<Explore />} />
-            <Route path="/account-type" element={<Navigate to="/register" replace />} />
-            <Route path="/register-method" element={<Navigate to="/register" replace />} />
-            <Route path="/demo/company" element={<DemoCompanyEntry />} />
-            <Route path="/jobs/:id" element={<JobDetail />} />
 
             <Route element={<ProtectedRoute />}>
               <Route path="/auth/set-password" element={<SetPassword />} />
               <Route path="/search" element={<SearchResults />} />
 
               <Route element={<RoleRoute role={ROLES.PERSONAL} />}>
-                <Route path="/setup/personal" element={<CandidateSetup />} />
-                <Route path="/personal/feed" element={<CandidateFeed />} />
-                <Route path="/personal/jobs" element={<CandidateJobs />} />
-                <Route path="/personal/publish" element={<CandidatePublish />} />
-                <Route path="/personal/jobs/:id/apply" element={<ApplyJob />} />
-                <Route path="/personal/saved-jobs" element={<CandidateSavedJobs />} />
-                <Route path="/personal/applications" element={<CandidateApplications />} />
-                <Route path="/personal/notifications" element={<CandidateNotifications />} />
-                <Route path="/personal/profile" element={<CandidateProfile />} />
-                <Route path="/personal/profile/edit-intro" element={<EditIntro />} />
-                <Route path="/personal/settings" element={<CandidateSettings />} />
-                <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
-                <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />
-                <Route path="/help" element={<HelpCenter />} />
+                <Route element={<RouteSectionLayout />}>
+                  <Route path="/setup/personal" element={<CandidateSetup />} />
+                  <Route path="/personal/feed" element={<CandidateFeed />} />
+                  <Route path="/personal/jobs" element={<CandidateJobs />} />
+                  <Route path="/personal/publish" element={<CandidatePublish />} />
+                  <Route path="/personal/jobs/:id/apply" element={<ApplyJob />} />
+                  <Route path="/personal/saved-jobs" element={<CandidateSavedJobs />} />
+                  <Route path="/personal/applications" element={<CandidateApplications />} />
+                  <Route path="/personal/notifications" element={<CandidateNotifications />} />
+                  <Route path="/personal/profile" element={<CandidateProfile />} />
+                  <Route path="/personal/profile/edit-intro" element={<EditIntro />} />
+                  <Route path="/personal/settings" element={<CandidateSettings />} />
+                  <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
+                  <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />
+                  <Route path="/help" element={<HelpCenter />} />
+                </Route>
               </Route>
 
               <Route element={<RoleRoute roles={[ROLES.BUSINESS, ROLES.ORGANIZATION]} />}>
-                <Route path="/setup/business" element={<CompanySetup />} />
-                <Route path="/setup/organization" element={<CompanySetup />} />
-                <Route path="/business">{EmployerAppRoutes()}</Route>
-                <Route path="/organization">{EmployerAppRoutes()}</Route>
+                <Route element={<RouteSectionLayout />}>
+                  <Route path="/setup/business" element={<CompanySetup />} />
+                  <Route path="/setup/organization" element={<CompanySetup />} />
+                  <Route path="/business">{EmployerAppRoutes()}</Route>
+                  <Route path="/organization">{EmployerAppRoutes()}</Route>
+                </Route>
               </Route>
 
               <Route element={<RoleRoute role={ROLES.ADMIN} />}>
@@ -224,16 +232,20 @@ function AppRoutes() {
             <Route path="/personal/jobs/:id" element={<JobDetail />} />
             <Route path="/post/:postId" element={<PostDetail />} />
             <Route path="/feed/post/:postId" element={<PostDetail />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfUse />} />
-            <Route path="/aviso-legal" element={<Navigate to="/terms#marcas-terceros-uso" replace />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/app-info" element={<AppInfo />} />
-            <Route path="/maintenance" element={<Maintenance />} />
-            <Route path="/legal/privacy" element={<Navigate to="/privacy" replace />} />
-            <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
-            <Route path="/legal/aviso-legal" element={<Navigate to="/terms#marcas-terceros-uso" replace />} />
-            <Route path="/legal/help" element={<HelpCenter />} />
+
+            <Route element={<RouteSectionLayout />}>
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfUse />} />
+              <Route path="/aviso-legal" element={<Navigate to="/terms#marcas-terceros-uso" replace />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/app-info" element={<AppInfo />} />
+              <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/legal/privacy" element={<Navigate to="/privacy" replace />} />
+              <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
+              <Route path="/legal/aviso-legal" element={<Navigate to="/terms#marcas-terceros-uso" replace />} />
+              <Route path="/legal/help" element={<HelpCenter />} />
+            </Route>
+
             <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

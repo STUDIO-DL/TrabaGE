@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import ProfilePageShell from '../../components/profile/ProfilePageShell';
 import CompanyProfileView from '../../components/company/profile/CompanyProfileView';
+import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import PageContainer from '../../components/layout/PageContainer';
 import { companyService } from '../../services/company.service';
@@ -25,6 +26,7 @@ export default function CompanyPublicProfile() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [fetchError, setFetchError] = useState(null);
 
   const followTarget = useMemo(
     () =>
@@ -64,23 +66,57 @@ export default function CompanyPublicProfile() {
 
     setLoading(true);
     setNotFound(false);
+    setFetchError(null);
 
     Promise.all([
       companyService.getPublicProfile(companyId),
       jobsService.getCompanyJobs(companyId),
     ]).then(([profileResult, jobsResult]) => {
-      if (!profileResult.data) {
+      if (profileResult.error) {
+        setProfile(null);
+        setJobs([]);
+        setNotFound(false);
+        setFetchError(profileResult.error.message ?? 'No se pudo cargar el perfil.');
+      } else if (!profileResult.data) {
+        setProfile(null);
+        setJobs([]);
+        setNotFound(true);
+        setFetchError(null);
+      } else {
+        setProfile(profileResult.data);
+        setJobs((jobsResult.data ?? []).filter((job) => job.status === 'active'));
+        setNotFound(false);
+        setFetchError(null);
+      }
+      setLoading(false);
+    });
+  }, [companyId, isPreviewMode]);
+
+  const retryFetch = () => {
+    if (!companyId || isPreviewMode) return;
+    setLoading(true);
+    setNotFound(false);
+    setFetchError(null);
+
+    Promise.all([
+      companyService.getPublicProfile(companyId),
+      jobsService.getCompanyJobs(companyId),
+    ]).then(([profileResult, jobsResult]) => {
+      if (profileResult.error) {
+        setProfile(null);
+        setJobs([]);
+        setFetchError(profileResult.error.message ?? 'No se pudo cargar el perfil.');
+      } else if (!profileResult.data) {
         setProfile(null);
         setJobs([]);
         setNotFound(true);
       } else {
         setProfile(profileResult.data);
-        setJobs(jobsResult.data ?? []);
-        setNotFound(false);
+        setJobs((jobsResult.data ?? []).filter((job) => job.status === 'active'));
       }
       setLoading(false);
     });
-  }, [companyId, isPreviewMode]);
+  };
 
   const handleContact = () => {
     const { ok, error } = openCompanyContact(profile);
@@ -102,6 +138,19 @@ export default function CompanyPublicProfile() {
     return (
       <PageContainer topBar={false} bottomNav={false} className="max-w-none">
         <ProfilePageSkeleton />
+      </PageContainer>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <PageContainer topBar={false} bottomNav={false} className="max-w-none">
+        <div className="p-space-base">
+          <FetchErrorBanner
+            message="No se pudo cargar el perfil. Inténtalo de nuevo."
+            onRetry={retryFetch}
+          />
+        </div>
       </PageContainer>
     );
   }

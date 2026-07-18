@@ -105,58 +105,63 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    setSentryUser(currentUser);
-    void setOneSignalUserId(currentUser.id);
+    try {
+      setSentryUser(currentUser);
+      void setOneSignalUserId(currentUser.id);
 
-    // Resolve role and both profiles in parallel instead of fetching the role
-    // first and then the matching profile in series. This halves the blocking
-    // network latency before the UI can render the authenticated state.
-    const [roleResult, candidateResult, companyResult] = await Promise.all([
-      authService.getUserRole(currentUser.id),
-      profileService.getCandidateProfile(currentUser.id),
-      companyService.getCompanyProfile(currentUser.id),
-    ]);
+      // Resolve role and both profiles in parallel instead of fetching the role
+      // first and then the matching profile in series. This halves the blocking
+      // network latency before the UI can render the authenticated state.
+      const [roleResult, candidateResult, companyResult] = await Promise.all([
+        authService.getUserRole(currentUser.id),
+        profileService.getCandidateProfile(currentUser.id),
+        companyService.getCompanyProfile(currentUser.id),
+      ]);
 
-    let userRole = roleResult?.data?.role ?? null;
+      let userRole = roleResult?.data?.role ?? null;
 
-    if (!userRole) {
-      if (companyResult?.data?.user_id) {
-        userRole = normalizeRole(ROLES.BUSINESS, {
-          companyType: companyResult.data.company_type,
-        });
-      } else if (candidateResult?.data?.user_id) {
-        userRole = ROLES.PERSONAL;
+      if (!userRole) {
+        if (companyResult?.data?.user_id) {
+          userRole = normalizeRole(ROLES.BUSINESS, {
+            companyType: companyResult.data.company_type,
+          });
+        } else if (candidateResult?.data?.user_id) {
+          userRole = ROLES.PERSONAL;
+        }
+      } else {
+        userRole =
+          normalizeRole(userRole, { companyType: companyResult?.data?.company_type }) ?? userRole;
       }
-    } else {
-      userRole =
-        normalizeRole(userRole, { companyType: companyResult?.data?.company_type }) ?? userRole;
-    }
 
-    if (!roleResult?.data?.role && userRole && currentUser.id && userRole !== ROLES.ADMIN) {
-      await authService.setUserRole(currentUser.id, userRole);
-    }
+      if (!roleResult?.data?.role && userRole && currentUser.id && userRole !== ROLES.ADMIN) {
+        await authService.setUserRole(currentUser.id, userRole);
+      }
 
-    setRole(userRole);
+      setRole(userRole);
 
-    if (userRole && userRole !== ROLES.ADMIN) {
-      await bootstrapProfile({ user: currentUser, role: userRole });
-    }
+      if (userRole && userRole !== ROLES.ADMIN) {
+        await bootstrapProfile({ user: currentUser, role: userRole });
+      }
 
-    if (isPersonalRole(userRole)) {
-      const { data: candidateAfterBootstrap } = await profileService.getCandidateProfile(currentUser.id);
-      setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, candidateAfterBootstrap));
-    } else if (isEmployerRole(userRole)) {
-      const { data: companyAfterBootstrap } = await companyService.getCompanyProfile(currentUser.id);
-      const resolvedRole =
-        normalizeRole(userRole, { companyType: companyAfterBootstrap?.company_type }) ?? userRole;
-      setRole(resolvedRole);
-      setSetupComplete(isProfileSetupComplete(resolvedRole, companyAfterBootstrap));
-    } else if (userRole === ROLES.ADMIN) {
-      setSetupComplete(true);
-    } else {
+      if (isPersonalRole(userRole)) {
+        const { data: candidateAfterBootstrap } = await profileService.getCandidateProfile(currentUser.id);
+        setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, candidateAfterBootstrap));
+      } else if (isEmployerRole(userRole)) {
+        const { data: companyAfterBootstrap } = await companyService.getCompanyProfile(currentUser.id);
+        const resolvedRole =
+          normalizeRole(userRole, { companyType: companyAfterBootstrap?.company_type }) ?? userRole;
+        setRole(resolvedRole);
+        setSetupComplete(isProfileSetupComplete(resolvedRole, companyAfterBootstrap));
+      } else if (userRole === ROLES.ADMIN) {
+        setSetupComplete(true);
+      } else {
+        setSetupComplete(false);
+      }
+    } catch (err) {
+      reportError(err, { area: 'auth_hydrate_user', userId: currentUser.id });
+      setRole(null);
       setSetupComplete(false);
     }
-
   }, []);
 
   useEffect(() => {
@@ -242,15 +247,14 @@ export function AuthProvider({ children }) {
       return { data, error: { message: 'No se pudo iniciar sesión' }, redirectTo: null };
     }
 
-    await hydrateUser(session);
-
     const flow = await completePostAuthFlow(session.user, { preferProfile: false });
     if (flow.error) return { data, error: flow.error, redirectTo: null };
+
+    await hydrateUser(session);
+
     if (flow.needsAccountTypeSelection) {
       return { data, error: null, redirectTo: '/register' };
     }
-
-    await hydrateUser(session);
 
     return { data, error: null, redirectTo: flow.redirectTo };
   }, [hydrateUser]);

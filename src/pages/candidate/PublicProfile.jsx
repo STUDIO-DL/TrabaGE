@@ -8,26 +8,47 @@ import CertificationsSection from '../../components/profile/CertificationsSectio
 import SkillsSection from '../../components/profile/SkillsSection';
 import ServicesSection from '../../components/profile/ServicesSection';
 import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
+import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useProfile } from '../../hooks/useProfile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
 import { openCandidateContact } from '../../utils/contact';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { getDisplayName } from '../../utils/displayIdentity';
+import { ROLES } from '../../constants/roles';
 
 export default function PublicProfile() {
   const { userId } = useParams();
-  const { profile, loading } = useProfile(userId);
+  const { profile, loading, error, refetch } = useProfile(userId);
   const { showToast } = useNotificationContext();
 
+  const displayName = getDisplayName(profile, ROLES.PERSONAL, {
+    fallbackAuthorName: profile?.full_name,
+    context: 'public_profile',
+  });
+
   const handleContact = () => {
-    const { ok, error } = openCandidateContact(profile);
-    if (!ok) showToast(error, 'error');
+    const { ok, error: contactError } = openCandidateContact(profile);
+    if (!ok) showToast(contactError, 'error');
   };
 
   if (loading) {
     return (
       <PageContainer topBar={false} bottomNav={false} className="max-w-none">
         <ProfilePageSkeleton />
+      </PageContainer>
+    );
+  }
+
+  if (error) {
+    return (
+      <PageContainer topBar={false} bottomNav={false} className="max-w-none">
+        <div className="p-space-base">
+          <FetchErrorBanner
+            message="No se pudo cargar el perfil. Inténtalo de nuevo."
+            onRetry={() => refetch()}
+          />
+        </div>
       </PageContainer>
     );
   }
@@ -46,7 +67,7 @@ export default function PublicProfile() {
         backButton
         profile={profile}
         shareUrl={generateProfileUrl(userId)}
-        shareTitle={profile.full_name || 'Perfil en TrabaGE'}
+        shareTitle={displayName || 'Perfil en TrabaGE'}
         reportTargetId={userId}
         onContact={handleContact}
       >

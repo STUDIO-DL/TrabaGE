@@ -27,11 +27,13 @@ export default function ContactSection({
   if (!isOwn && !contactEmail && !contactWhatsapp) return null;
 
   const handleSave = async () => {
-    await onSave?.({
+    const result = await onSave?.({
       contact_email: email.trim() || null,
       contact_whatsapp: whatsapp.trim() || null,
     });
-    setDirty(false);
+    if (!result?.error) {
+      setDirty(false);
+    }
   };
 
   return (

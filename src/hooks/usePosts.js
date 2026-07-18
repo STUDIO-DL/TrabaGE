@@ -222,8 +222,13 @@ export function usePosts(authorId, { enabled = true } = {}) {
       return;
     }
 
+    const includeHidden = Boolean(authorId && user?.id && authorId === user.id);
     const { data, error: fetchError } = authorId
-      ? await postsService.getByAuthor(authorId, { limit: PAGE_SIZE, offset })
+      ? await postsService.getByAuthor(authorId, {
+          limit: PAGE_SIZE,
+          offset,
+          includeHidden,
+        })
       : await postsService.getFeed({ limit: PAGE_SIZE, offset });
 
     if (fetchError) {

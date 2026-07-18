@@ -1,8 +1,9 @@
 import { isEmployerAuthor } from '../constants/authorTypes';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
 import EmptyState from '../components/common/EmptyState';
+import FetchErrorBanner from '../components/common/FetchErrorBanner';
 import PostCard from '../components/feed/PostCard';
 import { PostCardSkeleton } from '../components/common/Skeleton';
 import { postsService } from '../services/posts.service';
@@ -53,28 +54,42 @@ export default function PostDetail() {
   const { postId } = useParams();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  useEffect(() => {
-    let mounted = true;
+  const fetchPost = useCallback(() => {
+    if (!postId) return;
     setLoading(true);
+    setError(null);
 
-    postsService.getById(postId).then(async ({ data }) => {
+    postsService.getById(postId).then(async ({ data, error: fetchError }) => {
+      if (fetchError) {
+        setPost(null);
+        setError(fetchError.message ?? 'No se pudo cargar la publicación.');
+        setLoading(false);
+        return;
+      }
+
       const enriched = await enrichPost(data);
-      if (!mounted) return;
       setPost(enriched ?? null);
+      setError(null);
       setLoading(false);
     });
-
-    return () => {
-      mounted = false;
-    };
   }, [postId]);
+
+  useEffect(() => {
+    fetchPost();
+  }, [fetchPost]);
 
   return (
     <PageContainer backButton bottomNav={false}>
       <div className="p-space-base">
         {loading ? (
           <PostCardSkeleton />
+        ) : error ? (
+          <FetchErrorBanner
+            message="No se pudo cargar la publicación. Inténtalo de nuevo."
+            onRetry={fetchPost}
+          />
         ) : !post ? (
           <EmptyState
             title="Publicación no encontrada"

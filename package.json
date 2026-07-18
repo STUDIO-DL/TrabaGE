@@ -11,6 +11,8 @@
     "create-admins": "node scripts/create-admins.mjs",
     "verify-admins": "node scripts/verify-admins.mjs",
     "test-login": "node scripts/test-login-flow.mjs",
+    "verify-profile-persistence": "node scripts/verify-profile-persistence.mjs",
+    "verify-profiles": "node scripts/verify-profile-provisioning.mjs",
     "generate-icons": "node scripts/generate-pwa-icons.mjs"
   },
   "dependencies": {

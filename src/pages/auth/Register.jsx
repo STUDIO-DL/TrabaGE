@@ -408,9 +408,6 @@ export default function Register() {
     setTypeValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  const isEmployerAccountKind =
-    accountKind === ACCOUNT_KINDS.BUSINESS || accountKind === ACCOUNT_KINDS.ORGANIZATION;
-
   const handleGoogleRegister = async () => {
     setError('');
 

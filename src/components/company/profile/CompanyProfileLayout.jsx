@@ -20,6 +20,7 @@ import { isOrganizationProfile } from '../../../utils/orgLabels';
 import { getCompanyDisplayName } from '../../../utils/companyProfile';
 import { TOAST } from '../../../utils/copyLabels';
 import { ProfilePageSkeleton } from '../../common/Skeleton';
+import FetchErrorBanner from '../../common/FetchErrorBanner';
 import { useCompanyProfile } from '../../../hooks/useCompanyProfile';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -302,6 +303,8 @@ export default function CompanyProfileLayout({
   const {
     profile,
     loading,
+    error,
+    refetch,
     uploadLogo,
     uploadCover,
     addCompanyService,
@@ -438,10 +441,11 @@ export default function CompanyProfileLayout({
 
     if (error) {
       showToast(error.message, 'error');
-      return;
+      return { error };
     }
 
     showToast(TOAST.contactSaved, 'success');
+    return { error: null };
   };
 
   const handleSaveProfile = async (data) => {
@@ -473,6 +477,17 @@ export default function CompanyProfileLayout({
 
   if (loading && !profile && !isPreviewMode) {
     return <ProfilePageSkeleton />;
+  }
+
+  if (error && !profile && !isPreviewMode) {
+    return (
+      <div className="p-space-base">
+        <FetchErrorBanner
+          message="No se pudo cargar tu perfil. Inténtalo de nuevo."
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
   }
 
   return (

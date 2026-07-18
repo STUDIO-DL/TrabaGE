@@ -75,6 +75,8 @@ export function useNotifications() {
       });
       if (page.length) cursorRef.current = cursorFromPage(page);
       setHasMore(page.length === NOTIFICATIONS_PAGE_SIZE);
+    } else {
+      setError(pageError.message ?? 'No se pudieron cargar más notificaciones.');
     }
 
     loadingMoreRef.current = false;

@@ -111,10 +111,12 @@ export const profileService = {
   updateCandidateProfile: (userId, data) => {
     const safeData = { ...(data ?? {}) };
     delete safeData.onesignal_player_id;
+    delete safeData.user_id;
     return executeWrite(
       supabase
         .from('candidate_profiles')
-        .upsert({ user_id: userId, ...safeData }, { onConflict: 'user_id' })
+        .update(safeData)
+        .eq('user_id', userId)
         .select(CANDIDATE_PROFILE_COLUMNS)
         .maybeSingle(),
     );

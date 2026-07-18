@@ -9,7 +9,7 @@ import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
 import { getOwnCompanyProfileKey, getProfileQueryKey } from '../constants/profileQueryKeys';
-import { isEmployerRole } from '../constants/roles';
+import { withSetupComplete } from '../utils/profilePersistence';
 import { logoPath, companyCoverPath } from '../constants/storage';
 
 function friendlyCompanyError(error) {
@@ -34,7 +34,7 @@ function mergeBaseProfileRow(current, row) {
 
 export function useCompanyProfile() {
   const queryClient = useQueryClient();
-  const { user, role, isPreviewMode } = useAuth();
+  const { user, role, isPreviewMode, refreshSetupStatus } = useAuth();
   const { profile, loading, error, refetch, queryKey } = useProfile();
 
   const userId = user?.id;
@@ -55,6 +55,12 @@ export function useCompanyProfile() {
     return result.data ?? null;
   }, [ownQueryKey, queryClient, refetch]);
 
+  const invalidateProfileQueries = useCallback(async () => {
+    if (!userId) return null;
+    await queryClient.invalidateQueries({ queryKey: ['profile', 'public', 'company', userId] });
+    return syncFullProfile();
+  }, [queryClient, syncFullProfile, userId]);
+
   const runMutation = useCallback(
     async ({ execute, patchCache, resync = true }) => {
       try {
@@ -73,7 +79,7 @@ export function useCompanyProfile() {
         }
 
         if (resync) {
-          await syncFullProfile();
+          await invalidateProfileQueries();
         }
 
         return { data: result?.data ?? null, error: null };
@@ -82,21 +88,19 @@ export function useCompanyProfile() {
         return { data: null, error: friendlyCompanyError(mutationError) };
       }
     },
-    [ownQueryKey, queryClient, syncFullProfile],
+    [invalidateProfileQueries, ownQueryKey, queryClient, syncFullProfile],
   );
 
   const updateCompanyProfile = useCallback(
     async (data, { companyNameFallback } = {}) => {
-      const payload = {
-        user_id: userId,
-        ...data,
+      const payload = withSetupComplete(role, profile, {
         ...(data.company_name
-          ? {}
-          : { company_name: profile?.company_name?.trim() || companyNameFallback || undefined }),
-      };
+          ? data
+          : { ...data, company_name: profile?.company_name?.trim() || companyNameFallback || undefined }),
+      });
 
       const { error: saveError } = await runMutation({
-        execute: () => companyService.upsertCompanyProfile(payload),
+        execute: () => companyService.updateCompanyProfile(userId, payload),
         patchCache: (current, row) => mergeBaseProfileRow(current, row),
       }).then(({ error }) => ({ error }));
 
@@ -106,9 +110,13 @@ export function useCompanyProfile() {
         });
       }
 
+      if (!saveError) {
+        void refreshSetupStatus();
+      }
+
       return { error: saveError };
     },
-    [profile?.company_name, runMutation, userId],
+    [profile, refreshSetupStatus, role, runMutation, userId],
   );
 
   const uploadLogo = useCallback(

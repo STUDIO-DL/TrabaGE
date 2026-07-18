@@ -34,7 +34,8 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
   };
 
   const saveEdit = async () => {
-    await onSave?.(draft.trim());
+    const result = await onSave?.(draft.trim());
+    if (result?.error) return;
     setEditing(false);
   };
 

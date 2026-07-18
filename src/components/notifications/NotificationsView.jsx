@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../layout/PageContainer';
 import TopBar from '../layout/TopBar';
 import NotificationItem from './NotificationItem';
 import EmptyState from '../common/EmptyState';
+import FetchErrorBanner from '../common/FetchErrorBanner';
 import { NotificationListSkeleton } from '../common/Skeleton';
 import Button from '../ui/Button';
 import { Bell } from '../../constants/icons';
@@ -55,6 +56,7 @@ const EMPLOYER_EMPTY_COPY = {
 // Auto-fill filtered views: since filtering is client-side, a chip may show few
 // rows even when more pages exist. Keep loading until we have enough to display.
 const MIN_VISIBLE = 6;
+const MAX_AUTO_FETCH_PAGES = 5;
 
 export default function NotificationsView({ role = 'candidate' }) {
   usePushPermission();
@@ -66,13 +68,16 @@ export default function NotificationsView({ role = 'candidate' }) {
     loading,
     loadingMore,
     hasMore,
+    error,
     markAsRead,
     markAllAsRead,
     deleteNotification,
     loadMore,
+    refetch,
   } = useNotifications();
 
   const [activeFilter, setActiveFilter] = useState(NOTIFICATION_CATEGORY.ALL);
+  const autoFetchCountRef = useRef(0);
 
   const filtered = useMemo(
     () => notifications.filter((n) => matchesCategory(n, activeFilter)),
@@ -94,10 +99,16 @@ export default function NotificationsView({ role = 'candidate' }) {
 
   // Keep filtered chips populated by pulling more pages when needed.
   useEffect(() => {
+    if (activeFilter === NOTIFICATION_CATEGORY.ALL) {
+      autoFetchCountRef.current = 0;
+      return;
+    }
     if (!loading && !loadingMore && hasMore && filtered.length < MIN_VISIBLE) {
+      if (autoFetchCountRef.current >= MAX_AUTO_FETCH_PAGES) return;
+      autoFetchCountRef.current += 1;
       loadMore();
     }
-  }, [loading, loadingMore, hasMore, filtered.length, loadMore]);
+  }, [activeFilter, loading, loadingMore, hasMore, filtered.length, loadMore]);
 
   const handleClick = async (notification) => {
     await markAsRead(notification.id);
@@ -170,9 +181,17 @@ export default function NotificationsView({ role = 'candidate' }) {
       </div>
 
       <div className="p-space-md">
+        {error ? (
+          <FetchErrorBanner
+            message="No se pudieron cargar las notificaciones. Inténtalo de nuevo."
+            onRetry={refetch}
+            className="mb-space-md"
+          />
+        ) : null}
+
         {loading ? (
           <NotificationListSkeleton count={6} />
-        ) : filtered.length === 0 ? (
+        ) : filtered.length === 0 && !error ? (
           <EmptyState
             variant="soft"
             icon={Bell}

@@ -45,7 +45,7 @@ export default function RoleRoute({ role: requiredRole, roles: requiredRoles }) 
     if (!roleWaitExpired) {
       return <AuthLoadingScreen />;
     }
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/register" replace state={{ resumeAccountSetup: true }} />;
   }
 
   if (!allowedRoles.includes(effectiveRole)) {

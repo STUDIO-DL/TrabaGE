@@ -15,6 +15,7 @@ import JobsRecommendationsBanner from '../../components/jobs/JobsRecommendations
 import JobCard from '../../components/jobs/JobCard';
 
 import EmptyState from '../../components/common/EmptyState';
+import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 
 import { JobListSkeleton } from '../../components/common/Skeleton';
 
@@ -79,7 +80,7 @@ export default function Jobs() {
     [filters, query],
   );
 
-  const { jobs, loading } = useJobs(effectiveFilters);
+  const { jobs, loading, error, refetch } = useJobs(effectiveFilters);
   const { profile } = useProfile();
   const { showToast } = useNotificationContext();
   const { isSaved, toggleSavedJob, actionLoadingId } = useSavedJobs();
@@ -182,6 +183,13 @@ export default function Jobs() {
 
         <JobsFilterPanel open={filtersOpen} filters={filters} onChange={setFilters} />
 
+        {error ? (
+          <FetchErrorBanner
+            message="No se pudieron cargar las ofertas. Inténtalo de nuevo."
+            onRetry={refetch}
+          />
+        ) : null}
+
         {showRecommendations && (
           <JobsRecommendationsBanner mode={recommendationMode} count={recommendedJobs.length} />
         )}
@@ -210,7 +218,7 @@ export default function Jobs() {
         <div className="space-y-3" aria-label="Listado de empleos">
           {loading ? (
             <JobListSkeleton count={3} />
-          ) : displayJobs.length === 0 ? (
+          ) : displayJobs.length === 0 && !error ? (
             <EmptyState
               image={NoJobs}
               title="Nada por aquí todavía"

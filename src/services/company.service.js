@@ -17,6 +17,8 @@ const COMPANY_PROFILE_COLUMNS = [
   'company_size',
   'logo_path',
   'cover_path',
+  'contact_name',
+  'contact_role',
   'contact_email',
   'contact_phone',
   'contact_whatsapp',
@@ -125,6 +127,24 @@ export const companyService = {
       supabase
         .from('company_profiles')
         .upsert(safeData, { onConflict: 'user_id' })
+        .select(COMPANY_PROFILE_COLUMNS)
+        .maybeSingle(),
+    );
+
+    return {
+      ...result,
+      data: normalizeCompanyProfile(result.data),
+    };
+  },
+
+  updateCompanyProfile: async (userId, data) => {
+    const safeData = stripClientForbiddenFields(data);
+    delete safeData.user_id;
+    const result = await executeWrite(
+      supabase
+        .from('company_profiles')
+        .update(safeData)
+        .eq('user_id', userId)
         .select(COMPANY_PROFILE_COLUMNS)
         .maybeSingle(),
     );

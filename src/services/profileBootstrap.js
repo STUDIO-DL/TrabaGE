@@ -43,10 +43,7 @@ export async function bootstrapProfile({ user, role }) {
       return { error, data: null };
     }
 
-    if (data?.created || data?.backfilled) {
-      consumePendingSignupDetails();
-    }
-
+    consumePendingSignupDetails();
     return { error: null, data };
   } catch (error) {
     reportError(error, { area: 'profile_bootstrap', role, userId });

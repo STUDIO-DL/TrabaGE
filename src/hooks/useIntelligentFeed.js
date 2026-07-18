@@ -35,9 +35,11 @@ export function useIntelligentFeed({ authorId } = {}) {
         setLoadingMore(append);
         const { postsService } = await import('../services/posts.service');
         const offset = append ? itemsRef.current.length : 0;
+        const includeHidden = Boolean(authorId && user?.id && authorId === user.id);
         const { data, error: fetchError } = await postsService.getByAuthor(authorId, {
           limit: FEED_PAGE_SIZE,
           offset,
+          includeHidden,
         });
         if (fetchError) {
           if (!append) setItems([]);

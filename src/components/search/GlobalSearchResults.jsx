@@ -86,6 +86,7 @@ export default function GlobalSearchResults({
   query = '',
   results = [],
   loading = false,
+  error = null,
   onSelect,
   className = '',
   listId,
@@ -114,6 +115,10 @@ export default function GlobalSearchResults({
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
           Buscando…
         </div>
+      ) : error ? (
+        <p className="px-4 py-6 text-center text-sm text-error-700" role="alert">
+          No se pudo completar la búsqueda. Inténtalo de nuevo.
+        </p>
       ) : groups.length === 0 ? (
         <p className="px-4 py-6 text-center text-sm text-gray-500">
           No se encontraron resultados.
