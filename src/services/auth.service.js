@@ -48,9 +48,64 @@ function isExistingUnconfirmedUser(user) {
 }
 
 const SESSION_DETECT_WAIT_MS = 250;
+const AUTH_STORAGE_KEY = 'trabage-auth';
+const VERIFIED_ACCOUNT_EMAIL_KEY = 'trabage_verified_account_email';
 
 async function waitForInitialSessionDetection(ms = SESSION_DETECT_WAIT_MS) {
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function readPersistedAuthSession() {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (parsed?.access_token && parsed?.refresh_token && parsed?.user) {
+      return parsed;
+    }
+
+    const nested = parsed?.currentSession ?? parsed?.session;
+    if (nested?.access_token && nested?.refresh_token && nested?.user) {
+      return nested;
+    }
+  } catch {
+    // Ignore malformed storage payloads.
+  }
+
+  return null;
+}
+
+function rememberVerifiedAccountEmail(email) {
+  const normalized = normalizeEmail(email);
+  if (!normalized || typeof window === 'undefined') return;
+
+  try {
+    localStorage.setItem(VERIFIED_ACCOUNT_EMAIL_KEY, normalized);
+  } catch {
+    // Private mode / quota exceeded — best effort only.
+  }
+}
+
+async function restoreVerifiedSessionFromStorage() {
+  const persisted = readPersistedAuthSession();
+  if (!persisted?.user || !isEmailVerified(persisted.user)) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.setSession({
+    access_token: persisted.access_token,
+    refresh_token: persisted.refresh_token,
+  });
+
+  if (error || !data?.session?.user || !isEmailVerified(data.session.user)) {
+    return null;
+  }
+
+  rememberVerifiedAccountEmail(data.session.user.email);
+  return { user: data.session.user, session: data.session };
 }
 
 async function getVerifiedSessionFromClient() {
@@ -62,6 +117,7 @@ async function getVerifiedSessionFromClient() {
   const session = data?.session ?? null;
   const user = session?.user ?? null;
   if (user && isEmailVerified(user)) {
+    rememberVerifiedAccountEmail(user.email);
     return { session, user, error: null };
   }
 
@@ -75,11 +131,59 @@ async function resolveVerifiedUserFromServer() {
   }
 
   const verified = await getVerifiedSessionFromClient();
-  if (verified.user) {
+  if (verified.user && verified.session) {
     return { user: verified.user, session: verified.session };
   }
 
-  return { user: data.user, session: null };
+  const restored = await restoreVerifiedSessionFromStorage();
+  if (restored?.user && restored.session) {
+    return restored;
+  }
+
+  return null;
+}
+
+async function recoverVerifiedSessionAfterOtpFailure() {
+  let verified = await getVerifiedSessionFromClient();
+  if (verified.user && verified.session) {
+    return { user: verified.user, session: verified.session, alreadyVerified: true };
+  }
+
+  const restored = await restoreVerifiedSessionFromStorage();
+  if (restored?.user && restored.session) {
+    return { ...restored, alreadyVerified: true };
+  }
+
+  const recovered = await resolveVerifiedUserFromServer();
+  if (recovered?.user && recovered.session) {
+    return { ...recovered, alreadyVerified: true };
+  }
+
+  return null;
+}
+
+async function verifyEmailConfirmationToken(tokenHash, typeParam) {
+  const primaryType = typeParam === 'signup' ? 'signup' : 'email';
+  let result = await supabase.auth.verifyOtp({
+    token_hash: tokenHash,
+    type: primaryType,
+  });
+
+  if (!result.error || !isRecoverableConfirmationError(result.error)) {
+    return result;
+  }
+
+  const alternateType = primaryType === 'email' ? 'signup' : 'email';
+  const alternateResult = await supabase.auth.verifyOtp({
+    token_hash: tokenHash,
+    type: alternateType,
+  });
+
+  if (!alternateResult.error) {
+    return alternateResult;
+  }
+
+  return result;
 }
 
 function pendingVerificationResult(existingUnconfirmed = true, rateLimited = false) {
@@ -721,23 +825,41 @@ export const authService = {
     const errorDescription =
       query.get('error_description') || hash.get('error_description');
 
-    const successPayload = (user, session, { alreadyVerified = false } = {}) => ({
-      data: { user, session },
-      error: null,
-      alreadyVerified,
-    });
+    const successPayload = (user, session, { alreadyVerified = false } = {}) => {
+      if (user?.email) {
+        rememberVerifiedAccountEmail(user.email);
+      }
+
+      return {
+        data: { user, session },
+        error: null,
+        alreadyVerified,
+      };
+    };
+
+    const persistedSessionSnapshot = readPersistedAuthSession();
 
     // Allow detectSessionInUrl / PKCE code exchange to finish first.
     await waitForInitialSessionDetection();
 
     let verified = await getVerifiedSessionFromClient();
-    if (verified.user) {
+    if (verified.user && verified.session) {
       return successPayload(verified.user, verified.session, { alreadyVerified: true });
+    }
+
+    if (
+      persistedSessionSnapshot?.user &&
+      isEmailVerified(persistedSessionSnapshot.user)
+    ) {
+      const restored = await restoreVerifiedSessionFromStorage();
+      if (restored?.user && restored.session) {
+        return successPayload(restored.user, restored.session, { alreadyVerified: true });
+      }
     }
 
     if (errorDescription) {
       const recovered = await resolveVerifiedUserFromServer();
-      if (recovered?.user) {
+      if (recovered?.user && recovered.session) {
         return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
       }
 
@@ -756,12 +878,12 @@ export const authService = {
 
     if (!tokenHash && !code) {
       verified = await getVerifiedSessionFromClient();
-      if (verified.user) {
+      if (verified.user && verified.session) {
         return successPayload(verified.user, verified.session, { alreadyVerified: true });
       }
 
       const recovered = await resolveVerifiedUserFromServer();
-      if (recovered?.user) {
+      if (recovered?.user && recovered.session) {
         return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
       }
 
@@ -776,27 +898,17 @@ export const authService = {
 
     let result;
     if (tokenHash) {
-      const confirmationType = typeParam === 'signup' ? 'signup' : 'email';
-      result = await supabase.auth.verifyOtp({
-        token_hash: tokenHash,
-        type: confirmationType,
-      });
+      result = await verifyEmailConfirmationToken(tokenHash, typeParam);
     } else {
       result = await supabase.auth.exchangeCodeForSession(code);
     }
 
     if (result.error) {
       await waitForInitialSessionDetection(150);
-      verified = await getVerifiedSessionFromClient();
-      if (verified.user) {
-        return successPayload(verified.user, verified.session, { alreadyVerified: true });
-      }
 
-      if (isRecoverableConfirmationError(result.error)) {
-        const recovered = await resolveVerifiedUserFromServer();
-        if (recovered?.user) {
-          return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
-        }
+      const recovered = await recoverVerifiedSessionAfterOtpFailure();
+      if (recovered?.user && recovered.session) {
+        return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
       }
 
       return result;
@@ -808,7 +920,7 @@ export const authService = {
     if (!isEmailVerified(user)) {
       await waitForInitialSessionDetection(150);
       verified = await getVerifiedSessionFromClient();
-      if (verified.user) {
+      if (verified.user && verified.session) {
         return successPayload(verified.user, verified.session);
       }
 

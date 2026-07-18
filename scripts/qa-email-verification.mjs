@@ -100,15 +100,28 @@ function buildConfirmUrl(baseUrl, tokenHash) {
 
 async function resetBrowserState(context, accountKind) {
   await context.addInitScript(
-    ({ onboardingKey, kind }) => {
+    ({ onboardingKey, kind, authKey, verifiedEmailKey }) => {
+      const persistedAuth = localStorage.getItem(authKey);
+      const persistedVerifiedEmail = localStorage.getItem(verifiedEmailKey);
       sessionStorage.clear();
       localStorage.clear();
       localStorage.setItem(onboardingKey, 'true');
       if (kind) {
         localStorage.setItem('pending_account_type', kind);
       }
+      if (persistedAuth) {
+        localStorage.setItem(authKey, persistedAuth);
+      }
+      if (persistedVerifiedEmail) {
+        localStorage.setItem(verifiedEmailKey, persistedVerifiedEmail);
+      }
     },
-    { onboardingKey: ONBOARDING_KEY, kind: accountKind },
+    {
+      onboardingKey: ONBOARDING_KEY,
+      kind: accountKind,
+      authKey: 'trabage-auth',
+      verifiedEmailKey: 'trabage_verified_account_email',
+    },
   );
 }
 
@@ -123,24 +136,22 @@ async function waitForAuthShell(page) {
     .catch(() => {});
 }
 
-async function createAndConfirmUser(admin, anon, testCase, baseUrl) {
+async function createAndConfirmUser(admin, _anon, testCase, baseUrl) {
   const email = uniqueEmail(testCase.id);
   const redirectTo = `${baseUrl.replace(/\/$/, '')}/auth/confirm`;
 
-  const { data: signupData, error: signupError } = await anon.auth.signUp({
+  const { data: createData, error: createError } = await admin.auth.admin.createUser({
     email,
     password: TEST_PASSWORD,
-    options: {
-      data: testCase.signupData,
-      emailRedirectTo: redirectTo,
-    },
+    email_confirm: false,
+    user_metadata: testCase.signupData,
   });
 
-  if (signupError) {
-    throw new Error(`signUp failed: ${signupError.message}`);
+  if (createError) {
+    throw new Error(`createUser failed: ${createError.message}`);
   }
-  if (!signupData?.user?.id) {
-    throw new Error('signUp returned no user id');
+  if (!createData?.user?.id) {
+    throw new Error('createUser returned no user id');
   }
 
   const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
