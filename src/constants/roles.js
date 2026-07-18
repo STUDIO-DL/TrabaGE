@@ -27,6 +27,13 @@ export const ROLE_HOME = {
   [ROLES.ADMIN]: '/admin',
 };
 
+/** Role-scoped profile pages — first landing after account creation. */
+export const ROLE_PROFILE = {
+  [ROLES.PERSONAL]: '/personal/profile',
+  [ROLES.BUSINESS]: '/business/profile',
+  [ROLES.ORGANIZATION]: '/organization/profile',
+};
+
 export const ROLE_SETUP = {
   [ROLES.PERSONAL]: '/setup/personal',
   [ROLES.BUSINESS]: '/setup/business',

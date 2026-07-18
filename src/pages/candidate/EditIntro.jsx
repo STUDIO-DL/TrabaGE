@@ -14,6 +14,7 @@ import { SECTORS } from '../../constants/sectors';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { readIdentityFromUser } from '../../utils/displayIdentity';
 import {
   buildEducationSelectOptions,
   getCurrentExperience,
@@ -67,19 +68,21 @@ export default function EditIntro() {
   const [modalSaving, setModalSaving] = useState(false);
 
   useEffect(() => {
-    if (!profile) return;
-    if (formInitializedRef.current && form.full_name) return;
+    if (!user || loading) return;
+    if (formInitializedRef.current) return;
     formInitializedRef.current = true;
+
+    const identity = readIdentityFromUser(user);
     setForm({
-      full_name: profile.full_name || '',
-      headline: profile.headline || '',
-      sector: profile.sector || '',
-      country: profile.country || DEFAULT_COUNTRY,
-      city: profile.city || '',
-      show_education_in_intro: Boolean(profile.show_education_in_intro),
-      intro_education_id: profile.intro_education_id || '',
+      full_name: profile?.full_name || identity.full_name || '',
+      headline: profile?.headline || '',
+      sector: profile?.sector || '',
+      country: profile?.country || DEFAULT_COUNTRY,
+      city: profile?.city || identity.city || '',
+      show_education_in_intro: Boolean(profile?.show_education_in_intro),
+      intro_education_id: profile?.intro_education_id || '',
     });
-  }, [profile]);
+  }, [profile, user, loading]);
 
   const currentExperience = useMemo(
     () => getCurrentExperience(profile?.experience),
@@ -148,8 +151,12 @@ export default function EditIntro() {
     const result = id ? await updateEducation(id, data) : await addEducation(data);
     setModalSaving(false);
     if (!result.error) {
-      if (!id && result.data?.id && form.show_education_in_intro && !form.intro_education_id) {
-        setForm((prev) => ({ ...prev, intro_education_id: result.data.id }));
+      if (!id && result.data?.id) {
+        setForm((prev) => ({
+          ...prev,
+          intro_education_id: result.data.id,
+          show_education_in_intro: true,
+        }));
       }
       showToast('Educación guardada.', 'success');
     }

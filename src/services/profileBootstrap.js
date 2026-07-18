@@ -1,5 +1,6 @@
 import { ROLES, isEmployerRole, isPersonalRole } from '../constants/roles';
 import { ACCOUNT_KINDS } from '../constants/accountKinds';
+import { DEFAULT_COUNTRY } from '../constants/countries';
 import { profileService } from './profile.service';
 import { companyService } from './company.service';
 import {
@@ -41,6 +42,7 @@ async function ensureCandidateProfile(userId, user, metadata) {
     }
     if (!existing.avatar_path && google.avatar_url) patch.avatar_path = google.avatar_url;
     if (!existing.city && metadata.city) patch.city = metadata.city;
+    if (!existing.country) patch.country = DEFAULT_COUNTRY;
     if (Object.keys(patch).length > 0) {
       await profileService.updateCandidateProfile(userId, patch);
     }
@@ -60,6 +62,7 @@ async function ensureCandidateProfile(userId, user, metadata) {
     user_id: userId,
     full_name: fullName,
     city: metadata.city || null,
+    country: DEFAULT_COUNTRY,
     avatar_path: google.avatar_url || null,
   });
 }

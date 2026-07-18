@@ -238,7 +238,9 @@ export function AuthProvider({ children }) {
 
     await hydrateUser(session);
 
-    const redirectTo = await resolvePostAuthRedirect(session.user.id);
+    const redirectTo = await resolvePostAuthRedirect(session.user.id, null, {
+      preferProfile: false,
+    });
 
     return { data, error: null, redirectTo };
   }, [hydrateUser]);
@@ -259,7 +261,9 @@ export function AuthProvider({ children }) {
     }
 
     await hydrateUser(session);
-    const redirectTo = await resolvePostAuthRedirect(session.user.id);
+    const redirectTo = await resolvePostAuthRedirect(session.user.id, null, {
+      preferProfile: true,
+    });
 
     return { data, error: null, redirectTo };
   }, [hydrateUser]);
@@ -304,10 +308,10 @@ export function AuthProvider({ children }) {
   }, []);
 
   const getHomePath = useCallback(() => {
-    // Guide users with an incomplete required profile to the setup assistant;
-    // everyone else lands on their role-based home. Preview users are never
-    // gated. Keeps manual and Google flows identical (LinkedIn-like: dashboard
-    // or complete-profile assistant, never an extra account-type screen).
+    // Bootstrap identity incomplete → setup assistant (edge cases only, e.g.
+    // Google org without a company name). Otherwise → role home (feed/dashboard).
+    // Edit Intro / profile editor collect enrichment; never block app access for
+    // missing headline or company description.
     const previewActive = isPreviewMode || getPreviewMode();
     const activeRole = role ?? (previewActive ? getPreviewRole() : null);
     if (!activeRole) return null;

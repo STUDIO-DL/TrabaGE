@@ -3,22 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Textarea from '../../components/ui/Textarea';
-import Select from '../../components/ui/Select';
 import Spinner from '../../components/ui/Spinner';
-import { CITIES } from '../../constants/cities';
-import { ROLE_HOME, ROLES } from '../../constants/roles';
+import { ROLE_PROFILE, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { profileService } from '../../services/profile.service';
 import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { extractGoogleProfile } from '../../utils/googleProfile';
-import { getCandidateRequiredMissing } from '../../utils/profileRequirements';
+import { getCandidateBootstrapMissing } from '../../utils/profileRequirements';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
+/**
+ * Setup assistant for personal accounts — only shown when bootstrap identity
+ * (full_name) is missing, e.g. a Google sign-up without a display name.
+ * Headline, sector, and location are collected in Edit Intro instead.
+ */
 export default function CandidateSetup() {
   const navigate = useNavigate();
   const { user, refreshSetupStatus } = useAuth();
-  const [form, setForm] = useState({ full_name: '', headline: '', about: '', city: '' });
+  const [form, setForm] = useState({ full_name: '' });
   const [initializing, setInitializing] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,11 +34,14 @@ export default function CandidateSetup() {
 
     profileService.getCandidateProfile(user.id).then(({ data }) => {
       if (!mounted) return;
+
+      if (getCandidateBootstrapMissing(data).length === 0) {
+        navigate(ROLE_PROFILE[ROLES.PERSONAL], { replace: true });
+        return;
+      }
+
       setForm({
         full_name: data?.full_name || identity.full_name || google.full_name || '',
-        headline: data?.headline || '',
-        about: data?.about || '',
-        city: data?.city || identity.city || '',
       });
       setInitializing(false);
     });
@@ -44,10 +49,10 @@ export default function CandidateSetup() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user, navigate]);
 
   const missingFields = useMemo(
-    () => getCandidateRequiredMissing(form),
+    () => getCandidateBootstrapMissing(form),
     [form],
   );
 
@@ -57,12 +62,9 @@ export default function CandidateSetup() {
 
     const trimmed = {
       full_name: form.full_name.trim(),
-      headline: form.headline.trim(),
-      about: form.about.trim(),
-      city: form.city.trim(),
     };
 
-    if (getCandidateRequiredMissing(trimmed).length > 0) {
+    if (getCandidateBootstrapMissing(trimmed).length > 0) {
       setError('Completa los campos obligatorios para continuar.');
       return;
     }
@@ -72,7 +74,6 @@ export default function CandidateSetup() {
     const { error: saveError } = await profileService.upsertCandidateProfile({
       user_id: user.id,
       ...trimmed,
-      setup_complete: true,
     });
 
     if (saveError) {
@@ -82,7 +83,7 @@ export default function CandidateSetup() {
     }
 
     await refreshSetupStatus();
-    navigate(ROLE_HOME[ROLES.PERSONAL], { replace: true });
+    navigate(ROLE_PROFILE[ROLES.PERSONAL], { replace: true });
   };
 
   if (initializing) {
@@ -114,29 +115,6 @@ export default function CandidateSetup() {
             value={form.full_name}
             onChange={(e) => setForm({ ...form, full_name: e.target.value })}
             required
-          />
-        )}
-        {!missingFields.includes('headline') && form.headline ? (
-          <input type="hidden" name="headline" value={form.headline} />
-        ) : (
-          <Input
-            label="Titular profesional"
-            value={form.headline}
-            onChange={(e) => setForm({ ...form, headline: e.target.value })}
-            placeholder="Ej. Desarrollador Frontend"
-            required
-          />
-        )}
-        <Textarea label="Sobre mí" value={form.about} onChange={(e) => setForm({ ...form, about: e.target.value })} />
-        {!missingFields.includes('city') && form.city ? (
-          <input type="hidden" name="city" value={form.city} />
-        ) : (
-          <Select
-            label="Ciudad"
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-            required
-            options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]}
           />
         )}
       </form>

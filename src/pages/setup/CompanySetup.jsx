@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Textarea from '../../components/ui/Textarea';
 import Select from '../../components/ui/Select';
 import Spinner from '../../components/ui/Spinner';
-import { CITIES } from '../../constants/cities';
 import { ACCOUNT_KINDS } from '../../constants/accountKinds';
-import { SECTORS } from '../../constants/sectors';
-import { ROLE_HOME, ROLES } from '../../constants/roles';
+import { ROLE_PROFILE, ROLES } from '../../constants/roles';
 import {
   ORGANIZATION_TYPE_OPTIONS,
   organizationTypeToCompanyType,
@@ -19,7 +16,7 @@ import { consumePendingOrgDetails, consumePendingOrgKind } from '../../services/
 import { companyService } from '../../services/company.service';
 import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { getOrgLabels } from '../../utils/orgLabels';
-import { getCompanyRequiredMissing } from '../../utils/profileRequirements';
+import { getCompanyBootstrapMissing } from '../../utils/profileRequirements';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 function getDefaultCompanyType(orgKind) {
@@ -27,14 +24,16 @@ function getDefaultCompanyType(orgKind) {
   return '';
 }
 
+/**
+ * Setup assistant for business/organization — only shown when bootstrap identity
+ * (company_name, and company_type for orgs) is missing. Description, sector, and
+ * city are enriched on the profile page instead of repeating registration data.
+ */
 export default function CompanySetup() {
   const navigate = useNavigate();
   const { user, role, refreshSetupStatus } = useAuth();
   const [form, setForm] = useState({
     company_name: '',
-    sector: '',
-    description: '',
-    city: '',
     company_type: '',
     organizationType: '',
   });
@@ -52,6 +51,15 @@ export default function CompanySetup() {
 
     companyService.getCompanyProfile(user.id).then(({ data }) => {
       if (!mounted) return;
+
+      const resolvedRole =
+        role === ROLES.ORGANIZATION ? ROLES.ORGANIZATION : ROLES.BUSINESS;
+
+      if (getCompanyBootstrapMissing(data, resolvedRole).length === 0) {
+        navigate(ROLE_PROFILE[resolvedRole], { replace: true });
+        return;
+      }
+
       const companyType =
         data?.company_type ||
         pendingOrgDetails.company_type ||
@@ -66,9 +74,6 @@ export default function CompanySetup() {
           pendingOrgDetails.company_name ||
           identity.company_name ||
           '',
-        sector: data?.sector || pendingOrgDetails.sector || identity.sector || '',
-        description: data?.description || '',
-        city: data?.city || identity.city || '',
         company_type: companyType,
         organizationType,
       });
@@ -78,15 +83,14 @@ export default function CompanySetup() {
     return () => {
       mounted = false;
     };
-  }, [user]);
+  }, [user, role, navigate]);
 
   const orgLabels = getOrgLabels({ company_type: form.company_type });
-  const isInstitution = orgLabels.entity === 'organización';
   const isOrganizationAccount = role === ROLES.ORGANIZATION;
 
   const missingFields = useMemo(
-    () => getCompanyRequiredMissing({ ...form, company_type: form.company_type }),
-    [form],
+    () => getCompanyBootstrapMissing({ ...form, company_type: form.company_type }, role),
+    [form, role],
   );
 
   const handleSubmit = async (e) => {
@@ -95,15 +99,12 @@ export default function CompanySetup() {
 
     const trimmed = {
       company_name: form.company_name.trim(),
-      sector: form.sector.trim(),
-      description: form.description.trim(),
-      city: form.city.trim(),
       company_type: form.company_type,
     };
 
-    if (getCompanyRequiredMissing(trimmed).length > 0) {
+    if (getCompanyBootstrapMissing(trimmed, role).length > 0) {
       setError(
-        isInstitution
+        isOrganizationAccount
           ? 'Completa los campos obligatorios de tu institución.'
           : 'Completa los campos obligatorios de tu cuenta Business.',
       );
@@ -115,7 +116,6 @@ export default function CompanySetup() {
     const { error: saveError } = await companyService.upsertCompanyProfile({
       user_id: user.id,
       ...trimmed,
-      setup_complete: true,
     });
 
     if (saveError) {
@@ -125,7 +125,8 @@ export default function CompanySetup() {
     }
 
     await refreshSetupStatus();
-    navigate(ROLE_HOME[role] || ROLE_HOME[ROLES.BUSINESS], { replace: true });
+    const homeRole = role === ROLES.ORGANIZATION ? ROLES.ORGANIZATION : ROLES.BUSINESS;
+    navigate(ROLE_PROFILE[homeRole], { replace: true });
   };
 
   if (initializing) {
@@ -181,36 +182,6 @@ export default function CompanySetup() {
             ]}
           />
         ) : null}
-        {!isInstitution && missingFields.includes('sector') ? (
-          <Select
-            label="Sector"
-            value={form.sector}
-            onChange={(e) => setForm({ ...form, sector: e.target.value })}
-            required
-            options={[{ value: '', label: 'Seleccionar' }, ...SECTORS.map((s) => ({ value: s, label: s }))]}
-          />
-        ) : null}
-        {!missingFields.includes('description') && form.description ? (
-          <input type="hidden" name="description" value={form.description} />
-        ) : (
-          <Textarea
-            label="Descripción"
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            required
-          />
-        )}
-        {!missingFields.includes('city') && form.city ? (
-          <input type="hidden" name="city" value={form.city} />
-        ) : (
-          <Select
-            label="Ciudad"
-            value={form.city}
-            onChange={(e) => setForm({ ...form, city: e.target.value })}
-            required
-            options={[{ value: '', label: 'Seleccionar' }, ...CITIES.map((c) => ({ value: c, label: c }))]}
-          />
-        )}
       </form>
     </FormPageLayout>
   );

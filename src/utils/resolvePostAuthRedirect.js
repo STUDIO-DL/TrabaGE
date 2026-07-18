@@ -1,5 +1,6 @@
 import {
   ROLE_HOME,
+  ROLE_PROFILE,
   ROLE_SETUP,
   ROLES,
   isEmployerRole,
@@ -11,12 +12,16 @@ import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
 import { isProfileSetupComplete } from './profileRequirements';
 
-// After authentication (login, signup confirmation, or Google OAuth) we send
-// users to their role-based home when their profile has the minimum required
-// data, or to the setup assistant to complete ONLY the missing required fields.
-// This keeps manual and Google flows identical: land on the dashboard or the
-// complete-profile assistant, never on an extra account-type screen.
-export async function resolvePostAuthRedirect(userId, knownRole = null) {
+/**
+ * After authentication, compute where to send the user.
+ *
+ * @param {string} userId
+ * @param {string|null} knownRole
+ * @param {{ preferProfile?: boolean }} options
+ *   preferProfile — true for signup/OAuth/first session (land on profile);
+ *                   false for returning login (land on feed/dashboard).
+ */
+export async function resolvePostAuthRedirect(userId, knownRole = null, { preferProfile = false } = {}) {
   let userRole = knownRole;
   if (!userRole) {
     const { data: roleData } = await authService.getUserRole(userId);
@@ -30,13 +35,15 @@ export async function resolvePostAuthRedirect(userId, knownRole = null) {
   if (isPersonalRole(userRole)) {
     const role = ROLES.PERSONAL;
     const { data } = await profileService.getCandidateProfile(userId);
-    return isProfileSetupComplete(role, data) ? ROLE_HOME[role] : ROLE_SETUP[role];
+    if (!isProfileSetupComplete(role, data)) return ROLE_SETUP[role];
+    return preferProfile ? ROLE_PROFILE[role] : ROLE_HOME[role];
   }
 
   if (isEmployerRole(userRole)) {
     const { data } = await companyService.getCompanyProfile(userId);
     const role = normalizeRole(userRole, { companyType: data?.company_type }) ?? ROLES.BUSINESS;
-    return isProfileSetupComplete(role, data) ? ROLE_HOME[role] : ROLE_SETUP[role];
+    if (!isProfileSetupComplete(role, data)) return ROLE_SETUP[role];
+    return preferProfile ? ROLE_PROFILE[role] : ROLE_HOME[role];
   }
 
   const normalized = normalizeRole(userRole);

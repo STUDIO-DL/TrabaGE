@@ -17,6 +17,7 @@ import { ROLE_SETUP, ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
 import { companyService } from '../../services/company.service';
+import { isCompanyRequiredComplete } from '../../utils/profileRequirements';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { normalizeSalaryInput } from '../../utils/formatSalary';
 import {
@@ -81,9 +82,10 @@ function validateStructuredFields(form, status) {
 export default function PublishJob() {
   const navigate = useNavigate();
   const { jobId } = useParams();
-  const { user, isPreviewMode, setupComplete, role } = useAuth();
+  const { user, isPreviewMode, role } = useAuth();
   const base = role || ROLES.BUSINESS;
   const { showToast } = useNotificationContext();
+  const [companyProfileReady, setCompanyProfileReady] = useState(isPreviewMode);
   const [form, setForm] = useState({
     title: '',
     role: '',
@@ -142,6 +144,20 @@ export default function PublishJob() {
     };
   }, [jobId, user?.id]);
 
+  useEffect(() => {
+    if (isPreviewMode || !user?.id) return undefined;
+    let mounted = true;
+
+    companyService.getCompanyProfile(user.id).then(({ data }) => {
+      if (!mounted) return;
+      setCompanyProfileReady(isCompanyRequiredComplete(data));
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, [isPreviewMode, user?.id]);
+
   const saveJob = async (status) => {
     if (isPreviewMode) {
       showToast(GUEST_MODE_MESSAGE, 'info');
@@ -153,7 +169,7 @@ export default function PublishJob() {
       return;
     }
 
-    if (status === 'active' && !setupComplete) {
+    if (status === 'active' && !companyProfileReady) {
       setError('Completa el perfil de tu empresa antes de publicar ofertas.');
       return;
     }
@@ -213,7 +229,7 @@ export default function PublishJob() {
     );
   }
 
-  if (!isPreviewMode && !setupComplete) {
+  if (!isPreviewMode && !companyProfileReady) {
     return (
       <PageContainer title="Publicar empleo" backButton bottomNav={false}>
         <div className="p-md">

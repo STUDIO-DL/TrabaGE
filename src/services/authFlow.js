@@ -30,6 +30,6 @@ export async function completePostAuthFlow(user) {
     await bootstrapProfile({ user, role });
   }
 
-  const redirectTo = await resolvePostAuthRedirect(user.id, role);
+  const redirectTo = await resolvePostAuthRedirect(user.id, role, { preferProfile: true });
   return { role, redirectTo, error: null };
 }
