@@ -188,10 +188,12 @@ export default function CandidateProfileHeader({
                 <button
                   type="button"
                   onClick={onEditIntro}
-                  className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
+                  className="inline-flex min-h-touch shrink-0 items-center gap-space-xs rounded-radius-sm px-space-sm text-caption font-medium text-app-muted transition-colors duration-fast hover:bg-app-surface hover:text-primary-600"
                   aria-label="Editar intro"
+                  title="Editar intro"
                 >
-                  <AppIcon icon={Pencil} size={ICON_SIZES.md} />
+                  <AppIcon icon={Pencil} size={ICON_SIZES.sm} aria-hidden />
+                  <span>Editar intro</span>
                 </button>
               )}
             </div>
