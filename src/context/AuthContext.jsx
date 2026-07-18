@@ -148,6 +148,25 @@ export function AuthProvider({ children }) {
       setRole(userRole);
 
       if (userRole && userRole !== ROLES.ADMIN) {
+        const profileInactive = isPersonalRole(userRole)
+          ? candidateResult?.data?.is_active === false
+          : isEmployerRole(userRole)
+            ? companyResult?.data?.is_active === false
+            : false;
+
+        if (profileInactive) {
+          setSession(null);
+          setUser(null);
+          setRole(null);
+          setSetupComplete(false);
+          clearSentryUser();
+          void clearOneSignalUserId();
+          await supabase.auth.signOut({ scope: 'local' });
+          return;
+        }
+      }
+
+      if (userRole && userRole !== ROLES.ADMIN) {
         await bootstrapProfile({ user: currentUser, role: userRole });
       }
 

@@ -8,11 +8,13 @@ const PAGE_TITLES = {
   '/admin': 'Dashboard',
   '/admin/users': 'Usuarios',
   '/admin/companies': 'Empresas',
+  '/admin/organizations': 'Organizaciones',
   '/admin/verifications': 'Verificaciones',
   '/admin/jobs': 'Ofertas de trabajo',
   '/admin/posts': 'Publicaciones',
   '/admin/reports': 'Reportes',
   '/admin/notifications': 'Notificaciones',
+  '/admin/profile': 'Perfil admin',
   '/admin/settings': 'Configuración',
 };
 

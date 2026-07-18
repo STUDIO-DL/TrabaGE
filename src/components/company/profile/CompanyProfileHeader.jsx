@@ -26,7 +26,7 @@ import {
 
 } from '../../../constants/icons';
 
-import CompanyVerificationStatus from './CompanyVerificationStatus';
+import CompanyVerificationAction from './CompanyVerificationAction';
 
 import CompanyNameWithBadge from '../CompanyNameWithBadge';
 
@@ -605,17 +605,9 @@ export default function CompanyProfileHeader({
 
 
             {!readOnly && (
-
               <div className="mt-space-xs">
-
-                <Link to={rolePath(role || ROLES.BUSINESS, '/verification')}>
-
-                  <CompanyVerificationStatus company={profile} profile />
-
-                </Link>
-
+                <CompanyVerificationAction company={profile} role={role || ROLES.BUSINESS} />
               </div>
-
             )}
 
 

@@ -7,6 +7,8 @@ import {
   cvPath,
   logoPath,
   postImagePath,
+  companyVerificationDocPath,
+  representativeVerificationDocPath,
   verificationDocPath,
   educationFilePath,
 } from '../constants/storage';
@@ -36,8 +38,13 @@ export const storageService = {
     return { error };
   },
 
-  deleteOldVerificationDocument: async (companyId, oldPath) => {
-    const paths = [oldPath, verificationDocPath(companyId)].filter(Boolean);
+  deleteOldVerificationDocuments: async (companyId, oldPaths = []) => {
+    const paths = [
+      ...oldPaths,
+      companyVerificationDocPath(companyId),
+      representativeVerificationDocPath(companyId),
+      verificationDocPath(companyId),
+    ].filter(Boolean);
     const unique = [...new Set(paths)];
     if (!unique.length) return { error: null };
     const { error } = await supabase.storage
@@ -45,6 +52,9 @@ export const storageService = {
       .remove(unique);
     return { error };
   },
+
+  deleteOldVerificationDocument: async (companyId, oldPath) =>
+    storageService.deleteOldVerificationDocuments(companyId, oldPath ? [oldPath] : []),
 
   deleteOldAvatar: async (userId, oldPath) => {
     const paths = [oldPath, avatarPath(userId), `${userId}/avatar.jpg`, `${userId}/avatar.png`].filter(
@@ -123,8 +133,28 @@ export const storageService = {
   },
 
   uploadVerificationDoc: async (companyId, file, oldPath) => {
-    await storageService.deleteOldVerificationDocument(companyId, oldPath);
-    const path = verificationDocPath(companyId);
+    const path = companyVerificationDocPath(companyId);
+    if (oldPath && oldPath !== path) {
+      await removeIfExists(STORAGE_BUCKETS.COMPANY_VERIFICATIONS, oldPath);
+    }
+    const contentType = file.type || PDF_CONTENT_TYPE;
+    const result = await uploadReplace(
+      STORAGE_BUCKETS.COMPANY_VERIFICATIONS,
+      path,
+      file,
+      contentType,
+    );
+    return {
+      ...result,
+      data: result.data ? { ...result.data, path } : result.data,
+    };
+  },
+
+  uploadRepresentativeVerificationDoc: async (companyId, file, oldPath) => {
+    const path = representativeVerificationDocPath(companyId);
+    if (oldPath && oldPath !== path) {
+      await removeIfExists(STORAGE_BUCKETS.COMPANY_VERIFICATIONS, oldPath);
+    }
     const contentType = file.type || PDF_CONTENT_TYPE;
     const result = await uploadReplace(
       STORAGE_BUCKETS.COMPANY_VERIFICATIONS,

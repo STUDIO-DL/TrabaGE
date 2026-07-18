@@ -1,30 +1,36 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
-import AdminUserDetailModal from '../../components/admin/AdminUserDetailModal';
+import AdminConfirmModal from '../../components/admin/AdminConfirmModal';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import AppAvatar from '../../components/common/AppAvatar';
+import AppIcon from '../../components/common/AppIcon';
 import {
   AvatarType,
   avatarTypeFromRole,
 } from '../../constants/avatarDefaults';
 import { formatDate } from '../../utils/formatDate';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
-import { ROLE_LABELS, ROLES } from '../../constants/roles';
+import { ROLE_LABELS, isEmployerRole } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
+import useAdminTable from '../../hooks/useAdminTable';
+import { Eye, Trash2, ICON_SIZES } from '../../constants/icons';
 
 export default function AdminUsers() {
+  const navigate = useNavigate();
   const { showToast } = useNotificationContext();
   const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionId, setActionId] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
   const [query, setQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -38,11 +44,46 @@ export default function AdminUsers() {
     loadUsers();
   }, [loadUsers]);
 
-  const handleToggleActive = useCallback(async (user) => {
-    setActionId(user.user_id);
-    const nextActive = !user.is_active;
-    const { error } = await adminService.setUserActive(user.user_id, user.role, nextActive);
+  const tableFilters = useMemo(() => {
+    const filters = {};
+    if (roleFilter !== 'all') filters.role = roleFilter;
+    if (statusFilter === 'active') filters.is_active = true;
+    if (statusFilter === 'inactive') filters.is_active = false;
+    return filters;
+  }, [roleFilter, statusFilter]);
+
+  const {
+    rows,
+    totalRows,
+    page,
+    setPage,
+    totalPages,
+    pageSize,
+    sortKey,
+    sortDir,
+    toggleSort,
+    resetPage,
+  } = useAdminTable(users, {
+    searchQuery: query,
+    searchKeys: ['email', 'role', 'full_name', 'company_name', 'city'],
+    filters: tableFilters,
+    defaultSortKey: 'created_at',
+    defaultSortDir: 'desc',
+  });
+
+  const openProfile = useCallback((user) => {
+    const path = isEmployerRole(user.role)
+      ? `/companies/${user.user_id}`
+      : `/profile/${user.user_id}`;
+    navigate(path);
+  }, [navigate]);
+
+  const handleToggleActive = useCallback(async (targetUser) => {
+    setActionId(targetUser.user_id);
+    const nextActive = !targetUser.is_active;
+    const { error } = await adminService.setUserActive(targetUser.user_id, targetUser.role, nextActive);
     setActionId(null);
+    setConfirmAction(null);
     if (error) {
       showToast(getSupabaseErrorMessage(error), 'error');
       return;
@@ -51,59 +92,27 @@ export default function AdminUsers() {
     await loadUsers();
   }, [loadUsers, showToast]);
 
-  const handleRoleChange = useCallback(async (targetUser, nextRole) => {
-    if (targetUser.user_id === currentUser?.id) {
-      showToast('No puedes cambiar tu propio rol.', 'error');
-      return;
-    }
-
-    setActionId(targetUser.user_id);
-    const { error } = await adminService.setUserRole(targetUser.user_id, nextRole);
-    setActionId(null);
-    if (error) {
-      showToast(getSupabaseErrorMessage(error), 'error');
-      return;
-    }
-    showToast('Rol actualizado', 'success');
-    await loadUsers();
-  }, [currentUser?.id, loadUsers, showToast]);
-
   const handleDelete = useCallback(async (targetUser) => {
-    if (targetUser.user_id === currentUser?.id) {
-      showToast('No puedes eliminar tu propia cuenta admin.', 'error');
-      return;
-    }
-
-    const label = targetUser.email || targetUser.full_name || targetUser.company_name || 'este usuario';
-    if (!window.confirm(`¿Eliminar permanentemente la cuenta ${label}? Esta acción no se puede deshacer.`)) return;
-
     setActionId(targetUser.user_id);
     const { error } = await adminService.deleteUser(targetUser.user_id);
     setActionId(null);
+    setConfirmAction(null);
     if (error) {
       showToast(getSupabaseErrorMessage(error), 'error');
       return;
     }
     showToast('Usuario eliminado', 'success');
     await loadUsers();
-  }, [currentUser?.id, loadUsers, showToast]);
+  }, [loadUsers, showToast]);
 
-  const filteredUsers = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
-    if (!normalized) return users;
-
-    return users.filter((item) =>
-      [
-        item.email,
-        item.role,
-        item.full_name,
-        item.company_name,
-        item.city,
-      ]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(normalized)),
-    );
-  }, [query, users]);
+  const handleConfirm = async () => {
+    if (!confirmAction?.user) return;
+    if (confirmAction.type === 'delete') {
+      await handleDelete(confirmAction.user);
+    } else {
+      await handleToggleActive(confirmAction.user);
+    }
+  };
 
   const columns = useMemo(
     () => [
@@ -111,7 +120,7 @@ export default function AdminUsers() {
         key: 'avatar',
         label: 'Avatar',
         render: (row) => {
-          const isCompany = row.role === 'company' || row.role === 'business' || row.role === 'organization';
+          const isCompany = isEmployerRole(row.role);
           const avatarType = isCompany
             ? avatarTypeFromRole(row.role, { companyType: row.company_type })
             : AvatarType.PERSONAL;
@@ -119,11 +128,7 @@ export default function AdminUsers() {
           return (
             <AppAvatar
               type={avatarType}
-              src={
-                isCompany
-                  ? row.logo_path || row.logo_url
-                  : row.avatar_path || row.avatar_url
-              }
+              src={isCompany ? row.logo_path : row.avatar_path}
               name={row.full_name || row.company_name}
               alt={row.full_name || row.company_name}
               size="sm"
@@ -136,32 +141,22 @@ export default function AdminUsers() {
       {
         key: 'name',
         label: 'Nombre',
+        sortable: true,
+        sortKey: 'full_name',
         render: (row) => row.full_name || row.company_name || '—',
       },
-      { key: 'email', label: 'Email' },
+      {
+        key: 'email',
+        label: 'Email',
+        sortable: true,
+        sortKey: 'email',
+      },
       {
         key: 'role',
-        label: 'Rol',
-        render: (row) => (
-          <select
-            value={row.role}
-            disabled={actionId === row.user_id || row.user_id === currentUser?.id}
-            onChange={(event) => handleRoleChange(row, event.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm"
-          >
-            {[ROLES.PERSONAL, ROLES.BUSINESS, ROLES.ORGANIZATION, ROLES.ADMIN].map((role) => (
-              <option key={role} value={role}>
-                {ROLE_LABELS[role]}
-              </option>
-            ))}
-          </select>
-        ),
-      },
-      { key: 'city', label: 'Ciudad', render: (row) => row.city || '—' },
-      {
-        key: 'created_at',
-        label: 'Registrado',
-        render: (row) => formatDate(row.created_at),
+        label: 'Tipo de cuenta',
+        sortable: true,
+        sortKey: 'role',
+        render: (row) => ROLE_LABELS[row.role] ?? row.role,
       },
       {
         key: 'status',
@@ -174,19 +169,36 @@ export default function AdminUsers() {
         ),
       },
       {
+        key: 'created_at',
+        label: 'Registro',
+        sortable: true,
+        sortKey: 'created_at',
+        render: (row) => formatDate(row.created_at),
+      },
+      {
         key: 'actions',
         label: 'Acciones',
         render: (row) => (
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="secondary" onClick={() => setSelectedUser(row)}>
-              Ver
+            <Button size="sm" variant="secondary" onClick={() => openProfile(row)} title="Ver perfil">
+              <AppIcon icon={Eye} size={ICON_SIZES.sm} />
             </Button>
             <Button
               size="sm"
               variant={row.is_active ? 'danger' : 'primary'}
               loading={actionId === row.user_id}
-              disabled={row.role === ROLES.ADMIN}
-              onClick={() => handleToggleActive(row)}
+              onClick={() =>
+                setConfirmAction({
+                  type: row.is_active ? 'deactivate' : 'activate',
+                  user: row,
+                  title: row.is_active ? 'Desactivar usuario' : 'Reactivar usuario',
+                  description: row.is_active
+                    ? `¿Desactivar la cuenta de ${row.email}? No podrá iniciar sesión ni aparecer públicamente.`
+                    : `¿Reactivar la cuenta de ${row.email}?`,
+                  confirmLabel: row.is_active ? 'Desactivar' : 'Reactivar',
+                  variant: row.is_active ? 'danger' : 'primary',
+                })
+              }
             >
               {row.is_active ? 'Desactivar' : 'Reactivar'}
             </Button>
@@ -195,45 +207,100 @@ export default function AdminUsers() {
               variant="danger"
               loading={actionId === row.user_id}
               disabled={row.user_id === currentUser?.id}
-              onClick={() => handleDelete(row)}
+              onClick={() =>
+                setConfirmAction({
+                  type: 'delete',
+                  user: row,
+                  title: 'Eliminar usuario',
+                  description: `¿Eliminar permanentemente la cuenta ${row.email}? Se borrarán auth, perfil y datos asociados.`,
+                  confirmLabel: 'Eliminar',
+                  variant: 'danger',
+                })
+              }
+              title="Eliminar"
             >
-              Eliminar
+              <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
             </Button>
           </div>
         ),
       },
     ],
-    [actionId, currentUser?.id, handleDelete, handleRoleChange, handleToggleActive],
+    [actionId, currentUser?.id, openProfile],
   );
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-gray-500">
-        Gestiona candidatos y empresas. La desactivación es reversible (soft delete).
+        Gestiona cuentas de candidatos y empleadores. La desactivación preserva los datos.
       </p>
-      <Input
-        label="Buscar usuarios"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Buscar por email, nombre, ciudad o rol"
-      />
+
+      <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
+        <Input
+          label="Buscar usuarios"
+          value={query}
+          onChange={(event) => {
+            setQuery(event.target.value);
+            resetPage();
+          }}
+          placeholder="Email, nombre, ciudad..."
+        />
+        <label className="text-sm font-medium text-gray-700">
+          Tipo
+          <select
+            value={roleFilter}
+            onChange={(event) => {
+              setRoleFilter(event.target.value);
+              resetPage();
+            }}
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900"
+          >
+            <option value="all">Todos</option>
+            <option value="personal">Personal</option>
+            <option value="business">Business</option>
+            <option value="organization">Organización</option>
+          </select>
+        </label>
+        <label className="text-sm font-medium text-gray-700">
+          Estado
+          <select
+            value={statusFilter}
+            onChange={(event) => {
+              setStatusFilter(event.target.value);
+              resetPage();
+            }}
+            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900"
+          >
+            <option value="all">Todos</option>
+            <option value="active">Activos</option>
+            <option value="inactive">Inactivos</option>
+          </select>
+        </label>
+      </div>
+
       <AdminTable
         columns={columns}
-        rows={filteredUsers.map((user) => ({ ...user, id: user.user_id }))}
+        rows={rows.map((user) => ({ ...user, id: user.user_id }))}
         loading={loading}
         emptyMessage="No hay usuarios registrados."
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSort={toggleSort}
+        page={page}
+        totalPages={totalPages}
+        totalRows={totalRows}
+        pageSize={pageSize}
+        onPageChange={setPage}
       />
-      <p className="text-xs text-gray-400">
-        Perfiles de empresa:{' '}
-        <Link to="/admin/companies" className="text-primary-600 hover:underline">
-          ir a empresas
-        </Link>
-      </p>
-      <AdminUserDetailModal
-        user={selectedUser}
-        isOpen={Boolean(selectedUser)}
-        onClose={() => setSelectedUser(null)}
-        onUpdated={loadUsers}
+
+      <AdminConfirmModal
+        isOpen={Boolean(confirmAction)}
+        onClose={() => setConfirmAction(null)}
+        onConfirm={handleConfirm}
+        loading={Boolean(actionId)}
+        title={confirmAction?.title}
+        description={confirmAction?.description}
+        confirmLabel={confirmAction?.confirmLabel}
+        variant={confirmAction?.variant ?? 'danger'}
       />
     </div>
   );

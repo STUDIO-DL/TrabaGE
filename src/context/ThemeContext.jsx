@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { ThemeContext } from './themeContextValue';
-import { THEME_STORAGE_KEY, THEMES, normalizeTheme } from '../constants/theme';
+import {
+  THEME_STORAGE_KEY,
+  THEMES,
+  isPublicAuthRoute,
+  normalizeTheme,
+} from '../constants/theme';
 import { useAuth } from '../hooks/useAuth';
 import { appearanceService } from '../services/appearance.service';
 import { reportError } from '../utils/logger';
@@ -11,19 +17,23 @@ function readStoredTheme() {
   return normalizeTheme(window.localStorage.getItem(THEME_STORAGE_KEY));
 }
 
-function applyThemeToDocument(theme) {
+function applyThemeToDocument(theme, { forcedLight = false } = {}) {
   if (typeof document === 'undefined') return;
 
   const normalized = normalizeTheme(theme);
   const root = document.documentElement;
   root.dataset.theme = normalized;
+  root.dataset.forcedLight = forcedLight ? 'true' : 'false';
   root.classList.add('theme-transition');
   root.classList.toggle('dark', normalized === THEMES.DARK);
   root.style.colorScheme = normalized;
 
   const metaTheme = document.querySelector('meta[name="theme-color"]');
   if (metaTheme) {
-    metaTheme.setAttribute('content', normalized === THEMES.DARK ? '#0F172A' : '#2563EB');
+    metaTheme.setAttribute(
+      'content',
+      normalized === THEMES.DARK ? '#09090B' : '#FFFFFF',
+    );
   }
 }
 
@@ -34,22 +44,25 @@ function persistLocalTheme(theme) {
 
 export function ThemeProvider({ children }) {
   const { user, isPreviewMode } = useAuth();
+  const { pathname } = useLocation();
   const [theme, setThemeState] = useState(readStoredTheme);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
+  const isForcedLight = !user?.id && isPublicAuthRoute(pathname);
+  const effectiveTheme = isForcedLight ? THEMES.LIGHT : theme;
+
   const applyTheme = useCallback((nextTheme) => {
     const normalized = normalizeTheme(nextTheme);
     setThemeState(normalized);
-    applyThemeToDocument(normalized);
     persistLocalTheme(normalized);
     return normalized;
   }, []);
 
   useEffect(() => {
-    applyThemeToDocument(theme);
-  }, [theme]);
+    applyThemeToDocument(effectiveTheme, { forcedLight: isForcedLight });
+  }, [effectiveTheme, isForcedLight]);
 
   useEffect(() => {
     let mounted = true;
@@ -113,13 +126,15 @@ export function ThemeProvider({ children }) {
   const value = useMemo(
     () => ({
       theme,
-      isDark: theme === THEMES.DARK,
+      effectiveTheme,
+      isForcedLight,
+      isDark: effectiveTheme === THEMES.DARK,
       loading,
       saving,
       error,
       setTheme,
     }),
-    [error, loading, saving, setTheme, theme],
+    [effectiveTheme, error, isForcedLight, loading, saving, setTheme, theme],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

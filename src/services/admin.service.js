@@ -12,56 +12,21 @@ function roleRegistrationLabel(role) {
 
 export const adminService = {
   getDashboardStats: async () => {
-    const [
-      usersRes,
-      candidatesRes,
-      companiesRes,
-      adminsRes,
-      verificationsRes,
-      jobsRes,
-      postsRes,
-      reportsRes,
-    ] = await Promise.all([
-      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }),
-      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }).eq('role', 'personal'),
-      supabase.from('company_profiles').select('user_id', { count: 'exact', head: true }),
-      supabase.from('user_roles').select('user_id', { count: 'exact', head: true }).eq('role', 'admin'),
-      supabase
-        .from('verification_requests')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'pending'),
-      supabase
-        .from('jobs')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'active')
-        .eq('admin_hidden', false),
-      supabase.from('posts').select('id', { count: 'exact', head: true }).eq('is_hidden', false),
-      supabase
-        .from('reports')
-        .select('id', { count: 'exact', head: true })
-        .eq('status', 'pending'),
-    ]);
+    const { data, error } = await supabase.rpc('admin_dashboard_stats');
+    if (error) return { data: null, error };
 
     return {
       data: {
-        totalUsers: usersRes.count ?? 0,
-        totalCandidates: candidatesRes.count ?? 0,
-        totalCompanies: companiesRes.count ?? 0,
-        totalAdmins: adminsRes.count ?? 0,
-        pendingVerifications: verificationsRes.count ?? 0,
-        activeJobs: jobsRes.count ?? 0,
-        totalPosts: postsRes.count ?? 0,
-        pendingReports: reportsRes.count ?? 0,
+        registeredUsers: data?.registered_users ?? 0,
+        registeredCompanies: data?.registered_companies ?? 0,
+        registeredOrganizations: data?.registered_organizations ?? 0,
+        verifiedCompanies: data?.verified_companies ?? 0,
+        pendingVerifications: data?.pending_verifications ?? 0,
+        publications: data?.publications ?? 0,
+        activeJobs: data?.active_jobs ?? 0,
+        pendingReports: data?.pending_reports ?? 0,
       },
-      error:
-        usersRes.error ||
-        candidatesRes.error ||
-        companiesRes.error ||
-        adminsRes.error ||
-        verificationsRes.error ||
-        jobsRes.error ||
-        postsRes.error ||
-        reportsRes.error,
+      error: null,
     };
   },
 
@@ -187,11 +152,23 @@ export const adminService = {
       p_user_id: userId,
     }),
 
-  getCompanies: () =>
-    supabase
-      .from('company_profiles')
-      .select('user_id, company_name, city, sector, is_verified, created_at, logo_path, is_active, verification_status, company_size, company_type')
-      .order('created_at', { ascending: false }),
+  getCompanies: () => adminService.getEmployers('business'),
+
+  getOrganizations: () => adminService.getEmployers('organization'),
+
+  getEmployers: (accountRole) =>
+    supabase.rpc('admin_list_companies', {
+      p_account_role: accountRole ?? null,
+    }),
+
+  manualVerifyCompany: (userId) =>
+    supabase.rpc('admin_manual_verify_company', {
+      p_user_id: userId,
+    }),
+
+  getAdmins: () => supabase.rpc('admin_list_admins'),
+
+  isMyAccountActive: () => supabase.rpc('is_my_account_active'),
 
   setCompanyActive: (userId, isActive) =>
     supabase.rpc('admin_set_user_active', {

@@ -13,6 +13,10 @@ export const candidateCoverPath = (userId) => `${userId}/cover.webp`;
 export const logoPath = (companyId) => `${companyId}/logo.webp`;
 export const companyCoverPath = (companyId) => `${companyId}/cover.webp`;
 export const postImagePath = (userId, postId) => `${userId}/${postId}.webp`;
-export const verificationDocPath = (companyId) => `${companyId}/verification-document.pdf`;
+export const companyVerificationDocPath = (companyId) => `${companyId}/company-document.pdf`;
+export const representativeVerificationDocPath = (companyId) =>
+  `${companyId}/representative-document.pdf`;
+/** @deprecated Use companyVerificationDocPath */
+export const verificationDocPath = companyVerificationDocPath;
 export const educationFilePath = (userId, educationId, fileId, fileName) =>
   `${userId}/education/${educationId}/${fileId}-${fileName}`;

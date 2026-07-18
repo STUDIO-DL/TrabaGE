@@ -11,6 +11,9 @@ import {
   Camera,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
+  ChevronsUpDown,
+  Landmark,
   Clock,
   Copy,
   Download,
@@ -73,6 +76,9 @@ export {
   Camera,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
+  ChevronsUpDown,
+  Landmark,
   Clock,
   Copy,
   Download,
@@ -140,12 +146,18 @@ export const ICON_STROKE = {
   bold: 2.25,
 };
 
-/** Primary #2563EB · Inactive #64748B — icons inherit via text-* */
+/** Light: near-black icons · Dark: near-white · Green for active/important only */
 export const ICON_COLORS = {
+  default: 'text-app-text',
   primary: 'text-primary-600',
   inactive: 'text-app-muted',
   muted: 'text-app-subtle',
+  positive: 'text-success-600',
 };
+
+/** Unified neutral icon surface for section headers (no decorative hues). */
+export const ICON_SURFACE_CLASS =
+  'bg-app-surface text-app-text ring-1 ring-app-border dark:bg-app-elevated';
 
 /** Bottom navigation */
 export const NAV_ICONS = {

@@ -1,22 +1,18 @@
 import AppIcon from '../common/AppIcon';
-import { ICON_SIZES } from '../../constants/icons';
+import { ICON_COLORS, ICON_SIZES } from '../../constants/icons';
 
-const TONES = {
-  blue: 'bg-blue-50 text-blue-600',
-  green: 'bg-emerald-50 text-emerald-600',
-  amber: 'bg-amber-50 text-amber-600',
-  purple: 'bg-violet-50 text-violet-600',
-  slate: 'bg-slate-100 text-slate-600',
-};
+const ICON_SURFACE = 'bg-app-surface text-app-text ring-1 ring-app-border dark:bg-app-elevated';
 
-export default function AdminStatCard({ icon, tone = 'blue', value, label }) {
+export default function AdminStatCard({ icon, tone = 'default', value, label }) {
+  const iconClass = tone === 'positive' ? ICON_COLORS.positive : ICON_COLORS.default;
+
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
-      <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${TONES[tone]}`}>
-        <AppIcon icon={icon} size={ICON_SIZES.default} />
+    <div className="surface-card p-4">
+      <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${ICON_SURFACE}`}>
+        <AppIcon icon={icon} size={ICON_SIZES.default} className={iconClass} />
       </span>
-      <p className="mt-space-base text-title font-bold tracking-tight text-gray-900">{value}</p>
-      <p className="mt-1 text-sm text-gray-500">{label}</p>
+      <p className="mt-space-base text-title font-bold tracking-tight text-app-text">{value}</p>
+      <p className="mt-1 text-sm text-app-muted">{label}</p>
     </div>
   );
 }

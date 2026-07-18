@@ -16,20 +16,20 @@
 
     /* Semantic RGB channels (Tailwind alpha-value compatible) */
     --app-bg: 255 255 255;
-    --app-surface: 248 250 252;
+    --app-surface: 250 250 250;
     --app-card: 255 255 255;
     --app-elevated: 255 255 255;
-    --app-text: 15 23 42;
-    --app-muted: 100 116 139;
-    --app-subtle: 148 163 184;
-    --app-border: 226 232 240;
-    --app-divider: 241 245 249;
-    --app-overlay: 15 23 42;
-    --app-disabled: 241 245 249;
-    --app-text-disabled: 148 163 184;
+    --app-text: 9 9 11;
+    --app-muted: 113 113 122;
+    --app-subtle: 161 161 170;
+    --app-border: 228 228 231;
+    --app-divider: 244 244 245;
+    --app-overlay: 9 9 11;
+    --app-disabled: 244 244 245;
+    --app-text-disabled: 161 161 170;
     --app-text-inverse: 255 255 255;
     --app-primary-soft: 239 246 255;
-    --app-shadow: 15 23 42;
+    --app-shadow: 9 9 11;
 
     /* Motion */
     --motion-fast: 150ms;
@@ -53,24 +53,24 @@
   }
 
   .dark {
-    --color-bg: #0f172a;
-    --color-surface: #111827;
-    --color-text: #f8fafc;
-    --color-muted: #cbd5e1;
-    --color-border: #334155;
-    --app-bg: 15 23 42;
-    --app-surface: 17 24 39;
-    --app-card: 30 41 59;
-    --app-elevated: 30 41 59;
-    --app-text: 248 250 252;
-    --app-muted: 203 213 225;
-    --app-subtle: 148 163 184;
-    --app-border: 51 65 85;
-    --app-divider: 30 41 59;
+    --color-bg: #09090b;
+    --color-surface: #0f0f12;
+    --color-text: #fafafa;
+    --color-muted: #a1a1aa;
+    --color-border: #27272a;
+    --app-bg: 9 9 11;
+    --app-surface: 15 15 18;
+    --app-card: 24 24 27;
+    --app-elevated: 33 33 36;
+    --app-text: 250 250 250;
+    --app-muted: 161 161 170;
+    --app-subtle: 113 113 122;
+    --app-border: 39 39 42;
+    --app-divider: 24 24 27;
     --app-overlay: 0 0 0;
-    --app-disabled: 30 41 59;
-    --app-text-disabled: 100 116 139;
-    --app-text-inverse: 15 23 42;
+    --app-disabled: 24 24 27;
+    --app-text-disabled: 82 82 91;
+    --app-text-inverse: 9 9 11;
     --app-primary-soft: 30 58 138;
     --app-shadow: 0 0 0;
   }
@@ -305,7 +305,7 @@
   }
 
   .dark .onboarding-screen {
-    --onboarding-bg-top: rgb(30 58 138 / 0.28);
+    --onboarding-bg-top: rgb(var(--app-primary-soft) / 0.22);
     --onboarding-bg-bottom: rgb(var(--app-bg));
   }
 
@@ -401,6 +401,15 @@
     filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.22));
   }
 
+  /* Single surface system for cards across the app */
+  .surface-card {
+    @apply rounded-radius-lg border border-app-border bg-app-card text-app-text shadow-elevation-1;
+  }
+
+  .dark .surface-card {
+    box-shadow: none;
+  }
+
   /* Focus ring utility for interactive controls */
   .focus-ring {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2;
@@ -464,7 +473,7 @@
   .dark .bg-primary-50\/50,
   .dark .bg-primary-50\/60,
   .dark .bg-primary-50\/70 {
-    background-color: rgb(30 58 138 / 0.28) !important;
+    background-color: rgb(var(--app-primary-soft) / 0.28) !important;
   }
 
   .dark .from-white {
@@ -517,7 +526,7 @@
   .dark input,
   .dark textarea,
   .dark select {
-    background-color: rgb(15 23 42 / 0.72) !important;
+    background-color: rgb(var(--app-surface)) !important;
     border-color: rgb(var(--app-border)) !important;
     color: rgb(var(--app-text)) !important;
   }
@@ -533,9 +542,10 @@
   .dark .shadow-elevation-1,
   .dark .shadow-elevation-2,
   .dark .shadow-elevation-3,
-  .dark .shadow-elevation-4,
-  .dark [class*='shadow-'] {
-    --tw-shadow-color: rgb(0 0 0 / 0.35);
+  .dark .shadow-elevation-4 {
+    box-shadow: none !important;
+    --tw-shadow: 0 0 #0000 !important;
+    --tw-shadow-colored: 0 0 #0000 !important;
   }
 }
 

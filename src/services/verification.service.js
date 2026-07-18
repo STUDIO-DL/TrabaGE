@@ -56,10 +56,21 @@ export const verificationService = {
       .eq('user_id', companyId)
       .single(),
 
-  submitRequest: async (documentPath, documentName) => {
+  submitRequest: async ({
+    companyDocumentType,
+    companyDocumentPath,
+    representativeDocumentType,
+    representativeDocumentPath,
+    companyDocumentName,
+    representativeDocumentName,
+  }) => {
     const { data, error } = await supabase.rpc('submit_verification_request', {
-      p_document_path: documentPath,
-      p_document_name: documentName,
+      p_company_document_type: companyDocumentType,
+      p_company_document_path: companyDocumentPath,
+      p_representative_document_type: representativeDocumentType,
+      p_representative_document_path: representativeDocumentPath,
+      p_company_document_name: companyDocumentName ?? null,
+      p_representative_document_name: representativeDocumentName ?? null,
     });
 
     if (error) return { data: null, error };

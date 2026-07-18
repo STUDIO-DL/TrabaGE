@@ -14,20 +14,20 @@ const PUBLISH_MODES = {
   POST: 'post',
 };
 
+const ICON_SURFACE = 'bg-app-surface text-app-text ring-1 ring-app-border dark:bg-app-elevated';
+
 const PUBLISH_OPTIONS = [
   {
     id: 'post',
     label: 'Publicación',
     description: 'Comparte novedades, cultura o actualizaciones con tu comunidad.',
     icon: FileText,
-    tone: 'text-violet-600 bg-violet-50',
   },
   {
     id: 'job',
     label: 'Oferta de empleo',
     description: 'Publica una vacante y recibe postulaciones de candidatos.',
     icon: Briefcase,
-    tone: 'text-blue-600 bg-blue-50',
   },
 ];
 
@@ -84,21 +84,21 @@ export default function Publish() {
   return (
     <PageContainer topBar={false}>
       <div className="p-4">
-        <p className="mb-4 text-sm text-gray-600">¿Qué quieres publicar?</p>
+        <p className="mb-4 text-sm text-app-muted">¿Qué quieres publicar?</p>
         <div className="grid grid-cols-1 gap-3">
-          {PUBLISH_OPTIONS.map(({ id, label, description, icon: Icon, tone }) => (
+          {PUBLISH_OPTIONS.map(({ id, label, description, icon: Icon }) => (
             <button
               key={id}
               type="button"
               onClick={() => handleOptionSelect(id)}
-              className="flex items-start gap-3 rounded-2xl border border-gray-100 bg-white p-4 text-left shadow-sm transition hover:border-primary-100 hover:bg-primary-50/40"
+              className="surface-card flex items-start gap-3 p-4 text-left transition hover:border-app-muted/50"
             >
-              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tone}`}>
+              <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${ICON_SURFACE}`}>
                 <AppIcon icon={Icon} size={ICON_SIZES.default} />
               </span>
               <span>
-                <span className="block text-sm font-semibold text-gray-900">{label}</span>
-                <span className="mt-1 block text-xs leading-relaxed text-gray-500">{description}</span>
+                <span className="block text-sm font-semibold text-app-text">{label}</span>
+                <span className="mt-1 block text-xs leading-relaxed text-app-muted">{description}</span>
               </span>
             </button>
           ))}

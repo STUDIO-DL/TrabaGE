@@ -4,34 +4,41 @@ import {
   Building2,
   Plus,
   Users,
+  ICON_COLORS,
   ICON_SIZES,
 } from '../../../constants/icons';
 import { useAuth } from '../../../hooks/useAuth';
 import { ROLES, rolePath } from '../../../constants/roles';
 
+const ICON_SURFACE = 'bg-app-surface text-app-text ring-1 ring-app-border dark:bg-app-elevated';
+
 export default function DashboardQuickAccess() {
   const { role } = useAuth();
   const base = role || ROLES.BUSINESS;
   const quickLinks = [
-    { to: rolePath(base, '/jobs/create'), label: 'Crear oferta', icon: Plus, tone: 'text-violet-600 bg-violet-50' },
-    { to: rolePath(base, '/applicants'), label: 'Ver postulaciones', icon: Users, tone: 'text-blue-600 bg-blue-50' },
-    { to: rolePath(base, '/profile'), label: 'Editar perfil', icon: Building2, tone: 'text-amber-600 bg-amber-50' },
+    { to: rolePath(base, '/jobs/create'), label: 'Crear oferta', icon: Plus, accent: true },
+    { to: rolePath(base, '/applicants'), label: 'Ver postulaciones', icon: Users },
+    { to: rolePath(base, '/profile'), label: 'Editar perfil', icon: Building2 },
   ];
 
   return (
-    <section className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-      <h2 className="text-base font-semibold text-gray-900">Acciones rápidas</h2>
+    <section className="surface-card p-5">
+      <h2 className="text-base font-semibold text-app-text">Acciones rápidas</h2>
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {quickLinks.map(({ to, label, icon: Icon, tone }) => (
+        {quickLinks.map(({ to, label, icon: Icon, accent }) => (
           <Link
             key={to}
             to={to}
-            className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-3 transition hover:border-primary-100 hover:bg-primary-50/40"
+            className="flex items-center gap-3 rounded-xl border border-app-border bg-app-surface px-3 py-3 transition hover:border-app-muted/50 hover:bg-app-card"
           >
-            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${tone}`}>
-              <AppIcon icon={Icon} size={ICON_SIZES.default} />
+            <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${ICON_SURFACE}`}>
+              <AppIcon
+                icon={Icon}
+                size={ICON_SIZES.default}
+                className={accent ? ICON_COLORS.positive : ICON_COLORS.default}
+              />
             </span>
-            <span className="text-sm font-medium text-gray-900">{label}</span>
+            <span className="text-sm font-medium text-app-text">{label}</span>
           </Link>
         ))}
       </div>

@@ -1,15 +1,15 @@
 const STYLES = {
-  active: 'bg-emerald-50 text-emerald-700',
-  inactive: 'bg-gray-100 text-gray-600',
-  pending: 'bg-amber-50 text-amber-700',
-  approved: 'bg-emerald-50 text-emerald-700',
-  rejected: 'bg-red-50 text-red-700',
-  hidden: 'bg-gray-100 text-gray-600',
-  reviewed: 'bg-blue-50 text-blue-700',
-  resolved: 'bg-emerald-50 text-emerald-700',
-  dismissed: 'bg-gray-100 text-gray-600',
-  verified: 'bg-emerald-50 text-emerald-700',
-  unverified: 'bg-gray-100 text-gray-600',
+  active: 'bg-app-surface text-success-700 dark:text-success-400',
+  inactive: 'bg-app-surface text-app-muted',
+  pending: 'bg-app-surface text-app-muted',
+  approved: 'bg-app-surface text-success-700 dark:text-success-400',
+  rejected: 'bg-app-surface text-error-700 dark:text-error-400',
+  hidden: 'bg-app-surface text-app-muted',
+  reviewed: 'bg-app-surface text-app-muted',
+  resolved: 'bg-app-surface text-success-700 dark:text-success-400',
+  dismissed: 'bg-app-surface text-app-muted',
+  verified: 'bg-app-surface text-success-700 dark:text-success-400',
+  unverified: 'bg-app-surface text-app-muted',
 };
 
 export default function AdminStatusBadge({ status, label }) {

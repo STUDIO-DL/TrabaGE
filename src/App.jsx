@@ -66,6 +66,8 @@ const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
 const AdminPosts = lazy(() => import('./pages/admin/AdminPosts'));
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
+const AdminOrganizations = lazy(() => import('./pages/admin/AdminOrganizations'));
+const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
 const CompanyPublicProfile = lazy(() => import('./pages/shared/CompanyPublicProfile'));
@@ -190,11 +192,13 @@ function AppRoutes() {
                   <Route path="/admin" element={<AdminDashboard />} />
                   <Route path="/admin/users" element={<AdminUsers />} />
                   <Route path="/admin/companies" element={<AdminCompanies />} />
+                  <Route path="/admin/organizations" element={<AdminOrganizations />} />
                   <Route path="/admin/verifications" element={<AdminVerifications />} />
                   <Route path="/admin/jobs" element={<AdminJobs />} />
                   <Route path="/admin/posts" element={<AdminPosts />} />
                   <Route path="/admin/reports" element={<AdminReports />} />
                   <Route path="/admin/notifications" element={<AdminNotifications />} />
+                  <Route path="/admin/profile" element={<AdminProfile />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
                   <Route path="/admin/help" element={<HelpCenter />} />
                 </Route>

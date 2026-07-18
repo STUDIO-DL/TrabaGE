@@ -1,20 +1,17 @@
 import { Link } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
-import { ChevronRight, ICON_SIZES } from '../../../constants/icons';
+import { ChevronRight, ICON_COLORS, ICON_SIZES } from '../../../constants/icons';
 
-const ICON_STYLES = {
-  blue: 'bg-blue-50 text-blue-600',
-  green: 'bg-emerald-50 text-emerald-600',
-  purple: 'bg-violet-50 text-violet-600',
-  amber: 'bg-amber-50 text-amber-600',
-};
+const ICON_SURFACE = 'bg-app-surface text-app-text ring-1 ring-app-border dark:bg-app-elevated';
 
-export default function DashboardStatCard({ icon, tone = 'blue', value, label, linkLabel, to }) {
+export default function DashboardStatCard({ icon, tone = 'default', value, label, linkLabel, to }) {
+  const iconClass = tone === 'positive' ? ICON_COLORS.positive : ICON_COLORS.default;
+
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="surface-card p-4">
       <div className="flex items-start justify-between gap-3">
-        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${ICON_STYLES[tone]}`}>
-          <AppIcon icon={icon} size={ICON_SIZES.default} />
+        <span className={`flex h-10 w-10 items-center justify-center rounded-xl ${ICON_SURFACE}`}>
+          <AppIcon icon={icon} size={ICON_SIZES.default} className={iconClass} />
         </span>
         {to && (
           <Link
@@ -26,8 +23,8 @@ export default function DashboardStatCard({ icon, tone = 'blue', value, label, l
           </Link>
         )}
       </div>
-      <p className="mt-space-base text-title font-bold tracking-tight text-gray-900">{value}</p>
-      <p className="mt-1 text-sm text-gray-500">{label}</p>
+      <p className="mt-space-base text-title font-bold tracking-tight text-app-text">{value}</p>
+      <p className="mt-1 text-sm text-app-muted">{label}</p>
     </div>
   );
 }

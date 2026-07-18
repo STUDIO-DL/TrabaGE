@@ -118,8 +118,13 @@ export const PREVIEW_COMPANY_APPLICATIONS = [];
 
 export const PREVIEW_COMPANY_VERIFICATION = {
   status: 'pending',
-  document_name: 'registro-mercantil.pdf',
+  company_document_type: 'nif',
+  company_document_path: 'preview-company/company-document.pdf',
+  representative_document_type: 'dip',
+  representative_document_path: 'preview-company/representative-document.pdf',
+  document_name: 'nif-empresa.pdf + dip-representante.pdf',
   review_notes: null,
+  rejection_reason: null,
   created_at: daysAgo(4),
   submitted_at: daysAgo(4),
 };

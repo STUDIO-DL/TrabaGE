@@ -7,6 +7,25 @@ export const THEMES = {
   DARK: 'dark',
 };
 
+/** Routes that always render light while the user is logged out (auth/onboarding funnel). */
+export const PUBLIC_AUTH_ROUTES = [
+  '/',
+  '/onboarding',
+  '/login',
+  '/register',
+  '/forgot-password',
+  '/verify-email',
+  '/auth/callback',
+  '/auth/confirm',
+];
+
+export function isPublicAuthRoute(pathname) {
+  if (!pathname) return false;
+  return PUBLIC_AUTH_ROUTES.some(
+    (route) => pathname === route || (route !== '/' && pathname.startsWith(`${route}/`)),
+  );
+}
+
 export const THEME_OPTIONS = [
   {
     value: THEMES.LIGHT,

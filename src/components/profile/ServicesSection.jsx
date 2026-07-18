@@ -57,14 +57,14 @@ export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) 
         {preview.map((item) => (
           <span
             key={item.id}
-            className="inline-flex items-center gap-1 rounded-full border border-orange-200 bg-orange-50 px-3.5 py-1.5 text-sm text-orange-900"
+            className="inline-flex items-center gap-1 rounded-full border border-app-border bg-app-surface px-3.5 py-1.5 text-sm text-app-text"
           >
             {item.name}
             {isOwn && (
               <button
                 type="button"
                 onClick={() => onDelete?.(item.id)}
-                className="ml-0.5 rounded p-0.5 text-orange-400 hover:bg-red-50 hover:text-red-500"
+                className="ml-0.5 rounded p-0.5 text-app-subtle hover:bg-app-surface hover:text-error-600"
                 aria-label="Eliminar"
               >
                 <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
@@ -75,7 +75,7 @@ export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) 
       </div>
 
       {isOwn && (
-        <div className="mt-4 space-y-3 border-t border-gray-100 pt-4">
+        <div className="mt-4 space-y-3 border-t border-app-divider pt-4">
           <div className="flex gap-2">
             <AutocompleteInput
               value={serviceName}
@@ -92,14 +92,14 @@ export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) 
 
           {!serviceName.trim() && popularSuggestions.length > 0 && (
             <div>
-              <p className="mb-2 text-xs font-medium text-gray-500">Sugerencias</p>
+              <p className="mb-2 text-xs font-medium text-app-muted">Sugerencias</p>
               <div className="flex flex-wrap gap-2">
                 {popularSuggestions.map((service) => (
                   <button
                     key={service}
                     type="button"
                     onClick={() => addService(service)}
-                    className="rounded-full border border-dashed border-gray-300 bg-white px-3 py-1 text-xs text-gray-600 hover:border-orange-300 hover:bg-orange-50 hover:text-orange-800"
+                    className="rounded-full border border-dashed border-app-border bg-app-card px-3 py-1 text-xs text-app-muted hover:border-app-muted hover:bg-app-surface hover:text-app-text"
                   >
                     + {service}
                   </button>

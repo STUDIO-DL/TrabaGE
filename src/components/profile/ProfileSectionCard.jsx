@@ -1,5 +1,5 @@
 import AppIcon from '../common/AppIcon';
-import { ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
+import { ICON_COLORS, ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
 import { SECTION_ICON_TONES } from './ProfileIcons';
 
 function EditActionButton({ onClick, label = 'Editar' }) {
@@ -48,17 +48,17 @@ export default function ProfileSectionCard({
   if (isEmpty && !isOwn) return null;
 
   return (
-    <section id={id} className="rounded-radius-lg border border-gray-200 bg-white p-space-md shadow-sm">
+    <section id={id} className="surface-card p-space-md">
       <div className="mb-space-md flex items-center justify-between gap-space-sm">
         <div className="flex items-center gap-space-sm">
           {icon && (
             <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-radius-md ring-1 ${toneClass}`}
+              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-radius-md ${toneClass}`}
             >
-              <AppIcon icon={icon} size={ICON_SIZES.default} />
+              <AppIcon icon={icon} size={ICON_SIZES.default} className={ICON_COLORS.default} />
             </span>
           )}
-          <h3 className="text-subtitle font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-subtitle font-semibold text-app-text">{title}</h3>
         </div>
         {isOwn && onAdd && (
           <button
@@ -79,7 +79,7 @@ export default function ProfileSectionCard({
       </div>
 
       {isEmpty ? (
-        <p className="text-sm text-gray-400">{emptyText}</p>
+        <p className="text-sm text-app-subtle">{emptyText}</p>
       ) : (
         children
       )}
@@ -110,20 +110,20 @@ export function ProfileEntryRow({
   const toneClass = SECTION_ICON_TONES[entryIconTone] ?? SECTION_ICON_TONES.experience;
 
   return (
-    <div className="flex gap-3 border-b border-gray-100 py-4 first:pt-0 last:border-0 last:pb-0">
+    <div className="flex gap-3 border-b border-app-divider py-4 first:pt-0 last:border-0 last:pb-0">
       {entryIcon ? (
         <span
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ring-1 ${toneClass}`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${toneClass}`}
         >
-          <AppIcon icon={entryIcon} size={ICON_SIZES.lg} />
+          <AppIcon icon={entryIcon} size={ICON_SIZES.lg} className={ICON_COLORS.default} />
         </span>
       ) : (
-        <div className="h-11 w-11 shrink-0 rounded-lg bg-gray-100" aria-hidden />
+        <div className="h-11 w-11 shrink-0 rounded-lg bg-app-surface" aria-hidden />
       )}
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-gray-900">{title || '—'}</p>
-        {subtitle && <p className="mt-0.5 text-sm text-gray-600">{subtitle}</p>}
-        {meta && <p className="mt-1 text-xs leading-relaxed text-gray-400">{meta}</p>}
+        <p className="font-semibold text-app-text">{title || '—'}</p>
+        {subtitle && <p className="mt-0.5 text-sm text-app-muted">{subtitle}</p>}
+        {meta && <p className="mt-1 text-xs leading-relaxed text-app-subtle">{meta}</p>}
         {isOwn && (onEdit || onDelete) && (
           <div className="mt-2 flex gap-3">
             {onEdit && <EditActionButton onClick={onEdit} />}

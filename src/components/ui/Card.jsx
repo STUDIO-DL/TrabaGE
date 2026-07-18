@@ -28,9 +28,9 @@ export default function Card({
   return (
     <Component
       className={[
-        'rounded-radius-lg border border-app-border bg-app-card text-app-text',
+        'surface-card',
         paddingMap[padding] ?? paddingMap.md,
-        elevationClass,
+        elevation !== 'none' && elevationClass ? elevationClass : '',
         interactive
           ? 'transition-colors duration-fast ease-out hover:border-app-muted/40'
           : '',
