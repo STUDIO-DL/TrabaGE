@@ -208,9 +208,19 @@ async function runCase(context, env, admin, testCase, checklist, logoFiles) {
     );
 
     await loginViaUi(page, created.email);
-    record(checklist, section, 'Playwright login', 'pass');
+    const afterLoginUrl = page.url();
+    const authSnippet = await page.evaluate(() => (localStorage.getItem('trabage-auth') || '').slice(0, 120));
+    record(checklist, section, 'Playwright login', 'pass', `url=${afterLoginUrl} auth=${authSnippet}`);
 
-    await page.goto(`${BASE_URL}${testCase.profilePath}`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.waitForURL(/\/(organization|business)\/(feed|dashboard|profile|setup)/, { timeout: 45000 }).catch(() => {});
+    await waitForAuthShell(page);
+    const profileLink = page.getByRole('link', { name: /Ir a mi perfil/i });
+    if (await profileLink.count()) {
+      await profileLink.first().click();
+      await page.waitForURL((url) => url.pathname.includes('/profile'), { timeout: 30000 }).catch(() => {});
+    } else {
+      await page.goto(`${BASE_URL}${testCase.profilePath}`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    }
     await waitForAuthShell(page);
     await page.waitForTimeout(1500);
 
@@ -397,4 +407,5 @@ main().catch((err) => {
   console.error('Fatal:', err.message);
   process.exit(1);
 });
+
 

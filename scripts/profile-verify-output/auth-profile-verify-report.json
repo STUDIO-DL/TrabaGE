@@ -1,18 +1,18 @@
 {
   "baseUrl": "http://localhost:5173",
-  "timestamp": "2026-07-18T19:57:13.103Z",
+  "timestamp": "2026-07-18T20:13:25.546Z",
   "checklist": [
     {
       "section": "organization",
       "name": "Create temp user (admin API + company_name metadata)",
       "status": "pass",
-      "note": "email=qa-organization-mrqse7rh-1vviw@trabage-qa.test role=organization company_name=ZARREL"
+      "note": "email=qa-organization-mrqsyeu5-zlu4a@trabage-qa.test role=organization company_name=ZARREL"
     },
     {
       "section": "organization",
       "name": "Playwright login",
       "status": "pass",
-      "note": ""
+      "note": "url=http://localhost:5173/register auth={\"access_token\":\"eyJhbGciOiJFUzI1NiIsImtpZCI6ImQ3MTQ0NTQ1LTUwMjgtNDQwYy04ZTU1LTE2Njg3MDUyMjAwNSIsInR5cCI6IkpXVCJ9.eyJpc3"
     },
     {
       "section": "organization",
@@ -60,13 +60,13 @@
       "section": "business",
       "name": "Create temp user (admin API + company_name metadata)",
       "status": "pass",
-      "note": "email=qa-business-mrqsf5e2-x2s9p@trabage-qa.test role=business company_name=ZARREL Business QA"
+      "note": "email=qa-business-mrqszxai-7810t@trabage-qa.test role=business company_name=ZARREL Business QA"
     },
     {
       "section": "business",
       "name": "Playwright login",
       "status": "pass",
-      "note": ""
+      "note": "url=http://localhost:5173/register auth={\"access_token\":\"eyJhbGciOiJFUzI1NiIsImtpZCI6ImQ3MTQ0NTQ1LTUwMjgtNDQwYy04ZTU1LTE2Njg3MDUyMjAwNSIsInR5cCI6IkpXVCJ9.eyJpc3"
     },
     {
       "section": "business",
