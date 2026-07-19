@@ -218,25 +218,73 @@ async function testConfirmLanding(page, confirmUrl, expectedProfilePath, label) 
   return pathname;
 }
 
-async function testAlreadyVerifiedReuse(page, confirmUrl, expectedProfilePath) {
+async function testConsumedLinkRejected(page, confirmUrl) {
   await page.goto(confirmUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
   await waitForAuthShell(page);
 
   const errorAlert = page.locator('[role="alert"]');
-  if (await errorAlert.count()) {
-    const text = (await errorAlert.first().innerText()).trim();
-    if (/expirado|inválido|No pudimos/i.test(text)) {
-      throw new Error(`reuse link showed error: ${text}`);
-    }
+  if (!(await errorAlert.count())) {
+    throw new Error('reused confirmation token did not show an error');
   }
 
-  await page.waitForURL(
-    (url) =>
-      url.pathname.startsWith(expectedProfilePath) ||
-      url.pathname.includes('/setup/') ||
-      url.pathname.includes('/profile'),
-    { timeout: 45000 },
-  );
+  const text = (await errorAlert.first().innerText()).trim();
+  if (!/expirado|inválido|No pudimos/i.test(text)) {
+    throw new Error(`unexpected reused-link response: ${text}`);
+  }
+}
+
+async function testConfirmationReplacesDifferentSession(admin, anon, browser) {
+  const existingEmail = uniqueEmail('existing-session');
+  const { data: existingData, error: existingError } = await admin.auth.admin.createUser({
+    email: existingEmail,
+    password: TEST_PASSWORD,
+    email_confirm: true,
+    user_metadata: ACCOUNT_CASES[0].signupData,
+  });
+  if (existingError || !existingData?.user?.id) {
+    throw new Error(`create existing user failed: ${existingError?.message ?? 'missing user'}`);
+  }
+
+  let confirmingUser = null;
+  const context = await browser.newContext();
+
+  try {
+    confirmingUser = await createAndConfirmUser(
+      admin,
+      anon,
+      ACCOUNT_CASES[1],
+      BASE_URL,
+    );
+
+    await resetBrowserState(context, null);
+    const page = await context.newPage();
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await waitForAuthShell(page);
+    await page.locator('input[name="trabage-email"]').fill(existingEmail);
+    await page.locator('input[name="trabage-password"]').fill(TEST_PASSWORD);
+    await page.getByRole('button', { name: 'Iniciar sesión', exact: true }).click();
+    await page.waitForFunction(() => !window.location.pathname.startsWith('/login'), {
+      timeout: 25000,
+    });
+
+    await page.goto(confirmingUser.confirmUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: 45000,
+    });
+    await waitForAuthShell(page);
+    await page.waitForURL((url) => url.pathname.startsWith('/business/profile'), {
+      timeout: 45000,
+    });
+
+    const { data, error } = await admin.auth.admin.getUserById(confirmingUser.userId);
+    if (error || !data?.user?.email_confirmed_at) {
+      throw new Error(error?.message ?? 'confirmation token was not consumed');
+    }
+  } finally {
+    await context.close();
+    await deleteTestUser(admin, confirmingUser?.userId);
+    await deleteTestUser(admin, existingData.user.id);
+  }
 }
 
 async function main() {
@@ -289,8 +337,8 @@ async function main() {
       );
       record(results, `Confirm link — ${label}`, 'pass', `email=${email} → ${landed}`);
 
-      await testAlreadyVerifiedReuse(page, confirmUrl, testCase.expectedProfilePath);
-      record(results, `Reuse confirm link — ${label}`, 'pass', 'already verified, no error screen');
+      await testConsumedLinkRejected(page, confirmUrl);
+      record(results, `Reuse confirm link — ${label}`, 'pass', 'consumed token rejected');
 
       await context.close();
     } catch (err) {
@@ -298,6 +346,18 @@ async function main() {
     } finally {
       await deleteTestUser(admin, userId);
     }
+  }
+
+  try {
+    await testConfirmationReplacesDifferentSession(admin, anon, browser);
+    record(
+      results,
+      'Confirm link replaces a different existing session',
+      'pass',
+      'link account confirmed and active',
+    );
+  } catch (err) {
+    record(results, 'Confirm link replaces a different existing session', 'fail', err.message);
   }
 
   await browser.close();

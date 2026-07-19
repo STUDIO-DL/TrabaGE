@@ -143,25 +143,6 @@ async function resolveVerifiedUserFromServer() {
   return null;
 }
 
-async function recoverVerifiedSessionAfterOtpFailure() {
-  let verified = await getVerifiedSessionFromClient();
-  if (verified.user && verified.session) {
-    return { user: verified.user, session: verified.session, alreadyVerified: true };
-  }
-
-  const restored = await restoreVerifiedSessionFromStorage();
-  if (restored?.user && restored.session) {
-    return { ...restored, alreadyVerified: true };
-  }
-
-  const recovered = await resolveVerifiedUserFromServer();
-  if (recovered?.user && recovered.session) {
-    return { ...recovered, alreadyVerified: true };
-  }
-
-  return null;
-}
-
 async function verifyEmailConfirmationToken(tokenHash, typeParam) {
   const primaryType = typeParam === 'signup' ? 'signup' : 'email';
   let result = await supabase.auth.verifyOtp({
@@ -611,6 +592,11 @@ export const authService = {
       return configError();
     }
 
+    // A password login is never signup completion. Do not let a failed or
+    // abandoned registration in this browser change the account being signed in.
+    savePendingAccountType(null);
+    savePendingSignupDetails(null);
+
     const result = await supabase.auth.signInWithPassword({
       email: normalizeEmail(email),
       password: normalizePassword(password),
@@ -824,6 +810,10 @@ export const authService = {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const errorDescription =
       query.get('error_description') || hash.get('error_description');
+    const tokenHash = query.get('token_hash') || hash.get('token_hash');
+    const code = query.get('code');
+    const typeParam = query.get('type') || hash.get('type');
+    const hasConfirmationToken = Boolean(tokenHash || code);
 
     const successPayload = (user, session, { alreadyVerified = false } = {}) => {
       if (user?.email) {
@@ -839,30 +829,12 @@ export const authService = {
 
     const persistedSessionSnapshot = readPersistedAuthSession();
 
-    // Allow detectSessionInUrl / PKCE code exchange to finish first.
+    // Allow auth client initialization to settle before reading its session.
     await waitForInitialSessionDetection();
 
     let verified = await getVerifiedSessionFromClient();
-    if (verified.user && verified.session) {
-      return successPayload(verified.user, verified.session, { alreadyVerified: true });
-    }
-
-    if (
-      persistedSessionSnapshot?.user &&
-      isEmailVerified(persistedSessionSnapshot.user)
-    ) {
-      const restored = await restoreVerifiedSessionFromStorage();
-      if (restored?.user && restored.session) {
-        return successPayload(restored.user, restored.session, { alreadyVerified: true });
-      }
-    }
 
     if (errorDescription) {
-      const recovered = await resolveVerifiedUserFromServer();
-      if (recovered?.user && recovered.session) {
-        return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
-      }
-
       return {
         data: { user: null, session: null },
         error: {
@@ -872,9 +844,22 @@ export const authService = {
       };
     }
 
-    const tokenHash = query.get('token_hash') || hash.get('token_hash');
-    const code = query.get('code');
-    const typeParam = query.get('type') || hash.get('type');
+    // A valid link may belong to a different account in the same browser.
+    // Consume it before considering any already-established session.
+    if (!hasConfirmationToken && verified.user && verified.session) {
+      return successPayload(verified.user, verified.session, { alreadyVerified: true });
+    }
+
+    if (
+      !hasConfirmationToken &&
+      persistedSessionSnapshot?.user &&
+      isEmailVerified(persistedSessionSnapshot.user)
+    ) {
+      const restored = await restoreVerifiedSessionFromStorage();
+      if (restored?.user && restored.session) {
+        return successPayload(restored.user, restored.session, { alreadyVerified: true });
+      }
+    }
 
     if (!tokenHash && !code) {
       verified = await getVerifiedSessionFromClient();
@@ -904,13 +889,8 @@ export const authService = {
     }
 
     if (result.error) {
-      await waitForInitialSessionDetection(150);
-
-      const recovered = await recoverVerifiedSessionAfterOtpFailure();
-      if (recovered?.user && recovered.session) {
-        return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
-      }
-
+      // A failed exchange must never fall back to whichever account happened
+      // to be active before this link was opened.
       return result;
     }
 
@@ -918,12 +898,6 @@ export const authService = {
     let session = result.data?.session ?? null;
 
     if (!isEmailVerified(user)) {
-      await waitForInitialSessionDetection(150);
-      verified = await getVerifiedSessionFromClient();
-      if (verified.user && verified.session) {
-        return successPayload(verified.user, verified.session);
-      }
-
       return {
         data: result.data,
         error: {
@@ -935,8 +909,20 @@ export const authService = {
 
     if (!session) {
       verified = await getVerifiedSessionFromClient();
-      session = verified.session;
-      user = verified.user ?? user;
+      if (verified.user?.id === user?.id && verified.session) {
+        session = verified.session;
+        user = verified.user;
+      }
+    }
+
+    if (!session) {
+      return {
+        data: result.data,
+        error: {
+          code: 'confirmation_failed',
+          message: 'No se pudo iniciar la sesión después de confirmar el correo.',
+        },
+      };
     }
 
     return successPayload(user, session);

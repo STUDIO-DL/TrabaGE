@@ -15,6 +15,9 @@ if (!isSupabaseConfigured && import.meta.env.DEV) {
   console.warn('[TrabaGE] Missing Supabase env vars. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
 }
 
+const shouldDetectSessionInUrl =
+  typeof window === 'undefined' || window.location.pathname !== '/auth/confirm';
+
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key',
@@ -22,7 +25,9 @@ export const supabase = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true,
+      // Confirmation links are exchanged explicitly by auth.service so their
+      // result cannot be confused with a session that was already in storage.
+      detectSessionInUrl: shouldDetectSessionInUrl,
       flowType: 'pkce',
       storage: typeof window !== 'undefined' ? window.localStorage : undefined,
       storageKey: 'trabage-auth',
