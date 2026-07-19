@@ -8,17 +8,13 @@ import Button from '../../components/ui/Button';
 import { Newspaper } from '../../constants/icons';
 import { useIntelligentFeed } from '../../hooks/useIntelligentFeed';
 import { useAuth } from '../../hooks/useAuth';
-import { useNotificationContext } from '../../context/NotificationContext';
-import { postsService } from '../../services/posts.service';
-import { storageService } from '../../services/storage.service';
-import { STORAGE_BUCKETS } from '../../constants/storage';
+import { usePostMutations } from '../../hooks/usePostMutations';
 import { FEED_CONTENT_TYPES, isHomeFeedPostItem } from '../../constants/feedContentTypes';
-import { TOAST } from '../../utils/copyLabels';
 
 export default function Feed() {
   const { user } = useAuth();
-  const { showToast } = useNotificationContext();
   const { items, loading, loadingMore, hasMore, error, refetch, loadMore } = useIntelligentFeed();
+  const { handleEdit, handleDelete } = usePostMutations({ onSuccess: refetch });
   const feedItems = items.filter(isHomeFeedPostItem);
 
   useEffect(() => {
@@ -30,43 +26,6 @@ export default function Feed() {
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadMore]);
-
-  const handleEdit = async (post) => {
-    const content = window.prompt('Editar publicación', post.content || '');
-    if (content === null) return;
-    const trimmed = content.trim();
-    if (!trimmed && !post.post_image_path) {
-      showToast('La publicación no puede estar vacía.', 'error');
-      return;
-    }
-
-    const { error } = await postsService.update(post.id, { content: trimmed });
-    if (error) {
-      showToast('No se pudo actualizar la publicación.', 'error');
-      return;
-    }
-
-    showToast(TOAST.postUpdated, 'success');
-    refetch();
-  };
-
-  const handleDelete = async (post) => {
-    const ok = window.confirm('¿Eliminar esta publicación?');
-    if (!ok) return;
-
-    const { error } = await postsService.delete(post.id);
-    if (error) {
-      showToast('No se pudo eliminar la publicación.', 'error');
-      return;
-    }
-
-    if (post.post_image_path) {
-      await storageService.deleteFile(STORAGE_BUCKETS.POST_IMAGES, post.post_image_path);
-    }
-
-    showToast(TOAST.postDeleted, 'success');
-    refetch();
-  };
 
   const showSkeleton = loading || (Boolean(error) && items.length === 0);
 

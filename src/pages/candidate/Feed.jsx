@@ -7,10 +7,14 @@ import { PostListSkeleton } from '../../components/common/Skeleton';
 import Button from '../../components/ui/Button';
 import { Newspaper } from '../../constants/icons';
 import { useIntelligentFeed } from '../../hooks/useIntelligentFeed';
-import { isHomeFeedPostItem } from '../../constants/feedContentTypes';
+import { useAuth } from '../../hooks/useAuth';
+import { usePostMutations } from '../../hooks/usePostMutations';
+import { FEED_CONTENT_TYPES, isHomeFeedPostItem } from '../../constants/feedContentTypes';
 
 export default function Feed() {
+  const { user } = useAuth();
   const { items, loading, loadingMore, hasMore, error, refetch, loadMore } = useIntelligentFeed();
+  const { handleEdit, handleDelete } = usePostMutations({ onSuccess: refetch });
   const feedItems = items.filter(isHomeFeedPostItem);
 
   useEffect(() => {
@@ -64,15 +68,27 @@ export default function Feed() {
             description="Aquí verás publicaciones de personas y cuentas que sigues."
           />
         ) : (
-          feedItems.map((item, index) => (
-            <div
-              key={item.item_key ?? item.id}
-              className="card-enter"
-              style={{ animationDelay: `${Math.min(index, 6) * 30}ms` }}
-            >
-              <FeedItemRenderer item={item} />
-            </div>
-          ))
+          feedItems.map((item, index) => {
+            const post = item.payload;
+            const isPost =
+              item.content_type === FEED_CONTENT_TYPES.POST ||
+              item.content_type === FEED_CONTENT_TYPES.ADVICE;
+
+            return (
+              <div
+                key={item.item_key ?? item.id}
+                className="card-enter"
+                style={{ animationDelay: `${Math.min(index, 6) * 30}ms` }}
+              >
+                <FeedItemRenderer
+                  item={item}
+                  canManage={isPost && post?.author_id === user?.id}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              </div>
+            );
+          })
         )}
         {loadingMore && <PostListSkeleton count={1} />}
         {!loading && !showSkeleton && hasMore && !loadingMore && (

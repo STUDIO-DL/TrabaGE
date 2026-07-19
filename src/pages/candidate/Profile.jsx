@@ -83,8 +83,11 @@ export default function Profile() {
   const [contactSaving, setContactSaving] = useState(false);
   const [socialSaving, setSocialSaving] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
+  const [avatarPhase, setAvatarPhase] = useState(null);
   const [coverPhotoLoading, setCoverPhotoLoading] = useState(false);
+  const [coverPhase, setCoverPhase] = useState(null);
   const [cvLoading, setCvLoading] = useState(false);
+  const [cvPhase, setCvPhase] = useState(null);
   const [coverLoading, setCoverLoading] = useState(false);
 
   const canEdit = !isPreviewMode;
@@ -127,8 +130,9 @@ export default function Profile() {
       return;
     }
     setAvatarLoading(true);
-    const { error } = await uploadAvatar(file);
+    const { error } = await uploadAvatar(file, { onProgress: ({ phase }) => setAvatarPhase(phase) });
     setAvatarLoading(false);
+    setAvatarPhase(null);
     showToast(error ? error.message : 'Foto actualizada.', error ? 'error' : 'success');
   };
 
@@ -139,8 +143,9 @@ export default function Profile() {
       return;
     }
     setCoverPhotoLoading(true);
-    const { error } = await uploadCover(file);
+    const { error } = await uploadCover(file, { onProgress: ({ phase }) => setCoverPhase(phase) });
     setCoverPhotoLoading(false);
+    setCoverPhase(null);
     showToast(error ? error.message : 'Portada actualizada.', error ? 'error' : 'success');
   };
 
@@ -154,8 +159,9 @@ export default function Profile() {
   const handleUploadCV = async (file, errorMsg) => {
     if (errorMsg) return showToast(errorMsg, 'error');
     setCvLoading(true);
-    const { error } = await uploadCV(file);
+    const { error } = await uploadCV(file, { onProgress: ({ phase }) => setCvPhase(phase) });
     setCvLoading(false);
+    setCvPhase(null);
     showToast(error ? error.message : 'CV subido correctamente.', error ? 'error' : 'success');
   };
 
@@ -270,9 +276,11 @@ export default function Profile() {
         isOwn={canEdit}
         onAvatarChange={canEdit ? handleAvatar : undefined}
         avatarLoading={avatarLoading}
+        avatarPhase={avatarPhase}
         onCoverChange={canEdit ? handleCoverPhoto : undefined}
         onCoverRemove={canEdit ? handleRemoveCoverPhoto : undefined}
         coverLoading={coverPhotoLoading}
+        coverPhase={coverPhase}
         onShare={handleShare}
         onSettings={canEdit ? () => navigate('/personal/settings') : undefined}
         onEditIntro={canEdit ? () => navigate('/personal/profile/edit-intro') : undefined}
@@ -402,6 +410,7 @@ export default function Profile() {
           coverLetter={profile?.cover_letter}
           isOwn={canEdit}
           cvLoading={cvLoading}
+          cvPhase={cvPhase}
           coverSaving={coverLoading}
           onUploadCV={handleUploadCV}
           onSaveCoverLetter={handleSaveCoverLetter}

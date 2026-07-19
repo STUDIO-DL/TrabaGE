@@ -4,6 +4,7 @@ import FileUpload from '../ui/FileUpload';
 import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
 import { FILE_HINTS } from '../../utils/validateFile';
+import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 
 function CoverLetterEditor({ initialValue, saving, onSave }) {
@@ -41,6 +42,7 @@ export default function DocumentsSection({
   onUploadCV,
   onSaveCoverLetter,
   cvLoading = false,
+  cvPhase = null,
   coverSaving = false,
 }) {
   if (!isOwn) return null;
@@ -67,6 +69,7 @@ export default function DocumentsSection({
             fileType="cv"
             hint={FILE_HINTS.cv}
             loading={cvLoading}
+            loadingLabel={getUploadPhaseLabel(cvPhase)}
             onUpload={(file, error) => onUploadCV?.(file, error)}
           />
         </div>

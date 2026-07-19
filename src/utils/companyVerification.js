@@ -35,7 +35,8 @@ export const VERIFICATION_ACCEPT = '.pdf,application/pdf';
 export const REPRESENTATIVE_DOC_ACCEPT =
   '.pdf,application/pdf,.jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp';
 
-export const VERIFICATION_MAX_BYTES = 5 * 1024 * 1024;
+export const VERIFICATION_MAX_BYTES = 10 * 1024 * 1024;
+export const VERIFICATION_OUTPUT_MAX_BYTES = 2 * 1024 * 1024;
 
 const PDF_TYPES = ['application/pdf'];
 const REPRESENTATIVE_TYPES = [
@@ -65,7 +66,7 @@ export function validateVerificationFile(file, { allowImages = false } = {}) {
   }
 
   if (file.size > VERIFICATION_MAX_BYTES) {
-    return { valid: false, error: 'El archivo supera el límite de 5 MB.' };
+    return { valid: false, error: 'El archivo supera el límite de 10 MB.' };
   }
 
   return { valid: true };

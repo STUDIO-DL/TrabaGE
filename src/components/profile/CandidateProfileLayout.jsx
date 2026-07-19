@@ -11,8 +11,10 @@ export default function CandidateProfileLayout({
   isOwn = false,
   onAvatarChange,
   avatarLoading,
+  avatarPhase,
   onCoverChange,
   coverLoading,
+  coverPhase,
   onCoverRemove,
   coverSrc,
   onShare,
@@ -44,9 +46,11 @@ export default function CandidateProfileLayout({
         isOwn={isOwn}
         onAvatarChange={onAvatarChange}
         avatarLoading={avatarLoading}
+        avatarPhase={avatarPhase}
         onCoverChange={onCoverChange}
         onCoverRemove={onCoverRemove}
         coverLoading={coverLoading}
+        coverPhase={coverPhase}
         coverSrc={coverSrc}
         onEditIntro={onEditIntro}
       />

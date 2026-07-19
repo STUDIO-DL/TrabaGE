@@ -50,6 +50,8 @@ import { formatFollowerNumber } from '../../../utils/formatFollowerCount';
 
 import { useAuth } from '../../../hooks/useAuth';
 
+import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
+
 import { ROLES, rolePath } from '../../../constants/roles';
 
 import CompanyProfileActionBar from './CompanyProfileActionBar';
@@ -116,7 +118,7 @@ function BannerSkyline() {
 
 
 
-function MediaUploadButton({ label, loading, inputId, className = '' }) {
+function MediaUploadButton({ label, loading, uploadPhase, inputId, className = '' }) {
 
   return (
 
@@ -130,7 +132,7 @@ function MediaUploadButton({ label, loading, inputId, className = '' }) {
 
       <AppIcon icon={Camera} size={ICON_SIZES.sm} className="text-white" />
 
-      {loading ? 'Subiendo…' : label}
+      {loading ? getUploadPhaseLabel(uploadPhase) || 'Subiendo…' : label}
 
     </label>
 
@@ -200,7 +202,11 @@ export default function CompanyProfileHeader({
 
   logoLoading = false,
 
+  logoPhase = null,
+
   coverLoading = false,
+
+  coverPhase = null,
 
   followerCount = 0,
 
@@ -396,6 +402,8 @@ export default function CompanyProfileHeader({
 
               loading={coverLoading}
 
+              uploadPhase={coverPhase}
+
               className="absolute bottom-space-sm right-space-base z-20"
 
             />
@@ -466,7 +474,9 @@ export default function CompanyProfileHeader({
 
                   className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-radius-circular bg-app-card text-app-muted shadow-elevation-1 ring-2 ring-app-card transition-colors duration-fast hover:bg-app-surface hover:text-app-text disabled:opacity-60"
 
-                  aria-label="Subir logo"
+                  aria-label={logoLoading ? getUploadPhaseLabel(logoPhase) || 'Subiendo logo' : 'Subir logo'}
+
+                  title={logoLoading ? getUploadPhaseLabel(logoPhase) || 'Subiendo…' : undefined}
 
                 >
 

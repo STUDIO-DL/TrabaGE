@@ -10,7 +10,6 @@ import { authorTypeFromRole } from '../constants/authorTypes';
 import { useAuth } from './useAuth';
 import { useNotificationContext } from '../context/NotificationContext';
 import { GUEST_MODE_MESSAGE } from '../utils/guestMode';
-import { compressPostImage } from '../utils/imageCompression';
 import { getCompanyDisplayName } from '../utils/companyProfile';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
@@ -20,6 +19,7 @@ export function useCreatePost() {
   const { user, isPreviewMode, role } = useAuth();
   const { showToast } = useNotificationContext();
   const [loading, setLoading] = useState(false);
+  const [uploadPhase, setUploadPhase] = useState(null);
 
   const createPost = async ({ content, imageFile }) => {
     if (isPreviewMode) {
@@ -59,26 +59,29 @@ export function useCreatePost() {
     let savedPost = post;
 
     if (imageFile && post?.id) {
-      let compressed;
       try {
-        compressed = await compressPostImage(imageFile);
-      } catch (compressError) {
-        showToast(compressError.message, 'error');
-        setLoading(false);
-        return { ok: true, post: savedPost };
-      }
-
-      const { error: uploadError } = await storageService.uploadPostImage(
-        user.id,
-        post.id,
-        compressed,
-      );
-
-      if (uploadError) {
-        showToast(
-          getSupabaseErrorMessage(uploadError, 'Publicación creada, pero la imagen no se pudo subir'),
-          'error',
+        const { error: uploadError } = await storageService.uploadPostImage(
+          user.id,
+          post.id,
+          imageFile,
+          undefined,
+          {
+            onProgress: ({ phase }) => setUploadPhase(phase),
+          },
         );
+
+        if (uploadError) {
+          showToast(
+            getSupabaseErrorMessage(uploadError, 'Publicación creada, pero la imagen no se pudo subir'),
+            'error',
+          );
+          setUploadPhase(null);
+          setLoading(false);
+          return { ok: true, post: savedPost };
+        }
+      } catch (uploadError) {
+        showToast(uploadError.message, 'error');
+        setUploadPhase(null);
         setLoading(false);
         return { ok: true, post: savedPost };
       }
@@ -101,6 +104,7 @@ export function useCreatePost() {
       }
 
       savedPost = updatedPost ?? { ...post, post_image_path: path };
+      setUploadPhase(null);
     }
 
     if (isEmployerRole(role)) {
@@ -126,9 +130,10 @@ export function useCreatePost() {
     }
 
     showToast(TOAST.postCreated, 'success');
+    setUploadPhase(null);
     setLoading(false);
     return { ok: true, post: savedPost };
   };
 
-  return { createPost, loading };
+  return { createPost, loading, uploadPhase };
 }

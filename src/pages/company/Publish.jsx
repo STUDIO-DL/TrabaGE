@@ -34,7 +34,7 @@ const PUBLISH_OPTIONS = [
 export default function Publish() {
   const { isPreviewMode, role } = useAuth();
   const navigate = useNavigate();
-  const { createPost, loading } = useCreatePost();
+  const { createPost, loading, uploadPhase } = useCreatePost();
   const [mode, setMode] = useState(PUBLISH_MODES.SELECT);
   const base = role || ROLES.BUSINESS;
 
@@ -75,6 +75,7 @@ export default function Publish() {
         <PostComposer
           onSubmit={handleCreatePost}
           loading={loading}
+          uploadPhase={uploadPhase}
           onClose={() => setMode(PUBLISH_MODES.SELECT)}
         />
       </PageContainer>

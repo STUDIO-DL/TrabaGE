@@ -17,6 +17,7 @@ import {
   toStartDate,
 } from '../../../utils/educationDates';
 import { storageService } from '../../../services/storage.service';
+import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
 
 const ACTIVITIES_MAX = 500;
 const DESCRIPTION_MAX = 1000;
@@ -124,6 +125,7 @@ export default function EducationModal({
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [uploadPhase, setUploadPhase] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -180,6 +182,7 @@ export default function EducationModal({
         educationId,
         pending.file,
         fileId,
+        { onProgress: ({ phase }) => setUploadPhase(phase) },
       );
       if (error) return { mediaFiles: null, error };
       nextFiles = [...nextFiles, meta];
@@ -213,9 +216,11 @@ export default function EducationModal({
     };
 
     setUploading(true);
+    setUploadPhase(null);
     const { data, error: saveError } = await onSave(payload, initial?.id);
     if (saveError) {
       setUploading(false);
+      setUploadPhase(null);
       setSubmitError(saveError.message);
       return;
     }
@@ -225,6 +230,7 @@ export default function EducationModal({
       const { mediaFiles, error: mediaError } = await syncMediaFiles(educationId);
       if (mediaError) {
         setUploading(false);
+        setUploadPhase(null);
         setSubmitError('No se pudieron subir los archivos. Inténtalo de nuevo.');
         return;
       }
@@ -233,12 +239,14 @@ export default function EducationModal({
         silent: true,
       });
       setUploading(false);
+      setUploadPhase(null);
       if (patchError) {
         setSubmitError(patchError.message);
         return;
       }
     } else {
       setUploading(false);
+      setUploadPhase(null);
     }
 
     onClose();
@@ -396,7 +404,7 @@ export default function EducationModal({
         <KeyboardAwareFooter className="z-10 shrink-0 border-t border-app-border bg-app-card px-space-base pt-space-md">
           <Button type="submit" form={formId} fullWidth loading={busy} className="gap-space-sm">
             <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
-            Guardar
+            {busy ? getUploadPhaseLabel(uploadPhase) || 'Guardando...' : 'Guardar'}
           </Button>
         </KeyboardAwareFooter>
       </form>

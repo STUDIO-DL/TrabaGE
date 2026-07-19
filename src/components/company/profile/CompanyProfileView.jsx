@@ -12,6 +12,8 @@ import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
 import CompanyProfileSectionCard from './CompanyProfileSectionCard';
 import ProjectsSection from '../../profile/ProjectsSection';
 import { usePosts } from '../../../hooks/usePosts';
+import { useAuth } from '../../../hooks/useAuth';
+import { usePostMutations } from '../../../hooks/usePostMutations';
 import { sectionLinkClass, profileContentShellClass, profileInicioGridClass } from './companyProfileStyles';
 import { hasCompanyDescription } from '../../../utils/companyProfile';
 
@@ -32,7 +34,9 @@ export default function CompanyProfileView({
   onSaveContact,
   contactSaving = false,
   logoLoading = false,
+  logoPhase = null,
   coverLoading = false,
+  coverPhase = null,
   showFollowButton = false,
   showBackButton = false,
   isFollowing = false,
@@ -50,6 +54,7 @@ export default function CompanyProfileView({
   onEditProject,
   onDeleteProject,
 }) {
+  const { user } = useAuth();
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
 
@@ -69,7 +74,13 @@ export default function CompanyProfileView({
     loadingMore: postsLoadingMore,
     hasMore: postsHasMore,
     loadMore: loadMorePosts,
+    refetch: refetchPosts,
   } = usePosts(companyId, { enabled: shouldLoadPosts });
+
+  const canManagePosts = isOwn && !readOnly;
+  const { handleEdit: handleEditPost, handleDelete: handleDeletePost } = usePostMutations({
+    onSuccess: refetchPosts,
+  });
 
   const goToTab = (tabId) => {
     setActiveTab(tabId);
@@ -98,7 +109,9 @@ export default function CompanyProfileView({
         onUploadLogo={onUploadLogo}
         onUploadCover={onUploadCover}
         logoLoading={logoLoading}
+        logoPhase={logoPhase}
         coverLoading={coverLoading}
+        coverPhase={coverPhase}
         followerCount={followerCount}
         showFollowerCount={showFollowerCount}
         showActions={showPublicActions}
@@ -212,6 +225,9 @@ export default function CompanyProfileView({
                     loading={postsLoading}
                     maxVisible={3}
                     onViewAll={() => goToTab('publicaciones')}
+                    canManage={canManagePosts}
+                    onEdit={handleEditPost}
+                    onDelete={handleDeletePost}
                     embedded
                   />
                 </CompanyProfileSectionCard>
@@ -257,6 +273,9 @@ export default function CompanyProfileView({
             loadingMore={postsLoadingMore}
             hasMore={postsHasMore}
             onLoadMore={loadMorePosts}
+            canManage={canManagePosts}
+            onEdit={handleEditPost}
+            onDelete={handleDeletePost}
             readOnly={readOnly}
             profile={profile}
           />

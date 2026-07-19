@@ -12,9 +12,11 @@ export default function FileUpload({
   label = 'Seleccionar archivo',
   fileType = 'document',
   loading = false,
+  loadingLabel = null,
 }) {
   const inputRef = useRef(null);
   const sizeHint = hint || maxSize || FILE_HINTS[fileType];
+  const buttonLabel = loading && loadingLabel ? loadingLabel : label;
 
   const handleChange = async (e) => {
     const file = e.target.files?.[0];
@@ -47,7 +49,7 @@ export default function FileUpload({
         onClick={() => inputRef.current?.click()}
       >
         <AppIcon icon={Upload} size={ICON_SIZES.default} />
-        {label}
+        {buttonLabel}
       </Button>
       {sizeHint && <p className="mt-1 text-xs text-gray-500">{sizeHint}</p>}
     </div>

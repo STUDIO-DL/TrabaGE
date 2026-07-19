@@ -25,6 +25,7 @@ import { FILE_HINTS } from '../../utils/validateFile';
 import { formatRelativeTime } from '../../utils/formatDate';
 import { PREVIEW_COMPANY_PROFILE, PREVIEW_COMPANY_VERIFICATION } from '../../constants/preview';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 import { getOrgLabels, isOrganizationProfile } from '../../utils/orgLabels';
 
 function DocumentBlock({
@@ -117,6 +118,7 @@ export default function Verification() {
   const [request, setRequest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitPhase, setSubmitPhase] = useState(null);
 
   const [companyDocType, setCompanyDocType] = useState('nif');
   const [representativeDocType, setRepresentativeDocType] = useState('dip');
@@ -195,23 +197,41 @@ export default function Verification() {
     }
 
     setSubmitting(true);
+    setSubmitPhase('compressing');
 
-    const [{ data: companyUpload, error: companyUploadError }, { data: repUpload, error: repUploadError }] =
-      await Promise.all([
-        storageService.uploadVerificationDoc(
-          user.id,
-          companyFile,
-          request?.company_document_path ?? request?.verification_document_path,
-        ),
-        storageService.uploadRepresentativeVerificationDoc(
-          user.id,
-          representativeFile,
-          request?.representative_document_path,
-        ),
-      ]);
+    let companyUpload;
+    let repUpload;
+    let companyUploadError;
+    let repUploadError;
+
+    try {
+      const companyResult = await storageService.uploadVerificationDoc(
+        user.id,
+        companyFile,
+        request?.company_document_path ?? request?.verification_document_path,
+        { onProgress: ({ phase }) => setSubmitPhase(phase) },
+      );
+      companyUpload = companyResult.data;
+      companyUploadError = companyResult.error;
+
+      const repResult = await storageService.uploadRepresentativeVerificationDoc(
+        user.id,
+        representativeFile,
+        request?.representative_document_path,
+        { onProgress: ({ phase }) => setSubmitPhase(phase) },
+      );
+      repUpload = repResult.data;
+      repUploadError = repResult.error;
+    } catch (uploadError) {
+      setSubmitting(false);
+      setSubmitPhase(null);
+      showToast(uploadError.message || getSupabaseErrorMessage(uploadError), 'error');
+      return;
+    }
 
     if (companyUploadError || repUploadError) {
       setSubmitting(false);
+      setSubmitPhase(null);
       showToast(
         getSupabaseErrorMessage(companyUploadError || repUploadError),
         'error',
@@ -229,6 +249,7 @@ export default function Verification() {
     });
 
     setSubmitting(false);
+    setSubmitPhase(null);
 
     if (error) {
       showToast(getSupabaseErrorMessage(error), 'error');
@@ -322,13 +343,13 @@ export default function Verification() {
           file={representativeFile}
           onFileChange={(file, err) => handleFileChange('representativeFile', file, err)}
           accept={REPRESENTATIVE_DOC_ACCEPT}
-          fileHint="PDF o imágenes • Max 5 MB"
+          fileHint="PDF o imágenes • Max 10 MB (objetivo 2 MB)"
           allowImages
           error={formErrors.representativeFile}
         />
 
         <Button fullWidth loading={submitting} onClick={handleSubmit}>
-          Enviar solicitud de verificación
+          {submitting ? getUploadPhaseLabel(submitPhase) || 'Subiendo...' : 'Enviar solicitud de verificación'}
         </Button>
       </div>
     );

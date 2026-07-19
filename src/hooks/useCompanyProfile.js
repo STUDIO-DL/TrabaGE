@@ -4,7 +4,6 @@ import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { companyService } from '../services/company.service';
 import { storageService } from '../services/storage.service';
-import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import { syncAuthIdentityMetadata, readIdentityFromUser } from '../utils/displayIdentity';
@@ -132,55 +131,51 @@ export function useCompanyProfile() {
   }, [isPreviewMode, loading, profile?.company_name, updateCompanyProfile, user, userId]);
 
   const uploadLogo = useCallback(
-    async (file) => {
+    async (file, { onProgress } = {}) => {
       const validation = validateFile(file, 'logo');
       if (!validation.valid) return { error: { message: validation.error } };
 
-      let compressed;
       try {
-        compressed = await compressProfileImage(file);
-      } catch (compressError) {
-        return { error: { message: compressError.message } };
+        const { error: uploadError } = await storageService.uploadCompanyLogo(
+          userId,
+          file,
+          profile?.logo_path,
+          { onProgress },
+        );
+        if (uploadError) return { error: friendlyCompanyError(uploadError) };
+
+        const companyNameFallback =
+          profile?.company_name?.trim() || readIdentityFromUser(user).company_name || undefined;
+
+        return updateCompanyProfile(
+          { logo_path: logoPath(userId) },
+          { companyNameFallback },
+        );
+      } catch (uploadError) {
+        return { error: { message: uploadError.message || 'No se pudo subir el logo.' } };
       }
-
-      const { error: uploadError } = await storageService.uploadCompanyLogo(
-        userId,
-        compressed,
-        profile?.logo_path,
-      );
-      if (uploadError) return { error: friendlyCompanyError(uploadError) };
-
-      const companyNameFallback =
-        profile?.company_name?.trim() || readIdentityFromUser(user).company_name || undefined;
-
-      return updateCompanyProfile(
-        { logo_path: logoPath(userId) },
-        { companyNameFallback },
-      );
     },
     [profile?.company_name, profile?.logo_path, updateCompanyProfile, user, userId],
   );
 
   const uploadCover = useCallback(
-    async (file) => {
+    async (file, { onProgress } = {}) => {
       const validation = validateFile(file, 'image');
       if (!validation.valid) return { error: { message: validation.error } };
 
-      let compressed;
       try {
-        compressed = await compressProfileImage(file);
-      } catch (compressError) {
-        return { error: { message: compressError.message } };
+        const { error: uploadError } = await storageService.uploadCompanyCover(
+          userId,
+          file,
+          profile?.cover_path ?? profile?.cover_url,
+          { onProgress },
+        );
+        if (uploadError) return { error: friendlyCompanyError(uploadError) };
+
+        return updateCompanyProfile({ cover_path: companyCoverPath(userId) });
+      } catch (uploadError) {
+        return { error: { message: uploadError.message || 'No se pudo subir la portada.' } };
       }
-
-      const { error: uploadError } = await storageService.uploadCompanyCover(
-        userId,
-        compressed,
-        profile?.cover_path ?? profile?.cover_url,
-      );
-      if (uploadError) return { error: friendlyCompanyError(uploadError) };
-
-      return updateCompanyProfile({ cover_path: companyCoverPath(userId) });
     },
     [profile?.cover_path, profile?.cover_url, updateCompanyProfile, userId],
   );

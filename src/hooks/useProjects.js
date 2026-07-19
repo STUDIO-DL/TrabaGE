@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { projectsService } from '../services/projects.service';
 import { storageService } from '../services/storage.service';
 import { projectImagePath } from '../constants/storage';
-import { compressPostImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import {
@@ -59,6 +58,7 @@ export function useProjects(userId, { enabled = true } = {}) {
 export function useProjectMutations(userId) {
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
+  const [uploadPhase, setUploadPhase] = useState(null);
 
   const invalidateRelatedQueries = useCallback(async () => {
     if (!userId) return;
@@ -85,7 +85,7 @@ export function useProjectMutations(userId) {
   );
 
   const createProject = useCallback(
-    async ({ title, description, imageFile }) => {
+    async ({ title, description, imageFile }, { onProgress } = {}) => {
       if (!userId) return { data: null, error: { message: 'Usuario no autenticado.' } };
 
       const trimmedTitle = title?.trim?.() ?? '';
@@ -135,21 +135,28 @@ export function useProjectMutations(userId) {
         }
 
         const projectId = crypto.randomUUID();
-        let compressed;
-        try {
-          compressed = await compressPostImage(imageFile);
-        } catch (compressError) {
-          return { data: null, error: { message: compressError.message } };
-        }
-
         const path = projectImagePath(userId, projectId);
-        const { error: uploadError } = await storageService.uploadProjectImage(
-          userId,
-          projectId,
-          compressed,
-        );
-        if (uploadError) {
-          return { data: null, error: friendlyProjectError(uploadError) };
+
+        try {
+          const { error: uploadError } = await storageService.uploadProjectImage(
+            userId,
+            projectId,
+            imageFile,
+            undefined,
+            {
+              onProgress: (payload) => {
+                setUploadPhase(payload.phase);
+                onProgress?.(payload);
+              },
+            },
+          );
+          if (uploadError) {
+            return { data: null, error: friendlyProjectError(uploadError) };
+          }
+        } catch (uploadError) {
+          return { data: null, error: { message: uploadError.message } };
+        } finally {
+          setUploadPhase(null);
         }
 
         const { data, error } = await projectsService.addProject({
@@ -176,7 +183,7 @@ export function useProjectMutations(userId) {
   );
 
   const updateProject = useCallback(
-    async (projectId, { title, description, imageFile }, existingProject) => {
+    async (projectId, { title, description, imageFile }, existingProject, { onProgress } = {}) => {
       if (!userId || !projectId) {
         return { data: null, error: { message: 'Proyecto no válido.' } };
       }
@@ -221,21 +228,26 @@ export function useProjectMutations(userId) {
         let nextImagePath = existingProject?.image_path ?? null;
 
         if (imageFile) {
-          let compressed;
           try {
-            compressed = await compressPostImage(imageFile);
-          } catch (compressError) {
-            return { data: null, error: { message: compressError.message } };
-          }
-
-          const { error: uploadError } = await storageService.uploadProjectImage(
-            userId,
-            projectId,
-            compressed,
-            existingProject?.image_path,
-          );
-          if (uploadError) {
-            return { data: null, error: friendlyProjectError(uploadError) };
+            const { error: uploadError } = await storageService.uploadProjectImage(
+              userId,
+              projectId,
+              imageFile,
+              existingProject?.image_path,
+              {
+                onProgress: (payload) => {
+                  setUploadPhase(payload.phase);
+                  onProgress?.(payload);
+                },
+              },
+            );
+            if (uploadError) {
+              return { data: null, error: friendlyProjectError(uploadError) };
+            }
+          } catch (uploadError) {
+            return { data: null, error: { message: uploadError.message } };
+          } finally {
+            setUploadPhase(null);
           }
 
           nextImagePath = projectImagePath(userId, projectId);
@@ -298,6 +310,7 @@ export function useProjectMutations(userId) {
 
   return {
     loading,
+    uploadPhase,
     createProject,
     updateProject,
     deleteProject,

@@ -36,14 +36,17 @@ import {
 import { getDisplayName } from '../../utils/displayIdentity';
 import { useAuth } from '../../hooks/useAuth';
 
-function CoverUploadButton({ label, loading, inputId, className = '' }) {
+import { getUploadPhaseLabel } from '../../constants/uploadPhases';
+
+function CoverUploadButton({ label, loading, uploadPhase, inputId, className = '' }) {
+  const statusLabel = loading ? getUploadPhaseLabel(uploadPhase) || 'Subiendo…' : label;
   return (
     <label
       htmlFor={inputId}
       className={`inline-flex min-h-touch cursor-pointer items-center gap-space-xs rounded-radius-full bg-white/15 px-space-md py-space-xs text-caption font-semibold text-white shadow-elevation-1 ring-1 ring-inset ring-white/40 backdrop-blur transition-colors duration-fast hover:bg-white/25 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 ${className}`}
     >
       <AppIcon icon={Camera} size={ICON_SIZES.sm} className="text-white" />
-      {loading ? 'Subiendo…' : label}
+      {statusLabel}
     </label>
   );
 }
@@ -53,9 +56,11 @@ export default function CandidateProfileHeader({
   isOwn = false,
   onAvatarChange,
   avatarLoading = false,
+  avatarPhase = null,
   onCoverChange,
   onCoverRemove,
   coverLoading = false,
+  coverPhase = null,
   coverSrc: coverSrcProp,
   onEditIntro,
 }) {
@@ -118,6 +123,7 @@ export default function CandidateProfileHeader({
                 label={coverSrc ? 'Cambiar portada' : 'Añadir portada'}
                 inputId={coverInputId}
                 loading={coverLoading}
+                uploadPhase={coverPhase}
               />
             </div>
           </>
@@ -155,7 +161,8 @@ export default function CandidateProfileHeader({
                   type="button"
                   disabled={avatarLoading}
                   onClick={() => avatarInputRef.current?.click()}
-                  aria-label="Cambiar foto de perfil"
+                  aria-label={avatarLoading ? getUploadPhaseLabel(avatarPhase) || 'Subiendo foto' : 'Cambiar foto de perfil'}
+                  title={avatarLoading ? getUploadPhaseLabel(avatarPhase) || 'Subiendo…' : undefined}
                   className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-radius-circular bg-primary-600 text-white shadow-elevation-1 ring-2 ring-app-card transition-colors duration-fast hover:bg-primary-700 disabled:opacity-60"
                 >
                   {avatarLoading ? (

@@ -6,7 +6,6 @@ import { profileService } from '../services/profile.service';
 import { storageService } from '../services/storage.service';
 import { jobMatchesService } from '../services/jobMatches.service';
 import { cvPath, avatarPath, candidateCoverPath } from '../constants/storage';
-import { compressProfileImage } from '../utils/imageCompression';
 import { validateFile } from '../utils/validateFile';
 import { reportError } from '../utils/logger';
 import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
@@ -131,45 +130,48 @@ export function useCandidateProfile() {
   );
 
   const uploadAvatar = useCallback(
-    async (file) => {
+    async (file, { onProgress } = {}) => {
       const validation = validateFile(file, 'avatar');
       if (!validation.valid) return { error: { message: validation.error } };
 
-      let compressed;
       try {
-        compressed = await compressProfileImage(file);
-      } catch (compressError) {
-        return { error: { message: compressError.message } };
+        const { error: uploadError } = await storageService.uploadAvatar(
+          userId,
+          file,
+          profile?.avatar_path,
+          { onProgress },
+        );
+        if (uploadError) return { error: friendlyProfileError(uploadError) };
+
+        return updateBasicInfo({ avatar_path: avatarPath(userId) });
+      } catch (uploadError) {
+        return { error: { message: uploadError.message || 'No se pudo subir la foto.' } };
       }
-
-      const { error: uploadError } = await storageService.uploadAvatar(
-        userId,
-        compressed,
-        profile?.avatar_path,
-      );
-      if (uploadError) return { error: friendlyProfileError(uploadError) };
-
-      return updateBasicInfo({ avatar_path: avatarPath(userId) });
     },
     [userId, profile?.avatar_path, updateBasicInfo],
   );
 
   const uploadCV = useCallback(
-    async (file) => {
+    async (file, { onProgress } = {}) => {
       const validation = validateFile(file, 'cv');
       if (!validation.valid) return { error: { message: validation.error } };
 
-      const { error: uploadError } = await storageService.uploadCV(
-        userId,
-        file,
-        profile?.cv_path,
-      );
-      if (uploadError) return { error: friendlyProfileError(uploadError) };
+      try {
+        const { error: uploadError } = await storageService.uploadCV(
+          userId,
+          file,
+          profile?.cv_path,
+          { onProgress },
+        );
+        if (uploadError) return { error: friendlyProfileError(uploadError) };
 
-      return updateBasicInfo({
-        cv_path: cvPath(userId),
-        cv_name: file.name,
-      });
+        return updateBasicInfo({
+          cv_path: cvPath(userId),
+          cv_name: file.name,
+        });
+      } catch (uploadError) {
+        return { error: { message: uploadError.message || 'No se pudo subir el CV.' } };
+      }
     },
     [userId, profile?.cv_path, updateBasicInfo],
   );
@@ -180,25 +182,23 @@ export function useCandidateProfile() {
   );
 
   const uploadCover = useCallback(
-    async (file) => {
+    async (file, { onProgress } = {}) => {
       const validation = validateFile(file, 'image');
       if (!validation.valid) return { error: { message: validation.error } };
 
-      let compressed;
       try {
-        compressed = await compressProfileImage(file);
-      } catch (compressError) {
-        return { error: { message: compressError.message } };
+        const { error: uploadError } = await storageService.uploadCandidateCover(
+          userId,
+          file,
+          profile?.cover_path,
+          { onProgress },
+        );
+        if (uploadError) return { error: friendlyProfileError(uploadError) };
+
+        return updateBasicInfo({ cover_path: candidateCoverPath(userId) });
+      } catch (uploadError) {
+        return { error: { message: uploadError.message || 'No se pudo subir la portada.' } };
       }
-
-      const { error: uploadError } = await storageService.uploadCandidateCover(
-        userId,
-        compressed,
-        profile?.cover_path,
-      );
-      if (uploadError) return { error: friendlyProfileError(uploadError) };
-
-      return updateBasicInfo({ cover_path: candidateCoverPath(userId) });
     },
     [userId, profile?.cover_path, updateBasicInfo],
   );

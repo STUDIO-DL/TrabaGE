@@ -1,12 +1,14 @@
+import { UPLOAD_INPUT_MAX_BYTES } from '../constants/compressionPresets';
+
 const MAX_SIZES = {
-  cv: 5 * 1024 * 1024,
-  avatar: 2 * 1024 * 1024,
-  logo: 2 * 1024 * 1024,
-  postImage: 3 * 1024 * 1024,
-  verification: 5 * 1024 * 1024,
-  document: 5 * 1024 * 1024,
-  image: 3 * 1024 * 1024,
-  educationAttachment: 5 * 1024 * 1024,
+  cv: UPLOAD_INPUT_MAX_BYTES.cv,
+  avatar: UPLOAD_INPUT_MAX_BYTES.image,
+  logo: UPLOAD_INPUT_MAX_BYTES.image,
+  postImage: UPLOAD_INPUT_MAX_BYTES.image,
+  verification: UPLOAD_INPUT_MAX_BYTES.verification,
+  document: UPLOAD_INPUT_MAX_BYTES.cv,
+  image: UPLOAD_INPUT_MAX_BYTES.image,
+  educationAttachment: UPLOAD_INPUT_MAX_BYTES.educationAttachment,
 };
 
 const ALLOWED_TYPES = {
@@ -27,14 +29,14 @@ const ALLOWED_TYPES = {
 };
 
 export const FILE_HINTS = {
-  cv: 'PDF • Max 5 MB',
-  document: 'PDF • Max 5 MB',
-  avatar: 'Max 2 MB',
-  logo: 'Max 2 MB',
-  postImage: 'Max 3 MB',
-  image: 'Max 3 MB',
-  verification: 'PDF • Max 5 MB',
-  educationAttachment: 'PDF o imágenes • Max 5 MB',
+  cv: 'PDF • Max 2 MB (se optimiza al subir)',
+  document: 'PDF • Max 2 MB',
+  avatar: 'JPG, PNG o WebP • Se optimiza al subir',
+  logo: 'JPG, PNG o WebP • Se optimiza al subir',
+  postImage: 'JPG, PNG o WebP • Se optimiza al subir',
+  image: 'JPG, PNG o WebP • Se optimiza al subir',
+  verification: 'PDF • Max 10 MB (objetivo 2 MB)',
+  educationAttachment: 'PDF o imágenes • Max 2 MB (se optimiza al subir)',
 };
 
 const TYPE_ALIASES = {

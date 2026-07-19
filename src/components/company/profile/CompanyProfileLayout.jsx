@@ -326,7 +326,9 @@ export default function CompanyProfileLayout({
     useProjectMutations(userId);
   const [jobs, setJobs] = useState([]);
   const [logoLoading, setLogoLoading] = useState(false);
+  const [logoPhase, setLogoPhase] = useState(null);
   const [coverLoading, setCoverLoading] = useState(false);
+  const [coverPhase, setCoverPhase] = useState(null);
   const [contactSaving, setContactSaving] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [editMode, setEditMode] = useState(null);
@@ -396,8 +398,17 @@ export default function CompanyProfileLayout({
     if (!userId) return;
 
     setLoading(true);
-    const { error } = type === 'logo' ? await uploadLogo(file) : await uploadCover(file);
+    const onProgress = ({ phase }) => {
+      if (type === 'logo') setLogoPhase(phase);
+      else setCoverPhase(phase);
+    };
+    const { error } =
+      type === 'logo'
+        ? await uploadLogo(file, { onProgress })
+        : await uploadCover(file, { onProgress });
     setLoading(false);
+    setLogoPhase(null);
+    setCoverPhase(null);
 
     if (error) {
       showToast(error.message, 'error');
@@ -563,7 +574,9 @@ export default function CompanyProfileLayout({
         onSaveContact={readOnly ? undefined : handleSaveContact}
         contactSaving={contactSaving}
         logoLoading={logoLoading}
+        logoPhase={logoPhase}
         coverLoading={coverLoading}
+        coverPhase={coverPhase}
         followerCount={followerCount}
         onAddProject={readOnly ? undefined : () => openProject()}
         onEditProject={readOnly ? undefined : openProject}

@@ -1,6 +1,6 @@
 import { isEmployerAuthor } from '../constants/authorTypes';
 import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
 import EmptyState from '../components/common/EmptyState';
 import FetchErrorBanner from '../components/common/FetchErrorBanner';
@@ -11,6 +11,8 @@ import { supabase } from '../config/supabase';
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { resolvePostAuthorName } from '../utils/displayIdentity';
 import { ROLES } from '../constants/roles';
+import { useAuth } from '../hooks/useAuth';
+import { usePostMutations } from '../hooks/usePostMutations';
 
 async function enrichPost(post) {
   if (!post) return post;
@@ -52,6 +54,8 @@ async function enrichPost(post) {
 
 export default function PostDetail() {
   const { postId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -75,6 +79,16 @@ export default function PostDetail() {
       setLoading(false);
     });
   }, [postId]);
+
+  const { handleEdit, handleDelete } = usePostMutations({
+    onSuccess: (deletedPost) => {
+      if (deletedPost) {
+        navigate(-1);
+        return;
+      }
+      fetchPost();
+    },
+  });
 
   useEffect(() => {
     fetchPost();
@@ -105,6 +119,9 @@ export default function PostDetail() {
               authorAvatar={post.author_avatar}
               authorType={post.author_type}
               authorCompany={post.author_company}
+              canManage={post.author_id === user?.id}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
               defaultTextExpanded
             />
           </div>

@@ -13,6 +13,9 @@ import {
   verificationDocPath,
   educationFilePath,
 } from '../constants/storage';
+import { UPLOAD_COMPRESSION_TYPES } from '../constants/compressionPresets';
+import { UPLOAD_PHASES } from '../constants/uploadPhases';
+import { storageCompressionService } from './storageCompression.service';
 
 const WEBP_CONTENT_TYPE = 'image/webp';
 const PDF_CONTENT_TYPE = 'application/pdf';
@@ -28,6 +31,15 @@ async function uploadReplace(bucket, path, file, contentType) {
     .upload(path, file, { upsert: true, contentType });
 
   return { data, error, path };
+}
+
+async function prepareCompressedUpload(file, uploadType, options = {}) {
+  const { onProgress } = options;
+  const prepared = await storageCompressionService.prepareForUpload(file, uploadType, {
+    onProgress: (payload) => onProgress?.(payload),
+  });
+  onProgress?.({ phase: UPLOAD_PHASES.UPLOADING });
+  return prepared;
 }
 
 export const storageService = {
@@ -89,10 +101,20 @@ export const storageService = {
     return { error };
   },
 
-  uploadAvatar: async (userId, file, oldPath) => {
+  uploadAvatar: async (userId, file, oldPath, options = {}) => {
     await storageService.deleteOldAvatar(userId, oldPath);
     const path = avatarPath(userId);
-    return uploadReplace(STORAGE_BUCKETS.CANDIDATE_AVATARS, path, file, WEBP_CONTENT_TYPE);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.AVATAR,
+      options,
+    );
+    return uploadReplace(
+      STORAGE_BUCKETS.CANDIDATE_AVATARS,
+      path,
+      preparedFile,
+      contentType || WEBP_CONTENT_TYPE,
+    );
   },
 
   deleteCandidateCover: async (userId, oldPath) => {
@@ -103,47 +125,101 @@ export const storageService = {
     return { error };
   },
 
-  uploadCandidateCover: async (userId, file, oldPath) => {
+  uploadCandidateCover: async (userId, file, oldPath, options = {}) => {
     if (oldPath) await removeIfExists(STORAGE_BUCKETS.CANDIDATE_AVATARS, oldPath);
     const path = candidateCoverPath(userId);
-    return uploadReplace(STORAGE_BUCKETS.CANDIDATE_AVATARS, path, file, WEBP_CONTENT_TYPE);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.CANDIDATE_COVER,
+      options,
+    );
+    return uploadReplace(
+      STORAGE_BUCKETS.CANDIDATE_AVATARS,
+      path,
+      preparedFile,
+      contentType || WEBP_CONTENT_TYPE,
+    );
   },
 
-  uploadCompanyLogo: async (companyId, file, oldPath) => {
+  uploadCompanyLogo: async (companyId, file, oldPath, options = {}) => {
     await storageService.deleteOldLogo(companyId, oldPath);
     const path = logoPath(companyId);
-    return uploadReplace(STORAGE_BUCKETS.COMPANY_LOGOS, path, file, WEBP_CONTENT_TYPE);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.COMPANY_LOGO,
+      options,
+    );
+    return uploadReplace(
+      STORAGE_BUCKETS.COMPANY_LOGOS,
+      path,
+      preparedFile,
+      contentType || WEBP_CONTENT_TYPE,
+    );
   },
 
-  uploadCompanyCover: async (companyId, file, oldPath) => {
+  uploadCompanyCover: async (companyId, file, oldPath, options = {}) => {
     if (oldPath) await removeIfExists(STORAGE_BUCKETS.COMPANY_LOGOS, oldPath);
     const path = companyCoverPath(companyId);
-    return uploadReplace(STORAGE_BUCKETS.COMPANY_LOGOS, path, file, WEBP_CONTENT_TYPE);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.COMPANY_COVER,
+      options,
+    );
+    return uploadReplace(
+      STORAGE_BUCKETS.COMPANY_LOGOS,
+      path,
+      preparedFile,
+      contentType || WEBP_CONTENT_TYPE,
+    );
   },
 
-  uploadCV: async (userId, file, oldPath) => {
+  uploadCV: async (userId, file, oldPath, options = {}) => {
     await storageService.deleteOldCV(userId, oldPath);
     const path = cvPath(userId);
-    return uploadReplace(STORAGE_BUCKETS.CANDIDATE_CVS, path, file, PDF_CONTENT_TYPE);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.CV,
+      options,
+    );
+    return uploadReplace(
+      STORAGE_BUCKETS.CANDIDATE_CVS,
+      path,
+      preparedFile,
+      contentType || PDF_CONTENT_TYPE,
+    );
   },
 
-  uploadPostImage: async (userId, postId, file, oldPath) => {
+  uploadPostImage: async (userId, postId, file, oldPath, options = {}) => {
     await storageService.deleteOldPostImage(userId, postId, oldPath);
     const path = postImagePath(userId, postId);
-    return uploadReplace(STORAGE_BUCKETS.POST_IMAGES, path, file, WEBP_CONTENT_TYPE);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.POST_IMAGE,
+      options,
+    );
+    return uploadReplace(
+      STORAGE_BUCKETS.POST_IMAGES,
+      path,
+      preparedFile,
+      contentType || WEBP_CONTENT_TYPE,
+    );
   },
 
-  uploadVerificationDoc: async (companyId, file, oldPath) => {
+  uploadVerificationDoc: async (companyId, file, oldPath, options = {}) => {
     const path = companyVerificationDocPath(companyId);
     if (oldPath && oldPath !== path) {
       await removeIfExists(STORAGE_BUCKETS.COMPANY_VERIFICATIONS, oldPath);
     }
-    const contentType = file.type || PDF_CONTENT_TYPE;
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.VERIFICATION_DOC,
+      options,
+    );
     const result = await uploadReplace(
       STORAGE_BUCKETS.COMPANY_VERIFICATIONS,
       path,
-      file,
-      contentType,
+      preparedFile,
+      contentType || preparedFile.type || PDF_CONTENT_TYPE,
     );
     return {
       ...result,
@@ -151,17 +227,21 @@ export const storageService = {
     };
   },
 
-  uploadRepresentativeVerificationDoc: async (companyId, file, oldPath) => {
+  uploadRepresentativeVerificationDoc: async (companyId, file, oldPath, options = {}) => {
     const path = representativeVerificationDocPath(companyId);
     if (oldPath && oldPath !== path) {
       await removeIfExists(STORAGE_BUCKETS.COMPANY_VERIFICATIONS, oldPath);
     }
-    const contentType = file.type || PDF_CONTENT_TYPE;
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.REPRESENTATIVE_VERIFICATION_DOC,
+      options,
+    );
     const result = await uploadReplace(
       STORAGE_BUCKETS.COMPANY_VERIFICATIONS,
       path,
-      file,
-      contentType,
+      preparedFile,
+      contentType || preparedFile.type || PDF_CONTENT_TYPE,
     );
     return {
       ...result,
@@ -176,12 +256,17 @@ export const storageService = {
 
   deleteFile: (bucket, path) => supabase.storage.from(bucket).remove([path]),
 
-  uploadEducationFile: async (userId, educationId, file, fileId) => {
-    const safeName = file.name.replace(/[^\w.\-()+\s]/g, '_').slice(0, 120);
+  uploadEducationFile: async (userId, educationId, file, fileId, options = {}) => {
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.EDUCATION_FILE,
+      options,
+    );
+    const safeName = preparedFile.name.replace(/[^\w.\-()+\s]/g, '_').slice(0, 120);
     const path = educationFilePath(userId, educationId, fileId, safeName);
     const { data, error } = await supabase.storage
       .from(STORAGE_BUCKETS.CANDIDATE_EDUCATION_FILES)
-      .upload(path, file, { upsert: false, contentType: file.type || undefined });
+      .upload(path, preparedFile, { upsert: false, contentType: contentType || preparedFile.type || undefined });
 
     return {
       data,
@@ -189,9 +274,9 @@ export const storageService = {
       path,
       meta: {
         path,
-        name: file.name,
-        size: file.size,
-        mimeType: file.type || null,
+        name: preparedFile.name,
+        size: preparedFile.size,
+        mimeType: contentType || preparedFile.type || null,
       },
     };
   },
@@ -215,9 +300,19 @@ export const storageService = {
     return { error };
   },
 
-  uploadProjectImage: async (userId, projectId, file, oldPath) => {
+  uploadProjectImage: async (userId, projectId, file, oldPath, options = {}) => {
     if (oldPath) await removeIfExists(STORAGE_BUCKETS.PROFILE_PROJECTS, oldPath);
     const path = projectImagePath(userId, projectId);
-    return uploadReplace(STORAGE_BUCKETS.PROFILE_PROJECTS, path, file, WEBP_CONTENT_TYPE);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.PROJECT_IMAGE,
+      options,
+    );
+    return uploadReplace(
+      STORAGE_BUCKETS.PROFILE_PROJECTS,
+      path,
+      preparedFile,
+      contentType || WEBP_CONTENT_TYPE,
+    );
   },
 };

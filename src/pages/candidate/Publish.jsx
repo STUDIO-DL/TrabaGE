@@ -8,7 +8,7 @@ import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 export default function Publish() {
   const navigate = useNavigate();
   const { isPreviewMode } = useAuth();
-  const { createPost, loading } = useCreatePost();
+  const { createPost, loading, uploadPhase } = useCreatePost();
 
   if (isPreviewMode) {
     return (
@@ -30,7 +30,12 @@ export default function Publish() {
 
   return (
     <PageContainer topBar={false} bottomNav={false} className="!pb-0 bg-white">
-      <PostComposer onSubmit={createPost} loading={loading} onClose={() => navigate(-1)} />
+      <PostComposer
+        onSubmit={createPost}
+        loading={loading}
+        uploadPhase={uploadPhase}
+        onClose={() => navigate(-1)}
+      />
     </PageContainer>
   );
 }

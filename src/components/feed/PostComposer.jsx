@@ -10,8 +10,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { isEmployerRole } from '../../constants/roles';
 import { useKeyboard } from '../../hooks/useKeyboard';
+import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 
-export default function PostComposer({ onSubmit, loading = false, onClose }) {
+export default function PostComposer({ onSubmit, loading = false, uploadPhase = null, onClose }) {
   const navigate = useNavigate();
   const { role } = useAuth();
   const { profile } = useProfile();
@@ -98,7 +99,7 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
           disabled={!canPublish}
           className="!rounded-full px-5 disabled:bg-gray-200 disabled:text-gray-400"
         >
-          Publicar
+          {loading ? getUploadPhaseLabel(uploadPhase) || 'Publicando...' : 'Publicar'}
         </Button>
       </header>
 
