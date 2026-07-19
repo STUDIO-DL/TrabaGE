@@ -1,15 +1,18 @@
+import { memo } from 'react';
 import UserProfileLink from '../common/UserProfileLink';
 import Card from '../ui/Card';
 import ContentActionMenu from '../common/ContentActionMenu';
 import VerifiedBadge from '../company/VerifiedBadge';
+import ExpandableText from '../common/ExpandableText';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generatePostUrl } from '../../utils/generateShareUrl';
 import { resolvePostImageUrl } from '../../utils/storagePaths';
 import TimeAgo from '../common/TimeAgo';
+import PostImage from './PostImage';
 import { AUTHOR_TYPES, isEmployerAuthor } from '../../constants/authorTypes';
 
-export default function PostCard({
+function PostCard({
   post,
   authorId,
   authorName,
@@ -20,9 +23,11 @@ export default function PostCard({
   canManage = false,
   onEdit,
   onDelete,
+  defaultTextExpanded = false,
 }) {
   const postImageSrc = resolvePostImageUrl(post.post_image_path);
   const authorPath = post.author_path;
+  const hasText = Boolean(post.content?.trim());
 
   return (
     <Card className="mb-space-md" elevation={1}>
@@ -50,9 +55,9 @@ export default function PostCard({
             )}
           </div>
           {authorHeadline && <p className="text-body-small text-app-muted">{authorHeadline}</p>}
+          <TimeAgo date={post.created_at} className="mt-space-xs text-caption text-app-subtle" />
         </div>
         <div className="flex shrink-0 flex-col items-end gap-space-xs">
-          <TimeAgo date={post.created_at} className="text-caption text-app-subtle" />
           <ContentActionMenu
             shareUrl={generatePostUrl(post.id)}
             shareTitle={`${authorName} en TrabaGE`}
@@ -83,16 +88,11 @@ export default function PostCard({
         </div>
       </div>
 
-      <p className="whitespace-pre-wrap text-body-small text-app-text">{post.content}</p>
+      {hasText && <ExpandableText text={post.content} defaultExpanded={defaultTextExpanded} />}
 
-      {postImageSrc && (
-        <img
-          src={postImageSrc}
-          alt="Imagen de la publicación"
-          loading="lazy"
-          className="mt-space-md w-full rounded-radius-md object-cover"
-        />
-      )}
+      <PostImage src={postImageSrc} />
     </Card>
   );
 }
+
+export default memo(PostCard);

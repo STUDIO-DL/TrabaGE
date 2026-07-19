@@ -13,6 +13,7 @@ export const SECTION_ICON_TONES = {
   service: ICON_SURFACE_CLASS,
   social: ICON_SURFACE_CLASS,
   preferences: ICON_SURFACE_CLASS,
+  projects: ICON_SURFACE_CLASS,
 };
 
 export { PROFILE_SECTION_ICONS } from '../../constants/icons';

@@ -8,6 +8,7 @@ import ContactSection from '../../components/profile/ContactSection';
 import PersonalSocialSection from '../../components/profile/PersonalSocialSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
+import ProjectsSection from '../../components/profile/ProjectsSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
 import SkillsSection from '../../components/profile/SkillsSection';
 import ServicesSection from '../../components/profile/ServicesSection';
@@ -16,12 +17,14 @@ import PortfolioLinksSection from '../../components/profile/PortfolioLinksSectio
 import DocumentsSection from '../../components/profile/DocumentsSection';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
+import ProjectModal from '../../components/profile/modals/ProjectModal';
 import CertificationModal from '../../components/profile/modals/CertificationModal';
 import LanguageModal from '../../components/profile/modals/LanguageModal';
 import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
+import { useProjectMutations } from '../../hooks/useProjects';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { validateFile } from '../../utils/validateFile';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
@@ -62,13 +65,17 @@ export default function Profile() {
     addCandidateLink,
     deleteCandidateLink,
   } = useCandidateProfile();
+  const { createProject, updateProject, deleteProject, loading: projectSaving } =
+    useProjectMutations(user?.id);
 
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
+  const [projectOpen, setProjectOpen] = useState(false);
   const [certOpen, setCertOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
+  const [editingProject, setEditingProject] = useState(null);
   const [editingCert, setEditingCert] = useState(null);
   const [editingLanguage, setEditingLanguage] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -209,6 +216,19 @@ export default function Profile() {
   const openLanguage = (item = null) => {
     setEditingLanguage(item);
     setLanguageOpen(true);
+  };
+
+  const openProject = (item = null) => {
+    setEditingProject(item);
+    setProjectOpen(true);
+  };
+
+  const saveProject = async (data, initial) => {
+    const result = initial?.id
+      ? await updateProject(initial.id, data, initial)
+      : await createProject(data);
+    if (!result.error) showToast('Proyecto guardado.', 'success');
+    return result;
   };
 
   const handleShare = () => {
@@ -355,6 +375,17 @@ export default function Profile() {
           }}
         />
 
+        <ProjectsSection
+          items={profile?.projects}
+          isOwn={canEdit}
+          onAdd={() => openProject()}
+          onEdit={openProject}
+          onDelete={async (project) => {
+            const { error } = await deleteProject(project);
+            showToast(error ? error.message : 'Proyecto eliminado.', error ? 'error' : 'success');
+          }}
+        />
+
         <ExperienceSection
           items={profile?.experience}
           isOwn={canEdit}
@@ -406,6 +437,13 @@ export default function Profile() {
         initial={editingLanguage}
         onSave={saveLanguage}
         loading={saving}
+      />
+      <ProjectModal
+        isOpen={projectOpen}
+        onClose={() => setProjectOpen(false)}
+        initial={editingProject}
+        onSave={saveProject}
+        loading={projectSaving}
       />
     </PageContainer>
   );

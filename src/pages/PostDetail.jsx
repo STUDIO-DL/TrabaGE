@@ -105,6 +105,7 @@ export default function PostDetail() {
               authorAvatar={post.author_avatar}
               authorType={post.author_type}
               authorCompany={post.author_company}
+              defaultTextExpanded
             />
           </div>
         )}

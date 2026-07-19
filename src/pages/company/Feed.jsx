@@ -34,7 +34,7 @@ export default function Feed() {
     const content = window.prompt('Editar publicación', post.content || '');
     if (content === null) return;
     const trimmed = content.trim();
-    if (!trimmed) {
+    if (!trimmed && !post.post_image_path) {
       showToast('La publicación no puede estar vacía.', 'error');
       return;
     }

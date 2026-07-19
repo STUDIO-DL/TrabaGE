@@ -27,6 +27,13 @@ export function useCreatePost() {
       return { ok: false };
     }
 
+    const trimmedContent = content?.trim?.() ?? '';
+
+    if (!trimmedContent && !imageFile) {
+      showToast('Escribe algo o añade una imagen.', 'error');
+      return { ok: false };
+    }
+
     if (imageFile) {
       const validation = validateFile(imageFile, 'postImage');
       if (!validation.valid) {
@@ -40,7 +47,7 @@ export function useCreatePost() {
     const { data: post, error } = await postsService.create({
       author_id: user.id,
       author_type: authorTypeFromRole(role),
-      content,
+      content: trimmedContent,
     });
 
     if (error) {
@@ -49,6 +56,8 @@ export function useCreatePost() {
       return { ok: false };
     }
 
+    let savedPost = post;
+
     if (imageFile && post?.id) {
       let compressed;
       try {
@@ -56,7 +65,7 @@ export function useCreatePost() {
       } catch (compressError) {
         showToast(compressError.message, 'error');
         setLoading(false);
-        return { ok: true, post };
+        return { ok: true, post: savedPost };
       }
 
       const { error: uploadError } = await storageService.uploadPostImage(
@@ -66,13 +75,32 @@ export function useCreatePost() {
       );
 
       if (uploadError) {
-        showToast('Publicación creada, pero la imagen no se pudo subir', 'error');
+        showToast(
+          getSupabaseErrorMessage(uploadError, 'Publicación creada, pero la imagen no se pudo subir'),
+          'error',
+        );
         setLoading(false);
-        return { ok: true, post };
+        return { ok: true, post: savedPost };
       }
 
       const path = postImagePath(user.id, post.id);
-      await postsService.update(post.id, { post_image_path: path });
+      const { data: updatedPost, error: updateError } = await postsService.update(post.id, {
+        post_image_path: path,
+      });
+
+      if (updateError) {
+        showToast(
+          getSupabaseErrorMessage(
+            updateError,
+            'Publicación creada, pero la imagen no se pudo vincular',
+          ),
+          'error',
+        );
+        setLoading(false);
+        return { ok: true, post: savedPost };
+      }
+
+      savedPost = updatedPost ?? { ...post, post_image_path: path };
     }
 
     if (isEmployerRole(role)) {
@@ -80,9 +108,9 @@ export function useCreatePost() {
       const companyName = getCompanyDisplayName(companyProfile, { role, user, warnIfMissing: true });
       if (!companyName) {
         setLoading(false);
-        return { ok: true, post };
+        return { ok: true, post: savedPost };
       }
-      const preview = content.trim().slice(0, 120);
+      const preview = trimmedContent.slice(0, 120);
       const targetType = isOrganizationRole(role)
         ? FOLLOWS_TARGET.ORGANIZATION
         : FOLLOWS_TARGET.BUSINESS;
@@ -99,7 +127,7 @@ export function useCreatePost() {
 
     showToast(TOAST.postCreated, 'success');
     setLoading(false);
-    return { ok: true, post };
+    return { ok: true, post: savedPost };
   };
 
   return { createPost, loading };

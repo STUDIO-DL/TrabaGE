@@ -7,6 +7,7 @@ import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
 import SkillsSection from '../../components/profile/SkillsSection';
 import ServicesSection from '../../components/profile/ServicesSection';
+import ProjectsSection from '../../components/profile/ProjectsSection';
 import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
 import PersonalSocialSection from '../../components/profile/PersonalSocialSection';
 import FetchErrorBanner from '../../components/common/FetchErrorBanner';
@@ -76,6 +77,7 @@ export default function PublicProfile() {
         <SkillsSection items={profile.skills} />
         <PortfolioLinksSection items={profile.candidate_links} />
         <ServicesSection items={profile.services} />
+        <ProjectsSection items={profile.projects} />
       </CandidateProfileLayout>
       {contactPickerModal}
     </PageContainer>

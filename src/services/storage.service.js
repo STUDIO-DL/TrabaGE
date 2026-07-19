@@ -7,6 +7,7 @@ import {
   cvPath,
   logoPath,
   postImagePath,
+  projectImagePath,
   companyVerificationDocPath,
   representativeVerificationDocPath,
   verificationDocPath,
@@ -202,5 +203,21 @@ export const storageService = {
       .from(STORAGE_BUCKETS.CANDIDATE_EDUCATION_FILES)
       .remove(unique);
     return { error };
+  },
+
+  deleteProjectImage: async (userId, projectId, oldPath) => {
+    const paths = [oldPath, projectImagePath(userId, projectId)].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKETS.PROFILE_PROJECTS)
+      .remove(unique);
+    return { error };
+  },
+
+  uploadProjectImage: async (userId, projectId, file, oldPath) => {
+    if (oldPath) await removeIfExists(STORAGE_BUCKETS.PROFILE_PROJECTS, oldPath);
+    const path = projectImagePath(userId, projectId);
+    return uploadReplace(STORAGE_BUCKETS.PROFILE_PROJECTS, path, file, WEBP_CONTENT_TYPE);
   },
 };

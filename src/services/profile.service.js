@@ -47,7 +47,7 @@ async function attachCandidateSections(profile) {
   if (!profile?.user_id) return profile;
 
   const userId = profile.user_id;
-  const [education, experience, certifications, skills, candidate_links, services, languages] =
+  const [education, experience, certifications, skills, candidate_links, services, languages, projects] =
     await Promise.all([
       supabase.from('education').select('*').eq('user_id', userId),
       supabase.from('experience').select('*').eq('user_id', userId),
@@ -56,6 +56,11 @@ async function attachCandidateSections(profile) {
       supabase.from('candidate_links').select('*').eq('user_id', userId),
       supabase.from('services').select('*').eq('user_id', userId),
       supabase.from('languages').select('*').eq('user_id', userId),
+      supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false }),
     ]);
 
   return {
@@ -67,6 +72,7 @@ async function attachCandidateSections(profile) {
     candidate_links: candidate_links.data ?? [],
     services: services.data ?? [],
     languages: languages.data ?? [],
+    projects: projects.data ?? [],
   };
 }
 

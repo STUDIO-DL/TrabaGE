@@ -80,6 +80,7 @@ function normalizeCompanyProfile(data) {
     ...data,
     cover_url: data.cover_url ?? data.cover_path ?? null,
     company_services: Array.isArray(data.company_services) ? data.company_services : [],
+    projects: Array.isArray(data.projects) ? data.projects : [],
   };
 }
 
@@ -91,6 +92,21 @@ function stripClientForbiddenFields(data) {
     safeData.cover_path = data.cover_url;
   }
   return safeData;
+}
+
+async function attachCompanyProjects(profile) {
+  if (!profile?.user_id) return profile;
+
+  const { data: projects } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('user_id', profile.user_id)
+    .order('created_at', { ascending: false });
+
+  return {
+    ...profile,
+    projects: projects ?? [],
+  };
 }
 
 async function fetchCompanyProfile(userId) {
@@ -109,13 +125,17 @@ async function fetchCompanyProfile(userId) {
 
     return {
       ...fallback,
-      data: normalizeCompanyProfile(fallback.data),
+      data: normalizeCompanyProfile(
+        fallback.data ? await attachCompanyProjects(fallback.data) : fallback.data,
+      ),
     };
   }
 
   return {
     ...result,
-    data: normalizeCompanyProfile(result.data),
+    data: normalizeCompanyProfile(
+      result.data ? await attachCompanyProjects(result.data) : result.data,
+    ),
   };
 }
 
@@ -179,11 +199,13 @@ export const companyService = {
       .select('*')
       .eq('company_id', userId);
 
+    const profileWithServices = {
+      ...publicResult.data,
+      company_services: servicesResult.data ?? [],
+    };
+
     return {
-      data: normalizeCompanyProfile({
-        ...publicResult.data,
-        company_services: servicesResult.data ?? [],
-      }),
+      data: normalizeCompanyProfile(await attachCompanyProjects(profileWithServices)),
       error: servicesResult.error,
     };
   },

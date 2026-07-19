@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import PostCard from './PostCard';
 import FeedNewsCard from './FeedNewsCard';
 import FeedEventCard from './FeedEventCard';
@@ -7,7 +8,7 @@ import { FEED_CONTENT_TYPES } from '../../constants/feedContentTypes';
 
 // The Home feed is social/informational only. Job offers are intentionally not
 // rendered here — the entire vacancy experience lives in the Empleos section.
-export default function FeedItemRenderer({
+function FeedItemRenderer({
   item,
   canManage = false,
   onEdit,
@@ -47,3 +48,5 @@ export default function FeedItemRenderer({
       );
   }
 }
+
+export default memo(FeedItemRenderer);

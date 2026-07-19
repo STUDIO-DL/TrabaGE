@@ -14,6 +14,7 @@ import { CITIES } from '../../../constants/cities';
 import { SECTORS } from '../../../constants/sectors';
 import { Save, ICON_SIZES } from '../../../constants/icons';
 import CompanyProfileView from './CompanyProfileView';
+import ProjectModal from '../../profile/modals/ProjectModal';
 import { useFollow } from '../../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../../services/follows.service';
 import { isOrganizationProfile } from '../../../utils/orgLabels';
@@ -22,6 +23,7 @@ import { TOAST } from '../../../utils/copyLabels';
 import { ProfilePageSkeleton } from '../../common/Skeleton';
 import FetchErrorBanner from '../../common/FetchErrorBanner';
 import { useCompanyProfile } from '../../../hooks/useCompanyProfile';
+import { useProjectMutations } from '../../../hooks/useProjects';
 import { useAuth } from '../../../hooks/useAuth';
 import {
   cleanCompanySocialLinks,
@@ -320,12 +322,16 @@ export default function CompanyProfileLayout({
     saveContact,
     updateCompanyProfile,
   } = useCompanyProfile();
+  const { createProject, updateProject, deleteProject, loading: projectSaving } =
+    useProjectMutations(userId);
   const [jobs, setJobs] = useState([]);
   const [logoLoading, setLogoLoading] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
   const [contactSaving, setContactSaving] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [editMode, setEditMode] = useState(null);
+  const [projectOpen, setProjectOpen] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
   const [previewMedia, setPreviewMedia] = useState({ cover: null, logo: null });
   const [previewServices] = useState(null);
   const [previewContact] = useState(null);
@@ -472,6 +478,42 @@ export default function CompanyProfileLayout({
     setEditMode(null);
   };
 
+  const openProject = (item = null) => {
+    if (isPreviewMode) {
+      onPreviewAction?.('add-project');
+      return;
+    }
+    setEditingProject(item);
+    setProjectOpen(true);
+  };
+
+  const saveProject = async (data, initial) => {
+    if (isPreviewMode) {
+      onPreviewAction?.('save-project');
+      return { error: { message: GUEST_MODE_MESSAGE } };
+    }
+
+    const result = initial?.id
+      ? await updateProject(initial.id, data, initial)
+      : await createProject(data);
+
+    if (!result.error) {
+      showToast('Proyecto guardado.', 'success');
+    }
+
+    return result;
+  };
+
+  const handleDeleteProject = async (project) => {
+    if (isPreviewMode) {
+      onPreviewAction?.('delete-project');
+      return;
+    }
+
+    const { error } = await deleteProject(project);
+    showToast(error ? error.message : 'Proyecto eliminado.', error ? 'error' : 'success');
+  };
+
   const readOnly = isPreviewMode;
   const followTarget = isOrganizationProfile(profile)
     ? FOLLOWS_TARGET.ORGANIZATION
@@ -520,6 +562,9 @@ export default function CompanyProfileLayout({
         logoLoading={logoLoading}
         coverLoading={coverLoading}
         followerCount={followerCount}
+        onAddProject={readOnly ? undefined : () => openProject()}
+        onEditProject={readOnly ? undefined : openProject}
+        onDeleteProject={readOnly ? undefined : handleDeleteProject}
       />
       <CompanyEditModal
         mode={editMode}
@@ -527,6 +572,13 @@ export default function CompanyProfileLayout({
         loading={profileSaving}
         onClose={() => setEditMode(null)}
         onSave={handleSaveProfile}
+      />
+      <ProjectModal
+        isOpen={projectOpen}
+        onClose={() => setProjectOpen(false)}
+        initial={editingProject}
+        onSave={saveProject}
+        loading={projectSaving}
       />
     </ProfilePageShell>
   );

@@ -57,6 +57,7 @@ const PROFILE_SECTION_OWN = {
   skills: 'Aún no has añadido habilidades.',
   portfolio: 'Aún no has añadido enlaces de portafolio.',
   services: 'Aún no has añadido servicios.',
+  projects: 'Aún no has añadido proyectos.',
   languages: 'Aún no has añadido idiomas.',
   contact: 'Aún no has añadido datos de contacto.',
   social: 'Aún no has añadido redes sociales.',

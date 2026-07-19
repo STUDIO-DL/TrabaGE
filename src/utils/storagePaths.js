@@ -35,6 +35,10 @@ export function resolvePostImageUrl(postImagePath) {
   return resolvePublicStorageUrl(STORAGE_BUCKETS.POST_IMAGES, postImagePath);
 }
 
+export function resolveProjectImageUrl(imagePath) {
+  return resolvePublicStorageUrl(STORAGE_BUCKETS.PROFILE_PROJECTS, imagePath);
+}
+
 export function resolveCompanyCoverUrl(coverPath) {
   return resolvePublicStorageUrl(STORAGE_BUCKETS.COMPANY_LOGOS, coverPath);
 }

@@ -23,6 +23,7 @@ import {
   FileText,
   Filter,
   Flag,
+  FolderKanban,
   Globe,
   GraduationCap,
   Headphones,
@@ -88,6 +89,7 @@ export {
   FileText,
   Filter,
   Flag,
+  FolderKanban,
   Globe,
   GraduationCap,
   Headphones,
@@ -183,6 +185,7 @@ export const PROFILE_SECTION_ICONS = {
   social: Share2,
   language: Languages,
   preferences: Target,
+  projects: FolderKanban,
 };
 
 /** Semantic aliases for common actions */

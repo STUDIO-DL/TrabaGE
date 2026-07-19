@@ -10,6 +10,7 @@ import CompanyPostsSection, { CompanyPostsFeed } from './CompanyPostsSection';
 import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
 import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
 import CompanyProfileSectionCard from './CompanyProfileSectionCard';
+import ProjectsSection from '../../profile/ProjectsSection';
 import { usePosts } from '../../../hooks/usePosts';
 import { sectionLinkClass, profileContentShellClass, profileInicioGridClass } from './companyProfileStyles';
 import { hasCompanyDescription } from '../../../utils/companyProfile';
@@ -45,6 +46,9 @@ export default function CompanyProfileView({
   reportTargetId,
   followerCount = 0,
   onSettings,
+  onAddProject,
+  onEditProject,
+  onDeleteProject,
 }) {
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
@@ -80,6 +84,8 @@ export default function CompanyProfileView({
   const inicioGridClass = showInicioSidebar
     ? profileInicioGridClass
     : 'grid gap-space-base';
+  const projects = profile?.projects ?? [];
+  const showProjectsSection = projects.length > 0 || !readOnly;
 
   return (
     <div className="bg-app-surface">
@@ -152,6 +158,16 @@ export default function CompanyProfileView({
                     embedded
                   />
                 </CompanyProfileSectionCard>
+              )}
+
+              {showProjectsSection && (
+                <ProjectsSection
+                  items={projects}
+                  isOwn={!readOnly}
+                  onAdd={onAddProject}
+                  onEdit={onEditProject}
+                  onDelete={onDeleteProject}
+                />
               )}
 
               <CompanyProfileSectionCard

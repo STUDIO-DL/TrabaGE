@@ -23,7 +23,10 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
   const [uploadError, setUploadError] = useState('');
 
   const isCompany = isEmployerRole(role);
-  const hasContent = Boolean(content.trim());
+  const trimmedContent = content.trim();
+  const hasText = Boolean(trimmedContent);
+  const hasImage = Boolean(imageFile);
+  const canPublish = hasText || hasImage;
   const handleClose = onClose ?? (() => navigate(-1));
   const { footerPaddingBottom } = useKeyboard();
 
@@ -59,8 +62,8 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!hasContent) return;
-    await onSubmit?.({ content: content.trim(), imageFile });
+    if (!canPublish) return;
+    await onSubmit?.({ content: trimmedContent, imageFile });
     setContent('');
     clearImage();
   };
@@ -92,7 +95,7 @@ export default function PostComposer({ onSubmit, loading = false, onClose }) {
           type="submit"
           size="sm"
           loading={loading}
-          disabled={!hasContent}
+          disabled={!canPublish}
           className="!rounded-full px-5 disabled:bg-gray-200 disabled:text-gray-400"
         >
           Publicar
