@@ -21,7 +21,8 @@
     "qa:e2e": "node scripts/qa-e2e-auth-flow.mjs",
     "qa:email-verification": "node scripts/qa-email-verification.mjs",
     "qa:register-verify-ui": "node scripts/qa-register-verify-ui.mjs",
-    "generate-icons": "node scripts/generate-pwa-icons.mjs"
+    "generate-icons": "node scripts/generate-pwa-icons.mjs",
+    "test-onesignal-push": "node scripts/test-onesignal-push.mjs"
   },
   "dependencies": {
     "@sentry/react": "^9.30.0",
@@ -30,7 +31,7 @@
     "lucide-react": "^1.18.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "react-onesignal": "^3.0.1",
+    "react-onesignal": "^3.5.6",
     "react-router-dom": "^6.30.1"
   },
   "devDependencies": {

@@ -2,6 +2,8 @@ import {
   Bell,
   Briefcase,
   Building2,
+  Mail,
+  Settings,
   ShieldCheck,
   Sparkles,
   Users,
@@ -24,6 +26,9 @@ export const DEFAULT_NOTIFICATION_PREFERENCES = {
   companies_new_followers: true,
   companies_verified: true,
   activity_post_interactions: true,
+  messages_new: true,
+  system_updates: true,
+  marketing_enabled: false,
   account_security: true,
 };
 
@@ -45,8 +50,18 @@ export const NOTIFICATION_TYPE_MAP = {
     'verification_approved',
     'verification_rejected',
     'company_verified',
+    'user_verified',
   ],
   activity_post_interactions: ['new_post', 'company_update'],
+  messages_new: ['new_message', 'conversation_update'],
+  system_updates: [
+    'system_update',
+    'system_notification',
+    'system_alert',
+    'admin_notification',
+    'admin_broadcast',
+  ],
+  marketing_enabled: ['marketing', 'promotional'],
 };
 
 const CANDIDATE_NOTIFICATION_GROUPS = [
@@ -131,8 +146,54 @@ const COMPANY_NOTIFICATION_GROUPS = [
   },
 ];
 
+const SHARED_NOTIFICATION_GROUPS = [
+  {
+    id: 'messages',
+    title: 'Mensajes',
+    description: 'Comunicaciones directas entre cuentas en TrabaGE.',
+    icon: Mail,
+    items: [
+      {
+        key: 'messages_new',
+        title: 'Mensajes nuevos',
+        description: 'Cuando recibes un mensaje interno (próximamente).',
+        notificationTypes: NOTIFICATION_TYPE_MAP.messages_new,
+      },
+    ],
+  },
+  {
+    id: 'system',
+    title: 'Sistema',
+    description: 'Avisos importantes de la plataforma y del equipo de TrabaGE.',
+    icon: Settings,
+    items: [
+      {
+        key: 'system_updates',
+        title: 'Alertas y avisos del sistema',
+        description: 'Mantenimiento, novedades de la plataforma y comunicaciones oficiales.',
+        notificationTypes: NOTIFICATION_TYPE_MAP.system_updates,
+      },
+    ],
+  },
+  {
+    id: 'marketing',
+    title: 'Marketing',
+    description: 'Contenido promocional opcional. Puedes desactivarlo sin afectar avisos laborales.',
+    icon: Sparkles,
+    items: [
+      {
+        key: 'marketing_enabled',
+        title: 'Ofertas y novedades promocionales',
+        description: 'Comunicaciones comerciales y campañas especiales de TrabaGE.',
+        notificationTypes: NOTIFICATION_TYPE_MAP.marketing_enabled,
+      },
+    ],
+  },
+];
+
 export function getNotificationGroupsForRole(role) {
-  return isEmployerRole(role) ? COMPANY_NOTIFICATION_GROUPS : CANDIDATE_NOTIFICATION_GROUPS;
+  const base = isEmployerRole(role) ? COMPANY_NOTIFICATION_GROUPS : CANDIDATE_NOTIFICATION_GROUPS;
+  return [...base, ...SHARED_NOTIFICATION_GROUPS];
 }
 
 export const NOTIFICATION_MASTER_CARD = {

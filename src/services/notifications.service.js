@@ -153,4 +153,39 @@ export const notificationsService = {
 
     await sendPushBatch(recipientIds, title, body, data);
   },
+
+  /**
+   * Stub for future internal messaging module.
+   * Creates in-app notification + push when messaging ships.
+   */
+  sendInternalMessagePush: async ({
+    recipientId,
+    senderName = 'TrabaGE',
+    preview = 'Tienes un nuevo mensaje.',
+    conversationId = null,
+  }) => {
+    if (!recipientId) return { data: null, error: new Error('Destinatario requerido') };
+
+    const title = `Nuevo mensaje de ${senderName}`;
+    const body = preview;
+    const metadata = {
+      type: 'new_message',
+      link: '/personal/notifications',
+      conversation_id: conversationId,
+      stub: true,
+    };
+
+    const { error } = await notificationsService.create({
+      recipient_id: recipientId,
+      type: 'new_message',
+      title,
+      body,
+      metadata,
+    });
+
+    if (error) return { data: null, error };
+
+    await sendPushBatch([recipientId], title, body, metadata);
+    return { data: { sent: true, stub: true }, error: null };
+  },
 };

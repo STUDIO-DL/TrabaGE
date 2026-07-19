@@ -1,6 +1,6 @@
 import OneSignal from 'react-onesignal';
 import { NOTIFICATION_PREFERENCE_FIELDS } from '../constants/notificationPreferences';
-import { profileService } from '../services/profile.service';
+import { pushSubscriptionsService } from '../services/pushSubscriptions.service';
 import { readViteEnv } from './env';
 import { reportError } from '../utils/logger';
 
@@ -24,27 +24,26 @@ export function onPushPermissionChange(listener) {
   return () => permissionChangeListeners.delete(listener);
 }
 
-async function persistOneSignalPlayerId(userId) {
+async function persistPushSubscription(userId) {
   if (!userId || !initialized) return;
 
   try {
     const subscriptionId =
       OneSignal.User?.PushSubscription?.id ??
-      OneSignal.User?.pushSubscription?.id ??
-      OneSignal.User?.onesignalId;
+      OneSignal.User?.pushSubscription?.id;
 
     if (!subscriptionId) return;
 
-    await profileService.updateOneSignalPlayerId(userId, String(subscriptionId));
+    await pushSubscriptionsService.upsert(String(subscriptionId));
   } catch (error) {
-    reportError(error, { area: 'onesignal_player_sync', userId });
+    reportError(error, { area: 'onesignal_subscription_sync', userId });
   }
 }
 
-async function syncPlayerIdFromSubscription() {
-  const userId = OneSignal.User?.externalId;
-  if (userId) {
-    await persistOneSignalPlayerId(userId);
+async function syncSubscriptionFromDevice(userId) {
+  const resolvedUserId = userId ?? OneSignal.User?.externalId;
+  if (resolvedUserId) {
+    await persistPushSubscription(resolvedUserId);
   }
 }
 
@@ -65,7 +64,7 @@ function attachOneSignalListeners() {
   try {
     OneSignal.Notifications?.addEventListener?.('permissionChange', (granted) => {
       notifyPermissionChangeListeners();
-      if (granted) void syncPlayerIdFromSubscription();
+      if (granted) void syncSubscriptionFromDevice();
     });
 
     OneSignal.Notifications?.addEventListener?.('click', (event) => {
@@ -74,7 +73,14 @@ function attachOneSignalListeners() {
         event?.notification?.data ??
         event?.notification?.custom?.a ??
         null;
-      const target = resolvePushNavigationTarget(additionalData?.link);
+      const launchUrl =
+        event?.notification?.launchURL ??
+        event?.notification?.launchUrl ??
+        event?.notification?.url ??
+        null;
+      const target =
+        resolvePushNavigationTarget(additionalData?.link) ??
+        resolvePushNavigationTarget(launchUrl);
       if (target && typeof window !== 'undefined') {
         window.location.assign(target);
       }
@@ -82,7 +88,7 @@ function attachOneSignalListeners() {
 
     const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
     subscription?.addEventListener?.('change', () => {
-      void syncPlayerIdFromSubscription();
+      void syncSubscriptionFromDevice();
     });
   } catch (error) {
     reportError(error, { area: 'onesignal_listeners' });
@@ -145,7 +151,7 @@ async function ensurePushSubscriptionActive() {
   if (subscription?.optedIn === false) {
     await subscription.optIn?.();
   }
-  void syncPlayerIdFromSubscription();
+  void syncSubscriptionFromDevice();
 }
 
 export const requestNotificationPermission = async () => {
@@ -168,7 +174,7 @@ export const requestNotificationPermission = async () => {
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'granted') {
-        void syncPlayerIdFromSubscription();
+        void syncSubscriptionFromDevice();
         return true;
       }
 
@@ -179,7 +185,7 @@ export const requestNotificationPermission = async () => {
       const result = await Notification.requestPermission();
       const granted = result === 'granted';
       if (granted) {
-        void syncPlayerIdFromSubscription();
+        void syncSubscriptionFromDevice();
       }
       return granted;
     }
@@ -215,9 +221,10 @@ export const setOneSignalPushEnabled = async (enabled) => {
     const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
     if (enabled) {
       await subscription?.optIn?.();
-      void syncPlayerIdFromSubscription();
+      void syncSubscriptionFromDevice();
     } else {
       await subscription?.optOut?.();
+      await pushSubscriptionsService.deactivate();
     }
   } catch (error) {
     reportError(error, { area: 'onesignal_push_subscription_toggle', enabled });
@@ -249,13 +256,36 @@ export const syncOneSignalNotificationTags = async (preferences) => {
   }
 };
 
-export const setOneSignalUserId = async (userId) => {
+export const setOneSignalUserTags = async ({ role, city, sector } = {}) => {
+  await initOneSignal();
+  if (!initialized) return;
+
+  const tags = {};
+  if (role) tags.role = String(role);
+  if (city) tags.city = String(city);
+  if (sector) tags.sector = String(sector);
+
+  if (Object.keys(tags).length === 0) return;
+
+  try {
+    if (OneSignal.User?.addTags) {
+      await OneSignal.User.addTags(tags);
+    } else if (OneSignal.sendTags) {
+      await OneSignal.sendTags(tags);
+    }
+  } catch (error) {
+    reportError(error, { area: 'onesignal_user_tags', tags });
+  }
+};
+
+export const setOneSignalUserId = async (userId, profileTags = {}) => {
   await initOneSignal();
   if (!initialized || !userId) return;
 
   try {
     await OneSignal.login(userId);
-    await persistOneSignalPlayerId(userId);
+    await setOneSignalUserTags(profileTags);
+    await persistPushSubscription(userId);
   } catch (error) {
     reportError(error, { area: 'onesignal_login', userId });
   }
@@ -266,8 +296,27 @@ export const clearOneSignalUserId = async () => {
   if (!initialized) return;
 
   try {
+    const subscriptionId =
+      OneSignal.User?.PushSubscription?.id ??
+      OneSignal.User?.pushSubscription?.id;
+    if (subscriptionId) {
+      await pushSubscriptionsService.deactivate(String(subscriptionId));
+    } else {
+      await pushSubscriptionsService.deactivate();
+    }
     await OneSignal.logout();
   } catch (error) {
     reportError(error, { area: 'onesignal_logout' });
   }
+};
+
+export const bindOneSignalUser = async (userId, profileTags = {}) => {
+  await initOneSignal();
+  if (!userId) return;
+  if (getNotificationPermissionStatus() !== 'granted') return;
+  await setOneSignalUserId(userId, profileTags);
+};
+
+export const attachNotificationClickHandler = () => {
+  // Click navigation is handled via OneSignal.Notifications click listener in attachOneSignalListeners.
 };

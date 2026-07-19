@@ -1,5 +1,8 @@
 import { useCallback, useEffect } from 'react';
 import {
+  attachNotificationClickHandler,
+  bindOneSignalUser,
+  clearOneSignalUserId,
   getNotificationPermissionStatus,
   initOneSignal,
   isOneSignalConfigured,
@@ -10,6 +13,7 @@ import {
 import {
   NOTIFICATION_PERMISSION_STATUS,
 } from '../constants/notificationPreferences';
+import { useAuth } from './useAuth';
 
 const foregroundSyncListeners = new Set();
 
@@ -59,11 +63,15 @@ export function isOsPushPermissionDenied() {
   return getOsPushPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.DENIED;
 }
 
-export async function requestOsPushPermission() {
+export async function requestOsPushPermission(userId, profileTags = {}) {
   if (typeof window === 'undefined') return false;
 
   if (isOneSignalConfigured()) {
-    return requestNotificationPermission();
+    const granted = await requestNotificationPermission();
+    if (granted && userId) {
+      await bindOneSignalUser(userId, profileTags);
+    }
+    return granted;
   }
 
   if (!('Notification' in window)) return false;
@@ -81,29 +89,47 @@ export async function requestOsPushPermission() {
 }
 
 export function usePushPermission() {
+  const { user, role } = useAuth();
+
   useEffect(() => {
     void initOneSignal();
+    attachNotificationClickHandler();
   }, []);
+
+  useEffect(() => {
+    if (user?.id && isOsPushPermissionGranted()) {
+      void bindOneSignalUser(user.id, { role });
+    }
+  }, [role, user?.id]);
 }
 
 export function usePushPermissionActions() {
+  const { user, role } = useAuth();
   usePushPermission();
 
   const requestPermission = useCallback(async () => {
-    const granted = await requestOsPushPermission();
-    if (granted) {
+    const granted = await requestOsPushPermission(user?.id, { role });
+    if (granted && user?.id) {
       await setOneSignalPushEnabled(true);
     }
     return granted;
-  }, []);
+  }, [role, user?.id]);
 
   const disablePushSubscription = useCallback(async () => {
     await setOneSignalPushEnabled(false);
   }, []);
 
+  const refreshToken = useCallback(async () => {
+    if (!user?.id) return null;
+    await bindOneSignalUser(user.id, { role });
+    return true;
+  }, [role, user?.id]);
+
   return {
     requestPermission,
     disablePushSubscription,
+    refreshToken,
+    clearPushTokens: clearOneSignalUserId,
     getPermissionStatus: getOsPushPermissionStatus,
     isPermissionGranted: isOsPushPermissionGranted,
     isPermissionDenied: isOsPushPermissionDenied,

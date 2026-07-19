@@ -1,29 +1,78 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ZarrelCredit from '../components/branding/ZarrelCredit';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import EquatorialGuineaMap from '../components/splash/EquatorialGuineaMap';
+import TrabaGEIconMark from '../components/splash/TrabaGEIconMark';
 import TrabaGEWordmark from '../components/splash/TrabaGEWordmark';
 import { getOnboardingComplete } from '../context/AuthContext';
 import { useAuth } from '../hooks/useAuth';
+import { useStartupPreload, runStartupPreload } from '../hooks/useStartupPreload';
+import { isPwaInstalled } from '../hooks/useInstallPrompt';
+import {
+  markFullSplashSeen,
+  resolveStartupSplashMode,
+} from '../utils/startup';
 
-// Tiempo mínimo que se muestra el splash por marca/UX. La navegación real
-// espera además a que termine la restauración de la sesión (loading === false),
-// de modo que un usuario con sesión válida vaya directo a su inicio.
-const MIN_SPLASH_MS = 1800;
 const ROLE_WAIT_MS = 8000;
+
+function resolveGuestDestination() {
+  return getOnboardingComplete() ? '/login' : '/onboarding';
+}
 
 export default function SplashScreen() {
   const navigate = useNavigate();
-  const { isAuthenticated, role, getHomePath, loading, logout, refreshAuthState } = useAuth();
+  const {
+    isAuthenticated,
+    role,
+    user,
+    getHomePath,
+    loading,
+    logout,
+    refreshAuthState,
+  } = useAuth();
+
+  const splashMode = useMemo(() => resolveStartupSplashMode(), []);
+  const isFullSplash = splashMode.mode === 'full';
+
   const [minTimeElapsed, setMinTimeElapsed] = useState(false);
   const [roleWaitExpired, setRoleWaitExpired] = useState(false);
   const roleRetryRef = useRef(false);
+  const navigatingRef = useRef(false);
+
+  const pendingDestination = useMemo(() => {
+    if (loading) return null;
+    if (isAuthenticated) {
+      if (!role) return null;
+      return getHomePath() || '/login';
+    }
+    return resolveGuestDestination();
+  }, [getHomePath, isAuthenticated, loading, role]);
+
+  const preloadRef = useStartupPreload({
+    enabled: !isFullSplash,
+    destination: pendingDestination,
+    userId: user?.id,
+  });
 
   useEffect(() => {
-    const timer = setTimeout(() => setMinTimeElapsed(true), MIN_SPLASH_MS);
-    return () => clearTimeout(timer);
+    if (isPwaInstalled()) {
+      markFullSplashSeen();
+    }
   }, []);
+
+  useEffect(() => {
+    if (!isFullSplash) return undefined;
+    const timer = setTimeout(() => {
+      markFullSplashSeen();
+    }, splashMode.minDurationMs);
+    return () => clearTimeout(timer);
+  }, [isFullSplash, splashMode.minDurationMs]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimeElapsed(true), splashMode.minDurationMs);
+    return () => clearTimeout(timer);
+  }, [splashMode.minDurationMs]);
 
   useEffect(() => {
     if (loading || !minTimeElapsed || !isAuthenticated || role) {
@@ -39,14 +88,9 @@ export default function SplashScreen() {
   }, [role]);
 
   useEffect(() => {
-    // No decidimos el destino hasta que la sesión de Supabase haya terminado de
-    // restaurarse (loading) y haya pasado el tiempo mínimo de splash. Así se
-    // evita mandar a /login a un usuario que en realidad sí tiene sesión.
-    if (loading || !minTimeElapsed) return;
+    if (loading || !minTimeElapsed || navigatingRef.current) return;
 
     if (isAuthenticated) {
-      // Wait for role hydration on the splash itself — never flash /register
-      // as an intermediate screen while the profile/role is still loading.
       if (!role) {
         if (!roleWaitExpired) return;
         if (!roleRetryRef.current) {
@@ -55,30 +99,69 @@ export default function SplashScreen() {
           void refreshAuthState();
           return;
         }
+        navigatingRef.current = true;
         void logout().then(() => navigate('/login', { replace: true }));
         return;
       }
-      const home = getHomePath();
-      navigate(home || '/login', { replace: true });
+
+      const home = getHomePath() || '/login';
+      navigatingRef.current = true;
+
+      const navigateHome = () => {
+        navigate(home, { replace: true });
+      };
+
+      if (isFullSplash) {
+        void runStartupPreload({ destination: home, userId: user?.id }).finally(navigateHome);
+        return;
+      }
+
+      const preload = preloadRef.current ?? runStartupPreload({ destination: home, userId: user?.id });
+      void preload.finally(navigateHome);
       return;
     }
 
-    // Para un usuario no autenticado, comprobamos si ya ha visto el onboarding.
-    // Si no lo ha visto, le llevamos a la nueva ruta `/onboarding`.
-    // Si ya lo vio, le llevamos directamente a la pantalla de login.
-    const destination = getOnboardingComplete() ? '/login' : '/onboarding';
-    navigate(destination, { replace: true });
+    const destination = resolveGuestDestination();
+    navigatingRef.current = true;
+
+    const navigateGuest = () => {
+      navigate(destination, { replace: true });
+    };
+
+    if (isFullSplash) {
+      void runStartupPreload({ destination, userId: null }).finally(navigateGuest);
+      return;
+    }
+
+    const preload =
+      preloadRef.current ?? runStartupPreload({ destination, userId: null });
+    void preload.finally(navigateGuest);
   }, [
-    loading,
-    minTimeElapsed,
+    getHomePath,
     isAuthenticated,
+    isFullSplash,
+    loading,
+    logout,
+    minTimeElapsed,
+    navigate,
+    preloadRef,
+    refreshAuthState,
     role,
     roleWaitExpired,
-    getHomePath,
-    navigate,
-    logout,
-    refreshAuthState,
+    user?.id,
   ]);
+
+  if (!isFullSplash) {
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-app-bg pt-safe pb-safe"
+        aria-busy="true"
+        aria-label="Abriendo TrabaGE"
+      >
+        <TrabaGEIconMark className="h-12 w-12" />
+      </div>
+    );
+  }
 
   return (
     <MobileScreenLayout

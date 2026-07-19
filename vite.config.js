@@ -26,7 +26,7 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       devOptions: { enabled: false },
-      includeAssets: ['robots.txt', 'sitemap.xml', 'favicon.ico', 'icons/*.png', 'manifest.json'],
+      includeAssets: ['robots.txt', 'sitemap.xml', 'favicon.ico', 'icons/*.png', 'manifest.json', 'OneSignalSDKWorker.js', 'OneSignalSDKUpdaterWorker.js'],
       manifest: false,
       workbox: {
         skipWaiting: false,

@@ -17,9 +17,8 @@ import PwaUpdatePrompt from './components/common/PwaUpdatePrompt';
 import { ToastContainer } from './components/ui/Toast';
 import { useNotificationContext } from './context/NotificationContext';
 import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
+import SplashScreen from './pages/SplashScreen';
 import { ROLES } from './constants/roles';
-
-const SplashScreen = lazy(() => import('./pages/SplashScreen'));
 const OnboardingFlow = lazy(() => import('./pages/onboarding/OnboardingFlow'));
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 const AuthConfirm = lazy(() => import('./pages/auth/AuthConfirm'));

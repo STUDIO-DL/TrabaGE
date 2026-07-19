@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase';
 import { authService, isEmailVerified } from '../services/auth.service';
 import { isAuthConfirmPath } from '../constants/authUrls';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
-import { clearOneSignalUserId, setOneSignalUserId } from '../config/onesignal';
+import { clearOneSignalUserId, bindOneSignalUser } from '../config/onesignal';
 import {
   ROLE_HOME,
   ROLE_SETUP,
@@ -128,7 +128,6 @@ export function AuthProvider({ children }) {
 
     try {
       setSentryUser(currentUser);
-      void setOneSignalUserId(currentUser.id);
 
       // Resolve role and both profiles in parallel instead of fetching the role
       // first and then the matching profile in series. This halves the blocking
@@ -173,6 +172,12 @@ export function AuthProvider({ children }) {
       }
 
       setRole(userRole);
+
+      void bindOneSignalUser(currentUser.id, {
+        role: userRole,
+        city: candidateResult?.data?.city ?? companyResult?.data?.city ?? null,
+        sector: candidateResult?.data?.sector ?? companyResult?.data?.sector ?? null,
+      });
 
       if (userRole && userRole !== ROLES.ADMIN) {
         const profileInactive = isPersonalRole(userRole)

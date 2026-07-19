@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { setOneSignalPushEnabled, syncOneSignalNotificationTags } from '../config/onesignal';
+import {
+  setOneSignalPushEnabled,
+  syncOneSignalNotificationTags,
+} from '../config/onesignal';
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   NOTIFICATION_PERMISSION_STATUS,
@@ -22,6 +25,7 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
     getPermissionStatus,
     isPermissionGranted,
     isPermissionDenied,
+    refreshToken,
   } = usePushPermissionActions();
   const [preferences, setPreferences] = useState(DEFAULT_NOTIFICATION_PREFERENCES);
   const [loading, setLoading] = useState(true);
@@ -59,10 +63,15 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
       setSavingKey(null);
       setSavedKey(key);
       window.setTimeout(() => setSavedKey((current) => (current === key ? null : current)), 1800);
-      void syncOneSignalNotificationTags(normalized);
+
+      if (normalized.push_enabled && isPermissionGranted()) {
+        void refreshToken();
+        void syncOneSignalNotificationTags(normalized);
+      }
+
       return { data: normalized, error: null };
     },
-    [preferences, userId],
+    [isPermissionGranted, preferences, refreshToken, userId],
   );
 
   const syncWithOsPermission = useCallback(async () => {
@@ -74,6 +83,7 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
     if (osStatus === NOTIFICATION_PERMISSION_STATUS.GRANTED) {
       if (preferences.push_enabled) {
         await setOneSignalPushEnabled(true);
+        void syncOneSignalNotificationTags(preferences);
         if (preferences.permission_status !== NOTIFICATION_PERMISSION_STATUS.GRANTED) {
           await savePatch({
             permission_status: NOTIFICATION_PERMISSION_STATUS.GRANTED,
@@ -90,7 +100,6 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
           permission_status: NOTIFICATION_PERMISSION_STATUS.DENIED,
         }, 'sync');
       }
-      return;
     }
   }, [
     bumpPermissionRevision,
@@ -98,8 +107,7 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
     disablePushSubscription,
     getPermissionStatus,
     loading,
-    preferences.permission_status,
-    preferences.push_enabled,
+    preferences,
     savePatch,
     userId,
   ]);
@@ -125,7 +133,10 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
         }
         const normalized = normalizeNotificationPreferences(data);
         setPreferences(normalized);
-        void syncOneSignalNotificationTags(normalized);
+        if (normalized.push_enabled && isPermissionGranted()) {
+          void refreshToken();
+          void syncOneSignalNotificationTags(normalized);
+        }
       })
       .catch((loadError) => {
         reportError(loadError, { area: 'notification_preferences_load', userId });
@@ -138,7 +149,7 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
     return () => {
       mounted = false;
     };
-  }, [disabled, userId]);
+  }, [disabled, isPermissionGranted, refreshToken, userId]);
 
   useEffect(() => {
     if (loading || disabled || !userId) return;
@@ -172,6 +183,7 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
         }, 'push_enabled');
         if (!result.error) {
           setPermissionMessage('granted');
+          void syncOneSignalNotificationTags({ ...preferences, push_enabled: true });
         }
         return result;
       }
@@ -202,10 +214,11 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
 
       if (!result.error) {
         setPermissionMessage('granted');
+        void syncOneSignalNotificationTags({ ...preferences, push_enabled: true });
       }
       return result;
     },
-    [disablePushSubscription, getPermissionStatus, preferences.permission_prompted_at, requestPermission, savePatch],
+    [disablePushSubscription, getPermissionStatus, preferences, requestPermission, savePatch],
   );
 
   const setPreference = useCallback(

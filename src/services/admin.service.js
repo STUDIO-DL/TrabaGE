@@ -425,4 +425,46 @@ export const adminService = {
       .eq('id', 1)
       .select()
       .single(),
+
+  getPushBroadcastHistory: async (limit = 50) => {
+    const { data, error } = await supabase.rpc('admin_list_push_broadcast_log', {
+      p_limit: limit,
+    });
+    return { data: data ?? [], error };
+  },
+
+  sendAdminPushBroadcast: async ({
+    title,
+    body,
+    link = '/personal/notifications',
+    audienceFilter = { all: true },
+    scheduledAt = null,
+  }) => {
+    const { data, error } = await supabase.functions.invoke('send_push', {
+      body: {
+        admin_broadcast: true,
+        title,
+        body,
+        audience_filter: audienceFilter,
+        scheduled_at: scheduledAt,
+        data: {
+          type: 'admin_broadcast',
+          link,
+        },
+      },
+    });
+
+    if (error) return { data: null, error };
+    if (data?.error) return { data: null, error: new Error(String(data.error)) };
+    return { data, error: null };
+  },
+
+  processScheduledPushNotifications: async () => {
+    const { data, error } = await supabase.functions.invoke('send_push', {
+      body: { process_scheduled: true },
+    });
+    if (error) return { data: null, error };
+    if (data?.error) return { data: null, error: new Error(String(data.error)) };
+    return { data, error: null };
+  },
 };

@@ -1,5 +1,7 @@
 import { supabase } from '../config/supabase';
 import { notificationsService } from './notifications.service';
+import { authService } from './auth.service';
+import { ROLES, normalizeRole, rolePath } from '../constants/roles';
 import { VERIFICATION_BUCKET } from '../utils/companyVerification';
 import { reportError } from '../utils/logger';
 
@@ -21,12 +23,21 @@ async function sendPushNotification(recipientId, title, body, data = {}) {
 }
 
 async function createVerificationNotification(recipientId, type, title, body, metadata = {}) {
+  const { data: roleData } = await authService.getUserRole(recipientId);
+  const role =
+    normalizeRole(roleData?.role, { companyType: metadata.company_type }) ?? ROLES.BUSINESS;
+  const enrichedMetadata = {
+    ...metadata,
+    link: metadata.link ?? rolePath(role, '/verification'),
+    request_id: metadata.request_id ?? null,
+  };
+
   const { error } = await notificationsService.create({
     recipient_id: recipientId,
     type,
     title,
     body,
-    metadata,
+    metadata: enrichedMetadata,
   });
 
   if (error) {
@@ -34,7 +45,10 @@ async function createVerificationNotification(recipientId, type, title, body, me
     return;
   }
 
-  await sendPushNotification(recipientId, title, body, { type, ...metadata });
+  await sendPushNotification(recipientId, title, body, {
+    type,
+    ...enrichedMetadata,
+  });
 }
 
 export const verificationService = {

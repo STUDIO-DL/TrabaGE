@@ -100,15 +100,30 @@ export const applicationsService = {
     const copy = STATUS_NOTIFICATION_COPY[status];
     if (!result.error && copy && result.data?.candidate_id) {
       const jobTitle = result.data.jobs?.title || 'la oferta';
+      const notificationType = `application_${status}`;
+      const applicationsLink = '/personal/applications';
+
       await notificationsService.create({
         recipient_id: result.data.candidate_id,
-        type: `application_${status}`,
+        type: notificationType,
         title: copy.title,
         body: copy.body(jobTitle),
         metadata: {
           application_id: id,
           job_id: result.data.job_id,
-          link: '/personal/applications',
+          link: applicationsLink,
+        },
+      });
+
+      await notificationsService.sendPush({
+        recipientIds: [result.data.candidate_id],
+        title: copy.title,
+        body: copy.body(jobTitle),
+        data: {
+          type: notificationType,
+          link: applicationsLink,
+          application_id: id,
+          job_id: result.data.job_id,
         },
       });
     }
