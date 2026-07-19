@@ -1,10 +1,12 @@
-function SocialAuthButton({ icon, label, onClick, comingSoon = false }) {
+function SocialAuthButton({ icon, label, onClick, comingSoon = false, disabled = false }) {
+  const isDisabled = comingSoon || disabled;
+
   return (
     <button
       type="button"
-      onClick={comingSoon ? undefined : onClick}
-      disabled={comingSoon}
-      aria-disabled={comingSoon}
+      onClick={isDisabled ? undefined : onClick}
+      disabled={isDisabled}
+      aria-disabled={isDisabled}
       title={comingSoon ? 'Próximamente' : undefined}
       className="flex h-[2.75rem] w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed"
     >
@@ -37,12 +39,13 @@ export function GoogleIcon({ className = 'h-5 w-5' }) {
   );
 }
 
-export function GoogleAuthButton({ onClick, label = 'Continuar con Google' }) {
+export function GoogleAuthButton({ onClick, label = 'Continuar con Google', disabled = false }) {
   return (
     <SocialAuthButton
       icon={<GoogleIcon />}
       label={label}
       onClick={onClick}
+      disabled={disabled}
     />
   );
 }

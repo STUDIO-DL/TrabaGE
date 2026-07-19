@@ -205,6 +205,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [city, setCity] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [confirmedAge, setConfirmedAge] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -222,6 +223,22 @@ export default function Register() {
     setTypeValues((prev) => ({ ...prev, [key]: value }));
   };
 
+  const legalConfirmationsComplete = acceptedTerms && confirmedAge;
+
+  const validateLegalConfirmations = () => {
+    if (!acceptedTerms) {
+      setError(getErrorMessage('acceptTerms'));
+      return false;
+    }
+
+    if (!confirmedAge) {
+      setError(getErrorMessage('confirmAge'));
+      return false;
+    }
+
+    return true;
+  };
+
   const handleGoogleRegister = async () => {
     setError('');
 
@@ -231,6 +248,10 @@ export default function Register() {
 
     if (!accountKind) {
       setError(getErrorMessage('selectAccountType'));
+      return;
+    }
+
+    if (!validateLegalConfirmations()) {
       return;
     }
 
@@ -324,8 +345,7 @@ export default function Register() {
       return;
     }
 
-    if (!acceptedTerms) {
-      setError(getErrorMessage('acceptTerms'));
+    if (!validateLegalConfirmations()) {
       return;
     }
 
@@ -552,6 +572,18 @@ export default function Register() {
                     </span>
                   </label>
 
+                  <label className="flex cursor-pointer items-start gap-space-sm">
+                    <input
+                      type="checkbox"
+                      checked={confirmedAge}
+                      onChange={(e) => setConfirmedAge(e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded-radius-sm border-app-border text-primary-600 focus:ring-primary-500"
+                    />
+                    <span className="text-caption leading-relaxed text-app-muted">
+                      Confirmo que tengo 18+ años de edad
+                    </span>
+                  </label>
+
                   {error ? (
                     <p role="alert" className={AUTH_ALERT_ERROR}>
                       {error}
@@ -562,6 +594,7 @@ export default function Register() {
                     type="submit"
                     fullWidth
                     loading={loading}
+                    disabled={!legalConfirmationsComplete}
                     size="lg"
                     className="!rounded-radius-md"
                   >
@@ -583,6 +616,7 @@ export default function Register() {
                     <GoogleAuthButton
                       onClick={handleGoogleRegister}
                       label="Continuar con Google"
+                      disabled={!legalConfirmationsComplete}
                     />
                   </>
                 ) : null}
