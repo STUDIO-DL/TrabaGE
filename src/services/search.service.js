@@ -150,12 +150,13 @@ export const searchService = {
     };
   },
 
-  async search({ query, user, matchingContext = null }) {
+  async search({ query, user, matchingContext = null, includeJobs = true }) {
     return this.globalSearch({
       query,
       limitPerType: RESULT_LIMIT,
       user,
       matchingContext,
+      includeJobs,
     });
   },
 };

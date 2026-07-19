@@ -8,6 +8,7 @@ import { avatarTypeFromCompanyProfile } from '../../constants/avatarDefaults';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
 import { getWorkModeLabel } from '../../constants/workModes';
+import { getUserProfilePath } from '../../utils/profileRoutes';
 
 function JobLocationLine({ city, workMode }) {
   if (!city && !workMode) return null;
@@ -36,21 +37,42 @@ export default function JobCard({
   const company = job.company_profiles;
   const avatarType = avatarTypeFromCompanyProfile(company);
   const detailPath = `/personal/jobs/${job.id}`;
+  const companyProfilePath = job.company_id
+    ? getUserProfilePath(job.company_id, 'company')
+    : null;
 
   return (
     <article className="rounded-radius-md border border-app-border bg-app-surface p-3 shadow-elevation-1 transition-colors duration-fast ease-out hover:border-primary-200/70 hover:bg-primary-50/30 dark:hover:bg-primary-950/20">
       <div className="flex items-start gap-3">
-        <Link to={detailPath} className="shrink-0" aria-label={`Ver ${job.title}`}>
-          <AppAvatar
-            type={avatarType}
-            src={company?.logo_path}
-            name={company?.company_name}
-            alt={company?.company_name}
-            size="md"
-            variant="rounded"
-            className="!rounded-radius-sm"
-          />
-        </Link>
+        {companyProfilePath ? (
+          <Link
+            to={companyProfilePath}
+            className="shrink-0"
+            aria-label={`Ver perfil de ${company?.company_name ?? 'empresa'}`}
+          >
+            <AppAvatar
+              type={avatarType}
+              src={company?.logo_path}
+              name={company?.company_name}
+              alt={company?.company_name}
+              size="md"
+              variant="rounded"
+              className="!rounded-radius-sm"
+            />
+          </Link>
+        ) : (
+          <Link to={detailPath} className="shrink-0" aria-label={`Ver ${job.title}`}>
+            <AppAvatar
+              type={avatarType}
+              src={company?.logo_path}
+              name={company?.company_name}
+              alt={company?.company_name}
+              size="md"
+              variant="rounded"
+              className="!rounded-radius-sm"
+            />
+          </Link>
+        )}
 
         <div className="min-w-0 flex-1 space-y-0.5">
           <Link to={detailPath} className="block min-w-0">

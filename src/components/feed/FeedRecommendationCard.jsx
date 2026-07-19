@@ -150,7 +150,13 @@ export default function FeedRecommendationCard({ item }) {
             layout="avatar"
           />
           <div className="min-w-0 flex-1">
-            <p className="font-semibold text-gray-900">{institution.company_name}</p>
+            <UserProfileLink
+              userId={institution.user_id}
+              userType={AUTHOR_TYPES.ORGANIZATION}
+              name={institution.company_name}
+              path={`/companies/${institution.user_id}`}
+              layout="name"
+            />
             <p className="text-sm text-gray-500">
               {[institution.company_type, institution.city].filter(Boolean).join(' • ')}
             </p>

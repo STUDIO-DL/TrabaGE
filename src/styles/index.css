@@ -702,8 +702,16 @@
   animation: cardFadeIn var(--motion-normal) var(--ease-out) both;
 }
 
+.search-screen-enter {
+  animation: cardFadeIn var(--motion-normal) var(--ease-out) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card-enter {
+    animation: none !important;
+  }
+
+  .search-screen-enter {
     animation: none !important;
   }
 }
@@ -723,7 +731,9 @@
   .onboarding-title-in,
   .onboarding-body-in,
   .onboarding-desc-in,
-  .onboarding-btn-in {
+  .onboarding-btn-in,
+  .card-enter,
+  .search-screen-enter {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;

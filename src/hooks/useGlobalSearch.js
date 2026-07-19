@@ -7,7 +7,10 @@ import { ROLES, isEmployerRole } from '../constants/roles';
 
 const DEBOUNCE_MS = 300;
 
-export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}) {
+export function useGlobalSearch(
+  query,
+  { enabled = true, limitPerType = 5, includeJobs = false } = {},
+) {
   const { user, role } = useAuth();
   const { profile } = useProfile();
   const [companyJobs, setCompanyJobs] = useState([]);
@@ -55,6 +58,7 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
         limitPerType,
         user: user ? { id: user.id, role } : null,
         matchingContext,
+        includeJobs,
       });
 
       if (requestIdRef.current !== requestId) return;
@@ -70,7 +74,7 @@ export function useGlobalSearch(query, { enabled = true, limitPerType = 5 } = {}
     }, DEBOUNCE_MS);
 
     return () => window.clearTimeout(timer);
-  }, [companyJobs, profile, query, enabled, limitPerType, user, role]);
+  }, [companyJobs, profile, query, enabled, limitPerType, includeJobs, user, role]);
 
   return { results, loading, error };
 }

@@ -6,7 +6,7 @@ import { useProfile } from '../../hooks/useProfile';
 import { ROLES, isEmployerRole, rolePath } from '../../constants/roles';
 import AppAvatar from '../common/AppAvatar';
 import { avatarTypeFromRole } from '../../constants/avatarDefaults';
-import GlobalSearch from '../search/GlobalSearch';
+import SearchBarTrigger from '../search/SearchBarTrigger';
 import NotificationBellButton from '../notifications/NotificationBellButton';
 import { getDisplayName } from '../../utils/displayIdentity';
 import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
@@ -37,7 +37,7 @@ export default function FeedHeader() {
 
         {showVerifiedBadge ? <VerifiedBadge size="sm" className="shrink-0" /> : null}
 
-        <GlobalSearch placeholder="Buscar personas, Business y organizaciones…" />
+        <SearchBarTrigger placeholder="Buscar usuarios, empresas y empleos…" />
 
         <NotificationBellButton />
       </div>

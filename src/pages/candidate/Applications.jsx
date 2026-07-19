@@ -58,6 +58,7 @@ export default function Applications() {
               </button>
               <CompanyNameWithBadge
                 company={app.jobs?.company_profiles}
+                userId={app.jobs?.company_id}
                 showUnverifiedLabel
                 className="mt-0.5"
               />

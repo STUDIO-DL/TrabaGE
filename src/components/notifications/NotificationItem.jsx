@@ -68,16 +68,32 @@ export default function NotificationItem({
       </div>
 
       <div className="min-w-0 flex-1">
-        <p
-          className={`truncate text-body-small ${
-            isUnread ? 'font-semibold text-app-text' : 'font-medium text-app-muted'
-          }`}
-        >
-          {notification.title}
-        </p>
-        {notification.body && (
-          <p className="mt-0.5 line-clamp-2 text-body-small text-app-subtle">{notification.body}</p>
+        {actorId && avatarAlt ? (
+          <UserProfileLink
+            userId={actorId}
+            userType={actorType}
+            name={avatarAlt}
+            layout="name"
+            stopPropagation
+            nameClassName={`truncate text-body-small hover:text-primary-700 transition-colors ${
+              isUnread ? 'font-semibold text-app-text' : 'font-medium text-app-muted'
+            }`}
+            className="block min-w-0"
+          />
+        ) : (
+          <p
+            className={`truncate text-body-small ${
+              isUnread ? 'font-semibold text-app-text' : 'font-medium text-app-muted'
+            }`}
+          >
+            {notification.title}
+          </p>
         )}
+        {notification.body ? (
+          <p className="mt-0.5 line-clamp-2 text-body-small text-app-subtle">{notification.body}</p>
+        ) : actorId && notification.title && notification.title !== avatarAlt ? (
+          <p className="mt-0.5 line-clamp-2 text-body-small text-app-subtle">{notification.title}</p>
+        ) : null}
         <TimeAgo date={notification.created_at} className="mt-space-xs block text-caption text-app-subtle" />
       </div>
 

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
-import GlobalSearch from '../search/GlobalSearch';
+import SearchBarTrigger from '../search/SearchBarTrigger';
 import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
 import { Bell, Filter, ICON_SIZES } from '../../constants/icons';
 import { useNotifications } from '../../hooks/useNotifications';
@@ -16,9 +16,9 @@ export default function CompanyFeedHeader() {
     <header className={topBarOuterClass}>
       <div className="mx-auto max-w-lg">
         <div className={topBarInnerClass}>
-          <GlobalSearch
+          <SearchBarTrigger
             className="min-w-0 flex-1"
-            placeholder="Buscar personas, Business, empleos…"
+            placeholder="Buscar usuarios, empresas y empleos…"
             variant="rounded"
           />
           <Link

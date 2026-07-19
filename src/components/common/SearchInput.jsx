@@ -1,8 +1,8 @@
-import GlobalSearch from '../search/GlobalSearch';
+import SearchBarTrigger from '../search/SearchBarTrigger';
 
-export default function SearchInput({ placeholder = 'Buscar personas, empresas, empleos…' }) {
+export default function SearchInput({ placeholder = 'Buscar usuarios, empresas y empleos…' }) {
   return (
-    <GlobalSearch
+    <SearchBarTrigger
       placeholder={placeholder}
       className="w-full"
       variant="pill"
