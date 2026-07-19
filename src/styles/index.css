@@ -47,6 +47,7 @@
     --page-padding-y: 16px;
     --section-gap: 20px;
     --bottom-nav-height: 4.25rem;
+    --guest-bar-height: 2.75rem;
     --radius-sm: 8px;
     --radius-md: 12px;
     --radius-lg: 16px;
@@ -139,6 +140,17 @@
     position: sticky;
     top: calc(env(safe-area-inset-top, 0px) + 3rem);
     z-index: 10;
+  }
+
+  /* Company/org profile tabs — pin below viewport top while header scrolls away */
+  .profile-tabs-sticky {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 35;
+  }
+
+  html:has([data-guest-bar]) .profile-tabs-sticky {
+    top: calc(env(safe-area-inset-top, 0px) + var(--guest-bar-height));
   }
 
   .profile-hero {

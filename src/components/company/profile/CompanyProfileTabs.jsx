@@ -15,12 +15,12 @@ export function getCompanyProfileTabs({ hasServices = false } = {}) {
   return tabs;
 }
 
-export default function CompanyProfileTabs({ activeTab, onTabChange, hasServices = false, stickyTop = 'sticky-below-topbar' }) {
+export default function CompanyProfileTabs({ activeTab, onTabChange, hasServices = false, stickyTop = 'profile-tabs-sticky' }) {
   const tabs = getCompanyProfileTabs({ hasServices });
 
   return (
     <nav
-      className={`${stickyTop} z-20 border-b border-app-border bg-app-card/95 backdrop-blur`}
+      className={`${stickyTop} border-b border-app-border bg-app-card shadow-[0_1px_0_rgba(0,0,0,0.04)] supports-[backdrop-filter]:bg-app-card/95 supports-[backdrop-filter]:backdrop-blur`}
       aria-label="Secciones del perfil"
     >
       <div className="flex h-12 overflow-x-auto scrollbar-none px-space-xs">

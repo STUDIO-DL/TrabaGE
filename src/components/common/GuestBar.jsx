@@ -24,7 +24,7 @@ export default function GuestBar() {
   const roleLabel = ROLE_LABELS[role] ?? 'invitado';
 
   return (
-    <div className="sticky top-0 z-[60] border-b border-primary-700 bg-primary-600 text-white shadow-sm">
+    <div className="sticky top-0 z-[60] border-b border-primary-700 bg-primary-600 text-white shadow-sm" data-guest-bar>
       <div className="mx-auto flex max-w-lg items-center justify-between gap-space-sm px-space-base py-space-sm">
         <p className="min-w-0 flex-1 truncate text-caption sm:text-body-small">
           <span className="font-semibold sm:hidden">{roleLabel}</span>
