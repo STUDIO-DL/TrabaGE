@@ -86,7 +86,7 @@ Windows: `scripts\deploy-all-edge-functions.cmd`
 ## 6. PWA
 
 - [ ] `manifest.json` installs (name TrabaGE, icons 192/512 + maskable)
-- [ ] Service worker auto-update (`registerType: autoUpdate`)
+- [ ] Service worker prompt update (`registerType: prompt`; banner «Actualizar ahora» / «Más tarde»; no reload mid-session)
 - [ ] OneSignal workers not swallowed by Workbox (`globIgnores` set)
 - [ ] Offline navigate fallback to `index.html` (configured in `vite.config.js`)
 
