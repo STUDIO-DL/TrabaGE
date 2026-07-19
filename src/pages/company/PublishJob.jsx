@@ -84,10 +84,12 @@ export default function PublishJob() {
   const navigate = useNavigate();
   const { jobId } = useParams();
   const { user, isPreviewMode, role } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading: profileLoading, isFetched: profileFetched } = useProfile();
   const base = role || ROLES.BUSINESS;
   const { showToast } = useNotificationContext();
-  const companyProfileReady = isPreviewMode || isCompanyRequiredComplete(profile);
+  const profileCheckPending = !isPreviewMode && (profileLoading || !profileFetched);
+  const profileIncomplete =
+    !isPreviewMode && profileFetched && !isCompanyRequiredComplete(profile);
   const [form, setForm] = useState({
     title: '',
     role: '',
@@ -217,7 +219,7 @@ export default function PublishJob() {
     );
   }
 
-  if (!isPreviewMode && profileLoading) {
+  if (profileCheckPending) {
     return (
       <PageContainer title={jobId ? 'Editar empleo' : 'Publicar empleo'} backButton bottomNav={false}>
         <FormPageSkeleton fields={6} />
@@ -225,7 +227,7 @@ export default function PublishJob() {
     );
   }
 
-  if (!isPreviewMode && !companyProfileReady) {
+  if (profileIncomplete) {
     return (
       <PageContainer title="Publicar empleo" backButton bottomNav={false}>
         <div className="p-md">

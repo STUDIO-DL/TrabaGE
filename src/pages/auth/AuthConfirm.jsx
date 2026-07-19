@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, CircleAlert } from 'lucide-react';
-import Spinner from '../../components/ui/Spinner';
+import { AuthConfirmSkeleton } from '../../components/common/Skeleton';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
@@ -108,7 +108,7 @@ export default function AuthConfirm() {
         <section className="mt-8 w-full rounded-3xl border border-app-border bg-app-card p-7 shadow-elevation-3">
           {status === 'loading' ? (
             <>
-              <Spinner size="lg" />
+              <AuthConfirmSkeleton />
               <h1 className="mt-5 text-xl font-bold">Verificando tu correo</h1>
               <p className="mt-2 text-sm text-app-muted">
                 Estamos validando el enlace de confirmación. No cierres esta ventana.

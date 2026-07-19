@@ -1,4 +1,4 @@
-import Spinner from '../ui/Spinner';
+import { AdminTableSkeleton } from '../common/Skeleton';
 import Button from '../ui/Button';
 import AppIcon from '../common/AppIcon';
 import { ChevronDown, ChevronUp, ChevronsUpDown, ICON_SIZES } from '../../constants/icons';
@@ -31,11 +31,7 @@ export default function AdminTable({
   onPageChange,
 }) {
   if (loading) {
-    return (
-      <div className="flex min-h-[240px] items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-sm">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminTableSkeleton rows={8} columns={Math.max(columns.length, 4)} />;
   }
 
   if (!rows?.length) {

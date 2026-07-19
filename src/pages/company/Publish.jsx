@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import PageContainer from '../../components/layout/PageContainer';
 import PostComposer from '../../components/feed/PostComposer';
 import AppIcon from '../../components/common/AppIcon';
 import { Briefcase, FileText, ICON_SIZES } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { useCreatePost } from '../../hooks/useCreatePost';
-import { ROLES, rolePath } from '../../constants/roles';
+import { ROLES, rolePath, isEmployerRole } from '../../constants/roles';
+import { getOwnCompanyProfileKey } from '../../constants/profileQueryKeys';
+import { companyService } from '../../services/company.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 
 const PUBLISH_MODES = {
@@ -32,11 +35,27 @@ const PUBLISH_OPTIONS = [
 ];
 
 export default function Publish() {
-  const { isPreviewMode, role } = useAuth();
+  const { isPreviewMode, role, user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { createPost, loading, uploadPhase } = useCreatePost();
   const [mode, setMode] = useState(PUBLISH_MODES.SELECT);
   const base = role || ROLES.BUSINESS;
+
+  const prefetchCompanyProfile = () => {
+    if (!user?.id || isPreviewMode || !isEmployerRole(role)) return;
+    const queryKey = getOwnCompanyProfileKey(user.id);
+    if (!queryKey) return;
+    void queryClient.prefetchQuery({
+      queryKey,
+      queryFn: async () => {
+        const { data, error } = await companyService.getCompanyProfile(user.id);
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 60_000,
+    });
+  };
 
   const handleCreatePost = async (payload) => {
     const result = await createPost(payload);
@@ -48,6 +67,7 @@ export default function Publish() {
       setMode(PUBLISH_MODES.POST);
       return;
     }
+    prefetchCompanyProfile();
     navigate(rolePath(base, '/jobs/create'));
   };
 

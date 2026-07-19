@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
-import Spinner from '../ui/Spinner';
+import { AdminUserDetailSkeleton } from '../common/Skeleton';
 import AdminStatusBadge from './AdminStatusBadge';
 import { adminService } from '../../services/admin.service';
 import AppAvatar from '../common/AppAvatar';
@@ -156,9 +156,7 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
         </div>
 
         {loading ? (
-          <div className="flex min-h-[120px] items-center justify-center">
-            <Spinner />
-          </div>
+          <AdminUserDetailSkeleton />
         ) : !exists ? (
           <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-800">
             Este usuario todavía no ha completado su perfil. Solo se muestran los datos básicos

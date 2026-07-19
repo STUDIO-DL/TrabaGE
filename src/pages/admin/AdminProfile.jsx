@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Spinner from '../../components/ui/Spinner';
+import { AdminProfileSkeleton } from '../../components/common/Skeleton';
 import AdminSectionCard from '../../components/admin/AdminSectionCard';
 import { adminService } from '../../services/admin.service';
 import { ROLE_LABELS, ROLES } from '../../constants/roles';
@@ -41,11 +41,7 @@ export default function AdminProfile() {
     'Administrador';
 
   if (loading) {
-    return (
-      <div className="flex min-h-[240px] items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminProfileSkeleton />;
   }
 
   return (

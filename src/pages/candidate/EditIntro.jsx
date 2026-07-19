@@ -5,7 +5,7 @@ import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Textarea from '../../components/ui/Textarea';
-import Spinner from '../../components/ui/Spinner';
+import { FormPageSkeleton } from '../../components/common/Skeleton';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import { ProfileEntryRow } from '../../components/profile/ProfileSectionCard';
@@ -209,9 +209,9 @@ export default function EditIntro() {
 
   if (loading && !profile) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
+      <FormPageLayout title="Editar intro" backButton>
+        <FormPageSkeleton fields={5} />
+      </FormPageLayout>
     );
   }
 

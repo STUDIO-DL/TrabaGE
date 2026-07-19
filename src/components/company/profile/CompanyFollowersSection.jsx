@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import UserProfileLink from '../../common/UserProfileLink';
 import Button from '../../ui/Button';
-import Spinner from '../../ui/Spinner';
+import { FollowersListSkeleton } from '../../common/Skeleton';
 import { followsService } from '../../../services/follows.service';
 import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
 import { getEmptyFollowersCopy, resolveOrgViewerContext } from '../../../utils/copyLabels';
@@ -69,9 +69,7 @@ export default function CompanyFollowersSection({
       </h3>
 
       {loading ? (
-        <div className="flex justify-center py-8">
-          <Spinner size="md" />
-        </div>
+        <FollowersListSkeleton count={4} />
       ) : error ? (
         <p className="mt-3 text-sm text-red-600">{error}</p>
       ) : followers.length === 0 ? (

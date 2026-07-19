@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import Spinner from '../../ui/Spinner';
+import { PostListSkeleton } from '../../common/Skeleton';
 import PostCard from '../../feed/PostCard';
 import Button from '../../ui/Button';
 import AppIcon from '../../common/AppIcon';
@@ -64,11 +64,7 @@ export default function CompanyPostsSection({
   const hasMore = posts.length > limit;
 
   if (loading) {
-    const loadingContent = (
-      <div className="flex justify-center py-space-lg">
-        <Spinner size="md" />
-      </div>
-    );
+    const loadingContent = <PostListSkeleton count={2} />;
     return embedded ? loadingContent : loadingContent;
   }
 
@@ -123,8 +119,8 @@ export function CompanyPostsFeed({
 }) {
   if (loading) {
     return (
-      <div className="flex justify-center py-space-xl">
-        <Spinner size="md" />
+      <div className="px-space-base py-space-base">
+        <PostListSkeleton count={3} />
       </div>
     );
   }

@@ -1,8 +1,11 @@
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
 import { ROLES, getRolePathPrefix, isEmployerRole, rolePath } from '../../constants/roles';
+import { getOwnCompanyProfileKey } from '../../constants/profileQueryKeys';
+import { companyService } from '../../services/company.service';
 import { ICON_COLORS } from '../../constants/icons';
 import { NavIcon } from './NavIcons';
 import AppIcon from '../common/AppIcon';
@@ -54,13 +57,33 @@ function buildEmployerNav(role) {
 
 export default function BottomNav() {
   const { role, user, isPreviewMode } = useAuth();
+  const queryClient = useQueryClient();
   const { bottomBarInset, isKeyboardVisible } = useKeyboard();
   const [unreadCount, setUnreadCount] = useState(0);
   const [mounted, setMounted] = useState(false);
 
+  const prefetchCompanyProfile = useCallback(() => {
+    if (!user?.id || isPreviewMode || !isEmployerRole(role)) return;
+    const queryKey = getOwnCompanyProfileKey(user.id);
+    if (!queryKey) return;
+    void queryClient.prefetchQuery({
+      queryKey,
+      queryFn: async () => {
+        const { data, error } = await companyService.getCompanyProfile(user.id);
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 60_000,
+    });
+  }, [isPreviewMode, queryClient, role, user?.id]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    prefetchCompanyProfile();
+  }, [prefetchCompanyProfile]);
 
   const items = useMemo(
     () => (isEmployerRole(role) ? buildEmployerNav(role) : buildPersonalNav(ROLES.PERSONAL)),
@@ -106,6 +129,9 @@ export default function BottomNav() {
                 key={to}
                 to={to}
                 end
+                onMouseEnter={prefetchCompanyProfile}
+                onFocus={prefetchCompanyProfile}
+                onTouchStart={prefetchCompanyProfile}
                 isActive={(_, location) => isEmployerPublishActive(location.pathname, role)}
                 className="relative flex min-w-0 flex-1 flex-col items-center justify-end gap-0.5 px-0.5 pb-1 pt-0.5"
               >

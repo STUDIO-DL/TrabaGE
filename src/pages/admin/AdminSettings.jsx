@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Spinner from '../../components/ui/Spinner';
+import { AdminSettingsSkeleton } from '../../components/common/Skeleton';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -49,11 +49,7 @@ export default function AdminSettings() {
   };
 
   if (loading) {
-    return (
-      <div className="flex min-h-[240px] items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminSettingsSkeleton />;
   }
 
   return (

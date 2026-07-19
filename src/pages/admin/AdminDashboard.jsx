@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Spinner from '../../components/ui/Spinner';
+import { AdminDashboardSkeleton } from '../../components/common/Skeleton';
 import AdminStatCard from '../../components/admin/AdminStatCard';
 import AdminSectionCard from '../../components/admin/AdminSectionCard';
 import AdminQuickActions from '../../components/admin/AdminQuickActions';
@@ -37,11 +37,7 @@ export default function AdminDashboard() {
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminDashboardSkeleton />;
   }
 
   return (

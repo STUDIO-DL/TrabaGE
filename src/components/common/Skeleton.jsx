@@ -247,3 +247,221 @@ export function FormPageSkeleton({ fields = 5 }) {
   );
 }
 
+export function AppShellSkeleton({ showBottomNav = true }) {
+  return (
+    <div className="min-h-dvh bg-app-bg" aria-busy="true" aria-label="Cargando">
+      <div className="border-b border-app-border bg-app-card px-space-base py-space-md">
+        <Skeleton className="h-6 w-28" />
+      </div>
+      <div className="p-space-base">
+        <PostListSkeleton count={3} />
+      </div>
+      {showBottomNav ? (
+        <div className="fixed inset-x-0 bottom-0 border-t border-app-border bg-app-card/95 px-space-base py-space-sm pb-safe">
+          <div className="mx-auto flex max-w-lg justify-around">
+            {Array.from({ length: 5 }, (_, i) => (
+              <Skeleton key={i} className="h-8 w-8 rounded-radius-md" />
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function FollowersListSkeleton({ count = 4 }) {
+  return (
+    <ul className="mt-4 divide-y divide-gray-100" aria-busy="true" aria-label="Cargando seguidores">
+      {Array.from({ length: count }, (_, i) => (
+        <li key={i} className="flex items-center gap-3 py-3">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-radius-circular" />
+          <div className="min-w-0 flex-1 space-y-space-sm">
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-3 w-1/2" />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function AdminStatGridSkeleton({ count = 7 }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="surface-card p-4">
+          <Skeleton className="h-10 w-10 rounded-xl" />
+          <Skeleton className="mt-space-base h-8 w-16" />
+          <Skeleton className="mt-1 h-4 w-32" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function AdminDashboardSkeleton() {
+  return (
+    <div className="space-y-8" aria-busy="true" aria-label="Cargando panel de administración">
+      <AdminStatGridSkeleton count={7} />
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <Skeleton className="h-5 w-40" />
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Skeleton key={i} className="h-10 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <Skeleton className="h-5 w-48" />
+        <div className="mt-4 space-y-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="flex items-center justify-between gap-3">
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+              <Skeleton className="h-6 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AdminTableSkeleton({ rows = 8, columns = 5 }) {
+  return (
+    <div
+      className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+      aria-busy="true"
+      aria-label="Cargando tabla"
+    >
+      <div className="overflow-x-auto">
+        <div className="min-w-full">
+          <div className="flex gap-4 bg-gray-50 px-4 py-3">
+            {Array.from({ length: columns }, (_, i) => (
+              <Skeleton key={i} className="h-3 w-20 shrink-0" />
+            ))}
+          </div>
+          <div className="divide-y divide-gray-100">
+            {Array.from({ length: rows }, (_, i) => (
+              <div key={i} className="flex gap-4 px-4 py-3">
+                {Array.from({ length: columns }, (_, j) => (
+                  <Skeleton key={j} className="h-4 w-24 shrink-0" />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AdminProfileSkeleton() {
+  return (
+    <div className="mx-auto max-w-3xl space-y-6" aria-busy="true" aria-label="Cargando perfil admin">
+      <Skeleton className="h-4 w-full max-w-md" />
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <Skeleton className="mb-4 h-5 w-32" />
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Skeleton className="h-16 w-full rounded-2xl" />
+          <Skeleton className="h-16 w-full rounded-2xl" />
+        </div>
+      </div>
+      <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <Skeleton className="mb-4 h-5 w-48" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }, (_, i) => (
+            <div key={i} className="flex items-center justify-between py-2">
+              <div className="space-y-1">
+                <Skeleton className="h-4 w-36" />
+                <Skeleton className="h-3 w-48" />
+              </div>
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AdminSettingsSkeleton() {
+  return (
+    <div
+      className="max-w-xl space-y-5 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+      aria-busy="true"
+      aria-label="Cargando configuración"
+    >
+      {Array.from({ length: 3 }, (_, i) => (
+        <div key={i} className="space-y-2">
+          <Skeleton className="h-3.5 w-1/3" />
+          <Skeleton className="h-11 w-full rounded-xl" />
+        </div>
+      ))}
+      <Skeleton className="h-12 w-full rounded-xl" />
+      <Skeleton className="h-10 w-36 rounded-xl" />
+    </div>
+  );
+}
+
+export function AdminNotificationsSkeleton() {
+  return (
+    <div
+      className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm"
+      aria-busy="true"
+      aria-label="Cargando notificaciones"
+    >
+      <Skeleton className="mb-4 h-5 w-48" />
+      <div className="divide-y divide-gray-100">
+        {Array.from({ length: 5 }, (_, i) => (
+          <div key={i} className="flex items-start justify-between gap-4 py-4">
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-2/5" />
+              <Skeleton className="h-3 w-4/5" />
+            </div>
+            <Skeleton className="h-3 w-12 shrink-0" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AdminUserDetailSkeleton() {
+  return (
+    <div className="space-y-5" aria-busy="true" aria-label="Cargando detalle">
+      <div className="flex items-center gap-3">
+        <Skeleton className="h-14 w-14 rounded-radius-circular" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <Skeleton className="h-5 w-40" />
+          <div className="flex gap-2">
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-16 rounded-full" />
+          </div>
+        </div>
+      </div>
+      <div className="space-y-2 rounded-2xl border border-gray-100 bg-gray-50/60 px-4 py-2">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="flex justify-between py-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        ))}
+      </div>
+      <FormPageSkeleton fields={3} />
+    </div>
+  );
+}
+
+export function AuthConfirmSkeleton() {
+  return (
+    <div className="w-full space-y-5" aria-busy="true" aria-label="Verificando correo">
+      <Skeleton className="mx-auto h-14 w-14 rounded-radius-circular" />
+      <Skeleton className="mx-auto h-6 w-48" />
+      <SkeletonText lines={2} className="mx-auto max-w-xs" />
+    </div>
+  );
+}
+

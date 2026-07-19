@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Spinner from '../../components/ui/Spinner';
+import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { ROLE_PROFILE, ROLES } from '../../constants/roles';
 import { getOwnCandidateProfileKey } from '../../constants/profileQueryKeys';
 import { useAuth } from '../../hooks/useAuth';
@@ -98,9 +98,9 @@ export default function CandidateSetup() {
 
   if (initializing) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
+      <FormPageLayout title="Completa tu perfil">
+        <FormPageSkeleton fields={2} />
+      </FormPageLayout>
     );
   }
 

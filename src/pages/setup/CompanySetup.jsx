@@ -5,7 +5,7 @@ import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
-import Spinner from '../../components/ui/Spinner';
+import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { ACCOUNT_KINDS } from '../../constants/accountKinds';
 import { ROLE_PROFILE, ROLES } from '../../constants/roles';
 import {
@@ -141,9 +141,9 @@ export default function CompanySetup() {
 
   if (initializing) {
     return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner size="lg" />
-      </div>
+      <FormPageLayout title={`Configura tu ${orgLabels.entity}`}>
+        <FormPageSkeleton fields={3} />
+      </FormPageLayout>
     );
   }
 

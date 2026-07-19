@@ -95,6 +95,7 @@ export function useProfile(userId) {
   return {
     profile: query.data ?? null,
     loading: query.isLoading,
+    isFetched: query.isFetched,
     error: query.error?.message ?? null,
     refetch: query.refetch,
     queryKey,

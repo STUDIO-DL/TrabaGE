@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import AdminSectionCard from '../../components/admin/AdminSectionCard';
-import Spinner from '../../components/ui/Spinner';
+import { AdminNotificationsSkeleton } from '../../components/common/Skeleton';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import { formatRelativeTime } from '../../utils/formatDate';
@@ -23,11 +23,7 @@ export default function AdminNotifications() {
   }, [showToast]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-[240px] items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
+    return <AdminNotificationsSkeleton />;
   }
 
   return (

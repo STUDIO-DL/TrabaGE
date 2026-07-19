@@ -29,6 +29,7 @@ import { companyService } from '../services/company.service';
 import { isProfileSetupComplete } from '../utils/profileRequirements';
 import { reportError } from '../utils/logger';
 import { queryClient } from '../config/queryClient';
+import { getOwnCandidateProfileKey, getOwnCompanyProfileKey } from '../constants/profileQueryKeys';
 
 const AuthContext = createContext(null);
 
@@ -161,6 +162,16 @@ export function AuthProvider({ children }) {
 
       if (gen !== hydrateGenRef.current) return;
 
+      if (candidateResult?.data?.user_id) {
+        queryClient.setQueryData(
+          getOwnCandidateProfileKey(currentUser.id),
+          candidateResult.data,
+        );
+      }
+      if (companyResult?.data?.user_id) {
+        queryClient.setQueryData(getOwnCompanyProfileKey(currentUser.id), companyResult.data);
+      }
+
       setRole(userRole);
 
       if (userRole && userRole !== ROLES.ADMIN) {
@@ -191,10 +202,22 @@ export function AuthProvider({ children }) {
       if (isPersonalRole(userRole)) {
         const { data: candidateAfterBootstrap } = await profileService.getCandidateProfile(currentUser.id);
         if (gen !== hydrateGenRef.current) return;
+        if (candidateAfterBootstrap?.user_id) {
+          queryClient.setQueryData(
+            getOwnCandidateProfileKey(currentUser.id),
+            candidateAfterBootstrap,
+          );
+        }
         setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, candidateAfterBootstrap));
       } else if (isEmployerRole(userRole)) {
         const { data: companyAfterBootstrap } = await companyService.getCompanyProfile(currentUser.id);
         if (gen !== hydrateGenRef.current) return;
+        if (companyAfterBootstrap?.user_id) {
+          queryClient.setQueryData(
+            getOwnCompanyProfileKey(currentUser.id),
+            companyAfterBootstrap,
+          );
+        }
         const resolvedRole =
           normalizeRole(userRole, { companyType: companyAfterBootstrap?.company_type }) ?? userRole;
         setRole(resolvedRole);
