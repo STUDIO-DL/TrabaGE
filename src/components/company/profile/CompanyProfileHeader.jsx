@@ -26,6 +26,7 @@ import { formatFollowerNumber } from '../../../utils/formatFollowerCount';
 import { useAuth } from '../../../hooks/useAuth';
 import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
 import { ROLES } from '../../../constants/roles';
+import CompanyProfileActionBar from './CompanyProfileActionBar';
 import {
   profileBannerGradientClass,
   profileCompanyHeaderInfoClass,
@@ -104,6 +105,19 @@ export default function CompanyProfileHeader({
   followerCount = 0,
   showFollowerCount = false,
   onSettings,
+  showActions = false,
+  showFollow = false,
+  isFollowing = false,
+  followLoading = false,
+  canFollow = true,
+  onToggleFollow,
+  onViewJobs,
+  hasJobs = false,
+  shareUrl,
+  shareTitle,
+  reportTargetId,
+  onContact,
+  contactDisabled = false,
 }) {
   const navigate = useNavigate();
   const { role, user, getHomePath } = useAuth();
@@ -320,6 +334,25 @@ export default function CompanyProfileHeader({
               <p className="mt-space-sm text-caption font-medium tabular-nums text-app-muted">
                 {formatFollowerNumber(followerCount)} seguidores
               </p>
+            ) : null}
+
+            {showActions ? (
+              <div className="mt-space-md">
+                <CompanyProfileActionBar
+                  showFollow={showFollow}
+                  isFollowing={isFollowing}
+                  followLoading={followLoading}
+                  canFollow={canFollow}
+                  onToggleFollow={onToggleFollow}
+                  onViewJobs={onViewJobs}
+                  hasJobs={hasJobs}
+                  shareUrl={shareUrl}
+                  shareTitle={shareTitle}
+                  reportTargetId={reportTargetId}
+                  onContact={onContact}
+                  contactDisabled={contactDisabled}
+                />
+              </div>
             ) : null}
         </div>
       </div>

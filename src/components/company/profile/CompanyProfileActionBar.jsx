@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import AppIcon from '../../common/AppIcon';
 import {
   AlertTriangle,
+  Briefcase,
   Copy,
   MoreHorizontal,
   Phone,
@@ -16,13 +17,15 @@ import { useNotificationContext } from '../../../context/NotificationContext';
 import { notifyGuestBlocked } from '../../../utils/guestMode';
 import { shareContent, copyLink, getShareDescription } from '../../../utils/shareContent';
 import { REPORT_TARGET_TYPES } from '../../../constants/reportReasons';
-import {
-  profileActionButtonClass,
-  profileActionStripClass,
-  profileActionStripInnerClass,
-} from './companyProfileStyles';
+import { profileActionButtonClass } from './companyProfileStyles';
 
-function ProfileOverflowMenu({ onShare, onCopy, onReport }) {
+function ProfileOverflowMenu({
+  onShare,
+  onCopy,
+  onContact,
+  contactDisabled,
+  onReport,
+}) {
   const menuRef = useRef(null);
   const [open, setOpen] = useState(false);
 
@@ -40,18 +43,16 @@ function ProfileOverflowMenu({ onShare, onCopy, onReport }) {
     fn?.();
   };
 
-  if (!onShare && !onCopy && !onReport) return null;
-
   return (
-    <div className="relative shrink-0 sm:w-auto" ref={menuRef}>
+    <div className="relative shrink-0" ref={menuRef}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex h-btn-md min-h-touch min-w-touch w-full items-center justify-center rounded-radius-md bg-app-card text-app-text ring-1 ring-inset ring-app-border transition-colors duration-fast hover:bg-app-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 sm:w-auto"
+        className="inline-flex h-btn-md min-h-touch min-w-touch items-center justify-center rounded-radius-md bg-app-card text-app-muted ring-1 ring-inset ring-app-border transition-colors duration-fast hover:bg-app-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
         aria-label="Más opciones"
         aria-expanded={open}
       >
-        <AppIcon icon={MoreHorizontal} size={ICON_SIZES.md} className="text-app-text" />
+        <AppIcon icon={MoreHorizontal} size={ICON_SIZES.md} />
       </button>
 
       {open && (
@@ -62,7 +63,7 @@ function ProfileOverflowMenu({ onShare, onCopy, onReport }) {
               onClick={() => run(onShare)}
               className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface"
             >
-              <AppIcon icon={Share2} size={ICON_SIZES.sm} className="text-app-text" />
+              <AppIcon icon={Share2} size={ICON_SIZES.sm} className="text-app-subtle" />
               Compartir
             </button>
           )}
@@ -72,8 +73,19 @@ function ProfileOverflowMenu({ onShare, onCopy, onReport }) {
               onClick={() => run(onCopy)}
               className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface"
             >
-              <AppIcon icon={Copy} size={ICON_SIZES.sm} className="text-app-text" />
+              <AppIcon icon={Copy} size={ICON_SIZES.sm} className="text-app-subtle" />
               Copiar enlace
+            </button>
+          )}
+          {onContact && (
+            <button
+              type="button"
+              onClick={() => run(onContact)}
+              disabled={contactDisabled}
+              className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <AppIcon icon={Phone} size={ICON_SIZES.sm} className="text-app-subtle" />
+              Contactar
             </button>
           )}
           {onReport && (
@@ -82,7 +94,7 @@ function ProfileOverflowMenu({ onShare, onCopy, onReport }) {
               onClick={() => run(onReport)}
               className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface"
             >
-              <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-app-text" />
+              <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-amber-600" />
               Reportar
             </button>
           )}
@@ -133,62 +145,36 @@ export default function CompanyProfileActionBar({
 
   return (
     <>
-      <div className={profileActionStripClass}>
-        <div className={profileActionStripInnerClass}>
-          {showFollow && (
-            <FollowButton
-              isFollowing={isFollowing}
-              loading={followLoading}
-              canFollow={canFollow}
-              onToggle={onToggleFollow}
-              className={profileActionButtonClass}
-            />
-          )}
-
-          {onContact && (
-            <Button
-              type="button"
-              onClick={onContact}
-              disabled={contactDisabled}
-              variant={showFollow ? 'secondary' : 'primary'}
-              className={profileActionButtonClass}
-              fullWidth
-            >
-              <AppIcon icon={Phone} size={ICON_SIZES.md} className="text-current" />
-              Contactar
-            </Button>
-          )}
-
-          {hasJobs && onViewJobs && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onViewJobs}
-              className={profileActionButtonClass}
-              fullWidth
-            >
-              Ver empleos
-            </Button>
-          )}
-
-          {shareUrl && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleShare}
-              className={profileActionButtonClass}
-              fullWidth
-            >
-              <AppIcon icon={Share2} size={ICON_SIZES.md} className="text-current" />
-              Compartir
-            </Button>
-          )}
-
-          <ProfileOverflowMenu
-            onCopy={shareUrl ? handleCopy : undefined}
-            onReport={reportTargetId ? handleReport : undefined}
+      <div className="flex flex-wrap items-center gap-space-sm">
+        {showFollow && (
+          <FollowButton
+            isFollowing={isFollowing}
+            loading={followLoading}
+            canFollow={canFollow}
+            onToggle={onToggleFollow}
+            className={profileActionButtonClass}
           />
-        </div>
+        )}
+
+        {hasJobs && onViewJobs && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onViewJobs}
+            className={`${profileActionButtonClass} gap-space-xs`}
+          >
+            <AppIcon icon={Briefcase} size={ICON_SIZES.sm} className="text-current" />
+            Ver empleos
+          </Button>
+        )}
+
+        <ProfileOverflowMenu
+          onShare={shareUrl ? handleShare : undefined}
+          onCopy={shareUrl ? handleCopy : undefined}
+          onContact={onContact}
+          contactDisabled={contactDisabled}
+          onReport={reportTargetId ? handleReport : undefined}
+        />
       </div>
 
       <ReportModal

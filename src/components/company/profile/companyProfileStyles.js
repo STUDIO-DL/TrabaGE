@@ -43,14 +43,8 @@ export const profileCompanyNameRowClass =
 export const profileHeadlineClass =
   'break-words text-body-small leading-relaxed text-app-muted sm:text-body';
 
-/** Unified profile action buttons (same height, radius, weight) */
-export const profileActionButtonClass = 'h-btn-md min-h-touch w-full sm:w-auto sm:flex-1';
-
-export const profileActionStripClass =
-  'border-b border-app-border bg-app-card px-space-base py-space-base';
-
-export const profileActionStripInnerClass =
-  'mx-auto flex w-full max-w-lg flex-col gap-space-sm sm:flex-row sm:flex-wrap';
+/** Compact profile action buttons — inline row, not full-width stack */
+export const profileActionButtonClass = 'h-btn-md min-h-touch shrink-0 px-space-md';
 
 export const profileBannerGhostButtonClass =
   'inline-flex h-btn-md min-h-touch shrink-0 items-center justify-center gap-space-xs rounded-radius-md bg-transparent px-space-md text-body-small font-semibold text-white ring-1 ring-inset ring-white/90 transition-colors duration-fast hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 disabled:cursor-not-allowed disabled:opacity-50';

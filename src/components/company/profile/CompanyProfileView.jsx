@@ -10,7 +10,6 @@ import {
 import CompanyProfileHeader from './CompanyProfileHeader';
 import CompanyProfileTabs from './CompanyProfileTabs';
 import CompanyProfileCompleteness from './CompanyProfileCompleteness';
-import CompanyProfileActionBar from './CompanyProfileActionBar';
 import CompanyAboutSection from './CompanyAboutSection';
 import CompanyAboutTabSection from './CompanyAboutTabSection';
 import CompanyServicesSection from './CompanyServicesSection';
@@ -126,24 +125,20 @@ export default function CompanyProfileView({
         followerCount={followerCount}
         showFollowerCount={showFollowerCount}
         onSettings={onSettings}
+        showActions={showPublicActions}
+        showFollow={showFollowButton}
+        isFollowing={isFollowing}
+        followLoading={followLoading}
+        canFollow={canFollow}
+        onToggleFollow={onToggleFollow}
+        onViewJobs={() => goToTab('empleos')}
+        hasJobs={activeJobCount > 0}
+        shareUrl={shareUrl}
+        shareTitle={shareTitle}
+        reportTargetId={reportTargetId}
+        onContact={onContact}
+        contactDisabled={contactDisabled}
       />
-
-      {showPublicActions ? (
-        <CompanyProfileActionBar
-          showFollow={showFollowButton}
-          isFollowing={isFollowing}
-          followLoading={followLoading}
-          canFollow={canFollow}
-          onToggleFollow={onToggleFollow}
-          onViewJobs={() => goToTab('empleos')}
-          hasJobs={activeJobCount > 0}
-          shareUrl={shareUrl}
-          shareTitle={shareTitle}
-          reportTargetId={reportTargetId}
-          onContact={onContact}
-          contactDisabled={contactDisabled}
-        />
-      ) : null}
 
       {isOwn && !readOnly ? (
         <CompanyProfileCompleteness profile={profile} jobCount={activeJobCount} />
