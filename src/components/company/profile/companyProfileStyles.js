@@ -4,11 +4,9 @@ export const premiumCardClass =
 export const sectionTitleClass =
   'text-subtitle font-semibold text-app-text';
 
-export const profileContentShellClass =
-  'mx-auto w-full max-w-[75rem]';
+export const profileContentShellClass = 'w-full';
 
-export const profileInicioGridClass =
-  'grid gap-space-base lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start';
+export const profileInicioGridClass = 'grid gap-space-base';
 
 export const sectionCardClass =
   'overflow-hidden rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1';
@@ -32,7 +30,7 @@ export const profileBannerGradientClass =
   'absolute inset-0 bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500';
 
 /** Shared cover height across personal, business, and organization profiles */
-export const profileCoverHeightClass = 'h-[7.5rem] sm:h-[9rem] md:h-[10rem]';
+export const profileCoverHeightClass = 'h-[7.5rem] sm:h-[8.5rem]';
 
 /** Padding for the info block below the cover */
 export const profileHeaderContentClass = 'px-space-base pb-space-md sm:px-space-lg';
@@ -41,19 +39,19 @@ export const profileHeaderContentClass = 'px-space-base pb-space-md sm:px-space-
 export const profileHeaderBodyClass =
   'flex flex-col gap-space-md sm:flex-row sm:items-start sm:gap-space-lg md:gap-space-xl';
 
-/** Company header row — logo and name stay side-by-side so the name is never covered */
+/** Company header — stacks on mobile, logo + name side-by-side from sm (LinkedIn-style) */
 export const profileCompanyHeaderBodyClass =
-  'flex flex-row items-start gap-space-sm sm:gap-space-lg md:gap-space-xl';
+  'flex flex-col gap-space-md sm:flex-row sm:items-start sm:gap-space-lg';
 
 /** Pull personal avatar up ~50% into the cover (4.5rem mobile / 7rem sm+) */
 export const profilePersonalAvatarOverlapClass = '-mt-[2.25rem] sm:-mt-[3.5rem]';
 
 /** Pull company logo up ~50% into the cover (7rem avatar + frame) */
-export const profileCompanyLogoOverlapClass = '-mt-[3.5rem]';
+export const profileCompanyLogoOverlapClass = '-mt-[2.25rem] sm:-mt-[3.5rem]';
 
-/** Reserve space beside the logo so the company name always clears the avatar block */
+/** Reserve space beside the logo on sm+ so the company name clears the avatar block */
 export const profileCompanyHeaderInfoClass =
-  'min-w-0 flex-1 pt-0.5 sm:pt-[3.75rem]';
+  'min-w-0 flex-1 pt-space-xs sm:pt-[3.75rem]';
 
 export const profilePersonalAvatarFrameClass =
   'rounded-radius-circular bg-app-card p-0.5 ring-4 ring-app-card shadow-elevation-2';

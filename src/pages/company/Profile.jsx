@@ -21,7 +21,7 @@ export default function Profile() {
   }
 
   return (
-    <PageContainer topBar={false} className="max-w-none">
+    <PageContainer topBar={false}>
       <CompanyProfileLayout
         userId={user?.id}
         isPreviewMode={isPreviewMode}

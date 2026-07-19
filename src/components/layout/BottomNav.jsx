@@ -87,12 +87,12 @@ export default function BottomNav() {
     <nav
       aria-label="Navegación principal"
       className={[
-        'fixed left-0 right-0 z-nav border-t border-app-border bg-app-card/95 backdrop-blur keyboard-aware-footer',
+        'fixed inset-x-0 z-nav flex justify-center keyboard-aware-footer',
         isKeyboardVisible ? '' : 'pb-safe',
       ].join(' ')}
       style={{ bottom: bottomBarInset }}
     >
-      <div className="mx-auto flex max-w-lg items-end">
+      <div className="flex w-full max-w-lg items-end border-t border-app-border bg-app-card/95 backdrop-blur">
         {items.map(({ to, label, icon, showBadge, prominent }) => {
           if (prominent) {
             return (
