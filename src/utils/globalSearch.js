@@ -1,5 +1,5 @@
-// Home/global search groups people, businesses, organizations, and optionally jobs.
-export const SEARCH_ENTITY_ORDER = ['personal', 'business', 'organization', 'job'];
+// Home/global search groups people, businesses, and organizations (profiles only).
+export const SEARCH_ENTITY_ORDER = ['personal', 'business', 'organization'];
 
 export const DEDICATED_SEARCH_ENTITY_ORDER = ['personal', 'companies', 'job'];
 

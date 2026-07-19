@@ -18,7 +18,7 @@ export default function CompanyFeedHeader() {
         <div className={topBarInnerClass}>
           <SearchBarTrigger
             className="min-w-0 flex-1"
-            placeholder="Buscar usuarios, empresas y empleos…"
+            placeholder="Buscar usuarios y empresas…"
             variant="rounded"
           />
           <Link

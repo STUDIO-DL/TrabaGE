@@ -1,6 +1,6 @@
 import SearchBarTrigger from '../search/SearchBarTrigger';
 
-export default function SearchInput({ placeholder = 'Buscar usuarios, empresas y empleos…' }) {
+export default function SearchInput({ placeholder = 'Buscar usuarios y empresas…' }) {
   return (
     <SearchBarTrigger
       placeholder={placeholder}
