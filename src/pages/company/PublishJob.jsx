@@ -13,6 +13,7 @@ import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { CITIES } from '../../constants/cities';
 import { WORK_MODES } from '../../constants/workModes';
 import { useAuth } from '../../hooks/useAuth';
+import { useProfile } from '../../hooks/useProfile';
 import { ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
@@ -83,9 +84,10 @@ export default function PublishJob() {
   const navigate = useNavigate();
   const { jobId } = useParams();
   const { user, isPreviewMode, role } = useAuth();
+  const { profile, loading: profileLoading } = useProfile();
   const base = role || ROLES.BUSINESS;
   const { showToast } = useNotificationContext();
-  const [companyProfileReady, setCompanyProfileReady] = useState(isPreviewMode);
+  const companyProfileReady = isPreviewMode || isCompanyRequiredComplete(profile);
   const [form, setForm] = useState({
     title: '',
     role: '',
@@ -144,20 +146,6 @@ export default function PublishJob() {
     };
   }, [jobId, user?.id]);
 
-  useEffect(() => {
-    if (isPreviewMode || !user?.id) return undefined;
-    let mounted = true;
-
-    companyService.getCompanyProfile(user.id).then(({ data }) => {
-      if (!mounted) return;
-      setCompanyProfileReady(isCompanyRequiredComplete(data));
-    });
-
-    return () => {
-      mounted = false;
-    };
-  }, [isPreviewMode, user?.id]);
-
   const saveJob = async (status) => {
     if (isPreviewMode) {
       showToast(GUEST_MODE_MESSAGE, 'info');
@@ -169,7 +157,7 @@ export default function PublishJob() {
       return;
     }
 
-    if (status === 'active' && !companyProfileReady) {
+    if (status === 'active' && !isCompanyRequiredComplete(profile)) {
       setError('Completa el perfil de tu empresa antes de publicar ofertas.');
       return;
     }
@@ -224,6 +212,14 @@ export default function PublishJob() {
   if (initialLoading) {
     return (
       <PageContainer title="Editar empleo" backButton bottomNav={false}>
+        <FormPageSkeleton fields={6} />
+      </PageContainer>
+    );
+  }
+
+  if (!isPreviewMode && profileLoading) {
+    return (
+      <PageContainer title={jobId ? 'Editar empleo' : 'Publicar empleo'} backButton bottomNav={false}>
         <FormPageSkeleton fields={6} />
       </PageContainer>
     );

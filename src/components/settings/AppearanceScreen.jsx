@@ -13,20 +13,20 @@ function ThemePreview({ theme }) {
   return (
     <div
       className={[
-        'mt-5 overflow-hidden rounded-2xl border p-3 transition',
+        'mt-5 overflow-hidden rounded-radius-lg border p-3 transition',
         isDark
-          ? 'border-slate-600 bg-slate-950'
-          : 'border-slate-200 bg-slate-50',
+          ? 'border-app-border bg-app-bg'
+          : 'border-app-border bg-app-surface',
       ].join(' ')}
       aria-hidden
     >
-      <div className={['mb-3 h-3 w-20 rounded-full', isDark ? 'bg-slate-700' : 'bg-white'].join(' ')} />
+      <div className={['mb-3 h-3 w-20 rounded-full', isDark ? 'bg-app-border' : 'bg-app-card'].join(' ')} />
       <div className="grid grid-cols-[1fr_2fr] gap-2">
-        <div className={['h-16 rounded-xl', isDark ? 'bg-slate-800' : 'bg-white'].join(' ')} />
+        <div className={['h-16 rounded-radius-md', isDark ? 'bg-app-elevated' : 'bg-app-card'].join(' ')} />
         <div className="space-y-2">
-          <div className={['h-5 rounded-lg', isDark ? 'bg-primary-500/70' : 'bg-primary-100'].join(' ')} />
-          <div className={['h-4 rounded-lg', isDark ? 'bg-slate-700' : 'bg-slate-200'].join(' ')} />
-          <div className={['h-4 w-2/3 rounded-lg', isDark ? 'bg-slate-700' : 'bg-slate-200'].join(' ')} />
+          <div className={['h-5 rounded-radius-sm', isDark ? 'bg-primary-500/70' : 'bg-primary-100'].join(' ')} />
+          <div className={['h-4 rounded-radius-sm', isDark ? 'bg-app-border' : 'bg-app-border'].join(' ')} />
+          <div className={['h-4 w-2/3 rounded-radius-sm', isDark ? 'bg-app-border' : 'bg-app-border'].join(' ')} />
         </div>
       </div>
     </div>
@@ -41,10 +41,10 @@ function ThemeCard({ option, selected, saving, onSelect }) {
       disabled={saving}
       aria-pressed={selected}
       className={[
-        'group w-full rounded-[30px] border p-5 text-left shadow-[0_18px_46px_rgba(15,23,42,0.06)] transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 active:scale-[0.99]',
+        'group w-full rounded-radius-xl border p-space-base text-left shadow-elevation-2 transition duration-fast focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2 active:scale-[0.99]',
         selected
-          ? 'border-primary-300 bg-primary-50/70 shadow-[0_20px_52px_rgba(37,99,235,0.14)]'
-          : 'border-slate-100 bg-white hover:-translate-y-0.5 hover:border-primary-100',
+          ? 'border-primary-300 bg-app-primary-soft/70 shadow-elevation-2'
+          : 'border-app-border bg-app-card hover:-translate-y-0.5 hover:border-primary-100',
         saving ? 'cursor-wait opacity-80' : '',
       ].join(' ')}
     >
@@ -59,17 +59,17 @@ function ThemeCard({ option, selected, saving, onSelect }) {
         </span>
         <span className="min-w-0 flex-1">
           <span className="flex items-center justify-between gap-3">
-            <span className="text-subtitle font-bold text-slate-950">{option.title}</span>
+            <span className="text-subtitle font-bold text-app-text">{option.title}</span>
             <span
               className={[
-                'flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition',
-                selected ? 'border-primary-600 bg-primary-600 text-white' : 'border-slate-200 bg-white text-transparent',
+                'flex h-7 w-7 shrink-0 items-center justify-center rounded-radius-circular border transition',
+                selected ? 'border-primary-600 bg-primary-600 text-white' : 'border-app-border bg-app-card text-transparent',
               ].join(' ')}
             >
               <AppIcon icon={BadgeCheck} size={ICON_SIZES.sm} strokeWidth={2.2} />
             </span>
           </span>
-          <span className="mt-1.5 block text-[13px] leading-relaxed text-slate-500">
+          <span className="mt-1.5 block text-body-small leading-relaxed text-app-muted">
             {option.description}
           </span>
         </span>
@@ -98,16 +98,16 @@ export default function AppearanceScreen() {
 
   return (
     <PageContainer backButton className="bg-app-surface">
-      <div className="min-h-dvh bg-gradient-to-b from-white via-slate-50 to-slate-50 px-5 pb-28 pt-5 theme-transition">
+      <div className="bg-gradient-to-b from-app-card via-app-surface to-app-surface px-space-base pt-space-base theme-transition">
         <div className="mx-auto w-full max-w-lg">
-          <div className="mb-6 rounded-[30px] border border-slate-100 bg-white p-5 shadow-[0_18px_46px_rgba(15,23,42,0.05)]">
-            <h1 className="text-[24px] font-bold tracking-[-0.02em] text-slate-950">Apariencia</h1>
-            <p className="mt-2 text-[14px] leading-relaxed text-slate-500">
+          <div className="mb-space-lg surface-card p-space-base">
+            <h1 className="text-heading-m text-app-text">Apariencia</h1>
+            <p className="mt-space-sm text-body-small leading-relaxed text-app-muted">
               Personaliza el aspecto visual de TrabaGE.
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-space-base">
             {THEME_OPTIONS.map((option) => (
               <ThemeCard
                 key={option.value}

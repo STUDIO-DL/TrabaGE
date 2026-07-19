@@ -11,8 +11,16 @@ export default function PageContainer({
   className = '',
   contentClassName = '',
 }) {
+  const shellClass = [
+    bottomNav ? 'page-shell' : 'min-h-dvh',
+    'mx-auto max-w-lg bg-app-bg text-app-text',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <div className={`page-shell mx-auto max-w-lg bg-app-bg text-app-text ${className}`}>
+    <div className={shellClass}>
       {topBar !== false &&
         (topBar ||
           (backButton || actions || title ? (

@@ -51,7 +51,8 @@ export default function FormPageLayout({
         <div
           className="shrink-0"
           style={{
-            paddingBottom: `calc(4rem + env(safe-area-inset-bottom, 0px) + ${keyboardOffset}px)`,
+            height: 'var(--bottom-nav-height)',
+            paddingBottom: `calc(env(safe-area-inset-bottom, 0px) + ${keyboardOffset}px)`,
           }}
           aria-hidden
         />

@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { ROLES, getRolePathPrefix, isEmployerRole, rolePath } from '../../constants/roles';
@@ -55,6 +56,11 @@ export default function BottomNav() {
   const { role, user, isPreviewMode } = useAuth();
   const { bottomBarInset, isKeyboardVisible } = useKeyboard();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const items = useMemo(
     () => (isEmployerRole(role) ? buildEmployerNav(role) : buildPersonalNav(ROLES.PERSONAL)),
@@ -81,18 +87,18 @@ export default function BottomNav() {
     };
   }, [isPreviewMode, role, user?.id]);
 
-  if (role === ROLES.ADMIN) return null;
+  if (role === ROLES.ADMIN || !mounted) return null;
 
-  return (
+  const nav = (
     <nav
       aria-label="Navegación principal"
       className={[
-        'fixed inset-x-0 z-nav flex justify-center keyboard-aware-footer',
+        'fixed inset-x-0 bottom-0 z-nav border-t border-app-border bg-app-card/95 backdrop-blur supports-[backdrop-filter]:bg-app-card/90 keyboard-aware-footer',
         isKeyboardVisible ? '' : 'pb-safe',
       ].join(' ')}
       style={{ bottom: bottomBarInset }}
     >
-      <div className="flex w-full max-w-lg items-end border-t border-app-border bg-app-card/95 backdrop-blur">
+      <div className="mx-auto flex w-full max-w-lg items-end">
         {items.map(({ to, label, icon, showBadge, prominent }) => {
           if (prominent) {
             return (
@@ -151,4 +157,6 @@ export default function BottomNav() {
       </div>
     </nav>
   );
+
+  return createPortal(nav, document.body);
 }

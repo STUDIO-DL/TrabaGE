@@ -223,7 +223,7 @@ export default function SettingsScreen({ accountType }) {
 
   return (
     <PageContainer topBar={false} bottomNav className="bg-app-surface">
-      <div className="min-h-dvh bg-gradient-to-b from-app-card via-app-surface to-app-surface pb-28 pt-safe">
+      <div className="bg-gradient-to-b from-app-card via-app-surface to-app-surface pt-safe">
         <div className="mx-auto w-full max-w-lg px-space-base pt-space-lg sm:px-space-lg">
           <div className="space-y-space-xl">
             <AccountSummaryCard

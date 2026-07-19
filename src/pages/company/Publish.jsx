@@ -53,7 +53,7 @@ export default function Publish() {
 
   if (isPreviewMode) {
     return (
-      <PageContainer topBar={false} bottomNav={false} className="!pb-0 bg-white">
+      <PageContainer topBar={false} bottomNav={false} className="bg-app-bg">
         <div className="p-4">
           <div className="rounded-2xl border border-primary-100 bg-primary-50 p-6 text-center">
             <p className="text-sm text-primary-900">{GUEST_MODE_MESSAGE}</p>
@@ -71,7 +71,7 @@ export default function Publish() {
 
   if (mode === PUBLISH_MODES.POST) {
     return (
-      <PageContainer topBar={false} bottomNav={false} className="!pb-0 bg-white">
+      <PageContainer topBar={false} bottomNav={false} className="bg-app-bg">
         <PostComposer
           onSubmit={handleCreatePost}
           loading={loading}

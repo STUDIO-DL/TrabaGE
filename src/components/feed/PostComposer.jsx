@@ -70,12 +70,12 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-white text-gray-900">
-      <header className="flex h-topbar shrink-0 items-center gap-space-sm border-b border-gray-100 px-space-base">
+    <form onSubmit={handleSubmit} className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-app-text">
+      <header className="flex h-topbar shrink-0 items-center gap-space-sm border-b border-app-border px-space-base pt-safe">
         <button
           type="button"
           onClick={handleClose}
-          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-circular text-gray-600 transition-colors hover:bg-gray-100"
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface"
           aria-label="Cerrar"
         >
           <AppIcon icon={X} size={ICON_SIZES.md} />
@@ -97,7 +97,7 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
           size="sm"
           loading={loading}
           disabled={!canPublish}
-          className="!rounded-full px-5 disabled:bg-gray-200 disabled:text-gray-400"
+          className="!rounded-full px-5 disabled:bg-app-disabled disabled:text-app-text-disabled"
         >
           {loading ? getUploadPhaseLabel(uploadPhase) || 'Publicando...' : 'Publicar'}
         </Button>
@@ -110,7 +110,7 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
           placeholder="Comparte tus ideas…"
           rows={8}
           autoFocus
-          className="w-full flex-1 resize-none border-0 bg-transparent text-body leading-relaxed text-gray-900 outline-none placeholder:text-gray-400 placeholder:opacity-80"
+          className="w-full flex-1 resize-none border-0 bg-transparent text-body leading-relaxed text-app-text outline-none placeholder:text-app-subtle placeholder:opacity-80"
         />
 
         {imagePreview && (
@@ -131,7 +131,7 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
       </div>
 
       <footer
-        className="keyboard-aware-footer flex shrink-0 items-center justify-end gap-0.5 border-t border-gray-100 px-space-base py-space-sm"
+        className="keyboard-aware-footer flex shrink-0 items-center justify-end gap-0.5 border-t border-app-border bg-app-card px-space-base py-space-sm"
         style={{ paddingBottom: footerPaddingBottom }}
       >
         <input
@@ -144,7 +144,7 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
         <button
           type="button"
           onClick={openFilePicker}
-          className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-gray-600 transition-colors hover:bg-gray-100"
+          className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface"
           aria-label="Añadir imagen"
         >
           <AppIcon icon={Image} size={ICON_SIZES.md} />
@@ -152,7 +152,7 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
         <button
           type="button"
           onClick={openFilePicker}
-          className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-gray-600 transition-colors hover:bg-gray-100"
+          className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface"
           aria-label="Añadir archivo"
         >
           <AppIcon icon={Plus} size={ICON_SIZES.md} />

@@ -155,7 +155,7 @@ export default function NotificationsView({ role = 'candidate' }) {
       }
     >
       {/* Segmented filter chips — horizontally scrollable, no scrollbar clutter */}
-      <div className="sticky top-14 z-10 border-b border-app-border bg-app-bg/95 backdrop-blur supports-[backdrop-filter]:bg-app-bg/80">
+      <div className="sticky-below-topbar border-b border-app-border bg-app-bg/95 backdrop-blur supports-[backdrop-filter]:bg-app-bg/80">
         <div className="flex gap-space-sm overflow-x-auto px-space-base py-space-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {NOTIFICATION_FILTERS.map((filter) => {
             const isActive = activeFilter === filter.id;
