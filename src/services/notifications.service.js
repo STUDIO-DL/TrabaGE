@@ -10,7 +10,7 @@ async function sendPushBatch(recipientIds, title, body, data = {}) {
   for (let i = 0; i < recipientIds.length; i += PUSH_BATCH_SIZE) {
     const batch = recipientIds.slice(i, i + PUSH_BATCH_SIZE);
     try {
-      await supabase.functions.invoke(PUSH_FUNCTION, {
+      const { data: responseData, error } = await supabase.functions.invoke(PUSH_FUNCTION, {
         body: {
           recipient_ids: batch,
           title,
@@ -18,6 +18,14 @@ async function sendPushBatch(recipientIds, title, body, data = {}) {
           data,
         },
       });
+
+      if (error || responseData?.error) {
+        reportError(error ?? new Error(responseData?.error ?? 'Push send failed'), {
+          area: 'push_notification_batch',
+          recipients: batch.length,
+          response: responseData ?? null,
+        });
+      }
     } catch (error) {
       reportError(error, { area: 'push_notification_batch', recipients: batch.length });
     }

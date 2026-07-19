@@ -148,7 +148,35 @@ serve(async (req) => {
     headings: { en: title, es: title },
     contents: { en: body, es: body },
     data,
+    priority: 10,
+    android_sound: 'default',
+    ios_sound: 'default',
   };
+
+  const appUrl = (
+    Deno.env.get('APP_URL') ??
+    Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ??
+    'https://trabage.org'
+  ).replace(/\/$/, '');
+
+  const icon192 = `${appUrl}/icons/trabage-icon-192.png`;
+  const icon512 = `${appUrl}/icons/trabage-icon-512.png`;
+  const icon96 = `${appUrl}/icons/trabage-icon-96.png`;
+
+  payload.small_icon = icon192;
+  payload.large_icon = icon512;
+  payload.chrome_web_icon = icon192;
+  payload.firefox_icon = icon192;
+  payload.chrome_web_badge = icon96;
+
+  const rawLink = data?.link ? String(data.link).trim() : '';
+  if (rawLink) {
+    const webUrl = /^https?:\/\//i.test(rawLink)
+      ? rawLink
+      : `${appUrl}${rawLink.startsWith('/') ? rawLink : `/${rawLink}`}`;
+    payload.web_url = webUrl;
+    payload.url = webUrl;
+  }
 
   payload.include_aliases = { external_id: pushRecipients };
 

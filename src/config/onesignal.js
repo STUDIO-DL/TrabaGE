@@ -48,11 +48,36 @@ async function syncPlayerIdFromSubscription() {
   }
 }
 
+function resolvePushNavigationTarget(rawLink) {
+  if (!rawLink || typeof rawLink !== 'string') return null;
+
+  const trimmed = rawLink.trim();
+  if (!trimmed) return null;
+
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+  const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
+  const appOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+  return appOrigin ? `${appOrigin}${path}` : path;
+}
+
 function attachOneSignalListeners() {
   try {
     OneSignal.Notifications?.addEventListener?.('permissionChange', (granted) => {
       notifyPermissionChangeListeners();
       if (granted) void syncPlayerIdFromSubscription();
+    });
+
+    OneSignal.Notifications?.addEventListener?.('click', (event) => {
+      const additionalData =
+        event?.notification?.additionalData ??
+        event?.notification?.data ??
+        event?.notification?.custom?.a ??
+        null;
+      const target = resolvePushNavigationTarget(additionalData?.link);
+      if (target && typeof window !== 'undefined') {
+        window.location.assign(target);
+      }
     });
 
     const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
@@ -82,6 +107,7 @@ export const initOneSignal = async () => {
         serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
         serviceWorkerParam: { scope: '/' },
         notifyButton: { enable: false },
+        autoResubscribe: true,
         allowLocalhostAsSecureOrigin: import.meta.env.DEV,
         promptOptions: {
           slidedown: {
@@ -114,21 +140,30 @@ export const initOneSignal = async () => {
   return initPromise;
 };
 
+async function ensurePushSubscriptionActive() {
+  const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
+  if (subscription?.optedIn === false) {
+    await subscription.optIn?.();
+  }
+  await syncPlayerIdFromSubscription();
+}
+
 export const requestNotificationPermission = async () => {
   await initOneSignal();
 
   try {
-    if (initialized && OneSignal.Notifications?.permission) {
-      await syncPlayerIdFromSubscription();
-      return true;
-    }
-
-    if (initialized && OneSignal.Notifications?.requestPermission) {
-      const granted = await OneSignal.Notifications.requestPermission();
-      if (granted) {
-        await syncPlayerIdFromSubscription();
+    if (initialized) {
+      if (OneSignal.Notifications?.permissionNative === 'denied') {
+        return false;
       }
-      return Boolean(granted);
+
+      if (!OneSignal.Notifications?.permission && OneSignal.Notifications?.requestPermission) {
+        const granted = await OneSignal.Notifications.requestPermission();
+        if (!granted) return false;
+      }
+
+      await ensurePushSubscriptionActive();
+      return true;
     }
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
@@ -157,12 +192,20 @@ export const requestNotificationPermission = async () => {
 };
 
 export const getNotificationPermissionStatus = () => {
+  if (initialized && OneSignal.Notifications?.permissionNative) {
+    return OneSignal.Notifications.permissionNative;
+  }
+
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return 'default';
   }
 
   return Notification.permission;
 };
+
+export const isPushSupported = () =>
+  typeof window !== 'undefined' &&
+  ('Notification' in window || 'serviceWorker' in navigator);
 
 export const setOneSignalPushEnabled = async (enabled) => {
   await initOneSignal();
