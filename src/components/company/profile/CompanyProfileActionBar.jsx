@@ -18,23 +18,13 @@ import { shareContent, copyLink, getShareDescription } from '../../../utils/shar
 import { REPORT_TARGET_TYPES } from '../../../constants/reportReasons';
 import {
   profileActionButtonClass,
-  profileBannerFollowButtonClass,
-  profileBannerFollowFollowingClass,
-  profileBannerGhostButtonClass,
-  profileBannerMenuButtonClass,
+  profileActionStripClass,
+  profileActionStripInnerClass,
 } from './companyProfileStyles';
 
-function ProfileMenu({
-  onShare,
-  onCopy,
-  onContact,
-  contactDisabled,
-  onReport,
-  variant = 'default',
-}) {
+function ProfileOverflowMenu({ onShare, onCopy, onReport }) {
   const menuRef = useRef(null);
   const [open, setOpen] = useState(false);
-  const onBanner = variant === 'banner';
 
   useEffect(() => {
     if (!open) return;
@@ -50,20 +40,18 @@ function ProfileMenu({
     fn?.();
   };
 
-  const triggerClass = onBanner
-    ? profileBannerMenuButtonClass
-    : 'inline-flex h-11 min-h-touch min-w-[44px] items-center justify-center rounded-radius-md bg-app-card text-app-muted ring-1 ring-inset ring-app-border transition-colors duration-fast hover:bg-app-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
+  if (!onShare && !onCopy && !onReport) return null;
 
   return (
-    <div className="relative shrink-0" ref={menuRef}>
+    <div className="relative shrink-0 sm:w-auto" ref={menuRef}>
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className={triggerClass}
+        className="inline-flex h-btn-md min-h-touch min-w-touch w-full items-center justify-center rounded-radius-md bg-app-card text-app-text ring-1 ring-inset ring-app-border transition-colors duration-fast hover:bg-app-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 sm:w-auto"
         aria-label="Más opciones"
         aria-expanded={open}
       >
-        <AppIcon icon={MoreHorizontal} size={ICON_SIZES.md} />
+        <AppIcon icon={MoreHorizontal} size={ICON_SIZES.md} className="text-app-text" />
       </button>
 
       {open && (
@@ -74,7 +62,7 @@ function ProfileMenu({
               onClick={() => run(onShare)}
               className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface"
             >
-              <AppIcon icon={Share2} size={ICON_SIZES.sm} className="text-app-subtle" />
+              <AppIcon icon={Share2} size={ICON_SIZES.sm} className="text-app-text" />
               Compartir
             </button>
           )}
@@ -84,19 +72,8 @@ function ProfileMenu({
               onClick={() => run(onCopy)}
               className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface"
             >
-              <AppIcon icon={Copy} size={ICON_SIZES.sm} className="text-app-subtle" />
+              <AppIcon icon={Copy} size={ICON_SIZES.sm} className="text-app-text" />
               Copiar enlace
-            </button>
-          )}
-          {onContact && (
-            <button
-              type="button"
-              onClick={() => run(onContact)}
-              disabled={contactDisabled}
-              className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <AppIcon icon={Phone} size={ICON_SIZES.sm} className="text-app-subtle" />
-              Contactar
             </button>
           )}
           {onReport && (
@@ -105,7 +82,7 @@ function ProfileMenu({
               onClick={() => run(onReport)}
               className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface"
             >
-              <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-amber-600" />
+              <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-app-text" />
               Reportar
             </button>
           )}
@@ -116,7 +93,6 @@ function ProfileMenu({
 }
 
 export default function CompanyProfileActionBar({
-  variant = 'default',
   showFollow = false,
   isFollowing = false,
   followLoading = false,
@@ -133,7 +109,6 @@ export default function CompanyProfileActionBar({
   const [reportOpen, setReportOpen] = useState(false);
   const { isPreviewMode, user } = useAuth();
   const { showToast } = useNotificationContext();
-  const onBanner = variant === 'banner';
 
   const handleShare = () => {
     shareContent({
@@ -158,51 +133,62 @@ export default function CompanyProfileActionBar({
 
   return (
     <>
-      <div className="flex flex-wrap items-stretch gap-space-sm">
-        {showFollow && (
-          <FollowButton
-            isFollowing={isFollowing}
-            loading={followLoading}
-            canFollow={canFollow}
-            onToggle={onToggleFollow}
-            appearance={onBanner ? 'banner' : 'default'}
-            className={
-              onBanner
-                ? isFollowing
-                  ? profileBannerFollowFollowingClass
-                  : profileBannerFollowButtonClass
-                : profileActionButtonClass
-            }
-          />
-        )}
-        {hasJobs && (
-          onBanner ? (
-            <button
+      <div className={profileActionStripClass}>
+        <div className={profileActionStripInnerClass}>
+          {showFollow && (
+            <FollowButton
+              isFollowing={isFollowing}
+              loading={followLoading}
+              canFollow={canFollow}
+              onToggle={onToggleFollow}
+              className={profileActionButtonClass}
+            />
+          )}
+
+          {onContact && (
+            <Button
               type="button"
-              onClick={onViewJobs}
-              className={profileBannerGhostButtonClass}
+              onClick={onContact}
+              disabled={contactDisabled}
+              variant={showFollow ? 'secondary' : 'primary'}
+              className={profileActionButtonClass}
+              fullWidth
             >
-              Ver empleos
-            </button>
-          ) : (
+              <AppIcon icon={Phone} size={ICON_SIZES.md} className="text-current" />
+              Contactar
+            </Button>
+          )}
+
+          {hasJobs && onViewJobs && (
             <Button
               type="button"
               variant="secondary"
               onClick={onViewJobs}
-              className={`${profileActionButtonClass} flex-1 gap-space-xs`}
+              className={profileActionButtonClass}
+              fullWidth
             >
               Ver empleos
             </Button>
-          )
-        )}
-        <ProfileMenu
-          variant={variant}
-          onShare={shareUrl ? handleShare : undefined}
-          onCopy={shareUrl ? handleCopy : undefined}
-          onContact={onContact}
-          contactDisabled={contactDisabled}
-          onReport={reportTargetId ? handleReport : undefined}
-        />
+          )}
+
+          {shareUrl && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleShare}
+              className={profileActionButtonClass}
+              fullWidth
+            >
+              <AppIcon icon={Share2} size={ICON_SIZES.md} className="text-current" />
+              Compartir
+            </Button>
+          )}
+
+          <ProfileOverflowMenu
+            onCopy={shareUrl ? handleCopy : undefined}
+            onReport={reportTargetId ? handleReport : undefined}
+          />
+        </div>
       </div>
 
       <ReportModal

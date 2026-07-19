@@ -1,9 +1,10 @@
+import { Building2, Share2, PROFILE_SECTION_ICONS } from '../../../constants/icons';
 import CompanyAboutSection from './CompanyAboutSection';
 import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
 import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
 import CompanyContactSection from './CompanyContactSection';
 import CompanyProfileSectionCard from './CompanyProfileSectionCard';
-import { profileContentShellClass, sectionLinkClass } from './companyProfileStyles';
+import { profileContentShellClass, profileSectionStackClass, sectionLinkClass } from './companyProfileStyles';
 
 export default function CompanyAboutTabSection({
   profile,
@@ -15,11 +16,14 @@ export default function CompanyAboutTabSection({
 }) {
   const showInfoCard = hasVisibleCompanyInfoRows(profile, 'full');
   const showSocialCard = hasCompanySocialLinks(profile) || !readOnly;
+  const showContactCard = !readOnly || hasCompanyActionableContact(profile);
 
   return (
-    <div className={`${profileContentShellClass} space-y-space-base px-space-base py-space-base`}>
+    <div className={`${profileContentShellClass} ${profileSectionStackClass}`}>
       <CompanyProfileSectionCard
         title="Acerca de"
+        icon={PROFILE_SECTION_ICONS.about}
+        iconTone="about"
         action={
           !readOnly && onEditAbout ? (
             <button type="button" onClick={onEditAbout} className={sectionLinkClass}>
@@ -38,9 +42,11 @@ export default function CompanyAboutTabSection({
         />
       </CompanyProfileSectionCard>
 
-      {showInfoCard && (
+      {showInfoCard ? (
         <CompanyProfileSectionCard
           title="Información"
+          icon={Building2}
+          iconTone="about"
           action={
             !readOnly && onEditDetails ? (
               <button type="button" onClick={onEditDetails} className={sectionLinkClass}>
@@ -51,10 +57,10 @@ export default function CompanyAboutTabSection({
         >
           <CompanyInfoRows profile={profile} variant="full" />
         </CompanyProfileSectionCard>
-      )}
+      ) : null}
 
-      {showSocialCard && (
-        <CompanyProfileSectionCard title="Redes sociales">
+      {showSocialCard ? (
+        <CompanyProfileSectionCard title="Redes sociales" icon={Share2} iconTone="social">
           <CompanySocialCard
             profile={profile}
             readOnly={readOnly}
@@ -63,18 +69,23 @@ export default function CompanyAboutTabSection({
             embedded
           />
         </CompanyProfileSectionCard>
-      )}
+      ) : null}
 
-      {!readOnly ? (
-        <CompanyContactSection
-          profile={profile}
-          readOnly={false}
-          onSave={onSaveContact}
-          saving={contactSaving}
-        />
-      ) : (
-        <CompanyContactSection profile={profile} readOnly />
-      )}
+      {showContactCard ? (
+        <CompanyProfileSectionCard
+          title="Contacto"
+          icon={PROFILE_SECTION_ICONS.contact}
+          iconTone="contact"
+        >
+          <CompanyContactSection
+            profile={profile}
+            readOnly={readOnly}
+            onSave={onSaveContact}
+            saving={contactSaving}
+            embedded
+          />
+        </CompanyProfileSectionCard>
+      ) : null}
     </div>
   );
 }

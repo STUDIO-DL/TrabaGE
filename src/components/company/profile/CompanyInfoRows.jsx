@@ -33,7 +33,7 @@ function InfoRow({ icon, label, value, href, external = false }) {
 
   const content = (
     <div className="flex min-h-touch items-start gap-space-sm py-space-xs">
-      <AppIcon icon={icon} size={ICON_SIZES.md} className="mt-0.5 shrink-0 text-app-subtle" />
+      <AppIcon icon={icon} size={ICON_SIZES.md} className="mt-0.5 shrink-0 text-app-text" />
       <div className="min-w-0 flex-1">
         <p className="text-caption text-app-subtle">{label}</p>
         <p

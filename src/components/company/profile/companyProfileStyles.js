@@ -1,21 +1,103 @@
-export const premiumCardClass =
-  'overflow-hidden rounded-radius-lg border border-app-border bg-app-card shadow-elevation-1';
+/** Shared layout tokens for company / organization profiles (mobile-first). */
 
-export const sectionTitleClass =
-  'text-subtitle font-semibold text-app-text';
+export const profileContentShellClass = 'mx-auto w-full max-w-lg';
 
-export const profileContentShellClass = 'w-full';
+export const profileSectionStackClass = 'space-y-space-base px-space-base py-space-base';
 
-export const profileInicioGridClass = 'grid gap-space-base';
+export const profileInicioGridClass = 'space-y-space-base';
 
+export const sectionTitleClass = 'text-subtitle font-semibold text-app-text';
+
+export const sectionLinkClass =
+  'shrink-0 text-caption font-medium text-primary-600 transition-colors duration-fast hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
+
+export const profileMetaLineClass =
+  'flex items-start gap-space-sm break-words text-caption text-app-muted';
+
+export const profileMetaIconClass = 'mt-0.5 shrink-0 text-app-text';
+
+export const profileCoverOverlayClass =
+  'absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/55';
+
+export const profileBannerGradientClass =
+  'absolute inset-0 bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500';
+
+/** Cover height — consistent across profile types */
+export const profileCoverHeightClass = 'h-[8rem] sm:h-[9rem]';
+
+/** Content below cover */
+export const profileHeaderContentClass = 'px-space-base pb-space-lg pt-0';
+
+/** Logo overlaps cover (~50%); identity block is a separate sibling below */
+export const profileCompanyLogoOverlapClass = '-mt-[3.25rem] sm:-mt-[3.75rem]';
+
+export const profileCompanyLogoFrameClass =
+  'rounded-radius-md bg-app-card p-1 ring-4 ring-app-card shadow-elevation-2';
+
+export const profileCompanyNameHeadingClass =
+  'break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
+
+export const profileCompanyNameRowClass =
+  'flex min-w-0 flex-wrap items-center gap-x-space-sm gap-y-space-xs';
+
+export const profileHeadlineClass =
+  'break-words text-body-small leading-relaxed text-app-muted sm:text-body';
+
+/** Unified profile action buttons (same height, radius, weight) */
+export const profileActionButtonClass = 'h-btn-md min-h-touch w-full sm:w-auto sm:flex-1';
+
+export const profileActionStripClass =
+  'border-b border-app-border bg-app-card px-space-base py-space-base';
+
+export const profileActionStripInnerClass =
+  'mx-auto flex w-full max-w-lg flex-col gap-space-sm sm:flex-row sm:flex-wrap';
+
+export const profileBannerGhostButtonClass =
+  'inline-flex h-btn-md min-h-touch shrink-0 items-center justify-center gap-space-xs rounded-radius-md bg-transparent px-space-md text-body-small font-semibold text-white ring-1 ring-inset ring-white/90 transition-colors duration-fast hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 disabled:cursor-not-allowed disabled:opacity-50';
+
+export const profileBannerMenuButtonClass =
+  'inline-flex h-btn-md min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-md bg-transparent text-white ring-1 ring-inset ring-white/90 transition-colors duration-fast hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700';
+
+export const profileBannerFollowButtonClass =
+  'h-btn-md min-h-touch shrink-0 px-space-md text-body-small font-semibold';
+
+export const profileBannerFollowFollowingClass =
+  'inline-flex h-btn-md min-h-touch shrink-0 items-center justify-center gap-space-xs rounded-radius-md bg-white/15 px-space-md text-body-small font-semibold text-white ring-1 ring-inset ring-white/70 transition-colors duration-fast hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 disabled:cursor-not-allowed disabled:opacity-50';
+
+export const profileTabButtonClass =
+  'relative flex h-12 shrink-0 items-center px-space-md text-body-small font-medium transition-colors duration-fast';
+
+export const JOB_STATUS_LABELS = {
+  draft: 'Borrador',
+  active: 'Publicada',
+  paused: 'Pausada',
+  closed: 'Cerrada',
+};
+
+/** @deprecated use surface-card via CompanyProfileSectionCard */
 export const sectionCardClass =
   'overflow-hidden rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1';
 
 export const sectionHeaderClass =
-  'mb-space-sm flex items-center justify-between gap-space-sm';
+  'mb-space-md flex items-center justify-between gap-space-sm';
 
-export const sectionLinkClass =
-  'shrink-0 text-caption font-medium text-primary-600 transition-colors duration-fast hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
+/** Legacy exports used by candidate profile header */
+export const profileHeaderBodyClass =
+  'flex flex-col gap-space-md sm:flex-row sm:items-start sm:gap-space-lg md:gap-space-xl';
+
+export const profileCompanyHeaderBodyClass = 'flex flex-col items-stretch gap-0';
+
+export const profilePersonalAvatarOverlapClass = '-mt-[2.25rem] sm:-mt-[3.5rem]';
+
+export const profilePersonalAvatarFrameClass =
+  'rounded-radius-circular bg-app-card p-0.5 ring-4 ring-app-card shadow-elevation-2';
+
+export const profileNameHeadingClass =
+  'break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
+
+export const profileHeaderInfoClass = 'min-w-0 flex-1 pt-space-xs sm:pt-space-md';
+
+export const profileCompanyHeaderInfoClass = 'min-w-0 w-full space-y-space-sm';
 
 export const profileMetaItemClass =
   'inline-flex items-center gap-space-xs text-caption text-app-muted';
@@ -23,71 +105,5 @@ export const profileMetaItemClass =
 export const profileBannerMetaItemClass =
   'inline-flex items-center gap-space-xs text-caption text-white/90';
 
-export const profileCoverOverlayClass =
-  'absolute inset-0 bg-gradient-to-b from-black/15 via-black/30 to-black/60';
-
-export const profileBannerGradientClass =
-  'absolute inset-0 bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500';
-
-/** Shared cover height across personal, business, and organization profiles */
-export const profileCoverHeightClass = 'h-[7.5rem] sm:h-[8.5rem]';
-
-/** Padding for the info block below the cover */
-export const profileHeaderContentClass = 'px-space-base pb-space-md sm:px-space-lg';
-
-/** Avatar/logo + info row — stacks on mobile, side-by-side from sm */
-export const profileHeaderBodyClass =
-  'flex flex-col gap-space-md sm:flex-row sm:items-start sm:gap-space-lg md:gap-space-xl';
-
-/** Company header — stacks on mobile, logo + name side-by-side from sm (LinkedIn-style) */
-export const profileCompanyHeaderBodyClass =
-  'flex flex-col gap-space-md sm:flex-row sm:items-start sm:gap-space-lg';
-
-/** Pull personal avatar up ~50% into the cover (4.5rem mobile / 7rem sm+) */
-export const profilePersonalAvatarOverlapClass = '-mt-[2.25rem] sm:-mt-[3.5rem]';
-
-/** Pull company logo up ~50% into the cover (7rem avatar + frame) */
-export const profileCompanyLogoOverlapClass = '-mt-[2.25rem] sm:-mt-[3.5rem]';
-
-/** Reserve space beside the logo on sm+ so the company name clears the avatar block */
-export const profileCompanyHeaderInfoClass =
-  'min-w-0 flex-1 pt-space-xs sm:pt-[3.75rem]';
-
-export const profilePersonalAvatarFrameClass =
-  'rounded-radius-circular bg-app-card p-0.5 ring-4 ring-app-card shadow-elevation-2';
-
-export const profileCompanyLogoFrameClass =
-  'rounded-radius-md bg-app-card p-1 ring-4 ring-app-card shadow-elevation-2';
-
-export const profileNameHeadingClass =
-  'break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
-
-export const profileCompanyNameHeadingClass =
-  'break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
-
-export const profileHeadlineClass =
-  'mt-space-xs break-words text-body-small text-app-muted sm:text-body';
-
-export const profileHeaderInfoClass = 'min-w-0 flex-1 pt-space-xs sm:pt-space-md';
-
-/** Tiny spacing token alias used for company name row alignment */
-export const profileCompanyNameRowClass =
-  'flex min-w-0 items-start gap-space-xs sm:items-center sm:gap-space-sm';
-
-export const profileActionButtonClass =
-  'h-10 min-h-0 shrink-0 px-space-md text-body-small font-medium';
-
-export const profileBannerGhostButtonClass =
-  'inline-flex h-10 min-h-0 shrink-0 items-center justify-center gap-space-xs rounded-radius-md bg-transparent px-space-md text-body-small font-medium text-white ring-1 ring-inset ring-white/90 transition-colors duration-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 disabled:cursor-not-allowed disabled:opacity-50';
-
-export const profileBannerMenuButtonClass =
-  'inline-flex h-10 min-h-0 min-w-10 shrink-0 items-center justify-center rounded-radius-md bg-transparent text-white ring-1 ring-inset ring-white/90 transition-colors duration-200 hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700';
-
-export const profileBannerFollowButtonClass =
-  'h-10 min-h-0 shrink-0 px-space-md text-body-small font-medium';
-
-export const profileBannerFollowFollowingClass =
-  'inline-flex h-10 min-h-0 shrink-0 items-center justify-center gap-space-xs rounded-radius-md bg-white/15 px-space-md text-body-small font-medium text-white ring-1 ring-inset ring-white/70 transition-colors duration-200 hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 disabled:cursor-not-allowed disabled:opacity-50';
-
-export const profileTabButtonClass =
-  'relative flex h-12 shrink-0 items-center px-space-md text-body-small font-medium transition-colors duration-200';
+export const premiumCardClass =
+  'overflow-hidden rounded-radius-lg border border-app-border bg-app-card shadow-elevation-1';

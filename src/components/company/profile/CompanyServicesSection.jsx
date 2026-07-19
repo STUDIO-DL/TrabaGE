@@ -3,7 +3,7 @@ import AppIcon from '../../common/AppIcon';
 import AutocompleteInput from '../../ui/AutocompleteInput';
 import Button from '../../ui/Button';
 import Card from '../../ui/Card';
-import { Sparkles, Trash2, ICON_SIZES } from '../../../constants/icons';
+import { Sparkles, Trash2, ICON_COLORS, ICON_SIZES } from '../../../constants/icons';
 import {
   COMPANY_SERVICE_SUGGESTIONS,
   filterCompanyServiceSuggestions,
@@ -15,7 +15,7 @@ function ServiceCard({ name, onDelete, readOnly }) {
   return (
     <Card padding="md" className="flex items-center justify-between gap-space-sm">
       <div className="flex min-w-0 items-center gap-space-sm">
-        <AppIcon icon={Sparkles} size={ICON_SIZES.sm} className="shrink-0 text-primary-600" />
+        <AppIcon icon={Sparkles} size={ICON_SIZES.sm} className={`shrink-0 ${ICON_COLORS.default}`} />
         <span className="truncate text-body-small font-medium text-app-text">{name}</span>
       </div>
       {!readOnly && onDelete && (
@@ -37,6 +37,7 @@ export default function CompanyServicesSection({
   readOnly = false,
   onAdd,
   onDelete,
+  embedded = false,
   variant: _variant = 'tab',
 }) {
   const [serviceName, setServiceName] = useState('');
@@ -71,21 +72,14 @@ export default function CompanyServicesSection({
 
   if (readOnly && !hasItems) return null;
 
-  return (
-    <section className="px-space-base py-space-base">
-      <div className="mb-space-base flex items-center justify-between gap-space-sm">
-        <h3 className="text-body font-semibold text-app-text">Servicios</h3>
-        {!readOnly && (
-          <span className="text-caption text-app-muted">Opcional</span>
-        )}
-      </div>
-
+  const body = (
+    <>
       {!hasItems && !readOnly ? (
-        <Card padding="lg" className="text-center">
+        <div className="rounded-radius-lg border border-dashed border-app-border bg-app-surface px-space-base py-space-xl text-center">
           <p className="text-body-small text-app-muted">
             Añade los servicios que ofrece tu empresa para que los visitantes te conozcan mejor.
           </p>
-        </Card>
+        </div>
       ) : hasItems ? (
         <div className="grid gap-space-sm sm:grid-cols-2">
           {items.map((item) => (
@@ -124,7 +118,7 @@ export default function CompanyServicesSection({
                     key={service}
                     type="button"
                     onClick={() => addService(service)}
-                    className="rounded-radius-full border border-dashed border-app-border bg-app-card px-space-md py-space-xs text-caption text-app-muted transition-colors duration-fast hover:border-primary-300 hover:bg-primary-50 hover:text-primary-800"
+                    className="rounded-radius-full border border-dashed border-app-border bg-app-card px-space-md py-space-xs text-caption text-app-muted transition-colors duration-fast hover:border-primary-300 hover:bg-app-primary-soft hover:text-primary-800"
                   >
                     + {service}
                   </button>
@@ -134,6 +128,18 @@ export default function CompanyServicesSection({
           )}
         </div>
       )}
+    </>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <section className="px-space-base py-space-base">
+      <div className="mb-space-base flex items-center justify-between gap-space-sm">
+        <h3 className="text-subtitle font-semibold text-app-text">Servicios</h3>
+        {!readOnly ? <span className="text-caption text-app-muted">Opcional</span> : null}
+      </div>
+      {body}
     </section>
   );
 }

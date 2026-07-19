@@ -11,7 +11,8 @@ import { getPreviewMediaUrls, getPreviewProfile, PREVIEW_USER } from '../../cons
 import { isEmployerRole, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { generateCompanyUrl } from '../../utils/generateShareUrl';
-import { hasCompanyActionableContact, openCompanyContact } from '../../utils/contact';
+import { BUSINESS_CONTACT_METHODS, hasCompanyActionableContact } from '../../utils/contact';
+import useContactAction from '../../hooks/useContactAction';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { useFollow } from '../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../services/follows.service';
@@ -22,6 +23,11 @@ export default function CompanyPublicProfile() {
   const { companyId } = useParams();
   const { isPreviewMode, user, role, isAuthenticated } = useAuth();
   const { showToast } = useNotificationContext();
+  const { handleContact: runContact, contactPickerModal } = useContactAction({
+    showToast,
+    methodIds: BUSINESS_CONTACT_METHODS,
+    pickerTitle: 'Contactar empresa',
+  });
   const [profile, setProfile] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -118,9 +124,8 @@ export default function CompanyPublicProfile() {
     });
   };
 
-  const handleContact = () => {
-    const { ok, error } = openCompanyContact(profile);
-    if (!ok) showToast(error, 'error');
+  const onContact = () => {
+    runContact(profile);
   };
 
   const handleToggleFollow = async () => {
@@ -189,7 +194,7 @@ export default function CompanyPublicProfile() {
           followLoading={followLoading}
           canFollow={canFollow || !isAuthenticated}
           onToggleFollow={handleToggleFollow}
-          onContact={handleContact}
+          onContact={onContact}
           contactDisabled={!hasCompanyActionableContact(profile)}
           shareUrl={generateCompanyUrl(companyId)}
           shareTitle={profile?.company_name || orgLabels.defaultName}
@@ -197,6 +202,7 @@ export default function CompanyPublicProfile() {
           followerCount={followerCount}
         />
       </ProfilePageShell>
+      {contactPickerModal}
     </PageContainer>
   );
 }

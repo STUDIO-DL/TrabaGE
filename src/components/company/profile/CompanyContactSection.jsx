@@ -8,21 +8,24 @@ import {
   Phone,
   Save,
   User,
+  ICON_COLORS,
   ICON_SIZES,
 } from '../../../constants/icons';
 import { CONTACT_ROLE_SUGGESTIONS } from '../../../constants/companyServices';
 import { hasCompanyActionableContact } from '../../../utils/contact';
 import { hasCompanyContact, getCompanyContactInitials } from '../../../utils/companyProfile';
+import CompanyProfileSectionCard from './CompanyProfileSectionCard';
+import { PROFILE_SECTION_ICONS } from '../../../constants/icons';
 
 function ContactChannel({ icon, label, value, href }) {
-  const content = (
-    <div className="flex items-center gap-3 rounded-xl border border-primary-100 bg-white px-4 py-3 transition hover:border-primary-200 hover:bg-primary-50/40">
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-50">
-        <AppIcon icon={icon} size={ICON_SIZES.default} className="text-primary-600" />
+  const row = (
+    <div className="flex min-h-touch items-center gap-space-md rounded-radius-md border border-app-border bg-app-surface px-space-base py-space-sm transition-colors duration-fast hover:bg-app-card">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-radius-md bg-app-surface ring-1 ring-app-border">
+        <AppIcon icon={icon} size={ICON_SIZES.default} className={ICON_COLORS.default} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium uppercase tracking-wide text-primary-600/70">{label}</p>
-        <p className="mt-0.5 truncate text-sm font-medium text-gray-900">{value}</p>
+        <p className="text-caption text-app-subtle">{label}</p>
+        <p className="mt-0.5 truncate text-body-small font-medium text-app-text">{value}</p>
       </div>
     </div>
   );
@@ -30,12 +33,12 @@ function ContactChannel({ icon, label, value, href }) {
   if (href) {
     return (
       <a href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
-        {content}
+        {row}
       </a>
     );
   }
 
-  return content;
+  return row;
 }
 
 export default function CompanyContactSection({
@@ -43,6 +46,7 @@ export default function CompanyContactSection({
   readOnly = false,
   onSave,
   saving = false,
+  embedded = false,
 }) {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
@@ -84,168 +88,146 @@ export default function CompanyContactSection({
       contact_whatsapp: whatsapp.trim() || null,
       contact_phone: phone.trim() || null,
     });
-    if (!result?.error) {
-      setDirty(false);
-    }
+    if (!result?.error) setDirty(false);
   };
 
   const whatsappDigits = profile?.contact_whatsapp?.replace(/\D/g, '');
 
-  return (
-    <section className="px-space-base py-space-base">
-      <div className="mb-space-base flex items-center gap-space-sm">
-        <span className="flex h-8 w-8 items-center justify-center rounded-radius-md bg-primary-50">
-          <AppIcon icon={Headphones} size={ICON_SIZES.default} className="text-primary-600" />
-        </span>
-        <div>
-          <h3 className="text-body font-semibold text-app-text">Contacto</h3>
-          <p className="text-caption text-app-muted">Persona de referencia</p>
+  const content = readOnly ? (
+    <div className="space-y-space-md">
+      <div className="flex items-start gap-space-md">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-radius-md bg-app-surface text-lg font-bold text-app-text ring-1 ring-app-border">
+          {initials || <AppIcon icon={Headphones} size={ICON_SIZES.lg} className={ICON_COLORS.default} />}
+        </div>
+        <div className="min-w-0 flex-1 pt-0.5">
+          <p className="truncate text-body-small font-semibold text-app-text">
+            {profile.contact_name?.trim() || 'Contacto de la empresa'}
+          </p>
+          {profile.contact_role ? (
+            <p className="mt-space-xs text-caption text-app-muted">{profile.contact_role}</p>
+          ) : null}
         </div>
       </div>
 
-      {readOnly && (
-        <div className="overflow-hidden rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50/70 via-white to-white shadow-sm ring-1 ring-primary-50">
-          <div className="flex items-start gap-4 p-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 text-lg font-bold text-white shadow-md">
-              {initials || (
-                <AppIcon icon={Headphones} size={ICON_SIZES.lg} className="text-white" />
-              )}
-            </div>
-            <div className="min-w-0 flex-1 pt-0.5">
-              <p className="truncate text-base font-semibold text-gray-900">
-                {profile.contact_name?.trim() || 'Contacto de la empresa'}
-              </p>
-              {profile.contact_role && (
-                <span className="mt-1.5 inline-flex items-center rounded-full bg-primary-100 px-2.5 py-0.5 text-xs font-semibold text-primary-800">
-                  {profile.contact_role}
-                </span>
-              )}
-            </div>
-          </div>
+      <div className="space-y-space-sm">
+        {profile.contact_email ? (
+          <ContactChannel
+            icon={Mail}
+            label="Correo"
+            value={profile.contact_email}
+            href={`mailto:${profile.contact_email}`}
+          />
+        ) : null}
+        {profile.contact_whatsapp ? (
+          <ContactChannel
+            icon={Phone}
+            label="WhatsApp"
+            value={profile.contact_whatsapp}
+            href={whatsappDigits ? `https://wa.me/${whatsappDigits}` : undefined}
+          />
+        ) : null}
+        {profile.contact_phone ? (
+          <ContactChannel
+            icon={Phone}
+            label="Teléfono"
+            value={profile.contact_phone}
+            href={`tel:${profile.contact_phone.replace(/\s/g, '')}`}
+          />
+        ) : null}
+      </div>
+    </div>
+  ) : (
+    <div className="space-y-space-md">
+      {!hasContact ? (
+        <p className="text-body-small text-app-muted">
+          Añade un contacto de referencia. Los visitantes podrán pulsar &quot;Contactar&quot; en tu
+          perfil para escribirte por WhatsApp, correo o teléfono.
+        </p>
+      ) : null}
 
-          <div className="space-y-2 border-t border-primary-100/80 bg-white/60 p-4">
-            {profile.contact_email && (
-              <ContactChannel
-                icon={Mail}
-                label="Correo"
-                value={profile.contact_email}
-                href={`mailto:${profile.contact_email}`}
-              />
-            )}
-            {profile.contact_whatsapp && (
-              <ContactChannel
-                icon={Phone}
-                label="WhatsApp"
-                value={profile.contact_whatsapp}
-                href={whatsappDigits ? `https://wa.me/${whatsappDigits}` : undefined}
-              />
-            )}
-            {profile.contact_phone && (
-              <ContactChannel
-                icon={Phone}
-                label="Teléfono"
-                value={profile.contact_phone}
-                href={`tel:${profile.contact_phone.replace(/\s/g, '')}`}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      {!readOnly && (
-        <div className="space-y-4">
-          {!hasContact && (
-            <p className="text-sm text-gray-500">
-              Añade un contacto de referencia. Los visitantes podrán pulsar &quot;Contactar&quot; en tu
-              perfil para escribirte por WhatsApp, correo o teléfono.
-            </p>
+      <div className="flex items-start gap-space-md">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-radius-md bg-app-surface text-sm font-bold text-app-text ring-1 ring-app-border">
+          {getCompanyContactInitials({ contact_name: name }) || (
+            <AppIcon icon={User} size={ICON_SIZES.default} className={ICON_COLORS.default} />
           )}
-
-          <div className="rounded-2xl border border-primary-100 bg-gradient-to-b from-primary-50/40 to-white p-4">
-            <div className="mb-4 flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-sm font-bold text-white">
-                {getCompanyContactInitials({ contact_name: name }) || (
-                  <AppIcon icon={User} size={ICON_SIZES.default} className="text-white" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1 space-y-3">
-                <Input
-                  label="Nombre del contacto"
-                  placeholder="Ej. María Obiang"
-                  value={name}
-                  onChange={markDirty(setName)}
-                />
-                <div>
-                  <Input
-                    label="Cargo o área"
-                    placeholder="Ej. RR.HH., Representante comercial"
-                    value={role}
-                    onChange={markDirty(setRole)}
-                  />
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {CONTACT_ROLE_SUGGESTIONS.map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        type="button"
-                        onClick={() => {
-                          setRole(suggestion);
-                          setDirty(true);
-                        }}
-                        className={[
-                          'rounded-full px-2.5 py-1 text-xs font-medium transition',
-                          role === suggestion
-                            ? 'bg-primary-600 text-white'
-                            : 'bg-white text-gray-600 ring-1 ring-gray-200 hover:bg-primary-50 hover:text-primary-800 hover:ring-primary-200',
-                        ].join(' ')}
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
+        </div>
+        <div className="min-w-0 flex-1 space-y-space-md">
+          <Input
+            label="Nombre del contacto"
+            placeholder="Ej. María Obiang"
+            value={name}
+            onChange={markDirty(setName)}
+          />
+          <div>
+            <Input
+              label="Cargo o área"
+              placeholder="Ej. RR.HH., Representante comercial"
+              value={role}
+              onChange={markDirty(setRole)}
+            />
+            <div className="mt-space-sm flex flex-wrap gap-space-sm">
+              {CONTACT_ROLE_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => {
+                    setRole(suggestion);
+                    setDirty(true);
+                  }}
+                  className={[
+                    'rounded-radius-circular px-space-sm py-1 text-caption font-medium transition-colors duration-fast',
+                    role === suggestion
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-app-surface text-app-muted ring-1 ring-app-border hover:bg-app-card hover:text-app-text',
+                  ].join(' ')}
+                >
+                  {suggestion}
+                </button>
+              ))}
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                label="Correo"
-                type="email"
-                placeholder="rrhh@empresa.com"
-                value={email}
-                onChange={markDirty(setEmail)}
-              />
-              <Input
-                label="WhatsApp (con código de país)"
-                type="tel"
-                placeholder="240XXXXXXXX"
-                value={whatsapp}
-                onChange={markDirty(setWhatsapp)}
-              />
-              <Input
-                label="Teléfono fijo (opcional)"
-                type="tel"
-                placeholder="+240 XXX XXX"
-                value={phone}
-                onChange={markDirty(setPhone)}
-                className="sm:col-span-2"
-              />
-            </div>
-
-            {dirty && (
-              <Button
-                type="button"
-                fullWidth
-                loading={saving}
-                onClick={handleSave}
-                className="mt-4 gap-2"
-              >
-                <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
-                Guardar contacto
-              </Button>
-            )}
           </div>
         </div>
-      )}
-    </section>
+      </div>
+
+      <div className="grid grid-cols-1 gap-space-md sm:grid-cols-2">
+        <Input
+          label="Correo"
+          type="email"
+          placeholder="rrhh@empresa.com"
+          value={email}
+          onChange={markDirty(setEmail)}
+        />
+        <Input
+          label="WhatsApp (con código de país)"
+          type="tel"
+          placeholder="240XXXXXXXX"
+          value={whatsapp}
+          onChange={markDirty(setWhatsapp)}
+        />
+        <Input
+          label="Teléfono fijo (opcional)"
+          type="tel"
+          placeholder="+240 XXX XXX"
+          value={phone}
+          onChange={markDirty(setPhone)}
+          className="sm:col-span-2"
+        />
+      </div>
+
+      {dirty ? (
+        <Button type="button" fullWidth loading={saving} onClick={handleSave} className="gap-space-sm">
+          <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
+          Guardar contacto
+        </Button>
+      ) : null}
+    </div>
+  );
+
+  if (embedded) return content;
+
+  return (
+    <CompanyProfileSectionCard title="Contacto" icon={PROFILE_SECTION_ICONS.contact} iconTone="contact">
+      {content}
+    </CompanyProfileSectionCard>
   );
 }

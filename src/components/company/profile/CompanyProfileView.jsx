@@ -1,7 +1,16 @@
 import { useMemo, useState } from 'react';
+import {
+  Briefcase,
+  Building2,
+  Newspaper,
+  Share2,
+  Wrench,
+  PROFILE_SECTION_ICONS,
+} from '../../../constants/icons';
 import CompanyProfileHeader from './CompanyProfileHeader';
 import CompanyProfileTabs from './CompanyProfileTabs';
 import CompanyProfileCompleteness from './CompanyProfileCompleteness';
+import CompanyProfileActionBar from './CompanyProfileActionBar';
 import CompanyAboutSection from './CompanyAboutSection';
 import CompanyAboutTabSection from './CompanyAboutTabSection';
 import CompanyServicesSection from './CompanyServicesSection';
@@ -9,13 +18,19 @@ import CompanyJobsSection from './CompanyJobsSection';
 import CompanyPostsSection, { CompanyPostsFeed } from './CompanyPostsSection';
 import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
 import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
+import CompanyContactSection from './CompanyContactSection';
 import CompanyProfileSectionCard from './CompanyProfileSectionCard';
 import ProjectsSection from '../../profile/ProjectsSection';
 import { usePosts } from '../../../hooks/usePosts';
-import { useAuth } from '../../../hooks/useAuth';
 import { usePostMutations } from '../../../hooks/usePostMutations';
-import { sectionLinkClass, profileContentShellClass, profileInicioGridClass } from './companyProfileStyles';
+import {
+  sectionLinkClass,
+  profileContentShellClass,
+  profileSectionStackClass,
+  profileInicioGridClass,
+} from './companyProfileStyles';
 import { hasCompanyDescription } from '../../../utils/companyProfile';
+import { hasCompanyActionableContact } from '../../../utils/contact';
 
 export default function CompanyProfileView({
   profile,
@@ -54,7 +69,6 @@ export default function CompanyProfileView({
   onEditProject,
   onDeleteProject,
 }) {
-  const { user } = useAuth();
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
 
@@ -87,19 +101,16 @@ export default function CompanyProfileView({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const showAboutOnInicio = hasCompanyDescription(profile) || profile?.mission?.trim() || profile?.vision?.trim();
+  const showAboutOnInicio =
+    hasCompanyDescription(profile) || profile?.mission?.trim() || profile?.vision?.trim();
   const infoVariant = 'inicio';
   const showInfoCard = hasVisibleCompanyInfoRows(profile, infoVariant);
   const showSocialCard = hasCompanySocialLinks(profile) || !readOnly;
-  const showInicioSidebar = showInfoCard || showSocialCard;
-  const inicioGridClass = showInicioSidebar
-    ? profileInicioGridClass
-    : 'grid gap-space-base';
   const projects = profile?.projects ?? [];
   const showProjectsSection = projects.length > 0 || !readOnly;
 
   return (
-    <div className="bg-app-surface">
+    <div className="min-w-0 bg-app-surface">
       <CompanyProfileHeader
         profile={profile}
         readOnly={readOnly}
@@ -114,154 +125,187 @@ export default function CompanyProfileView({
         coverPhase={coverPhase}
         followerCount={followerCount}
         showFollowerCount={showFollowerCount}
-        showActions={showPublicActions}
-        showFollow={showFollowButton}
-        isFollowing={isFollowing}
-        followLoading={followLoading}
-        canFollow={canFollow}
-        onToggleFollow={onToggleFollow}
-        onViewJobs={() => goToTab('empleos')}
-        hasJobs={activeJobCount > 0}
-        shareUrl={shareUrl}
-        shareTitle={shareTitle}
-        reportTargetId={reportTargetId}
-        onContact={onContact}
-        contactDisabled={contactDisabled}
         onSettings={onSettings}
       />
 
-      {isOwn && !readOnly && (
+      {showPublicActions ? (
+        <CompanyProfileActionBar
+          showFollow={showFollowButton}
+          isFollowing={isFollowing}
+          followLoading={followLoading}
+          canFollow={canFollow}
+          onToggleFollow={onToggleFollow}
+          onViewJobs={() => goToTab('empleos')}
+          hasJobs={activeJobCount > 0}
+          shareUrl={shareUrl}
+          shareTitle={shareTitle}
+          reportTargetId={reportTargetId}
+          onContact={onContact}
+          contactDisabled={contactDisabled}
+        />
+      ) : null}
+
+      {isOwn && !readOnly ? (
         <CompanyProfileCompleteness profile={profile} jobCount={activeJobCount} />
-      )}
+      ) : null}
 
       <CompanyProfileTabs
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        hasServices={hasServices}
-        stickyTop="top-0"
+        hasServices={hasServices || !readOnly}
       />
 
       {activeTab === 'inicio' && (
-        <div className={`${profileContentShellClass} px-space-base py-space-base`}>
-          <div className={inicioGridClass}>
-            <div className="space-y-space-base">
-              {showAboutOnInicio && (
-                <CompanyProfileSectionCard
-                  title="Acerca de"
-                  action={
-                    !readOnly && onEditAbout ? (
-                      <button type="button" onClick={onEditAbout} className={sectionLinkClass}>
-                        Editar
-                      </button>
-                    ) : (
-                      <button type="button" onClick={() => goToTab('acerca')} className={sectionLinkClass}>
-                        Ver más
-                      </button>
-                    )
-                  }
-                >
-                  <CompanyAboutSection
-                    profile={profile}
-                    readOnly={readOnly}
-                    onEditAbout={onEditAbout}
-                    expanded={aboutExpanded}
-                    onToggleExpand={() => setAboutExpanded((value) => !value)}
-                    onViewMore={() => goToTab('acerca')}
-                    compact
-                    embedded
-                  />
-                </CompanyProfileSectionCard>
-              )}
-
-              {showProjectsSection && (
-                <ProjectsSection
-                  items={projects}
-                  isOwn={!readOnly}
-                  onAdd={onAddProject}
-                  onEdit={onEditProject}
-                  onDelete={onDeleteProject}
-                />
-              )}
-
+        <div className={`${profileContentShellClass} ${profileSectionStackClass}`}>
+          <div className={profileInicioGridClass}>
+            {showAboutOnInicio ? (
               <CompanyProfileSectionCard
-                title="Empleos activos"
+                title="Acerca de"
+                icon={PROFILE_SECTION_ICONS.about}
+                iconTone="about"
                 action={
-                  activeJobCount > 0 ? (
-                    <button type="button" onClick={() => goToTab('empleos')} className={sectionLinkClass}>
-                      Ver todos
+                  !readOnly && onEditAbout ? (
+                    <button type="button" onClick={onEditAbout} className={sectionLinkClass}>
+                      Editar
                     </button>
-                  ) : null
+                  ) : (
+                    <button type="button" onClick={() => goToTab('acerca')} className={sectionLinkClass}>
+                      Ver más
+                    </button>
+                  )
                 }
               >
-                <CompanyJobsSection
-                  jobs={jobs}
-                  readOnly={readOnly}
+                <CompanyAboutSection
                   profile={profile}
-                  maxVisible={3}
-                  onViewAll={() => goToTab('empleos')}
-                  variant="preview"
-                  showTitle={false}
+                  readOnly={readOnly}
+                  onEditAbout={onEditAbout}
+                  expanded={aboutExpanded}
+                  onToggleExpand={() => setAboutExpanded((value) => !value)}
+                  onViewMore={() => goToTab('acerca')}
+                  compact
                   embedded
                 />
               </CompanyProfileSectionCard>
+            ) : null}
 
-              {(posts.length > 0 || postsLoading) && (
-                <CompanyProfileSectionCard
-                  title="Últimas publicaciones"
-                  action={
-                    posts.length > 0 ? (
-                      <button
-                        type="button"
-                        onClick={() => goToTab('publicaciones')}
-                        className={sectionLinkClass}
-                      >
-                        Ver todas
-                      </button>
-                    ) : null
-                  }
-                >
-                  <CompanyPostsSection
-                    posts={posts}
-                    loading={postsLoading}
-                    maxVisible={3}
-                    onViewAll={() => goToTab('publicaciones')}
-                    canManage={canManagePosts}
-                    onEdit={handleEditPost}
-                    onDelete={handleDeletePost}
-                    embedded
-                  />
-                </CompanyProfileSectionCard>
-              )}
-            </div>
+            {showProjectsSection ? (
+              <ProjectsSection
+                items={projects}
+                isOwn={!readOnly}
+                onAdd={onAddProject}
+                onEdit={onEditProject}
+                onDelete={onDeleteProject}
+              />
+            ) : null}
 
-            {showInicioSidebar && (
-              <aside className="space-y-space-base">
-                {showInfoCard && (
-                  <CompanyProfileSectionCard title="Información">
-                    <CompanyInfoRows profile={profile} variant={infoVariant} />
-                  </CompanyProfileSectionCard>
-                )}
+            <CompanyProfileSectionCard
+              title="Ofertas de empleo"
+              icon={Briefcase}
+              iconTone="experience"
+              action={
+                activeJobCount > 0 ? (
+                  <button type="button" onClick={() => goToTab('empleos')} className={sectionLinkClass}>
+                    Ver todos
+                  </button>
+                ) : null
+              }
+            >
+              <CompanyJobsSection
+                jobs={jobs}
+                readOnly={readOnly}
+                profile={profile}
+                maxVisible={3}
+                onViewAll={() => goToTab('empleos')}
+                variant="preview"
+                showTitle={false}
+                embedded
+              />
+            </CompanyProfileSectionCard>
 
-                {showSocialCard && (
-                  <CompanyProfileSectionCard title="Redes sociales">
-                    <CompanySocialCard
-                      profile={profile}
-                      readOnly={readOnly}
-                      onAddSocial={onEditDetails}
-                      compact
-                      embedded
-                    />
-                  </CompanyProfileSectionCard>
-                )}
-              </aside>
-            )}
+            <CompanyProfileSectionCard
+              title="Publicaciones"
+              icon={Newspaper}
+              iconTone="document"
+              action={
+                posts.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => goToTab('publicaciones')}
+                    className={sectionLinkClass}
+                  >
+                    Ver todas
+                  </button>
+                ) : null
+              }
+            >
+              <CompanyPostsSection
+                posts={posts}
+                loading={postsLoading}
+                maxVisible={3}
+                onViewAll={() => goToTab('publicaciones')}
+                canManage={canManagePosts}
+                onEdit={handleEditPost}
+                onDelete={handleDeletePost}
+                embedded
+                readOnly={readOnly}
+                profile={profile}
+              />
+            </CompanyProfileSectionCard>
+
+            {showInfoCard ? (
+              <CompanyProfileSectionCard title="Información" icon={Building2} iconTone="about">
+                <CompanyInfoRows profile={profile} variant={infoVariant} />
+              </CompanyProfileSectionCard>
+            ) : null}
+
+            {showSocialCard ? (
+              <CompanyProfileSectionCard title="Redes sociales" icon={Share2} iconTone="social">
+                <CompanySocialCard
+                  profile={profile}
+                  readOnly={readOnly}
+                  onAddSocial={onEditDetails}
+                  compact
+                  embedded
+                />
+              </CompanyProfileSectionCard>
+            ) : null}
+
+            {(!readOnly || hasCompanyActionableContact(profile)) ? (
+              <CompanyProfileSectionCard
+                title="Contacto"
+                icon={PROFILE_SECTION_ICONS.contact}
+                iconTone="contact"
+              >
+                <CompanyContactSection
+                  profile={profile}
+                  readOnly={readOnly}
+                  onSave={onSaveContact}
+                  saving={contactSaving}
+                  embedded
+                />
+              </CompanyProfileSectionCard>
+            ) : null}
           </div>
         </div>
       )}
 
       {activeTab === 'empleos' && (
         <div className={profileContentShellClass}>
-          <CompanyJobsSection jobs={jobs} readOnly={readOnly} profile={profile} variant="full" showTitle={false} />
+          <CompanyProfileSectionCard
+            title="Ofertas de empleo"
+            icon={Briefcase}
+            iconTone="experience"
+            className="mx-space-base my-space-base"
+          >
+            <CompanyJobsSection
+              jobs={jobs}
+              readOnly={readOnly}
+              profile={profile}
+              variant="full"
+              showTitle={false}
+              embedded
+            />
+          </CompanyProfileSectionCard>
         </div>
       )}
 
@@ -293,16 +337,19 @@ export default function CompanyProfileView({
         />
       )}
 
-      {activeTab === 'servicios' && hasServices && (
-        <div className={profileContentShellClass}>
-          <CompanyServicesSection
-            items={services}
-            readOnly={readOnly}
-            onAdd={onAddService}
-            onDelete={onDeleteService}
-          />
+      {activeTab === 'servicios' && (hasServices || !readOnly) ? (
+        <div className={`${profileContentShellClass} ${profileSectionStackClass}`}>
+          <CompanyProfileSectionCard title="Servicios" icon={Wrench} iconTone="service">
+            <CompanyServicesSection
+              items={services}
+              readOnly={readOnly}
+              onAdd={onAddService}
+              onDelete={onDeleteService}
+              embedded
+            />
+          </CompanyProfileSectionCard>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

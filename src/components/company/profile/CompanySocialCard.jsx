@@ -9,42 +9,44 @@ import { extractSocialHandle, hasCompanySocialLinks } from '../../../utils/socia
 
 export { hasCompanySocialLinks };
 
+const MONO_SURFACE = 'bg-app-surface text-app-text ring-1 ring-app-border';
+
 const SOCIAL_NETWORKS = [
   {
     key: 'linkedin',
     label: 'LinkedIn',
     icon: LinkedinIcon,
-    activeClass: 'bg-[#0A66C2]/10 text-[#0A66C2]',
+    activeClass: MONO_SURFACE,
   },
   {
     key: 'facebook',
     label: 'Facebook',
     icon: FacebookIcon,
-    activeClass: 'bg-[#1877F2]/10 text-[#1877F2]',
+    activeClass: MONO_SURFACE,
   },
   {
     key: 'instagram',
     label: 'Instagram',
     icon: InstagramIcon,
-    activeClass: 'bg-[#E4405F]/10 text-[#E4405F]',
+    activeClass: MONO_SURFACE,
   },
   {
     key: 'tiktok',
     label: 'TikTok',
     icon: TikTokIcon,
-    activeClass: 'bg-app-surface text-app-text',
+    activeClass: MONO_SURFACE,
   },
   {
     key: 'x',
     label: 'X',
     icon: XIcon,
-    activeClass: 'bg-app-surface text-app-text',
+    activeClass: MONO_SURFACE,
   },
   {
     key: 'youtube',
     label: 'YouTube',
     icon: YoutubeIcon,
-    activeClass: 'bg-[#FF0000]/10 text-[#FF0000]',
+    activeClass: MONO_SURFACE,
   },
 ];
 
@@ -61,10 +63,8 @@ function SocialListRow({ network, href }) {
       rel="noopener noreferrer"
       className="group flex min-h-touch items-center gap-space-sm py-space-xs transition-colors duration-200 hover:bg-app-surface/60"
     >
-      <span
-        className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-radius-md ${network.activeClass}`}
-      >
-        <network.icon className="h-4 w-4" />
+      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-radius-md bg-app-surface ring-1 ring-app-border">
+        <network.icon className="h-4 w-4 text-app-text" />
       </span>
       <div className="min-w-0 flex-1">
         <p className="text-caption text-app-subtle">{network.label}</p>
@@ -73,7 +73,7 @@ function SocialListRow({ network, href }) {
       <AppIcon
         icon={ExternalLink}
         size={ICON_SIZES.sm}
-        className="shrink-0 text-primary-600 opacity-80 transition-opacity duration-200 group-hover:opacity-100"
+        className="shrink-0 text-app-text opacity-70 transition-opacity duration-200 group-hover:opacity-100"
       />
     </a>
   );
