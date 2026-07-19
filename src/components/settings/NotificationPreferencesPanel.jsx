@@ -150,6 +150,12 @@ export default function NotificationPreferencesPanel({ accountType }) {
   } = useNotificationPreferences(user?.id, { disabled: isPreviewMode });
 
   useEffect(() => {
+    if (status.permissionMessage === 'granted') {
+      showToast(NOTIFICATION_SAVED_COPY.activated, 'success');
+      clearPermissionMessage();
+      return;
+    }
+
     if (status.permissionMessage === 'denied') {
       showToast(NOTIFICATION_SAVED_COPY.denied, 'info');
       clearPermissionMessage();
@@ -162,7 +168,7 @@ export default function NotificationPreferencesPanel({ accountType }) {
       return;
     }
 
-    const { error } = await setMasterEnabled(!preferences.push_enabled);
+    const { error } = await setMasterEnabled(!status.pushToggleChecked);
     if (error) showToast(getSupabaseErrorMessage(error, 'No se pudieron guardar las preferencias.'), 'error');
   };
 
@@ -172,13 +178,13 @@ export default function NotificationPreferencesPanel({ accountType }) {
       return;
     }
 
-    if (!preferences.push_enabled) return;
+    if (!status.pushToggleChecked) return;
 
     const { error } = await setPreference(key, !preferences[key]);
     if (error) showToast(getSupabaseErrorMessage(error, 'No se pudo actualizar la preferencia.'), 'error');
   };
 
-  const disabledCategories = !preferences.push_enabled || status.savingKey === 'push_enabled' || isPreviewMode;
+  const disabledCategories = !status.pushToggleChecked || status.savingKey === 'push_enabled' || isPreviewMode;
 
   return (
     <div className="space-y-5">
@@ -197,16 +203,16 @@ export default function NotificationPreferencesPanel({ accountType }) {
             </p>
           </div>
           <PreferenceSwitch
-            checked={preferences.push_enabled}
+            checked={status.pushToggleChecked}
             disabled={status.loading || status.savingKey === 'push_enabled' || isPreviewMode}
             label={NOTIFICATION_MASTER_CARD.title}
             onChange={handleMasterToggle}
           />
         </div>
 
-        {!preferences.push_enabled ? (
-          <div className="mt-4 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-[12px] leading-relaxed text-slate-500">
-            {NOTIFICATION_SAVED_COPY.permissionRequired}
+        {status.osPermissionDenied ? (
+          <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-900">
+            {NOTIFICATION_SAVED_COPY.blocked}
           </div>
         ) : null}
 

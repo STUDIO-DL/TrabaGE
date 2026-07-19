@@ -7,6 +7,23 @@ import { reportError } from '../utils/logger';
 let initPromise = null;
 let initialized = false;
 
+const permissionChangeListeners = new Set();
+
+function notifyPermissionChangeListeners() {
+  permissionChangeListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      // Ignore listener errors during permission sync.
+    }
+  });
+}
+
+export function onPushPermissionChange(listener) {
+  permissionChangeListeners.add(listener);
+  return () => permissionChangeListeners.delete(listener);
+}
+
 async function persistOneSignalPlayerId(userId) {
   if (!userId || !initialized) return;
 
@@ -21,6 +38,29 @@ async function persistOneSignalPlayerId(userId) {
     await profileService.updateOneSignalPlayerId(userId, String(subscriptionId));
   } catch (error) {
     reportError(error, { area: 'onesignal_player_sync', userId });
+  }
+}
+
+async function syncPlayerIdFromSubscription() {
+  const userId = OneSignal.User?.externalId;
+  if (userId) {
+    await persistOneSignalPlayerId(userId);
+  }
+}
+
+function attachOneSignalListeners() {
+  try {
+    OneSignal.Notifications?.addEventListener?.('permissionChange', (granted) => {
+      notifyPermissionChangeListeners();
+      if (granted) void syncPlayerIdFromSubscription();
+    });
+
+    const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
+    subscription?.addEventListener?.('change', () => {
+      void syncPlayerIdFromSubscription();
+    });
+  } catch (error) {
+    reportError(error, { area: 'onesignal_listeners' });
   }
 }
 
@@ -65,6 +105,7 @@ export const initOneSignal = async () => {
         },
       });
       initialized = true;
+      attachOneSignalListeners();
     } catch (error) {
       reportError(error, { area: 'onesignal_init' });
     }
@@ -75,30 +116,37 @@ export const initOneSignal = async () => {
 
 export const requestNotificationPermission = async () => {
   await initOneSignal();
-  if (!initialized) return false;
 
   try {
-    if (OneSignal.Notifications?.permission) {
-      const userId = OneSignal.User?.externalId;
-      if (userId) await persistOneSignalPlayerId(userId);
+    if (initialized && OneSignal.Notifications?.permission) {
+      await syncPlayerIdFromSubscription();
       return true;
     }
 
-    const syncOnGrant = async () => {
-      const userId = OneSignal.User?.externalId;
-      if (userId) await persistOneSignalPlayerId(userId);
-    };
-    OneSignal.Notifications?.addEventListener?.('permissionChange', (granted) => {
-      if (granted) void syncOnGrant();
-    });
+    if (initialized && OneSignal.Notifications?.requestPermission) {
+      const granted = await OneSignal.Notifications.requestPermission();
+      if (granted) {
+        await syncPlayerIdFromSubscription();
+      }
+      return Boolean(granted);
+    }
 
-    const granted = await OneSignal.Notifications?.requestPermission?.();
-    if (granted) await syncOnGrant();
-    if (typeof granted === 'boolean') return granted;
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        await syncPlayerIdFromSubscription();
+        return true;
+      }
 
-    if (OneSignal.Slidedown?.promptPush) {
-      await OneSignal.Slidedown.promptPush({ force: false });
-      return Boolean(OneSignal.Notifications?.permission);
+      if (Notification.permission === 'denied') {
+        return false;
+      }
+
+      const result = await Notification.requestPermission();
+      const granted = result === 'granted';
+      if (granted) {
+        await syncPlayerIdFromSubscription();
+      }
+      return granted;
     }
 
     return false;
@@ -124,6 +172,7 @@ export const setOneSignalPushEnabled = async (enabled) => {
     const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
     if (enabled) {
       await subscription?.optIn?.();
+      await syncPlayerIdFromSubscription();
     } else {
       await subscription?.optOut?.();
     }
