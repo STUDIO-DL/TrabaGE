@@ -8,6 +8,16 @@ export const FEED_CONTENT_TYPES = {
   RECOMMENDATION_CARD: 'recommendation_card',
 };
 
+/** Content types allowed on the home/inicio feed (posts only). */
+export const HOME_FEED_CONTENT_TYPES = new Set([
+  FEED_CONTENT_TYPES.POST,
+  FEED_CONTENT_TYPES.ADVICE,
+]);
+
+export function isHomeFeedPostItem(item) {
+  return HOME_FEED_CONTENT_TYPES.has(item?.content_type);
+}
+
 export const FEED_RECOMMENDATION_SUBTYPES = {
   BUSINESS: 'business',
   ORGANIZATION: 'organization',

@@ -7,9 +7,11 @@ import { PostListSkeleton } from '../../components/common/Skeleton';
 import Button from '../../components/ui/Button';
 import { Newspaper } from '../../constants/icons';
 import { useIntelligentFeed } from '../../hooks/useIntelligentFeed';
+import { isHomeFeedPostItem } from '../../constants/feedContentTypes';
 
 export default function Feed() {
   const { items, loading, loadingMore, hasMore, error, refetch, loadMore } = useIntelligentFeed();
+  const feedItems = items.filter(isHomeFeedPostItem);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -54,7 +56,7 @@ export default function Feed() {
             actionLabel="Reintentar"
             onAction={refetch}
           />
-        ) : items.length === 0 ? (
+        ) : feedItems.length === 0 ? (
           <EmptyState
             variant="soft"
             icon={Newspaper}
@@ -62,7 +64,7 @@ export default function Feed() {
             description="Aquí verás publicaciones de personas y cuentas que sigues."
           />
         ) : (
-          items.map((item, index) => (
+          feedItems.map((item, index) => (
             <div
               key={item.item_key ?? item.id}
               className="card-enter"

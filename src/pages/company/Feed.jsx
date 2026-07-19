@@ -12,13 +12,14 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { postsService } from '../../services/posts.service';
 import { storageService } from '../../services/storage.service';
 import { STORAGE_BUCKETS } from '../../constants/storage';
-import { FEED_CONTENT_TYPES } from '../../constants/feedContentTypes';
+import { FEED_CONTENT_TYPES, isHomeFeedPostItem } from '../../constants/feedContentTypes';
 import { TOAST } from '../../utils/copyLabels';
 
 export default function Feed() {
   const { user } = useAuth();
   const { showToast } = useNotificationContext();
   const { items, loading, loadingMore, hasMore, error, refetch, loadMore } = useIntelligentFeed();
+  const feedItems = items.filter(isHomeFeedPostItem);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -100,7 +101,7 @@ export default function Feed() {
             actionLabel="Reintentar"
             onAction={refetch}
           />
-        ) : items.length === 0 ? (
+        ) : feedItems.length === 0 ? (
           <EmptyState
             variant="soft"
             icon={Newspaper}
@@ -108,7 +109,7 @@ export default function Feed() {
             description="Las publicaciones de tu red y del sector aparecerán aquí."
           />
         ) : (
-          items.map((item, index) => {
+          feedItems.map((item, index) => {
             const post = item.payload;
             const isPost =
               item.content_type === FEED_CONTENT_TYPES.POST ||

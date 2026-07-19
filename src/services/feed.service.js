@@ -6,6 +6,7 @@ import {
   FEED_PAGE_SIZE,
   FEED_RECOMMENDATION_SUBTYPES,
   INSTITUTION_COMPANY_TYPES,
+  isHomeFeedPostItem,
 } from '../constants/feedContentTypes';
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { companyService } from './company.service';
@@ -17,17 +18,8 @@ import { resolvePostAuthorName } from '../utils/displayIdentity';
 
 // The Home (Inicio) feed shows posts only. Job offers live exclusively in
 // Empleos; news, events, courses, and recommendation cards are excluded here.
-const FEED_POST_CONTENT_TYPES = new Set([
-  FEED_CONTENT_TYPES.POST,
-  FEED_CONTENT_TYPES.ADVICE,
-]);
-
-function excludeJobItems(items) {
-  return (items ?? []).filter((item) => item?.content_type !== FEED_CONTENT_TYPES.JOB);
-}
-
 function filterPostOnlyItems(items) {
-  return excludeJobItems(items).filter((item) => FEED_POST_CONTENT_TYPES.has(item?.content_type));
+  return (items ?? []).filter(isHomeFeedPostItem);
 }
 
 async function fetchFeedPool(userId, role, { limit = FEED_PAGE_SIZE, offset = 0 } = {}) {
