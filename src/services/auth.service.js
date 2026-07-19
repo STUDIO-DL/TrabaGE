@@ -611,6 +611,10 @@ export const authService = {
       return configError();
     }
 
+    // A password login is never signup completion. Do not let a failed or
+    // abandoned registration in this browser change the account being signed in.
+    savePendingAccountType(null);
+
     const result = await supabase.auth.signInWithPassword({
       email: normalizeEmail(email),
       password: normalizePassword(password),
@@ -824,6 +828,10 @@ export const authService = {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
     const errorDescription =
       query.get('error_description') || hash.get('error_description');
+    const tokenHash = query.get('token_hash') || hash.get('token_hash');
+    const code = query.get('code');
+    const typeParam = query.get('type') || hash.get('type');
+    const hasConfirmationToken = Boolean(tokenHash || code);
 
     const successPayload = (user, session, { alreadyVerified = false } = {}) => {
       if (user?.email) {
@@ -843,11 +851,14 @@ export const authService = {
     await waitForInitialSessionDetection();
 
     let verified = await getVerifiedSessionFromClient();
-    if (verified.user && verified.session) {
+    // A valid link may belong to a different account in the same browser.
+    // Consume it before considering any already-established session.
+    if (!hasConfirmationToken && verified.user && verified.session) {
       return successPayload(verified.user, verified.session, { alreadyVerified: true });
     }
 
     if (
+      !hasConfirmationToken &&
       persistedSessionSnapshot?.user &&
       isEmailVerified(persistedSessionSnapshot.user)
     ) {
@@ -871,10 +882,6 @@ export const authService = {
         },
       };
     }
-
-    const tokenHash = query.get('token_hash') || hash.get('token_hash');
-    const code = query.get('code');
-    const typeParam = query.get('type') || hash.get('type');
 
     if (!tokenHash && !code) {
       verified = await getVerifiedSessionFromClient();
