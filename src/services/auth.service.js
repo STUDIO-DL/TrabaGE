@@ -847,11 +847,25 @@ export const authService = {
     };
 
     const persistedSessionSnapshot = readPersistedAuthSession();
+    const preexistingSession = await getVerifiedSessionFromClient();
+    const preexistingUserId =
+      persistedSessionSnapshot?.user?.id ?? preexistingSession.user?.id ?? null;
 
     // Allow detectSessionInUrl / PKCE code exchange to finish first.
     await waitForInitialSessionDetection();
 
     let verified = await getVerifiedSessionFromClient();
+
+    if (errorDescription) {
+      return {
+        data: { user: null, session: null },
+        error: {
+          code: query.get('error') || hash.get('error') || 'confirmation_failed',
+          message: decodeURIComponent(errorDescription.replace(/\+/g, ' ')),
+        },
+      };
+    }
+
     // A valid link may belong to a different account in the same browser.
     // Consume it before considering any already-established session.
     if (!hasConfirmationToken && verified.user && verified.session) {
@@ -867,21 +881,6 @@ export const authService = {
       if (restored?.user && restored.session) {
         return successPayload(restored.user, restored.session, { alreadyVerified: true });
       }
-    }
-
-    if (errorDescription) {
-      const recovered = await resolveVerifiedUserFromServer();
-      if (recovered?.user && recovered.session) {
-        return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
-      }
-
-      return {
-        data: { user: null, session: null },
-        error: {
-          code: query.get('error') || hash.get('error') || 'confirmation_failed',
-          message: decodeURIComponent(errorDescription.replace(/\+/g, ' ')),
-        },
-      };
     }
 
     if (!tokenHash && !code) {
@@ -922,7 +921,11 @@ export const authService = {
       await waitForInitialSessionDetection(150);
 
       const recovered = await recoverVerifiedSessionAfterOtpFailure();
-      if (recovered?.user && recovered.session) {
+      if (
+        recovered?.user &&
+        recovered.session &&
+        (!preexistingUserId || recovered.user.id !== preexistingUserId)
+      ) {
         return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
       }
 
@@ -945,7 +948,11 @@ export const authService = {
 
       await waitForInitialSessionDetection(150);
       verified = await getVerifiedSessionFromClient();
-      if (verified.user && verified.session) {
+      if (
+        verified.user &&
+        verified.session &&
+        (!preexistingUserId || verified.user.id !== preexistingUserId)
+      ) {
         return successPayload(verified.user, verified.session);
       }
 
