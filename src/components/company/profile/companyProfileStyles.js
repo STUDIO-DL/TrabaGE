@@ -41,11 +41,19 @@ export const profileHeaderContentClass = 'px-space-base pb-space-md sm:px-space-
 export const profileHeaderBodyClass =
   'flex flex-col gap-space-md sm:flex-row sm:items-start sm:gap-space-lg md:gap-space-xl';
 
+/** Company header row — logo and name stay side-by-side so the name is never covered */
+export const profileCompanyHeaderBodyClass =
+  'flex flex-row items-start gap-space-sm sm:gap-space-lg md:gap-space-xl';
+
 /** Pull personal avatar up ~50% into the cover (4.5rem mobile / 7rem sm+) */
 export const profilePersonalAvatarOverlapClass = '-mt-[2.25rem] sm:-mt-[3.5rem]';
 
-/** Pull company logo up ~50% into the cover (7rem) */
-export const profileCompanyLogoOverlapClass = '-mt-[3.5rem] sm:-mt-[3.5rem]';
+/** Pull company logo up ~50% into the cover (7rem avatar + frame) */
+export const profileCompanyLogoOverlapClass = '-mt-[3.5rem]';
+
+/** Reserve space beside the logo so the company name always clears the avatar block */
+export const profileCompanyHeaderInfoClass =
+  'min-w-0 flex-1 pt-0.5 sm:pt-[3.75rem]';
 
 export const profilePersonalAvatarFrameClass =
   'rounded-radius-circular bg-app-card p-0.5 ring-4 ring-app-card shadow-elevation-2';
@@ -63,6 +71,10 @@ export const profileHeadlineClass =
   'mt-space-xs break-words text-body-small text-app-muted sm:text-body';
 
 export const profileHeaderInfoClass = 'min-w-0 flex-1 pt-space-xs sm:pt-space-md';
+
+/** Tiny spacing token alias used for company name row alignment */
+export const profileCompanyNameRowClass =
+  'flex min-w-0 items-start gap-space-xs sm:items-center sm:gap-space-sm';
 
 export const profileActionButtonClass =
   'h-10 min-h-0 shrink-0 px-space-md text-body-small font-medium';

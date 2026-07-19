@@ -58,21 +58,23 @@ import {
 
   profileBannerGradientClass,
 
+  profileCompanyHeaderBodyClass,
+
+  profileCompanyHeaderInfoClass,
+
   profileCompanyLogoFrameClass,
 
   profileCompanyLogoOverlapClass,
 
   profileCompanyNameHeadingClass,
 
+  profileCompanyNameRowClass,
+
   profileCoverHeightClass,
 
   profileCoverOverlayClass,
 
-  profileHeaderBodyClass,
-
   profileHeaderContentClass,
-
-  profileHeaderInfoClass,
 
   profileHeadlineClass,
 
@@ -408,9 +410,9 @@ export default function CompanyProfileHeader({
 
       <div className={profileHeaderContentClass}>
 
-        <div className={profileHeaderBodyClass}>
+        <div className={profileCompanyHeaderBodyClass}>
 
-          <div className={`relative shrink-0 self-start ${profileCompanyLogoOverlapClass}`}>
+          <div className={`relative z-10 shrink-0 self-start ${profileCompanyLogoOverlapClass}`}>
 
             <div className={profileCompanyLogoFrameClass}>
 
@@ -488,9 +490,9 @@ export default function CompanyProfileHeader({
 
 
 
-          <div className={profileHeaderInfoClass}>
+          <div className={`relative z-20 ${profileCompanyHeaderInfoClass}`}>
 
-            <div className="flex items-center gap-space-sm">
+            <div className={profileCompanyNameRowClass}>
 
               <div className="min-w-0 flex-1">
 
@@ -512,7 +514,7 @@ export default function CompanyProfileHeader({
 
                     nameClassName={profileCompanyNameHeadingClass}
 
-                    className="items-center"
+                    className="inline-flex min-w-0 items-center gap-x-1"
 
                   />
 

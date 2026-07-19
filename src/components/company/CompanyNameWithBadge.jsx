@@ -42,7 +42,7 @@ export default function CompanyNameWithBadge({
     showVerificationBadge && (verified || (!readOnly && showOwnerVerificationBadge));
 
   return (
-    <span className={`inline-flex flex-wrap items-center gap-x-1.5 gap-y-1 ${className}`}>
+    <span className={`inline-flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 ${className}`}>
       {nameElement}
       {showBadge ? (
         <CompanyVerificationBadge profile={company} readOnly={readOnly} size={size} />

@@ -78,10 +78,12 @@ export const applicationsService = {
 
     const profilesById = new Map((profilesResult.data ?? []).map((profile) => [profile.user_id, profile]));
     const data = rankApplicantsByJob(
-      applicationsResult.data.map((application) => ({
-        ...application,
-        candidate_profiles: profilesById.get(application.candidate_id),
-      })),
+      applicationsResult.data
+        .map((application) => ({
+          ...application,
+          candidate_profiles: profilesById.get(application.candidate_id),
+        }))
+        .filter((application) => application.candidate_profiles),
     );
 
     return { ...applicationsResult, data };
