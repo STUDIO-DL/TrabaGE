@@ -15,6 +15,23 @@ SET
   ]
 WHERE id = 'company-verifications';
 
+CREATE OR REPLACE FUNCTION public.require_admin()
+RETURNS void
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+  IF auth.uid() IS NULL OR public.get_my_role() IS DISTINCT FROM 'admin' THEN
+    RAISE EXCEPTION 'Unauthorized';
+  END IF;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.require_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.require_admin() TO authenticated, service_role;
+
 DROP POLICY IF EXISTS "Company verification upload own" ON storage.objects;
 CREATE POLICY "Company verification upload own" ON storage.objects FOR INSERT
   TO authenticated
@@ -97,9 +114,7 @@ DECLARE
   v_admin_id UUID := auth.uid();
   v_request public.verification_requests;
 BEGIN
-  IF public.get_my_role() <> 'admin' THEN
-    RAISE EXCEPTION 'Solo administradores pueden revisar solicitudes';
-  END IF;
+  PERFORM public.require_admin();
 
   IF p_action NOT IN ('approved', 'rejected') THEN
     RAISE EXCEPTION 'Acción inválida';
