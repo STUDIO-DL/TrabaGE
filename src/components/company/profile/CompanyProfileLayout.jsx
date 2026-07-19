@@ -531,11 +531,14 @@ export default function CompanyProfileLayout({
 
   if (error && !profile && !isPreviewMode) {
     return (
-      <div className="p-space-base">
-        <FetchErrorBanner
-          message="No se pudo cargar tu perfil. Inténtalo de nuevo."
-          onRetry={() => refetch()}
-        />
+      <div className="min-h-dvh">
+        <ProfilePageSkeleton />
+        <div className="px-space-base pb-space-xl">
+          <FetchErrorBanner
+            message="Todavía no pudimos cargar el perfil. Reintenta cuando la conexión sea estable."
+            onRetry={() => refetch()}
+          />
+        </div>
       </div>
     );
   }

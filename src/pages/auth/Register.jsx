@@ -383,6 +383,19 @@ export default function Register() {
     if (home) return <Navigate to={home} replace />;
   }
 
+  // Hydrating role after login/OAuth — show loader, not the register form.
+  // Exception: explicit account-type completion or resume-after-timeout.
+  const resumeAccountSetup = Boolean(location.state?.resumeAccountSetup);
+  if (
+    isAuthenticated &&
+    !isPreviewMode &&
+    !role &&
+    !oauthCompletion &&
+    !resumeAccountSetup
+  ) {
+    return <AuthLoadingScreen />;
+  }
+
   const headerSubtitle = oauthCompletion
     ? 'Elige el tipo de cuenta para completar tu registro.'
     : 'Crea tu cuenta y comienza tu camino profesional.';

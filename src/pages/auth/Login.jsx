@@ -479,9 +479,9 @@ export default function Login() {
     return <Navigate to={getHomePath() || '/'} replace />;
   }
 
-  // Session present but role still missing — send to registration instead of spinning forever.
+  // Session present but role still hydrating — never flash Register mid-login.
   if (isAuthenticated && !isPreviewMode && !role) {
-    return <Navigate to="/register" replace state={{ resumeAccountSetup: true }} />;
+    return <AuthLoadingScreen />;
   }
 
   return (

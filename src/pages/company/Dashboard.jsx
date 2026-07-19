@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import AppIcon from '../../components/common/AppIcon';
 import Button from '../../components/ui/Button';
-import Spinner from '../../components/ui/Spinner';
+import { JobListSkeleton } from '../../components/common/Skeleton';
 import CompanyDashboardShell from '../../components/company/dashboard/CompanyDashboardShell';
 import DashboardStatCard from '../../components/company/dashboard/DashboardStatCard';
 import DashboardRecentCandidates from '../../components/company/dashboard/DashboardRecentCandidates';
@@ -80,8 +80,8 @@ export default function Dashboard() {
 
   if (profileLoading) {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-[#F9FAFB]">
-        <Spinner size="lg" />
+      <div className="min-h-dvh bg-app-surface p-space-base" aria-busy="true" aria-label="Cargando panel">
+        <JobListSkeleton count={4} />
       </div>
     );
   }

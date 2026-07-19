@@ -6,6 +6,9 @@ import { FEED_CONTENT_TYPES, FEED_PAGE_SIZE } from '../constants/feedContentType
 import { getPreviewPosts } from '../constants/preview';
 import { rankAndInterleaveFeed, dedupeFeedItems } from '../utils/feedRanking';
 
+const MAX_AUTO_RETRIES = 2;
+const RETRY_DELAY_MS = 700;
+
 export function useIntelligentFeed({ authorId } = {}) {
   const { user, isPreviewMode, role } = useAuth();
   const [items, setItems] = useState([]);
@@ -16,6 +19,8 @@ export function useIntelligentFeed({ authorId } = {}) {
   const itemsRef = useRef([]);
   const offsetRef = useRef(0);
   const contextRef = useRef(null);
+  const retryCountRef = useRef(0);
+  const fetchFeedRef = useRef(null);
 
   useEffect(() => {
     itemsRef.current = items;
@@ -24,12 +29,18 @@ export function useIntelligentFeed({ authorId } = {}) {
   useEffect(() => {
     contextRef.current = null;
     offsetRef.current = 0;
+    retryCountRef.current = 0;
   }, [user?.id, role, authorId]);
+
+  const scheduleRetry = useCallback(() => {
+    window.setTimeout(() => {
+      void fetchFeedRef.current?.({ append: false });
+    }, RETRY_DELAY_MS);
+  }, []);
 
   const fetchFeed = useCallback(
     async ({ append = false } = {}) => {
       if (authorId) {
-        // Profile-scoped posts still use chronological author feed via posts service path
         setLoading(!append);
         setLoadingMore(append);
         const { postsService } = await import('../services/posts.service');
@@ -41,12 +52,18 @@ export function useIntelligentFeed({ authorId } = {}) {
           includeHidden,
         });
         if (fetchError) {
+          if (!append && retryCountRef.current < MAX_AUTO_RETRIES) {
+            retryCountRef.current += 1;
+            scheduleRetry();
+            return;
+          }
           if (!append) setItems([]);
           setError(fetchError.message);
           setLoading(false);
           setLoadingMore(false);
           return;
         }
+        retryCountRef.current = 0;
         const mapped = (data ?? []).map((post) => ({
           item_key: `post:${post.id}`,
           content_type: FEED_CONTENT_TYPES.POST,
@@ -104,6 +121,11 @@ export function useIntelligentFeed({ authorId } = {}) {
       });
 
       if (fetchError) {
+        if (!append && retryCountRef.current < MAX_AUTO_RETRIES) {
+          retryCountRef.current += 1;
+          scheduleRetry();
+          return;
+        }
         if (!append) setItems([]);
         setError(fetchError.message);
         setLoading(false);
@@ -111,6 +133,7 @@ export function useIntelligentFeed({ authorId } = {}) {
         return;
       }
 
+      retryCountRef.current = 0;
       const rawItems = pool ?? [];
 
       const enriched = await feedService.enrichFeedItems(rawItems, user, role);
@@ -127,8 +150,10 @@ export function useIntelligentFeed({ authorId } = {}) {
       setLoading(false);
       setLoadingMore(false);
     },
-    [authorId, isPreviewMode, role, user],
+    [authorId, isPreviewMode, role, scheduleRetry, user],
   );
+
+  fetchFeedRef.current = fetchFeed;
 
   useEffect(() => {
     fetchFeed();
@@ -142,6 +167,7 @@ export function useIntelligentFeed({ authorId } = {}) {
   const refetch = useCallback(() => {
     contextRef.current = null;
     offsetRef.current = 0;
+    retryCountRef.current = 0;
     fetchFeed({ append: false });
   }, [fetchFeed]);
 

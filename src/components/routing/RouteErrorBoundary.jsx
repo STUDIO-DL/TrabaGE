@@ -7,7 +7,7 @@ function RouteErrorFallback({ onRetry }) {
     <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
       <h1 className="text-xl font-semibold text-gray-900">Algo salió mal</h1>
       <p className="mt-2 text-sm text-gray-500">
-        No pudimos cargar esta pantalla. Inténtalo de nuevo en unos segundos.
+        Ha ocurrido un error inesperado. Puedes reintentar cargar esta sección.
       </p>
       <button
         type="button"
@@ -23,7 +23,7 @@ function RouteErrorFallback({ onRetry }) {
 export default class RouteErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, autoRetried: false };
   }
 
   static getDerivedStateFromError() {
@@ -32,15 +32,33 @@ export default class RouteErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     reportError(error, { area: 'route_error_boundary', componentStack: info?.componentStack });
+
+    // One silent auto-retry for transient chunk/network glitches during navigation.
+    if (!this.state.autoRetried) {
+      window.setTimeout(() => {
+        this.setState({ hasError: false, autoRetried: true });
+      }, 500);
+    }
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false });
+    this.setState({ hasError: false, autoRetried: false });
   };
 
   render() {
-    if (this.state.hasError) {
+    if (this.state.hasError && this.state.autoRetried) {
       return <RouteErrorFallback onRetry={this.handleRetry} />;
+    }
+
+    if (this.state.hasError) {
+      // Quiet wait during the single auto-retry window.
+      return (
+        <div
+          className="flex min-h-dvh items-center justify-center bg-app-bg"
+          aria-busy="true"
+          aria-label="Cargando"
+        />
+      );
     }
 
     return this.props.children;

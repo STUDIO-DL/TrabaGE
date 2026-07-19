@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
 import AppAvatar from '../common/AppAvatar';
+import { SearchResultsSkeleton } from '../common/Skeleton';
 import { AvatarType, avatarTypeFromSearchEntity } from '../../constants/avatarDefaults';
 import { groupSearchResults } from '../../utils/globalSearch';
 import { resolveSearchResultPath } from '../../utils/profileRoutes';
@@ -84,23 +84,23 @@ export default function SearchResultsList({
 
   if (loading) {
     return (
-      <div
-        className={`flex items-center justify-center gap-space-sm px-space-base py-space-2xl text-body-small text-app-muted ${className}`}
-      >
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-        Buscando…
+      <div className={className}>
+        <SearchResultsSkeleton count={6} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <p
-        className={`px-space-base py-space-2xl text-center text-body-small text-error-700 ${className}`}
-        role="alert"
-      >
-        No se pudo completar la búsqueda. Inténtalo de nuevo.
-      </p>
+      <div className={className}>
+        <SearchResultsSkeleton count={4} />
+        <p
+          className="px-space-base py-space-base text-center text-body-small text-app-muted"
+          role="status"
+        >
+          Todavía estamos buscando. Si tarda demasiado, vuelve a intentarlo.
+        </p>
+      </div>
     );
   }
 

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../config/supabase';
 import { authService, isEmailVerified } from '../services/auth.service';
 import { isAuthConfirmPath } from '../constants/authUrls';
@@ -47,6 +47,9 @@ export function AuthProvider({ children }) {
   const [setupComplete, setSetupComplete] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  /** True while role/profile hydrate runs after session is known — prevents Register flash. */
+  const [hydrating, setHydrating] = useState(false);
+  const hydrateGenRef = useRef(0);
 
   const fetchRoleAndSetup = useCallback(async (userId, userRole) => {
     const normalized = normalizeRole(userRole) ?? userRole;
@@ -81,15 +84,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   const hydrateUser = useCallback(async (currentSession) => {
+    const gen = ++hydrateGenRef.current;
     const currentUser = currentSession?.user ?? null;
-    setSession(currentSession);
-    setUser(currentUser);
 
     if (!currentUser) {
+      setSession(null);
+      setUser(null);
       setRole(null);
       setSetupComplete(false);
       clearSentryUser();
       void clearOneSignalUserId();
+      if (gen === hydrateGenRef.current) setHydrating(false);
       return;
     }
 
@@ -106,12 +111,19 @@ export function AuthProvider({ children }) {
       setSetupComplete(false);
       clearSentryUser();
       void clearOneSignalUserId();
+      if (gen === hydrateGenRef.current) setHydrating(false);
 
       if (!onConfirmRoute) {
         void supabase.auth.signOut({ scope: 'local' });
       }
       return;
     }
+
+    // Mark hydrating BEFORE publishing session so guest routes never treat
+    // "authenticated + no role yet" as "go to Register".
+    setHydrating(true);
+    setSession(currentSession);
+    setUser(currentUser);
 
     try {
       setSentryUser(currentUser);
@@ -125,6 +137,8 @@ export function AuthProvider({ children }) {
         profileService.getCandidateProfile(currentUser.id),
         companyService.getCompanyProfile(currentUser.id),
       ]);
+
+      if (gen !== hydrateGenRef.current) return;
 
       let userRole = roleResult?.data?.role ?? null;
 
@@ -144,6 +158,8 @@ export function AuthProvider({ children }) {
       if (!roleResult?.data?.role && userRole && currentUser.id && userRole !== ROLES.ADMIN) {
         await authService.setUserRole(currentUser.id, userRole);
       }
+
+      if (gen !== hydrateGenRef.current) return;
 
       setRole(userRole);
 
@@ -170,11 +186,15 @@ export function AuthProvider({ children }) {
         await bootstrapProfile({ user: currentUser, role: userRole });
       }
 
+      if (gen !== hydrateGenRef.current) return;
+
       if (isPersonalRole(userRole)) {
         const { data: candidateAfterBootstrap } = await profileService.getCandidateProfile(currentUser.id);
+        if (gen !== hydrateGenRef.current) return;
         setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, candidateAfterBootstrap));
       } else if (isEmployerRole(userRole)) {
         const { data: companyAfterBootstrap } = await companyService.getCompanyProfile(currentUser.id);
+        if (gen !== hydrateGenRef.current) return;
         const resolvedRole =
           normalizeRole(userRole, { companyType: companyAfterBootstrap?.company_type }) ?? userRole;
         setRole(resolvedRole);
@@ -186,8 +206,10 @@ export function AuthProvider({ children }) {
       }
     } catch (err) {
       reportError(err, { area: 'auth_hydrate_user', userId: currentUser.id });
-      setRole(null);
-      setSetupComplete(false);
+      // Do not clear an already-resolved role — that flashes Register during login.
+      setSetupComplete((prev) => prev);
+    } finally {
+      if (gen === hydrateGenRef.current) setHydrating(false);
     }
   }, []);
 
@@ -379,7 +401,9 @@ export function AuthProvider({ children }) {
       user,
       role,
       setupComplete,
-      loading,
+      // Include hydrating so GuestOnly/Login never see session-before-role.
+      loading: loading || hydrating,
+      hydrating,
       isPreviewMode,
       emailVerified,
       isAuthenticated:
@@ -403,6 +427,7 @@ export function AuthProvider({ children }) {
       role,
       setupComplete,
       loading,
+      hydrating,
       isPreviewMode,
       login,
       register,

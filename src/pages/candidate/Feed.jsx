@@ -21,15 +21,17 @@ export default function Feed() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadMore]);
 
+  const showSkeleton = loading || (Boolean(error) && items.length === 0);
+
   return (
     <PageContainer topBar={<FeedHeader />}>
       <div className="space-y-space-sm p-space-base">
-        {error && (
+        {error && items.length > 0 ? (
           <div
             className="mb-space-md rounded-radius-lg border border-error-100 bg-error-50 px-space-base py-space-md text-body-small text-error-800"
             role="alert"
           >
-            <p>No se pudo cargar el feed. Inténtalo de nuevo.</p>
+            <p>No se pudo actualizar el feed. Puedes reintentar.</p>
             <button
               type="button"
               onClick={refetch}
@@ -39,9 +41,19 @@ export default function Feed() {
               Reintentar
             </button>
           </div>
-        )}
-        {loading ? (
+        ) : null}
+
+        {showSkeleton ? (
           <PostListSkeleton count={3} />
+        ) : error && items.length === 0 ? (
+          <EmptyState
+            variant="soft"
+            icon={Newspaper}
+            title="No pudimos cargar el feed"
+            description="Comprueba tu conexión e inténtalo de nuevo."
+            actionLabel="Reintentar"
+            onAction={refetch}
+          />
         ) : items.length === 0 ? (
           <EmptyState
             variant="soft"
@@ -61,8 +73,14 @@ export default function Feed() {
           ))
         )}
         {loadingMore && <PostListSkeleton count={1} />}
-        {!loading && hasMore && !loadingMore && (
-          <Button variant="secondary" fullWidth className="mt-space-sm" onClick={loadMore} aria-label="Cargar más contenido del feed">
+        {!loading && !showSkeleton && hasMore && !loadingMore && (
+          <Button
+            variant="secondary"
+            fullWidth
+            className="mt-space-sm"
+            onClick={loadMore}
+            aria-label="Cargar más contenido del feed"
+          >
             Cargar más
           </Button>
         )}
