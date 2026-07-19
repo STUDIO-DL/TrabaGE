@@ -143,25 +143,6 @@ async function resolveVerifiedUserFromServer() {
   return null;
 }
 
-async function recoverVerifiedSessionAfterOtpFailure() {
-  let verified = await getVerifiedSessionFromClient();
-  if (verified.user && verified.session) {
-    return { user: verified.user, session: verified.session, alreadyVerified: true };
-  }
-
-  const restored = await restoreVerifiedSessionFromStorage();
-  if (restored?.user && restored.session) {
-    return { ...restored, alreadyVerified: true };
-  }
-
-  const recovered = await resolveVerifiedUserFromServer();
-  if (recovered?.user && recovered.session) {
-    return { ...recovered, alreadyVerified: true };
-  }
-
-  return null;
-}
-
 async function verifyEmailConfirmationToken(tokenHash, typeParam) {
   const primaryType = typeParam === 'signup' ? 'signup' : 'email';
   let result = await supabase.auth.verifyOtp({
@@ -847,11 +828,8 @@ export const authService = {
     };
 
     const persistedSessionSnapshot = readPersistedAuthSession();
-    const preexistingSession = await getVerifiedSessionFromClient();
-    const preexistingUserId =
-      persistedSessionSnapshot?.user?.id ?? preexistingSession.user?.id ?? null;
 
-    // Allow detectSessionInUrl / PKCE code exchange to finish first.
+    // Allow auth client initialization to settle before reading its session.
     await waitForInitialSessionDetection();
 
     let verified = await getVerifiedSessionFromClient();
@@ -911,24 +889,8 @@ export const authService = {
     }
 
     if (result.error) {
-      // Token-hash links are exchanged only here. Falling back to a session
-      // that existed before the exchange can report the wrong account as
-      // confirmed when the link is expired, reused, or invalid.
-      if (tokenHash) {
-        return result;
-      }
-
-      await waitForInitialSessionDetection(150);
-
-      const recovered = await recoverVerifiedSessionAfterOtpFailure();
-      if (
-        recovered?.user &&
-        recovered.session &&
-        (!preexistingUserId || recovered.user.id !== preexistingUserId)
-      ) {
-        return successPayload(recovered.user, recovered.session, { alreadyVerified: true });
-      }
-
+      // A failed exchange must never fall back to whichever account happened
+      // to be active before this link was opened.
       return result;
     }
 
@@ -936,26 +898,6 @@ export const authService = {
     let session = result.data?.session ?? null;
 
     if (!isEmailVerified(user)) {
-      if (tokenHash) {
-        return {
-          data: result.data,
-          error: {
-            code: 'email_not_confirmed',
-            message: 'No se pudo confirmar el correo electrónico.',
-          },
-        };
-      }
-
-      await waitForInitialSessionDetection(150);
-      verified = await getVerifiedSessionFromClient();
-      if (
-        verified.user &&
-        verified.session &&
-        (!preexistingUserId || verified.user.id !== preexistingUserId)
-      ) {
-        return successPayload(verified.user, verified.session);
-      }
-
       return {
         data: result.data,
         error: {
