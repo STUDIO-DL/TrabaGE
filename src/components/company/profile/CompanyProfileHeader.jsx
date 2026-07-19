@@ -37,8 +37,7 @@ import {
   profileCoverOverlayClass,
   profileHeaderContentClass,
   profileHeadlineClass,
-  profileMetaIconClass,
-  profileMetaLineClass,
+  profileMetaItemClass,
 } from './companyProfileStyles';
 
 function BannerSkyline() {
@@ -76,6 +75,20 @@ function formatEmployeeCount(size) {
   return `${trimmed} empleados`;
 }
 
+function buildHeaderMeta(profile) {
+  const sector = getCompanySectorText(profile);
+  const city = profile?.city?.trim();
+  const country = profile?.country?.trim();
+  const location = [city, country].filter(Boolean).join(', ');
+  const employees = formatEmployeeCount(profile?.company_size);
+
+  return [
+    sector ? { key: 'sector', icon: Briefcase, text: sector } : null,
+    location ? { key: 'location', icon: MapPin, text: location } : null,
+    employees ? { key: 'size', icon: Users, text: employees } : null,
+  ].filter(Boolean);
+}
+
 export default function CompanyProfileHeader({
   profile,
   readOnly = false,
@@ -102,11 +115,7 @@ export default function CompanyProfileHeader({
   const introText = getCompanyIntroText(profile);
   const avatarType = avatarTypeFromCompanyProfile(profile);
   const coverSrc = getCompanyCoverUrl(profile?.cover_url);
-  const sector = getCompanySectorText(profile);
-  const city = profile?.city?.trim();
-  const country = profile?.country?.trim();
-  const location = [city, country].filter(Boolean).join(', ');
-  const employees = formatEmployeeCount(profile?.company_size);
+  const metaItems = buildHeaderMeta(profile);
 
   const handleLogoChange = (event) => {
     const file = event.target.files?.[0];
@@ -131,7 +140,6 @@ export default function CompanyProfileHeader({
 
   return (
     <section className="overflow-hidden border-b border-app-border bg-app-card">
-      {/* 1. Cover */}
       <div className={`relative ${profileCoverHeightClass} overflow-hidden`}>
         {coverSrc ? (
           <img src={coverSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
@@ -185,7 +193,7 @@ export default function CompanyProfileHeader({
       </div>
 
       <div className={profileHeaderContentClass}>
-        {/* 2. Logo — overlaps cover, never overlaps name (separate block below) */}
+        {/* Logo — overlaps cover; identity is a separate block below */}
         <div className={`relative z-10 flex justify-start ${profileCompanyLogoOverlapClass}`}>
           <div className="relative shrink-0">
             <div className={profileCompanyLogoFrameClass}>
@@ -213,14 +221,14 @@ export default function CompanyProfileHeader({
                   type="button"
                   onClick={() => setLogoOwnershipOpen(true)}
                   disabled={logoLoading}
-                  className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-radius-circular bg-primary-600 text-white shadow-elevation-1 ring-2 ring-app-card transition-colors duration-fast hover:bg-primary-700 disabled:opacity-60"
+                  className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-radius-circular bg-app-card text-app-muted shadow-elevation-1 ring-2 ring-app-card transition-colors duration-fast hover:bg-app-surface hover:text-app-text disabled:opacity-60"
                   aria-label={logoLoading ? getUploadPhaseLabel(logoPhase) || 'Subiendo logo' : 'Subir logo'}
                   title={logoLoading ? getUploadPhaseLabel(logoPhase) || 'Subiendo…' : undefined}
                 >
                   {logoLoading ? (
-                    <span className="text-xs font-semibold">…</span>
+                    <span className="text-[10px] font-semibold">…</span>
                   ) : (
-                    <AppIcon icon={Camera} size={ICON_SIZES.default} className="text-white" />
+                    <AppIcon icon={Camera} size={ICON_SIZES.sm} />
                   )}
                 </button>
               </>
@@ -228,99 +236,91 @@ export default function CompanyProfileHeader({
           </div>
         </div>
 
-        {/* 3–7. Identity — always below logo */}
+        {/* Name, intro and meta — always below the logo */}
         <div className={`${profileCompanyHeaderInfoClass} mt-space-md`}>
-          <div className={profileCompanyNameRowClass}>
-            <div className="min-w-0 flex-1">
-              {name ? (
-                <CompanyNameWithBadge
-                  company={profile}
-                  name={name}
-                  profile
-                  readOnly={readOnly}
-                  showOwnerVerificationBadge={!readOnly}
-                  linkToProfile={false}
-                  nameClassName={profileCompanyNameHeadingClass}
-                  className="inline-flex max-w-full flex-wrap items-center gap-x-space-sm gap-y-space-xs"
-                />
-              ) : !readOnly ? (
+            <div className={profileCompanyNameRowClass}>
+              <div className="min-w-0 flex-1">
+                {name ? (
+                  <CompanyNameWithBadge
+                    company={profile}
+                    name={name}
+                    profile
+                    readOnly={readOnly}
+                    showOwnerVerificationBadge={!readOnly}
+                    linkToProfile={false}
+                    nameClassName={profileCompanyNameHeadingClass}
+                    className="inline-flex min-w-0 items-center gap-x-1"
+                  />
+                ) : !readOnly ? (
+                  <button
+                    type="button"
+                    onClick={onEditName}
+                    className={`${profileCompanyNameHeadingClass} text-left text-app-subtle transition-colors hover:text-primary-600`}
+                  >
+                    Añade el nombre de tu cuenta
+                  </button>
+                ) : null}
+              </div>
+
+              {!readOnly && onEditIntro && name ? (
+                <button
+                  type="button"
+                  onClick={onEditIntro}
+                  className="inline-flex min-h-touch shrink-0 items-center gap-space-xs rounded-radius-sm px-space-sm text-caption font-medium text-app-muted transition-colors duration-fast hover:bg-app-surface hover:text-primary-600"
+                  aria-label="Editar intro"
+                  title="Editar intro"
+                >
+                  <AppIcon icon={Pencil} size={ICON_SIZES.sm} aria-hidden />
+                  <span>Editar intro</span>
+                </button>
+              ) : null}
+
+              {!readOnly && onEditName && name ? (
                 <button
                   type="button"
                   onClick={onEditName}
-                  className={`${profileCompanyNameHeadingClass} text-left text-app-subtle transition-colors hover:text-primary-600`}
+                  className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm text-app-muted transition-colors duration-fast hover:bg-app-surface hover:text-app-text"
+                  aria-label="Editar nombre"
                 >
-                  Añade el nombre de tu cuenta
+                  <AppIcon icon={Pencil} size={ICON_SIZES.md} />
                 </button>
               ) : null}
             </div>
 
-            {!readOnly && onEditName && name ? (
+            {introText ? <p className={profileHeadlineClass}>{introText}</p> : null}
+
+            {!readOnly && !introText && onEditIntro && name ? (
               <button
                 type="button"
-                onClick={onEditName}
-                className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm text-app-muted transition-colors duration-fast hover:bg-app-surface hover:text-app-text"
-                aria-label="Editar nombre"
+                onClick={onEditIntro}
+                className="mt-space-xs text-left text-body-small text-app-subtle transition-colors duration-fast hover:text-primary-600"
               >
-                <AppIcon icon={Pencil} size={ICON_SIZES.md} className="text-app-text" />
+                Añade un eslogan o frase introductoria
               </button>
             ) : null}
-          </div>
 
-          {sector ? (
-            <p className={profileMetaLineClass}>
-              <AppIcon icon={Briefcase} size={ICON_SIZES.default} className={profileMetaIconClass} />
-              <span>{sector}</span>
-            </p>
-          ) : null}
+            {!readOnly && (
+              <div className="mt-space-xs">
+                <CompanyVerificationAction company={profile} role={role || ROLES.BUSINESS} />
+              </div>
+            )}
 
-          {location ? (
-            <p className={profileMetaLineClass}>
-              <AppIcon icon={MapPin} size={ICON_SIZES.default} className={profileMetaIconClass} />
-              <span>{location}</span>
-            </p>
-          ) : null}
+            {metaItems.length > 0 ? (
+              <div className="mt-space-sm flex flex-wrap items-center gap-x-space-md gap-y-space-xs">
+                {metaItems.map((item) => (
+                  <span key={item.key} className={profileMetaItemClass}>
+                    <AppIcon icon={item.icon} size={ICON_SIZES.sm} className="shrink-0 text-app-subtle" />
+                    <span className="break-words">{item.text}</span>
+                  </span>
+                ))}
+              </div>
+            ) : null}
 
-          {employees ? (
-            <p className={profileMetaLineClass}>
-              <AppIcon icon={Users} size={ICON_SIZES.default} className={profileMetaIconClass} />
-              <span>{employees}</span>
-            </p>
-          ) : null}
-
-          {introText ? (
-            <p className={`${profileHeadlineClass} pt-space-xs`}>{introText}</p>
-          ) : !readOnly && onEditIntro && name ? (
-            <button
-              type="button"
-              onClick={onEditIntro}
-              className="pt-space-xs text-left text-body-small text-app-subtle transition-colors duration-fast hover:text-primary-600"
-            >
-              Añade un eslogan o frase introductoria
-            </button>
-          ) : null}
-
-          {!readOnly && onEditIntro && name && introText ? (
-            <button
-              type="button"
-              onClick={onEditIntro}
-              className="inline-flex min-h-touch items-center gap-space-xs text-caption font-medium text-primary-600 transition-colors hover:text-primary-700"
-            >
-              <AppIcon icon={Pencil} size={ICON_SIZES.sm} className="text-current" />
-              Editar intro
-            </button>
-          ) : null}
-
-          {!readOnly && (
-            <div className="pt-space-xs">
-              <CompanyVerificationAction company={profile} role={role || ROLES.BUSINESS} />
-            </div>
-          )}
-
-          {showFollowerCount && followerCount > 0 ? (
-            <p className="pt-space-xs text-caption font-medium tabular-nums text-app-muted">
-              {formatFollowerNumber(followerCount)} seguidores
-            </p>
-          ) : null}
+            {showFollowerCount && followerCount > 0 ? (
+              <p className="mt-space-sm text-caption font-medium tabular-nums text-app-muted">
+                {formatFollowerNumber(followerCount)} seguidores
+              </p>
+            ) : null}
         </div>
       </div>
 
