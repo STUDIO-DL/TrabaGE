@@ -37,7 +37,7 @@ export default function FeedHeader() {
 
         {showVerifiedBadge ? <VerifiedBadge size="sm" className="shrink-0" /> : null}
 
-        <SearchBarTrigger placeholder="Buscar usuarios, empresas y empleos…" />
+        <SearchBarTrigger placeholder="Buscar usuarios y empresas…" />
 
         <NotificationBellButton />
       </div>

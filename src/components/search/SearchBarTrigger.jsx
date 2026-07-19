@@ -3,7 +3,7 @@ import AppIcon from '../common/AppIcon';
 import { Search, ICON_COLORS, ICON_SIZES } from '../../constants/icons';
 
 export default function SearchBarTrigger({
-  placeholder = 'Buscar personas, empresas y empleos…',
+  placeholder = 'Buscar usuarios y empresas…',
   className = '',
   inputClassName = '',
   variant = 'pill',

@@ -20,7 +20,6 @@ export default function SearchResults() {
   const { results, loading, error } = useGlobalSearch(query, {
     enabled: true,
     limitPerType: 8,
-    includeJobs: true,
   });
 
   useEffect(() => {
@@ -100,10 +99,10 @@ export default function SearchResults() {
             type="search"
             enterKeyHint="search"
             autoComplete="off"
-            aria-label="Buscar usuarios, empresas y empleos"
+            aria-label="Buscar usuarios y empresas"
             value={query}
             onChange={handleQueryChange}
-            placeholder="Buscar usuarios, empresas y empleos…"
+            placeholder="Buscar usuarios y empresas…"
             className="w-full rounded-full border-0 bg-app-surface py-2 pl-9 pr-9 text-sm text-app-text outline-none transition-colors placeholder:text-app-muted focus:ring-2 focus:ring-primary-100"
           />
           {query ? (
