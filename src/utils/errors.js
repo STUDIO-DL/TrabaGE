@@ -198,3 +198,17 @@ export function isUnverifiedEmailError(error) {
 export function isExpiredVerificationUserMessage(text) {
   return isErrorMessage('expiredVerificationLink', text);
 }
+
+export function formatAuthErrorDetail(error) {
+  if (!error) return 'Sin error';
+
+  const parts = [
+    error.code ? `code=${error.code}` : null,
+    error.status || error.statusCode ? `status=${error.status ?? error.statusCode}` : null,
+    error.name ? `name=${error.name}` : null,
+    error.message ? `message=${error.message}` : null,
+  ].filter(Boolean);
+
+  const stack = error.stack ? `\nstack:\n${error.stack}` : '';
+  return `${parts.join(' | ')}${stack}`;
+}

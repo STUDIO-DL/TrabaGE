@@ -35,23 +35,29 @@ import { getOnboardingComplete } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
 import { queueWelcomeEmailOnRegistrationComplete } from '../../services/welcomeEmail.service';
-import { mapAuthError } from '../../utils/errors';
+import { mapAuthError, formatAuthErrorDetail } from '../../utils/errors';
 import { getErrorMessage } from '../../utils/i18n';
+
+function formatRegisterError(error) {
+  const friendly = mapAuthError(error);
+  const technical = formatAuthErrorDetail(error);
+  return `${friendly}\n\nDetalle técnico:\n${technical}`;
+}
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
 const fieldClassName =
   'h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base text-body-small text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
 
 const AUTH_ALERT_ERROR =
-  'rounded-radius-md border border-error-200 bg-error-50 px-space-md py-space-sm text-body-small text-error-700';
+  'rounded-radius-md border border-error-200 bg-error-50 px-space-md py-space-sm text-body-small text-error-700 whitespace-pre-wrap break-words';
 const AUTH_ALERT_WARNING =
   'rounded-radius-md border border-warning-200 bg-warning-50 px-space-md py-space-sm text-body-small text-warning-800';
 
 function resolveSubmittedEmail(raw) {
-  const trimmed = raw.trim();
+  const trimmed = raw.trim().toLowerCase();
   if (!trimmed) return '';
-  if (trimmed.includes('@')) return trimmed.toLowerCase();
-  return `${trimmed}@gmail.com`.toLowerCase();
+  if (!trimmed.includes('@')) return null;
+  return trimmed;
 }
 
 function RegisterField({ label, id, children }) {
@@ -328,6 +334,10 @@ export default function Register() {
     }
 
     const submittedEmail = resolveSubmittedEmail(email);
+    if (!submittedEmail) {
+      setError(getErrorMessage('invalidEmail'));
+      return;
+    }
 
     const passwordValidation = validateStrongPassword(password);
     if (!passwordValidation.valid) {
@@ -355,7 +365,7 @@ export default function Register() {
 
     const role = accountKindToRole(accountKind);
     const metadata = config.buildMetadata(typeValues, { city: city.trim() });
-    const { error: registerError, redirectTo, pendingVerification, rateLimited } = await register(
+    const { error: registerError, redirectTo, pendingVerification, rateLimited, emailDeliveryFailed } = await register(
       submittedEmail,
       password,
       role,
@@ -365,7 +375,7 @@ export default function Register() {
     submitLockRef.current = false;
 
     if (registerError) {
-      setError(mapAuthError(registerError));
+      setError(formatRegisterError(registerError));
       setLoading(false);
       return;
     }
@@ -385,6 +395,7 @@ export default function Register() {
         sentAt: Date.now(),
         pendingVerification: pendingVerification === true,
         rateLimited: rateLimited === true,
+        emailDeliveryFailed: emailDeliveryFailed === true,
       },
     });
   };

@@ -145,7 +145,7 @@ async function ensurePushSubscriptionActive() {
   if (subscription?.optedIn === false) {
     await subscription.optIn?.();
   }
-  await syncPlayerIdFromSubscription();
+  void syncPlayerIdFromSubscription();
 }
 
 export const requestNotificationPermission = async () => {
@@ -168,7 +168,7 @@ export const requestNotificationPermission = async () => {
 
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'granted') {
-        await syncPlayerIdFromSubscription();
+        void syncPlayerIdFromSubscription();
         return true;
       }
 
@@ -179,7 +179,7 @@ export const requestNotificationPermission = async () => {
       const result = await Notification.requestPermission();
       const granted = result === 'granted';
       if (granted) {
-        await syncPlayerIdFromSubscription();
+        void syncPlayerIdFromSubscription();
       }
       return granted;
     }
@@ -215,7 +215,7 @@ export const setOneSignalPushEnabled = async (enabled) => {
     const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
     if (enabled) {
       await subscription?.optIn?.();
-      await syncPlayerIdFromSubscription();
+      void syncPlayerIdFromSubscription();
     } else {
       await subscription?.optOut?.();
     }

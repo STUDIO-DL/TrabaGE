@@ -19,6 +19,7 @@ export default function VerifyEmail() {
   const sentAt = location.state?.sentAt || null;
   const resumedPending = location.state?.pendingVerification === true;
   const rateLimited = location.state?.rateLimited === true;
+  const emailDeliveryFailed = location.state?.emailDeliveryFailed === true;
   const { resend, remaining, sending, message, error, canResend } =
     useEmailVerificationResend(email, sentAt);
 
@@ -55,7 +56,9 @@ export default function VerifyEmail() {
           <p className="mt-3 text-sm leading-relaxed text-app-muted">
             {rateLimited
               ? 'Espera 1 minuto antes de volver a intentarlo. Si ya recibiste un correo anterior, ese enlace sigue siendo válido.'
-              : 'Hemos enviado un enlace de verificación a tu dirección de correo.'}
+              : emailDeliveryFailed
+                ? 'Tu cuenta se creó, pero no pudimos enviar el correo de verificación en el primer intento. Usa «Reenviar correo» para intentarlo de nuevo.'
+                : 'Hemos enviado un enlace de verificación a tu dirección de correo.'}
           </p>
           {email ? (
             <p className="mt-2 break-all text-sm font-semibold text-primary-600">{email}</p>

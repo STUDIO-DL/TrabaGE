@@ -1,14 +1,20 @@
 import { Component } from 'react';
 import { Outlet } from 'react-router-dom';
 import { reportError } from '../../utils/logger';
+import { formatAuthErrorDetail } from '../../utils/errors';
 
-function RouteErrorFallback({ onRetry }) {
+function RouteErrorFallback({ onRetry, error }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
-      <h1 className="text-xl font-semibold text-gray-900">Algo salió mal</h1>
+      <h1 className="text-xl font-semibold text-gray-900">Error de ruta</h1>
       <p className="mt-2 text-sm text-gray-500">
-        Ha ocurrido un error inesperado. Puedes reintentar cargar esta sección.
+        Ha ocurrido un error inesperado al cargar esta sección. Puedes reintentar.
       </p>
+      {error ? (
+        <pre className="mt-4 max-h-64 w-full max-w-xl overflow-auto rounded-xl border border-red-200 bg-red-50 p-3 text-left text-xs text-red-800 whitespace-pre-wrap">
+          {formatAuthErrorDetail(error)}
+        </pre>
+      ) : null}
       <button
         type="button"
         onClick={onRetry}
@@ -23,11 +29,11 @@ function RouteErrorFallback({ onRetry }) {
 export default class RouteErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, autoRetried: false };
+    this.state = { hasError: false, autoRetried: false, error: null };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
   }
 
   componentDidCatch(error, info) {
@@ -42,12 +48,12 @@ export default class RouteErrorBoundary extends Component {
   }
 
   handleRetry = () => {
-    this.setState({ hasError: false, autoRetried: false });
+    this.setState({ hasError: false, autoRetried: false, error: null });
   };
 
   render() {
     if (this.state.hasError && this.state.autoRetried) {
-      return <RouteErrorFallback onRetry={this.handleRetry} />;
+      return <RouteErrorFallback onRetry={this.handleRetry} error={this.state.error} />;
     }
 
     if (this.state.hasError) {

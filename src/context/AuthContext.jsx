@@ -335,13 +335,15 @@ export function AuthProvider({ children }) {
     clearPreviewMode();
     setIsPreviewMode(false);
 
-    const { data, error, pendingVerification, rateLimited } = await authService.register(
+    const { data, error, pendingVerification, rateLimited, emailDeliveryFailed } =
+      await authService.register(
       email,
       password,
       userRole,
       metadata,
     );
-    if (error) return { data, error, redirectTo: null };
+
+    if (error && !pendingVerification) return { data, error, redirectTo: null };
 
     if (pendingVerification || !data?.session?.user?.id) {
       return {
@@ -350,6 +352,7 @@ export function AuthProvider({ children }) {
         redirectTo: null,
         pendingVerification: true,
         rateLimited: rateLimited === true,
+        emailDeliveryFailed: emailDeliveryFailed === true,
       };
     }
 

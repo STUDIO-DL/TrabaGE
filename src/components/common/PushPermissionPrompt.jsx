@@ -4,10 +4,13 @@ import AppIcon from './AppIcon';
 import Button from '../ui/Button';
 import { Bell, X, ICON_SIZES } from '../../constants/icons';
 import { NOTIFICATION_PERMISSION_STATUS } from '../../constants/notificationPreferences';
-import { isOneSignalConfigured } from '../../config/onesignal';
+import { initOneSignal, isOneSignalConfigured } from '../../config/onesignal';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
-import { isOsPushPermissionDenied } from '../../hooks/usePushPermission';
+import {
+  isOsPushPermissionDenied,
+  usePushPermissionActions,
+} from '../../hooks/usePushPermission';
 import { ROLES } from '../../constants/roles';
 
 const DISMISS_KEY = 'trabage_push_prompt_dismissed_at';
@@ -41,8 +44,15 @@ export default function PushPermissionPrompt() {
   const { preferences, setMasterEnabled, status } = useNotificationPreferences(user?.id, {
     disabled: isPreviewMode,
   });
+  const { requestPermission, getPermissionStatus } = usePushPermissionActions();
   const [visible, setVisible] = useState(false);
   const [activating, setActivating] = useState(false);
+
+  useEffect(() => {
+    if (visible) {
+      void initOneSignal();
+    }
+  }, [visible]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -97,10 +107,18 @@ export default function PushPermissionPrompt() {
   const activate = async () => {
     setActivating(true);
     try {
-      const { error } = await setMasterEnabled(true);
-      if (!error) {
+      const alreadyGranted =
+        getPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.GRANTED;
+
+      const granted = alreadyGranted || (await requestPermission());
+
+      if (granted) {
         setVisible(false);
+        void setMasterEnabled(true);
+        return;
       }
+
+      void setMasterEnabled(true);
     } finally {
       setActivating(false);
     }
@@ -110,7 +128,7 @@ export default function PushPermissionPrompt() {
 
   return (
     <div
-      className="pointer-events-none fixed bottom-36 left-0 right-0 z-[75] flex justify-center px-4 sm:bottom-24"
+      className="pointer-events-none fixed left-0 right-0 top-0 z-[80] flex justify-center px-4 pt-[max(1rem,env(safe-area-inset-top,0px))]"
       role="region"
       aria-label="Activar notificaciones push"
     >

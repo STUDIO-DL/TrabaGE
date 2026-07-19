@@ -196,6 +196,51 @@ function pendingVerificationResult(existingUnconfirmed = true, rateLimited = fal
   };
 }
 
+async function resolveSignUpErrorResult(result, normalizedEmail) {
+  if (!result.error) return null;
+
+  const userId = result.data?.user?.id;
+
+  if (isAuthRateLimitError(result.error)) {
+    markSignupEmailSent(normalizedEmail);
+    markPendingSignupEmail(normalizedEmail);
+    return pendingVerificationResult(true, true);
+  }
+
+  if (!userId) {
+    return result;
+  }
+
+  markSignupEmailSent(normalizedEmail);
+  markPendingSignupEmail(normalizedEmail);
+
+  const resendResult = await supabase.auth.resend({
+    type: 'signup',
+    email: normalizedEmail,
+    options: {
+      emailRedirectTo: getEmailConfirmRedirectUrl(),
+    },
+  });
+
+  if (!resendResult.error) {
+    return {
+      ...pendingVerificationResult(false),
+      data: { ...result.data, session: null },
+    };
+  }
+
+  if (isAuthRateLimitError(resendResult.error)) {
+    return pendingVerificationResult(true, true);
+  }
+
+  return {
+    data: { ...result.data, session: null },
+    error: resendResult.error,
+    pendingVerification: true,
+    emailDeliveryFailed: true,
+  };
+}
+
 export const OAUTH_INTENTS = {
   LOGIN: 'login',
   SIGNUP: 'signup',
@@ -714,7 +759,7 @@ export const authService = {
     }
 
     if (result.error) {
-      return result;
+      return resolveSignUpErrorResult(result, normalizedEmail);
     }
 
     // Supabase anti-enumeration: existing emails often return user with empty
@@ -741,19 +786,6 @@ export const authService = {
             'La confirmación de correo no está habilitada en Supabase. Activa Confirm Email antes de registrar usuarios.',
         },
       };
-    }
-
-    if (result.error) {
-      if (isAuthRateLimitError(result.error)) {
-        markSignupEmailSent(normalizedEmail);
-        // Only treat as pending verification when Supabase already created the user.
-        if (result.data?.user?.id) {
-          markPendingSignupEmail(normalizedEmail);
-          return pendingVerificationResult(true, true);
-        }
-        return result;
-      }
-      return result;
     }
 
     if (!result.data?.user?.id) {
