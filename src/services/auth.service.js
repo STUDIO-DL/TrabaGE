@@ -614,6 +614,7 @@ export const authService = {
     // A password login is never signup completion. Do not let a failed or
     // abandoned registration in this browser change the account being signed in.
     savePendingAccountType(null);
+    savePendingSignupDetails(null);
 
     const result = await supabase.auth.signInWithPassword({
       email: normalizeEmail(email),
@@ -911,6 +912,13 @@ export const authService = {
     }
 
     if (result.error) {
+      // Token-hash links are exchanged only here. Falling back to a session
+      // that existed before the exchange can report the wrong account as
+      // confirmed when the link is expired, reused, or invalid.
+      if (tokenHash) {
+        return result;
+      }
+
       await waitForInitialSessionDetection(150);
 
       const recovered = await recoverVerifiedSessionAfterOtpFailure();
@@ -925,6 +933,16 @@ export const authService = {
     let session = result.data?.session ?? null;
 
     if (!isEmailVerified(user)) {
+      if (tokenHash) {
+        return {
+          data: result.data,
+          error: {
+            code: 'email_not_confirmed',
+            message: 'No se pudo confirmar el correo electrónico.',
+          },
+        };
+      }
+
       await waitForInitialSessionDetection(150);
       verified = await getVerifiedSessionFromClient();
       if (verified.user && verified.session) {
@@ -942,8 +960,20 @@ export const authService = {
 
     if (!session) {
       verified = await getVerifiedSessionFromClient();
-      session = verified.session;
-      user = verified.user ?? user;
+      if (verified.user?.id === user?.id && verified.session) {
+        session = verified.session;
+        user = verified.user;
+      }
+    }
+
+    if (!session) {
+      return {
+        data: result.data,
+        error: {
+          code: 'confirmation_failed',
+          message: 'No se pudo iniciar la sesión después de confirmar el correo.',
+        },
+      };
     }
 
     return successPayload(user, session);
