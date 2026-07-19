@@ -15,11 +15,19 @@ import { profileService } from './profile.service';
 import { dedupeFeedItems } from '../utils/feedRanking';
 import { resolvePostAuthorName } from '../utils/displayIdentity';
 
-// The Home (Inicio) feed is purely social/informational. Job offers live
-// exclusively in the Empleos section, so we strip any job items that a data
-// source might return before they reach the feed.
+// The Home (Inicio) feed shows posts only. Job offers live exclusively in
+// Empleos; news, events, courses, and recommendation cards are excluded here.
+const FEED_POST_CONTENT_TYPES = new Set([
+  FEED_CONTENT_TYPES.POST,
+  FEED_CONTENT_TYPES.ADVICE,
+]);
+
 function excludeJobItems(items) {
   return (items ?? []).filter((item) => item?.content_type !== FEED_CONTENT_TYPES.JOB);
+}
+
+function filterPostOnlyItems(items) {
+  return excludeJobItems(items).filter((item) => FEED_POST_CONTENT_TYPES.has(item?.content_type));
 }
 
 async function fetchFeedPool(userId, role, { limit = FEED_PAGE_SIZE, offset = 0 } = {}) {
@@ -31,59 +39,34 @@ async function fetchFeedPool(userId, role, { limit = FEED_PAGE_SIZE, offset = 0 
     p_offset: offset,
   });
 
-  if (!error) return { data: excludeJobItems(data), error: null };
+  if (!error) return { data: filterPostOnlyItems(data), error: null };
 
   return fetchFeedPoolFallback(userId, role, { limit, offset });
 }
 
-async function fetchFeedPoolFallback(userId, role, { limit, offset }) {
+async function fetchFeedPoolFallback(_userId, _role, { limit, offset }) {
   const poolSize = limit * 2;
-  const queries = [
-    supabase
-      .from('posts')
-      .select('*')
-      .eq('is_hidden', false)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + poolSize - 1),
-  ];
+  const postsResult = await supabase
+    .from('posts')
+    .select('*')
+    .eq('is_hidden', false)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + poolSize - 1);
 
-  // Home feed only mixes social posts and informational news — never jobs.
-  if (role === ROLES.PERSONAL || isEmployerRole(role)) {
-    queries.push(
-      supabase
-        .from('news_articles')
-        .select('*')
-        .eq('is_active', true)
-        .order('published_at', { ascending: false })
-        .range(Math.floor(offset / 2), Math.floor(offset / 2) + Math.floor(poolSize / 2) - 1),
-    );
-  }
-
-  const results = await Promise.all(queries);
-  const postsResult = results[0];
   if (postsResult.error) return { data: [], error: postsResult.error };
 
   const items = (postsResult.data ?? []).map((post) => ({
     item_key: `post:${post.id}`,
-    content_type: post.content_type === 'advice' || post.content_type === 'career_tip' ? 'advice' : 'post',
+    content_type:
+      post.content_type === 'advice' ||
+      post.content_type === 'career_tip' ||
+      post.content_type === 'hiring_trend'
+        ? 'advice'
+        : 'post',
     relevance_score: 12,
     sort_at: post.created_at,
     payload: post,
   }));
-
-  const newsResult = results[1];
-  if (newsResult?.data?.length) {
-    const newsScore = role === ROLES.PERSONAL ? 15 : 14;
-    newsResult.data.forEach((article) => {
-      items.push({
-        item_key: `news:${article.id}`,
-        content_type: FEED_CONTENT_TYPES.NEWS,
-        relevance_score: newsScore,
-        sort_at: article.published_at,
-        payload: article,
-      });
-    });
-  }
 
   return { data: items, error: null };
 }

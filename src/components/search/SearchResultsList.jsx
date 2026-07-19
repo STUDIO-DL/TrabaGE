@@ -1,27 +1,12 @@
 import { Link } from 'react-router-dom';
-import { Briefcase, Building2, Loader2, User } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import AppAvatar from '../common/AppAvatar';
-import AppIcon from '../common/AppIcon';
 import { AvatarType, avatarTypeFromSearchEntity } from '../../constants/avatarDefaults';
-import {
-  DEDICATED_SEARCH_ENTITY_TYPE_LABELS,
-  groupDedicatedSearchResults,
-} from '../../utils/globalSearch';
+import { groupSearchResults } from '../../utils/globalSearch';
 import { resolveSearchResultPath } from '../../utils/profileRoutes';
 import { useAuth } from '../../hooks/useAuth';
-import { ChevronRight, ICON_SIZES } from '../../constants/icons';
 import SearchSelfBadge from './SearchSelfBadge';
 import { useIsSearchSelf } from './useIsSearchSelf';
-
-const ENTITY_ICONS = {
-  personal: User,
-  business: Building2,
-  organization: Building2,
-  candidate: User,
-  company: Building2,
-  institution: Building2,
-  job: Briefcase,
-};
 
 function isOrgType(type) {
   return (
@@ -33,10 +18,11 @@ function isOrgType(type) {
 }
 
 function SearchResultRow({ item, path, onSelect }) {
-  const Icon = ENTITY_ICONS[item.type] || User;
   const avatarType = avatarTypeFromSearchEntity(item.type);
   const isSelf = useIsSearchSelf(item);
   const isJob = item.type === 'job';
+  const secondary = item.secondary ?? null;
+  const location = item.location ?? null;
 
   return (
     <Link
@@ -54,7 +40,7 @@ function SearchResultRow({ item, path, onSelect }) {
         src={item.avatar_path}
         name={item.title}
         alt={isSelf ? 'Tú' : item.title}
-        size="sm"
+        size="md"
         variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
         className={isOrgType(item.type) || isJob ? '!rounded-radius-md shrink-0' : 'shrink-0'}
       />
@@ -68,18 +54,13 @@ function SearchResultRow({ item, path, onSelect }) {
         {isSelf ? (
           <span className="mt-0.5 block truncate text-caption text-app-muted">{item.title}</span>
         ) : null}
-        {!isSelf && item.subtitle ? (
-          <span className="mt-0.5 block truncate text-caption text-app-muted">{item.subtitle}</span>
+        {secondary ? (
+          <span className="mt-0.5 block truncate text-caption text-app-muted">{secondary}</span>
         ) : null}
-        {isSelf && item.subtitle ? (
-          <span className="mt-0.5 block truncate text-caption text-app-subtle">{item.subtitle}</span>
+        {location ? (
+          <span className="mt-0.5 block truncate text-caption text-app-subtle">{location}</span>
         ) : null}
-        <span className="mt-space-xs inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide text-primary-600">
-          <AppIcon icon={Icon} size={10} />
-          {isSelf ? 'Tu perfil' : (DEDICATED_SEARCH_ENTITY_TYPE_LABELS[item.type] ?? 'Resultado')}
-        </span>
       </span>
-      <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} className="shrink-0 text-app-subtle" />
     </Link>
   );
 }
@@ -95,7 +76,7 @@ export default function SearchResultsList({
   const { user, role } = useAuth();
   const viewer = user ? { id: user.id, role } : null;
   const trimmedQuery = query.trim();
-  const groups = groupDedicatedSearchResults(results);
+  const groups = groupSearchResults(results);
 
   if (!trimmedQuery) {
     return null;
@@ -135,7 +116,7 @@ export default function SearchResultsList({
     <div className={className} role="listbox" aria-label="Resultados de búsqueda">
       {groups.map((group) => (
         <section key={group.type} aria-label={group.label}>
-          <h2 className="sticky top-0 z-10 bg-app-surface px-space-base py-space-sm text-caption font-semibold uppercase tracking-wide text-app-muted">
+          <h2 className="sticky top-0 z-10 border-b border-app-border bg-app-surface px-space-base py-space-sm text-caption font-semibold uppercase tracking-wide text-app-muted">
             {group.label}
           </h2>
           <ul>

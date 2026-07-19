@@ -1,12 +1,11 @@
-// Home/global search groups people, businesses and organizations only.
-// Jobs are searched exclusively from the Empleos section, so 'job' is excluded.
-export const SEARCH_ENTITY_ORDER = ['personal', 'business', 'organization'];
+// Home/global search groups people, businesses, organizations, and optionally jobs.
+export const SEARCH_ENTITY_ORDER = ['personal', 'business', 'organization', 'job'];
 
 export const DEDICATED_SEARCH_ENTITY_ORDER = ['personal', 'companies', 'job'];
 
 export const SEARCH_ENTITY_LABELS = {
   personal: 'Personas',
-  business: 'Business',
+  business: 'Empresas',
   organization: 'Organizaciones',
   // Legacy result_type aliases from search RPC during transition
   candidate: 'Personas',
@@ -87,4 +86,48 @@ export function groupDedicatedSearchResults(results = []) {
   });
 
   return groups.filter((group) => group.items.length > 0);
+}
+
+const ORGANIZATION_CATEGORY_LABELS = {
+  'Institucion publica': 'Institución pública',
+  ONG: 'Organización sin ánimo de lucro',
+};
+
+function formatOrganizationCategory(value) {
+  if (!value) return null;
+  return ORGANIZATION_CATEGORY_LABELS[value] ?? value;
+}
+
+/**
+ * Splits the RPC-composed subtitle into professional secondary info and optional location.
+ * global_search builds subtitles as: headline • city | sector • city | company_type • city
+ */
+export function resolveSearchResultDisplay(item) {
+  const type = normalizeSearchType(item.type);
+  const subtitle = item.subtitle?.trim();
+
+  if (!subtitle) {
+    return { secondary: null, location: null };
+  }
+
+  const parts = subtitle
+    .split(' • ')
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (type === 'organization') {
+    return {
+      secondary: formatOrganizationCategory(parts[0]) ?? parts[0] ?? null,
+      location: parts[1] ?? null,
+    };
+  }
+
+  if (type === 'personal' || type === 'business' || type === 'job') {
+    return {
+      secondary: parts[0] ?? null,
+      location: parts[1] ?? null,
+    };
+  }
+
+  return { secondary: subtitle, location: null };
 }

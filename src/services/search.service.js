@@ -8,6 +8,7 @@ import {
   rankSearchCandidatesForCompany,
   rankSearchJobsForCandidate,
 } from '../utils/searchMatching';
+import { resolveSearchResultDisplay } from '../utils/globalSearch';
 
 const RESULT_LIMIT = 8;
 const GLOBAL_SEARCH_LIMIT_PER_TYPE = 5;
@@ -24,8 +25,7 @@ function mapGlobalSearchRow(item, user) {
     { type, id: item.result_id, result_type: item.result_type, result_id: item.result_id },
     user,
   );
-
-  return {
+  const mapped = {
     type,
     id: item.result_id,
     title: item.title,
@@ -34,6 +34,13 @@ function mapGlobalSearchRow(item, user) {
     avatar_path: item.avatar_path,
     rank: item.rank,
     isSelf: isOwnSearchResult(type, item.result_id, user),
+  };
+  const { secondary, location } = resolveSearchResultDisplay(mapped);
+
+  return {
+    ...mapped,
+    secondary,
+    location,
   };
 }
 

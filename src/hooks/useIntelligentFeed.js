@@ -2,7 +2,6 @@ import { isEmployerAuthor } from '../constants/authorTypes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { feedService } from '../services/feed.service';
 import { useAuth } from './useAuth';
-import { ROLES } from '../constants/roles';
 import { FEED_CONTENT_TYPES, FEED_PAGE_SIZE } from '../constants/feedContentTypes';
 import { getPreviewPosts } from '../constants/preview';
 import { rankAndInterleaveFeed, dedupeFeedItems } from '../utils/feedRanking';
@@ -112,14 +111,7 @@ export function useIntelligentFeed({ authorId } = {}) {
         return;
       }
 
-      let rawItems = pool ?? [];
-
-      if (!append && role === ROLES.PERSONAL && user?.id && !authorId) {
-        const recommendationCards = await feedService.buildCandidateRecommendationCards(context.profile, {
-          limit: 3,
-        });
-        rawItems = [...rawItems, ...recommendationCards];
-      }
+      const rawItems = pool ?? [];
 
       const enriched = await feedService.enrichFeedItems(rawItems, user, role);
       const ranked = rankAndInterleaveFeed(enriched, context, { limit: FEED_PAGE_SIZE });

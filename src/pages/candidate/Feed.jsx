@@ -47,7 +47,7 @@ export default function Feed() {
             variant="soft"
             icon={Newspaper}
             title="Tu feed está vacío"
-            description="Aquí verás publicaciones, noticias y recomendaciones según tu perfil."
+            description="Aquí verás publicaciones de personas y cuentas que sigues."
           />
         ) : (
           items.map((item, index) => (

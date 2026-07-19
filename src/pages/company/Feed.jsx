@@ -94,7 +94,7 @@ export default function Feed() {
             variant="soft"
             icon={Newspaper}
             title="Tu feed está vacío"
-            description="Publicaciones, noticias del sector y candidatos recomendados aparecerán aquí."
+            description="Las publicaciones de tu red y del sector aparecerán aquí."
           />
         ) : (
           items.map((item, index) => {
