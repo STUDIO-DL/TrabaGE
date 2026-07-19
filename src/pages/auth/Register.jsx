@@ -166,8 +166,8 @@ function RegisterHeader({ subtitle }) {
       <div className="flex justify-center">
         <TrabaGEWordmark className="h-9 w-auto sm:h-10" />
       </div>
-      <h1 className="mt-space-xl text-title leading-tight text-app-text">
-        Bienvenido a <span className="text-primary-600">TrabaGE</span>
+      <h1 className="mt-space-xl text-heading-l font-bold tracking-tight leading-tight text-app-text">
+        BIENVENIDO
       </h1>
       <p className="mx-auto mt-space-sm max-w-sm text-body-small leading-relaxed text-app-muted">{subtitle}</p>
       <div className="mx-auto mt-space-base h-1.5 w-1.5 rounded-radius-circular bg-primary-500" aria-hidden />

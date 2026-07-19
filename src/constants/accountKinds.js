@@ -11,19 +11,19 @@ export const ACCOUNT_KIND_OPTIONS = [
   {
     id: ACCOUNT_KINDS.PERSONAL,
     label: 'Cuenta Personal',
-    description: 'Busco oportunidades laborales y construyo mi perfil profesional',
+    description: 'Para estudiantes, profesionales, autónomos y personas en búsqueda de empleo.',
     icon: User,
   },
   {
     id: ACCOUNT_KINDS.BUSINESS,
     label: 'Cuenta Business',
-    description: 'Publico ofertas y encuentro talento con mi cuenta Business',
+    description: 'Para empresas privadas que buscan contratar, crecer y conectar con el mejor talento.',
     icon: Building2,
   },
   {
     id: ACCOUNT_KINDS.ORGANIZATION,
     label: 'Cuenta de Organización',
-    description: 'Conectamos educación y oportunidades desde nuestra organización',
+    description: 'Para instituciones públicas, universidades, ONGs, fundaciones y asociaciones.',
     icon: Landmark,
   },
 ];

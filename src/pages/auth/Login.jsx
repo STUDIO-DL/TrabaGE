@@ -209,8 +209,8 @@ function LoginScreen({
         }}
       >
         <div className="login-fade-in flex flex-1 flex-col justify-center">
-          <div className="flex justify-center">
-            <TrabaGEWordmark className="h-10 w-auto" />
+          <div className="text-center">
+            <TrabaGEWordmark className="mx-auto block h-10 w-auto" />
           </div>
 
           <div className="mt-space-xl text-center">

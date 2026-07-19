@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="168" height="40" viewBox="0 0 168 40" role="img" aria-label="TrabaGE">
-  <text x="0" y="32" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.03em">
+  <text x="50%" y="32" text-anchor="middle" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="28" font-weight="700" letter-spacing="-0.03em">
     <tspan fill="#0F172A">Traba</tspan><tspan fill="#2563EB">GE</tspan>
   </text>
 </svg>

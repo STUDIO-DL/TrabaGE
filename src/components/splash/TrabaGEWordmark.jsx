@@ -10,8 +10,9 @@ export default function TrabaGEWordmark({ className = '', ...props }) {
       {...props}
     >
       <text
-        x="0"
+        x="50%"
         y="32"
+        textAnchor="middle"
         fontFamily="Inter, system-ui, -apple-system, sans-serif"
         fontSize="28"
         fontWeight="700"
