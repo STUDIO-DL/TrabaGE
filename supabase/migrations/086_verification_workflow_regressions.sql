@@ -3,6 +3,18 @@
 -- Restore dual-document uploads and keep admin review state consistent.
 -- =============================================
 
+UPDATE storage.buckets
+SET
+  file_size_limit = 5242880,
+  allowed_mime_types = ARRAY[
+    'application/pdf',
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp'
+  ]
+WHERE id = 'company-verifications';
+
 DROP POLICY IF EXISTS "Company verification upload own" ON storage.objects;
 CREATE POLICY "Company verification upload own" ON storage.objects FOR INSERT
   TO authenticated
