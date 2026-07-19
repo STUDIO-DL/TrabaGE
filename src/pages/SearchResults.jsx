@@ -6,9 +6,14 @@ import PageContainer from '../components/layout/PageContainer';
 import { TopBarShell } from '../components/layout/TopBar';
 import SearchHistorySection from '../components/search/SearchHistorySection';
 import SearchResultsList from '../components/search/SearchResultsList';
+import {
+  SEARCH_FIELD_ICON,
+  SEARCH_FIELD_INPUT,
+  SEARCH_FIELD_SHELL,
+} from '../components/search/searchFieldStyles';
 import { useGlobalSearch } from '../hooks/useGlobalSearch';
 import { useSearchHistory } from '../hooks/useSearchHistory';
-import { ArrowLeft, Search, X, ICON_COLORS, ICON_SIZES } from '../constants/icons';
+import { ArrowLeft, Search, X, ICON_SIZES } from '../constants/icons';
 
 export default function SearchResults() {
   const navigate = useNavigate();
@@ -88,12 +93,8 @@ export default function SearchResults() {
           <AppIcon icon={ArrowLeft} size={ICON_SIZES.md} />
         </button>
 
-        <form onSubmit={handleSubmit} className="relative min-w-0 flex-1">
-          <AppIcon
-            icon={Search}
-            size={ICON_SIZES.default}
-            className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${ICON_COLORS.inactive}`}
-          />
+        <form onSubmit={handleSubmit} className={[SEARCH_FIELD_SHELL, 'min-w-0 flex-1'].join(' ')}>
+          <AppIcon icon={Search} size={ICON_SIZES.sm} className={SEARCH_FIELD_ICON} strokeWidth={2} />
           <input
             ref={inputRef}
             type="search"
@@ -103,13 +104,13 @@ export default function SearchResults() {
             value={query}
             onChange={handleQueryChange}
             placeholder="Buscar usuarios y empresas…"
-            className="w-full rounded-full border-0 bg-app-surface py-2 pl-9 pr-9 text-sm text-app-text outline-none transition-colors placeholder:text-app-muted focus:ring-2 focus:ring-primary-100"
+            className={SEARCH_FIELD_INPUT}
           />
           {query ? (
             <button
               type="button"
               onClick={handleClearQuery}
-              className="absolute right-2 top-1/2 inline-flex min-h-touch min-w-touch -translate-y-1/2 items-center justify-center rounded-radius-sm text-app-subtle transition-colors hover:text-app-muted"
+              className="inline-flex shrink-0 items-center justify-center rounded-radius-sm p-0.5 text-app-subtle transition-colors hover:text-app-muted"
               aria-label="Limpiar búsqueda"
             >
               <AppIcon icon={X} size={ICON_SIZES.sm} />

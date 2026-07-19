@@ -19,7 +19,6 @@ export default function CompanyFeedHeader() {
           <SearchBarTrigger
             className="min-w-0 flex-1"
             placeholder="Buscar usuarios y empresas…"
-            variant="rounded"
           />
           <Link
             to={notificationsPath}

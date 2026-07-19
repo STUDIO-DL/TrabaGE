@@ -5,7 +5,6 @@ export default function SearchInput({ placeholder = 'Buscar usuarios y empresasâ
     <SearchBarTrigger
       placeholder={placeholder}
       className="w-full"
-      variant="pill"
     />
   );
 }

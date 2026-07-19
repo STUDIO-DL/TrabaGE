@@ -30,7 +30,7 @@ export const helpCategories = [
       {
         question: '¿Qué información debo incluir en mi perfil para destacar?',
         answer:
-          'Un perfil completo aumenta significativamente tu visibilidad ante las empresas. Asegúrate de incluir:\n\n• Fotografía de perfil clara y profesional.\n• Titular profesional que describa tu rol o aspiración.\n• Resumen breve sobre ti y tu trayectoria.\n• Experiencia laboral detallada con fechas y logros.\n• Formación académica actualizada.\n• Habilidades técnicas y blandas relevantes.\n• Idiomas con nivel de competencia.\n• CV en formato PDF adjunto.',
+          'Un perfil completo aumenta significativamente tu visibilidad ante las empresas. Asegúrate de incluir:\n\n• Fotografía de perfil clara y profesional.\n• Titular profesional que describa tu rol o aspiración.\n• Resumen breve sobre ti y tu trayectoria.\n• Experiencia laboral detallada con fechas y logros.\n• Formación académica actualizada.\n• Habilidades técnicas y blandas relevantes.\n• Idiomas con nivel de competencia.\n• Proyectos destacados con descripción e imágenes.\n• Enlaces a redes profesionales (LinkedIn, portafolio, etc.).\n• WhatsApp o correo de contacto, si deseas facilitar el contacto directo.\n• CV en formato PDF adjunto.',
       },
       {
         question: '¿Cómo subo o actualizo mi CV?',
@@ -38,24 +38,28 @@ export const helpCategories = [
           'En tu perfil, accede al apartado "Documentos" y selecciona "Subir CV". Admitimos archivos en formato PDF. Te recomendamos que tu CV esté actualizado y no supere los 5 MB. Puedes reemplazar tu CV en cualquier momento subiendo una nueva versión.',
       },
       {
-        question: '¿Puedo cambiar mi dirección de correo electrónico?',
+        question: '¿Puedo registrarme o iniciar sesión con Google?',
         answer:
-          'Sí. Accede a "Configuración de cuenta" y selecciona "Cambiar correo electrónico". Por motivos de seguridad, deberás verificar tu nueva dirección antes de que el cambio sea efectivo. Si tienes dificultades para hacerlo, contacta con nuestro equipo de soporte.',
+          'Sí, las cuentas personales pueden registrarse e iniciar sesión con Google. Al hacerlo, TrabaGE recibirá tu nombre, correo y foto de perfil autorizados por Google. Las cuentas Business y Organización deben registrarse con correo y contraseña, ya que requieren datos adicionales de la entidad.',
+      },
+      {
+        question: '¿Puedo cambiar mi dirección de correo electrónico?',
+        answer: `Por motivos de seguridad, el cambio de correo debe gestionarse a través del soporte. Escríbenos a ${SUPPORT_EMAIL} indicando tu correo actual y el nuevo. Si tienes dificultades, también puedes usar el formulario del Centro de Ayuda.`,
       },
       {
         question: '¿Cómo cambio mi contraseña?',
         answer:
-          'Ve a "Configuración de cuenta" y selecciona "Seguridad". Allí encontrarás la opción para cambiar tu contraseña. Te pediremos que introduzcas tu contraseña actual y que elijas una nueva. Si has olvidado tu contraseña, utiliza la opción "¿Olvidaste tu contraseña?" en la pantalla de inicio de sesión.',
+          'Ve a "Configuración" > "Contraseña y seguridad". Te pediremos tu contraseña actual y que elijas una nueva. Si has olvidado tu contraseña, utiliza "¿Olvidaste tu contraseña?" en la pantalla de inicio de sesión.',
       },
       {
         question: '¿Cómo elimino mi cuenta?',
         answer:
-          'Puedes solicitar la eliminación de tu cuenta desde "Configuración de cuenta" > "Eliminar cuenta". Esta acción es irreversible. Una vez eliminada la cuenta, tu perfil dejará de ser visible y tus datos serán tratados conforme a nuestra Política de Privacidad. Determinada información podrá conservarse durante un tiempo limitado por razones legales o de seguridad.',
+          'Puedes solicitar la eliminación de tu cuenta desde "Configuración" > "Eliminar cuenta". Esta acción es irreversible. Una vez eliminada, tu perfil dejará de ser visible y tus datos serán tratados conforme a nuestra Política de Privacidad. Determinada información podrá conservarse durante un tiempo limitado por razones legales o de seguridad.',
       },
       {
         question: '¿Mi perfil es visible para todos?',
         answer:
-          'Los perfiles de candidatos son visibles para las empresas registradas en la plataforma. Puedes controlar la visibilidad de tu perfil desde la configuración de privacidad. Si deseas no aparecer en búsquedas de empresas, puedes desactivar la visibilidad pública de tu perfil sin perder acceso a las funcionalidades de búsqueda y postulación.',
+          'Tu perfil personal es visible en búsquedas y directorio de la plataforma, y se comparte con las empresas a las que te postulas (incluyendo CV y documentos adjuntos). Actualmente no existe un interruptor de visibilidad privada en Configuración. Si deseas dejar de aparecer en la plataforma, puedes eliminar tu cuenta desde Configuración.',
       },
     ],
   },
@@ -71,7 +75,7 @@ export const helpCategories = [
       {
         question: '¿Cómo me postulo a una oferta de empleo?',
         answer:
-          'Cuando encuentres una oferta que te interese, accede a su página de detalle y haz clic en "Postularme". El sistema enviará automáticamente tu perfil y el CV que tengas cargado a la empresa. Asegúrate de tener tu perfil y CV actualizados antes de postularte.',
+          'Cuando encuentres una oferta que te interese, accede a su página de detalle y haz clic en "Postularme". El sistema enviará tu perfil, CV y respuestas al formulario (si la empresa lo ha personalizado) a la cuenta Business u Organización que publicó la oferta. Asegúrate de tener tu perfil y CV actualizados antes de postularte.',
       },
       {
         question: '¿Puedo postularme a varias ofertas al mismo tiempo?',
@@ -86,7 +90,7 @@ export const helpCategories = [
       {
         question: '¿Puedo retirar una postulación después de enviarla?',
         answer:
-          'Sí, puedes retirar una postulación mientras la empresa no haya iniciado la revisión de tu candidatura. Accede a "Mis Postulaciones", selecciona la candidatura que deseas retirar y haz clic en "Retirar postulación". Una vez que la empresa haya accedido a tu perfil, es posible que no podamos garantizar la retirada completa de tus datos de su sistema.',
+          'Sí, puedes retirar una postulación mientras no esté en estado aceptada, rechazada o ya retirada. Accede a "Mis Postulaciones", selecciona la candidatura y haz clic en "Retirar". Ten en cuenta que, si la empresa ya ha descargado o copiado tus datos, no podemos garantizar su eliminación en sus propios sistemas.',
       },
       {
         question: '¿Por qué no aparecen resultados cuando busco empleo?',
@@ -96,7 +100,7 @@ export const helpCategories = [
       {
         question: '¿Puedo guardar ofertas para verlas más tarde?',
         answer:
-          'Sí. En cada oferta encontrarás un icono para guardarla en tu lista de "Favoritos". Accede a tu lista de favoritos desde tu perfil para revisarlas cuando quieras. Ten en cuenta que las ofertas guardadas pueden caducar si la empresa las retira o cierra el proceso.',
+          'Sí. En cada oferta encontrarás un icono para guardarla en "Empleos guardados" (accesible desde la sección Ofertas). Revisa tu lista cuando quieras. Las ofertas guardadas pueden dejar de estar disponibles si la empresa las cierra o retira.',
       },
       {
         question: '¿TrabaGE me garantiza que conseguiré empleo?',
@@ -115,29 +119,29 @@ export const helpCategories = [
     title: 'Empresas',
     questions: [
       {
-        question: '¿Cómo registro mi empresa en TrabaGE?',
+        question: '¿Cómo registro mi empresa u organización en TrabaGE?',
         answer:
-          'Accede a la plataforma y selecciona "Registrarse como empresa". Completa el formulario con los datos de tu organización: nombre, sector, país, ciudad y datos de contacto. Una vez creada la cuenta, podrás completar el perfil de empresa y comenzar a publicar ofertas.',
+          'Accede a "Registrarse" y elige el tipo de cuenta Business u Organización. Completa el formulario con los datos de tu entidad (nombre, sector, ubicación y contacto), acepta los Términos y la Política de Privacidad, y confirma tu correo. Una vez activa la cuenta, podrás completar el perfil, publicar ofertas y solicitar la verificación.',
       },
       {
         question: '¿Cómo publico una oferta de empleo?',
         answer:
-          'Desde el panel de empresa, accede a "Publicar oferta" y completa el formulario con los datos de la vacante: título del puesto, descripción, requisitos, tipo de contrato, modalidad, ubicación, salario (opcional) y fecha de cierre. Revisa la información antes de publicar y haz clic en "Publicar". La oferta quedará visible para los candidatos de inmediato.',
+          'Desde tu panel, accede a "Crear oferta" (o la sección "Ofertas" > crear) y completa el formulario: título, descripción, requisitos, tipo de contrato, modalidad, ubicación, salario (opcional) y, si lo deseas, un formulario de postulación personalizado. Revisa la información y publica. La oferta quedará visible de inmediato.',
       },
       {
         question: '¿Cuántas ofertas puedo publicar simultáneamente?',
         answer:
-          'El número de ofertas activas simultáneas puede variar según el plan de la plataforma. Consulta la sección "Planes y tarifas" en tu panel de empresa para conocer los límites aplicables a tu cuenta. Si necesitas publicar un mayor número de ofertas, contacta con nuestro equipo.',
+          'Actualmente TrabaGE no cobra por publicar ofertas ni impone planes de pago. Puedes gestionar tus ofertas activas desde la sección "Ofertas" de tu panel. Si necesitas ayuda con un volumen muy elevado de vacantes, contacta con soporte.',
       },
       {
         question: '¿Cómo gestiono las postulaciones recibidas?',
         answer:
-          'Accede a "Gestión de postulaciones" desde tu panel de empresa. Desde allí podrás ver todos los candidatos que se han postulado a cada oferta, revisar sus perfiles y CVs, y actualizar el estado de cada candidatura (en revisión, preseleccionado, descartado, etc.).',
+          'Accede a "Candidatos" (o "Ver postulaciones") desde tu panel. Podrás ver quién se ha postulado a cada oferta, revisar perfiles y CVs, y actualizar el estado de cada candidatura (en revisión, preseleccionado, descartado, etc.).',
       },
       {
         question: '¿Puedo editar o eliminar una oferta publicada?',
         answer:
-          'Sí. Accede a "Mis ofertas" en tu panel de empresa, selecciona la oferta que deseas modificar y haz clic en "Editar". También puedes pausar o cerrar una oferta en cualquier momento si el proceso de selección ha concluido o la vacante ya no está disponible.',
+          'Sí. Accede a "Ofertas" en tu panel, selecciona la vacante y elige "Editar". También puedes pausar o cerrar una oferta en cualquier momento si el proceso ha concluido o la vacante ya no está disponible.',
       },
       {
         question: '¿Qué ocurre con las postulaciones si cierro una oferta?',
@@ -156,9 +160,9 @@ export const helpCategories = [
           'Una empresa verificada es aquella que ha completado el proceso de verificación de TrabaGE, acreditando su existencia legal mediante documentación oficial. Las empresas verificadas muestran un sello de verificación visible en su perfil y en sus ofertas, lo que transmite mayor confianza a los candidatos.',
       },
       {
-        question: '¿Cómo puedo verificar mi empresa?',
+        question: '¿Cómo puedo verificar mi empresa u organización?',
         answer:
-          'Accede a tu panel de empresa y dirígete a "Verificación de empresa". Desde allí podrás iniciar el proceso de verificación aportando la documentación requerida, que puede incluir certificado de registro mercantil, documento de identificación fiscal u otros documentos que acrediten la existencia legal de tu organización según el país de operación.',
+          'Accede a "Verificación" desde tu panel y sube dos documentos:\n\n1. Documento de la empresa: NIF o Licencia Comercial (PDF, máx. 5 MB).\n2. Documento del representante legal: DIP o Pasaporte (PDF o imagen JPG/PNG/WebP, máx. 5 MB).\n\nNuestro equipo revisará la solicitud y te notificará el resultado.',
       },
       {
         question: '¿Cuánto tiempo tarda el proceso de verificación?',
@@ -183,7 +187,7 @@ export const helpCategories = [
       {
         question: '¿Qué documentos se aceptan para la verificación?',
         answer:
-          'Los documentos aceptados pueden variar según el país de registro de la empresa. Con carácter general, se aceptan:\n\n• Certificado de registro mercantil o equivalente.\n• Documento de identificación fiscal de la empresa (NIF, RUT o equivalente).\n• Escritura de constitución de la sociedad.\n• Cualquier documento oficial que acredite la actividad económica de la organización.\n\nEl equipo de TrabaGE podrá solicitar documentación adicional si lo considera necesario durante el proceso de revisión.',
+          'El proceso requiere dos documentos:\n\nDocumento de la empresa (PDF):\n• NIF (Número de Identificación Fiscal).\n• Licencia Comercial.\n\nDocumento del representante legal (PDF o imagen):\n• DIP (Documento de Identidad Personal).\n• Pasaporte.\n\nCada archivo no debe superar 5 MB. El equipo de TrabaGE podrá solicitar documentación adicional si lo considera necesario.',
       },
     ],
   },
@@ -199,7 +203,7 @@ export const helpCategories = [
       {
         question: '¿Cómo activo o desactivo las notificaciones push?',
         answer:
-          'Accede a "Configuración" > "Notificaciones" en tu cuenta. Desde allí podrás personalizar qué tipos de notificaciones deseas recibir y por qué canal (notificación en la plataforma, correo electrónico o notificación push en el dispositivo). También puedes gestionar los permisos de notificaciones directamente desde la configuración de tu navegador o dispositivo.',
+          'Accede a "Configuración" > "Notificaciones". Desde allí podrás personalizar qué tipos de avisos recibir y por qué canal (en la plataforma, correo electrónico o push en el dispositivo). También puedes gestionar los permisos de notificaciones desde la configuración de tu navegador o dispositivo.',
       },
       {
         question: '¿Por qué no estoy recibiendo notificaciones?',
@@ -229,11 +233,11 @@ export const helpCategories = [
       },
       {
         question: '¿Cómo puedo solicitar la eliminación de mis datos personales?',
-        answer: `Tienes derecho a solicitar la eliminación de tus datos personales en cualquier momento. Puedes hacerlo desde "Configuración de cuenta" > "Eliminar cuenta", o enviando una solicitud escrita a ${SUPPORT_EMAIL}. Procesaremos tu solicitud conforme a la normativa aplicable y te informaremos del resultado.`,
+        answer: `Tienes derecho a solicitar la eliminación de tus datos personales en cualquier momento. Puedes hacerlo desde "Configuración" > "Eliminar cuenta", o enviando una solicitud escrita a ${SUPPORT_EMAIL}. Procesaremos tu solicitud conforme a la normativa aplicable y te informaremos del resultado.`,
       },
       {
         question: '¿Qué hago si creo que mi cuenta ha sido comprometida?',
-        answer: `Si sospechas que alguien ha accedido a tu cuenta sin tu autorización, actúa de inmediato:\n\n1. Cambia tu contraseña desde "Configuración" > "Seguridad".\n2. Revisa la actividad reciente de tu cuenta.\n3. Contacta con nuestro equipo de soporte en ${SUPPORT_EMAIL} para que podamos investigar y proteger tu cuenta.`,
+        answer: `Si sospechas que alguien ha accedido a tu cuenta sin tu autorización, actúa de inmediato:\n\n1. Cambia tu contraseña desde "Configuración" > "Contraseña y seguridad".\n2. Revisa la actividad reciente de tu cuenta.\n3. Contacta con nuestro equipo de soporte en ${SUPPORT_EMAIL} para que podamos investigar y proteger tu cuenta.`,
       },
       {
         question: '¿TrabaGE vende mis datos a terceros?',
@@ -247,7 +251,43 @@ export const helpCategories = [
       {
         question: '¿TrabaGE utiliza cookies?',
         answer:
-          'Sí. TrabaGE utiliza cookies y tecnologías similares para garantizar el funcionamiento de la plataforma, recordar tus preferencias y obtener información analítica sobre el uso del servicio. Puedes gestionar tus preferencias de cookies desde la configuración de tu navegador. Para más información, consulta nuestra Política de Privacidad.',
+          'TrabaGE utiliza cookies y almacenamiento local del navegador para mantener tu sesión, recordar preferencias (como el tema claro/oscuro) y mejorar el funcionamiento de la plataforma. No usamos cookies con fines publicitarios de terceros. Puedes gestionar cookies desde la configuración de tu navegador. Para más detalle, consulta la sección sobre cookies en nuestra Política de Privacidad.',
+      },
+    ],
+  },
+  {
+    id: 'platform',
+    title: 'Plataforma y Comunidad',
+    questions: [
+      {
+        question: '¿Qué es el feed y cómo funciona?',
+        answer:
+          'El feed es tu espacio de actividad en TrabaGE. Muestra publicaciones de cuentas Business y Organizaciones que sigues, ofertas relevantes y novedades de la comunidad. Puedes explorar contenido profesional y mantenerte al día con empresas e instituciones de tu interés.',
+      },
+      {
+        question: '¿Puedo publicar contenido en TrabaGE?',
+        answer:
+          'Las cuentas personales pueden crear publicaciones desde su panel. Las cuentas Business y Organización también pueden compartir contenido en su feed (texto e imágenes). Todo el contenido debe ser profesional y respetar los Términos y Condiciones.',
+      },
+      {
+        question: '¿Cómo sigo a una empresa u organización?',
+        answer:
+          'Visita el perfil de la cuenta Business u Organización y pulsa "Seguir". Solo puedes seguir cuentas empresariales e institucionales; las cuentas personales no pueden ser seguidas. Verás su actividad y ofertas en tu feed.',
+      },
+      {
+        question: '¿Puedo instalar TrabaGE en mi móvil?',
+        answer:
+          'Sí. TrabaGE funciona como aplicación web progresiva (PWA). Desde el navegador de tu móvil, puedes añadir TrabaGE a la pantalla de inicio para acceder como una app nativa, con notificaciones push si las activas.',
+      },
+      {
+        question: '¿Cómo funciona la búsqueda global?',
+        answer:
+          'La búsqueda te permite encontrar ofertas de empleo, perfiles, empresas e instituciones. Al buscar empresas o centros educativos, recuerda que su inclusión es meramente informativa y no implica afiliación con TrabaGE (consulta los Términos para más detalle).',
+      },
+      {
+        question: '¿Cómo reporto contenido inapropiado?',
+        answer:
+          'Puedes reportar perfiles, ofertas o publicaciones usando el botón "Reportar" disponible en cada elemento. Nuestro equipo de moderación revisará la denuncia. También puedes escribir a soporte si el caso lo requiere.',
       },
     ],
   },
@@ -257,7 +297,7 @@ export const helpCategories = [
     questions: [
       {
         question: '¿Cómo puedo contactar con el equipo de TrabaGE?',
-        answer: `Puedes ponerte en contacto con nosotros a través de los siguientes canales:\n\n• Correo electrónico: ${SUPPORT_EMAIL}\n• Formulario de contacto: disponible en la sección "Contacto" de la plataforma.\n\nNuestro equipo procura responder en un plazo no superior a 48 horas hábiles desde la recepción de tu consulta.`,
+        answer: `Puedes ponerte en contacto con nosotros a través de:\n\n• Correo electrónico: ${SUPPORT_EMAIL}\n• Formulario de contacto: disponible al final del Centro de Ayuda (Configuración > Centro de ayuda).\n\nNuestro equipo procura responder en un plazo no superior a 48 horas hábiles.`,
       },
       {
         question: '¿Qué información debo incluir al contactar con soporte?',

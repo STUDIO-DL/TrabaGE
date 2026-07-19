@@ -1,8 +1,13 @@
 import AppIcon from '../common/AppIcon';
 import { Search, ICON_SIZES } from '../../constants/icons';
+import {
+  SEARCH_FIELD_ICON,
+  SEARCH_FIELD_INPUT,
+  SEARCH_FIELD_SHELL,
+} from '../search/searchFieldStyles';
 
 /**
- * Search bar — tokenized input with leading search icon.
+ * Search bar — LinkedIn-style pill with inline search icon.
  */
 export default function SearchBar({
   value,
@@ -16,28 +21,19 @@ export default function SearchBar({
   return (
     <form
       role="search"
-      className={`relative w-full ${className}`}
+      className={[SEARCH_FIELD_SHELL, className].filter(Boolean).join(' ')}
       onSubmit={(e) => {
         e.preventDefault();
         onSubmit?.(value);
       }}
     >
-      <AppIcon
-        icon={Search}
-        size={ICON_SIZES.md}
-        className="pointer-events-none absolute left-space-md top-1/2 -translate-y-1/2 text-app-subtle"
-      />
+      <AppIcon icon={Search} size={ICON_SIZES.sm} className={SEARCH_FIELD_ICON} strokeWidth={2} />
       <input
         type="search"
         value={value}
         onChange={(e) => onChange?.(e.target.value, e)}
         placeholder={placeholder}
-        className={[
-          'h-input-md min-h-touch w-full rounded-radius-lg border border-app-border bg-app-card pl-9 pr-space-base text-body-small text-app-text',
-          'outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle placeholder:opacity-80',
-          'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
-          inputClassName,
-        ].join(' ')}
+        className={[SEARCH_FIELD_INPUT, inputClassName].filter(Boolean).join(' ')}
         {...props}
       />
     </form>

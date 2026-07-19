@@ -1,6 +1,6 @@
 import { SUPPORT_EMAIL } from '../../constants/support';
 
-/** Términos y Condiciones de Uso — TrabaGE v2.0 (formato Q&A) */
+/** Términos y Condiciones de Uso — TrabaGE v2.1 (formato Q&A) */
 
 export const TERMS_INTRO = {
   part: '',
@@ -16,7 +16,7 @@ export const TERMS_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: 'TrabaGE es una plataforma digital de empleo y oportunidades profesionales que conecta talento con Business y Organizaciones. Opera como marketplace laboral: facilita perfiles, ofertas, postulaciones y networking, sin intervenir en la contratación final.',
+        text: 'TrabaGE es una plataforma digital de empleo y oportunidades profesionales que conecta talento con Business y Organizaciones. Opera como marketplace laboral: facilita perfiles, ofertas, postulaciones, feed de contenido profesional, follows y networking, sin intervenir en la contratación final.',
       },
       {
         type: 'p',
@@ -35,6 +35,10 @@ export const TERMS_ARTICLES = [
       {
         type: 'p',
         text: 'Al crear una cuenta o usar la plataforma, aceptas estos Términos y la Política de Privacidad. Si no estás de acuerdo, no debes registrarte ni continuar usando el servicio.',
+      },
+      {
+        type: 'p',
+        text: 'Las cuentas personales pueden registrarse e iniciar sesión con Google OAuth. Business y Organizaciones deben registrarse con correo y contraseña.',
       },
       {
         type: 'p',
@@ -83,6 +87,10 @@ export const TERMS_ARTICLES = [
       },
       {
         type: 'p',
+        text: 'TrabaGE no cobra a las cuentas personales por postularse ni por usar las funcionalidades básicas de la plataforma. Actualmente no existen planes de pago para publicar ofertas. Las empresas no deben solicitar pagos, depósitos ni inversiones a candidatos como condición para participar en un proceso.',
+      },
+      {
+        type: 'p',
         text: 'TrabaGE no garantiza que una oferta esté siempre abierta, que el proceso culmine en contratación ni que la información publicada por terceros sea completa o exacta. Actuamos como intermediario tecnológico.',
       },
       {
@@ -121,12 +129,30 @@ export const TERMS_ARTICLES = [
     ],
   },
   {
+    id: 'feed-y-comunidad',
+    title: '¿Cómo funciona el feed y la comunidad?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'TrabaGE incluye un feed de contenido profesional donde las cuentas personales, Business y Organizaciones pueden publicar textos e imágenes relacionados con empleo, talento y oportunidades.',
+      },
+      {
+        type: 'p',
+        text: 'Las cuentas personales pueden seguir cuentas Business y Organizaciones (no otras cuentas personales). El contenido publicado debe cumplir las normas de contenido permitido y puede ser reportado por otros usuarios.',
+      },
+      {
+        type: 'p',
+        text: 'TrabaGE no garantiza la veracidad de todo el contenido generado por usuarios en el feed y actúa como intermediario tecnológico en su publicación y distribución.',
+      },
+    ],
+  },
+  {
     id: 'cuentas-verificadas',
     title: '¿Qué significan las cuentas verificadas?',
     blocks: [
       {
         type: 'p',
-        text: 'Una empresa verificada ha superado un proceso de revisión documental que acredita su existencia legal. El sello de verificación es visible en su perfil y ofertas.',
+        text: 'Una empresa u organización verificada ha superado un proceso de revisión documental que acredita su existencia legal mediante dos documentos: documento de la empresa (NIF o Licencia Comercial) y documento del representante legal (DIP o Pasaporte). El sello de verificación es visible en su perfil y ofertas.',
       },
       {
         type: 'p',

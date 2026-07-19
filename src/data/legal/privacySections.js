@@ -1,6 +1,6 @@
 import { SUPPORT_EMAIL } from '../../constants/support';
 
-/** Política de Privacidad — TrabaGE v2.0 (formato Q&A) */
+/** Política de Privacidad — TrabaGE v2.1 (formato Q&A) */
 
 export const PRIVACY_INTRO = {
   part: '',
@@ -25,9 +25,10 @@ export const PRIVACY_ARTICLES = [
       {
         type: 'ul',
         items: [
-          'Cuentas personales: nombre, correo, teléfono, fecha de nacimiento, foto de perfil y portada, headline, biografía, experiencia, formación, habilidades, idiomas, certificados, CV y preferencias laborales.',
-          'Business y Organizaciones: nombre o razón social, datos del representante, sector, descripción, logo, portada, documentación de verificación (si la solicitas) y formularios de postulación personalizados.',
+          'Cuentas personales: nombre, correo, teléfono, WhatsApp, fecha de nacimiento, foto de perfil y portada, headline, biografía, experiencia, formación, habilidades, idiomas, certificados, proyectos, enlaces a redes sociales, CV, preferencias laborales y datos de contacto.',
+          'Business y Organizaciones: nombre o razón social, datos del representante, sector, descripción, tagline, logo, portada, teléfono, WhatsApp, enlaces sociales, documentación de verificación (empresa y representante, si la solicitas) y formularios de postulación personalizados.',
           'Postulaciones: respuestas y archivos que envías al aplicar a una oferta.',
+          'Comunidad: publicaciones, imágenes de posts, follows y empleos guardados.',
         ],
       },
       {
@@ -130,8 +131,10 @@ export const PRIVACY_ARTICLES = [
         type: 'ul',
         items: [
           'Supabase: autenticación, base de datos y almacenamiento. Más info: https://supabase.com/privacy',
-          'Google OAuth: inicio de sesión con Google. Más info: https://policies.google.com/privacy',
-          'OneSignal (u equivalente): notificaciones push.',
+          'Google OAuth: inicio de sesión con Google (cuentas personales). Más info: https://policies.google.com/privacy',
+          'OneSignal: notificaciones push.',
+          'Resend: correos transaccionales (verificación de cuenta, bienvenida, avisos).',
+          'Formspree: formulario de contacto del Centro de Ayuda.',
           'Sentry: monitorización de errores técnicos. Más info: https://sentry.io/privacy/',
         ],
       },
@@ -161,7 +164,7 @@ export const PRIVACY_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: 'La verificación de empresas acredita, tras revisión, la existencia legal de la entidad mediante documentación oficial. El sello de verificación aumenta la confianza en la comunidad, pero no es un endoso de solvencia ni de prácticas de contratación.',
+        text: 'La verificación de empresas acredita, tras revisión de dos documentos (documento de la empresa —NIF o Licencia Comercial— y documento del representante legal —DIP o Pasaporte—), la existencia legal de la entidad. El sello de verificación aumenta la confianza en la comunidad, pero no es un endoso de solvencia ni de prácticas de contratación.',
       },
       {
         type: 'p',
@@ -278,6 +281,29 @@ export const PRIVACY_ARTICLES = [
       {
         type: 'p',
         text: 'Más información sobre ZARREL: https://zarrel.org',
+      },
+    ],
+  },
+  {
+    id: 'cookies-y-almacenamiento-local',
+    title: '¿Utilizamos cookies y almacenamiento local?',
+    blocks: [
+      {
+        type: 'p',
+        text: 'TrabaGE utiliza cookies y almacenamiento local del navegador (localStorage) para:',
+      },
+      {
+        type: 'ul',
+        items: [
+          'Mantener tu sesión iniciada de forma segura.',
+          'Recordar preferencias como el tema claro u oscuro.',
+          'Guardar el historial reciente de búsquedas en tu dispositivo.',
+          'Gestionar el estado de la aplicación web progresiva (PWA).',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'No utilizamos cookies con fines publicitarios de terceros ni vendemos datos derivados de estas tecnologías. Puedes eliminar cookies y datos locales desde la configuración de tu navegador; ten en cuenta que algunas funciones (como mantener la sesión o tus preferencias) podrían dejar de funcionar correctamente.',
       },
     ],
   },

@@ -1,20 +1,16 @@
-import Input from '../ui/Input';
+import SearchBar from '../ui/SearchBar';
 import AppIcon from '../common/AppIcon';
 import NotificationBellButton from '../notifications/NotificationBellButton';
-import { Filter, Search, ICON_SIZES } from '../../constants/icons';
+import { Filter, ICON_SIZES } from '../../constants/icons';
 
 export default function JobsSearchBar({ query = '', onQueryChange, onFiltersToggle, filtersOpen = false }) {
   return (
     <div className="flex items-center gap-space-sm">
       <div className="min-w-0 flex-1">
-        <Input
-          type="search"
-          name="jobSearch"
+        <SearchBar
           value={query}
-          onChange={(e) => onQueryChange?.(e.target.value)}
-          placeholder="Buscar por título, ciudad, empresa o palabra clave..."
-          icon={Search}
-          className="mb-0"
+          onChange={(value) => onQueryChange?.(value)}
+          placeholder="Buscar por título, ciudad, empresa..."
         />
       </div>
       <NotificationBellButton className="h-11 w-11 border border-app-border bg-app-card" />
