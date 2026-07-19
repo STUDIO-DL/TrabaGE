@@ -13,6 +13,7 @@ import { RouteSectionLayout } from './components/routing/RouteErrorBoundary';
 import GuestBar from './components/common/GuestBar';
 import InstallPrompt from './components/common/InstallPrompt';
 import PushPermissionPrompt from './components/common/PushPermissionPrompt';
+import PwaUpdatePrompt from './components/common/PwaUpdatePrompt';
 import { ToastContainer } from './components/ui/Toast';
 import { useNotificationContext } from './context/NotificationContext';
 import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
@@ -133,6 +134,7 @@ function AppRoutes() {
   return (
     <>
       <GuestBar />
+      <PwaUpdatePrompt />
       <InstallPrompt />
       <PushPermissionPrompt />
       <Suspense fallback={<AuthLoadingScreen />}>
