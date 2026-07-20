@@ -3,6 +3,7 @@ import { topicsService } from './topics.service';
 import { normalizePostTopics, normalizePostsTopics } from '../utils/normalizePostTopics';
 
 const POST_SELECT = `*, ${topicsService.POST_TOPICS_EMBED}`;
+const POST_SELECT_BY_TOPIC = `*, post_topics!inner(topics!inner(id, name, slug))`;
 
 async function withNormalizedTopics(result) {
   if (result.error) return result;
@@ -13,6 +14,32 @@ async function withNormalizedTopics(result) {
 }
 
 export const postsService = {
+  getByTopicSlug: async ({
+    topicSlug,
+    authorTypes,
+    limit = 30,
+    offset = 0,
+  } = {}) => {
+    const slug = String(topicSlug ?? '').trim();
+    if (!slug) {
+      return { data: [], error: new Error('topicSlug is required') };
+    }
+
+    let query = supabase
+      .from('posts')
+      .select(POST_SELECT_BY_TOPIC)
+      .eq('is_hidden', false)
+      .eq('post_topics.topics.slug', slug)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
+
+    if (authorTypes?.length) {
+      query = query.in('author_type', authorTypes);
+    }
+
+    return withNormalizedTopics(await query);
+  },
+
   getFeed: async ({ limit = 30, offset = 0 } = {}) => {
     const result = await supabase
       .from('posts')

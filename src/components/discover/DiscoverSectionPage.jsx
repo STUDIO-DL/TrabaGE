@@ -1,7 +1,7 @@
 import PageContainer from '../layout/PageContainer';
-import EmptyState from '../common/EmptyState';
 import FetchErrorBanner from '../common/FetchErrorBanner';
 import { DiscoverListSkeleton } from '../common/Skeleton';
+import EmptyPublicationsState from './EmptyPublicationsState';
 
 export default function DiscoverSectionPage({
   title,
@@ -10,10 +10,6 @@ export default function DiscoverSectionPage({
   onRetry,
   isEmpty = false,
   emptyIcon,
-  emptyTitle,
-  emptyDescription,
-  emptyActionLabel,
-  onEmptyAction,
   children,
 }) {
   return (
@@ -25,14 +21,7 @@ export default function DiscoverSectionPage({
           <FetchErrorBanner message={error} onRetry={onRetry} />
         </div>
       ) : isEmpty ? (
-        <EmptyState
-          variant="soft"
-          icon={emptyIcon}
-          title={emptyTitle}
-          description={emptyDescription}
-          actionLabel={emptyActionLabel}
-          onAction={onEmptyAction}
-        />
+        <EmptyPublicationsState icon={emptyIcon} />
       ) : (
         <div className="space-y-space-md p-space-base">{children}</div>
       )}
