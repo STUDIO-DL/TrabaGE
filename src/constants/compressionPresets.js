@@ -63,6 +63,17 @@ export const COMPRESSION_PRESETS = {
     mimeType: 'image/webp',
     safeMode: true,
   },
+  certificationImage: {
+    maxWidth: 2400,
+    maxHeight: 2400,
+    maxBytes: 2 * 1024 * 1024,
+    qualityStart: 0.88,
+    qualityMin: 0.75,
+    qualityStep: 0.03,
+    extension: 'webp',
+    mimeType: 'image/webp',
+    safeMode: true,
+  },
 };
 
 export const PDF_COMPRESSION_LIMITS = {
@@ -92,6 +103,7 @@ export const UPLOAD_COMPRESSION_TYPES = {
   VERIFICATION_DOC: 'verificationDoc',
   REPRESENTATIVE_VERIFICATION_DOC: 'representativeVerificationDoc',
   EDUCATION_FILE: 'educationFile',
+  CERTIFICATION_IMAGE: 'certificationImage',
 };
 
 export const UPLOAD_INPUT_MAX_BYTES = {

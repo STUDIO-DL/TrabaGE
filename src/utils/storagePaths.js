@@ -39,6 +39,10 @@ export function resolveProjectImageUrl(imagePath) {
   return resolvePublicStorageUrl(STORAGE_BUCKETS.PROFILE_PROJECTS, imagePath);
 }
 
+export function resolveCertificationImageUrl(imagePath) {
+  return resolvePublicStorageUrl(STORAGE_BUCKETS.CANDIDATE_CERTIFICATIONS, imagePath);
+}
+
 export function resolveCompanyCoverUrl(coverPath) {
   return resolvePublicStorageUrl(STORAGE_BUCKETS.COMPANY_LOGOS, coverPath);
 }

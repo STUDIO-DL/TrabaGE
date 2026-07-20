@@ -14,9 +14,14 @@ const POPULAR_COUNT = 6;
 export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) {
   const [serviceName, setServiceName] = useState('');
   const [adding, setAdding] = useState(false);
-  const preview = items.slice(0, PREVIEW_COUNT);
-  const footerLabel =
-    items.length > 0 ? `Ver todos los servicios (${items.length})` : undefined;
+  const [expanded, setExpanded] = useState(false);
+  const hasMore = items.length > PREVIEW_COUNT;
+  const visibleItems = expanded ? items : items.slice(0, PREVIEW_COUNT);
+  const footerLabel = hasMore
+    ? expanded
+      ? 'Ver menos'
+      : `Ver todos los servicios (${items.length})`
+    : undefined;
 
   const existingNames = useMemo(() => items.map((item) => item.name), [items]);
 
@@ -52,9 +57,10 @@ export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) 
       isEmpty={!items.length && !isOwn}
       emptyText={getProfileSectionEmptyCopy('services', isOwn)}
       footerLabel={footerLabel}
+      onFooterClick={hasMore ? () => setExpanded((value) => !value) : undefined}
     >
       <div className="flex flex-wrap gap-2">
-        {preview.map((item) => (
+        {visibleItems.map((item) => (
           <span
             key={item.id}
             className="inline-flex items-center gap-1 rounded-full border border-app-border bg-app-surface px-3.5 py-1.5 text-sm text-app-text"

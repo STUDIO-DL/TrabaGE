@@ -99,6 +99,7 @@ export function ProfileEntryRow({
   onDelete,
   entryIcon: _entryIcon,
   entryIconTone: _entryIconTone,
+  children,
 }) {
   return (
     <div className="border-b border-app-divider py-4 first:pt-0 last:border-0 last:pb-0">
@@ -106,6 +107,7 @@ export function ProfileEntryRow({
         <p className="text-user-content font-semibold text-app-text">{title || '—'}</p>
         {subtitle && <p className="text-user-content mt-0.5 text-sm text-app-muted">{subtitle}</p>}
         {meta && <p className="text-user-content mt-1 text-xs leading-relaxed text-app-subtle">{meta}</p>}
+        {children}
         {isOwn && (onEdit || onDelete) && (
           <div className="mt-2 flex gap-3">
             {onEdit && <EditActionButton onClick={onEdit} />}

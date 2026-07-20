@@ -15,9 +15,14 @@ const POPULAR_COUNT = 6;
 export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
   const [skillName, setSkillName] = useState('');
   const [adding, setAdding] = useState(false);
-  const preview = items.slice(0, PREVIEW_COUNT);
-  const footerLabel =
-    items.length > 0 ? `Ver todas las habilidades (${items.length})` : undefined;
+  const [expanded, setExpanded] = useState(false);
+  const hasMore = items.length > PREVIEW_COUNT;
+  const visibleItems = expanded ? items : items.slice(0, PREVIEW_COUNT);
+  const footerLabel = hasMore
+    ? expanded
+      ? 'Ver menos'
+      : `Ver todas las habilidades (${items.length})`
+    : undefined;
 
   const existingNames = useMemo(() => items.map((item) => item.name), [items]);
 
@@ -54,9 +59,10 @@ export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
       isEmpty={!items.length && !isOwn}
       emptyText={getProfileSectionEmptyCopy('skills', isOwn)}
       footerLabel={footerLabel}
+      onFooterClick={hasMore ? () => setExpanded((value) => !value) : undefined}
     >
       <div className="flex flex-wrap gap-2">
-        {preview.map((item) => (
+        {visibleItems.map((item) => (
           <span
             key={item.id}
             className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-3.5 py-1.5 text-sm text-gray-700"

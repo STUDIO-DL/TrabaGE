@@ -9,15 +9,12 @@ import KeyboardAwareFooter from '../../layout/KeyboardAwareFooter';
 import AppIcon from '../../common/AppIcon';
 import { Save, ICON_SIZES } from '../../../constants/icons';
 import SkillTagsField from '../education/SkillTagsField';
-import EducationFilesField, { MAX_EDUCATION_FILES } from '../education/EducationFilesField';
 import {
   compareMonthYear,
   parseMonthYear,
   toEndDate,
   toStartDate,
 } from '../../../utils/educationDates';
-import { storageService } from '../../../services/storage.service';
-import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
 import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
 import { useAuth } from '../../../hooks/useAuth';
 import { useFormDraft } from '../../../hooks/useFormDraft';
@@ -39,18 +36,6 @@ const emptyForm = {
   description: '',
   skills: [],
 };
-
-function normalizeMediaFiles(value) {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter((item) => item && typeof item === 'object' && item.path)
-    .map((item) => ({
-      path: item.path,
-      name: item.name || 'Archivo',
-      size: item.size ?? 0,
-      mimeType: item.mimeType || item.mime_type || null,
-    }));
-}
 
 function buildFormState(initial) {
   if (!initial) return emptyForm;
@@ -74,7 +59,7 @@ function buildFormState(initial) {
   };
 }
 
-function validateForm(form, existingFiles, pendingFiles) {
+function validateForm(form) {
   const errors = {};
 
   if (!form.institution.trim()) {
@@ -105,9 +90,6 @@ function validateForm(form, existingFiles, pendingFiles) {
   if (form.description.length > DESCRIPTION_MAX) {
     errors.description = `Máximo ${DESCRIPTION_MAX} caracteres.`;
   }
-  if (existingFiles.length + pendingFiles.length > MAX_EDUCATION_FILES) {
-    errors.files = `Máximo ${MAX_EDUCATION_FILES} archivos.`;
-  }
 
   return errors;
 }
@@ -132,23 +114,14 @@ export default function EducationModal({
     enabled: isOpen && Boolean(resolvedUserId),
   });
 
-  const [existingFiles, setExistingFiles] = useState([]);
-  const [pendingFiles, setPendingFiles] = useState([]);
-  const [removedPaths, setRemovedPaths] = useState([]);
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [uploadPhase, setUploadPhase] = useState(null);
   const prevOpenRef = useRef(false);
 
-  // File lists only reset when the modal opens — not when parent profile refetches.
   useEffect(() => {
     const justOpened = isOpen && !prevOpenRef.current;
     prevOpenRef.current = isOpen;
     if (!justOpened) return;
-    setExistingFiles(normalizeMediaFiles(initial?.media_files));
-    setPendingFiles([]);
-    setRemovedPaths([]);
     setFieldErrors({});
     setSubmitError('');
   }, [isOpen, initial]);
@@ -162,54 +135,11 @@ export default function EducationModal({
     });
   }, [setForm]);
 
-  const handleAddPendingFile = (file, errorMessage) => {
-    if (errorMessage) {
-      setFieldErrors((current) => ({ ...current, files: errorMessage }));
-      return;
-    }
-    if (!file) return;
-    setPendingFiles((current) => [
-      ...current,
-      { clientId: crypto.randomUUID(), file, name: file.name, size: file.size, type: file.type },
-    ]);
-    setFieldErrors((current) => {
-      const next = { ...current };
-      delete next.files;
-      return next;
-    });
-  };
-
-  const syncMediaFiles = async (educationId) => {
-    if (!userId || !educationId) return { mediaFiles: existingFiles, error: null };
-
-    let nextFiles = existingFiles.filter((file) => !removedPaths.includes(file.path));
-
-    if (removedPaths.length) {
-      const { error } = await storageService.deleteEducationFiles(removedPaths);
-      if (error) return { mediaFiles: null, error };
-    }
-
-    for (const pending of pendingFiles) {
-      const fileId = crypto.randomUUID();
-      const { meta, error } = await storageService.uploadEducationFile(
-        userId,
-        educationId,
-        pending.file,
-        fileId,
-        { onProgress: ({ phase }) => setUploadPhase(phase) },
-      );
-      if (error) return { mediaFiles: null, error };
-      nextFiles = [...nextFiles, meta];
-    }
-
-    return { mediaFiles: nextFiles, error: null };
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitError('');
 
-    const errors = validateForm(form, existingFiles, pendingFiles);
+    const errors = validateForm(form);
     if (Object.keys(errors).length) {
       setFieldErrors(errors);
       return;
@@ -226,48 +156,17 @@ export default function EducationModal({
       activities: form.activities.trim() || null,
       description: form.description.trim() || null,
       skills: form.skills,
-      media_files: existingFiles.filter((file) => !removedPaths.includes(file.path)),
     };
 
-    setUploading(true);
-    setUploadPhase(null);
-    const { data, error: saveError } = await onSave(payload, initial?.id);
+    const { error: saveError } = await onSave(payload, initial?.id);
     if (saveError) {
-      setUploading(false);
-      setUploadPhase(null);
       setSubmitError(saveError.message);
       return;
-    }
-
-    const educationId = data?.id || initial?.id;
-    if (educationId && (pendingFiles.length || removedPaths.length)) {
-      const { mediaFiles, error: mediaError } = await syncMediaFiles(educationId);
-      if (mediaError) {
-        setUploading(false);
-        setUploadPhase(null);
-        setSubmitError('No se pudieron subir los archivos. Inténtalo de nuevo.');
-        return;
-      }
-
-      const { error: patchError } = await onSave({ media_files: mediaFiles }, educationId, {
-        silent: true,
-      });
-      setUploading(false);
-      setUploadPhase(null);
-      if (patchError) {
-        setSubmitError(patchError.message);
-        return;
-      }
-    } else {
-      setUploading(false);
-      setUploadPhase(null);
     }
 
     clearDraft();
     onClose();
   };
-
-  const busy = loading || uploading;
 
   const activitiesCount = form.activities.length;
   const descriptionCount = form.description.length;
@@ -396,21 +295,6 @@ export default function EducationModal({
             error={fieldErrors.skills}
           />
 
-          <EducationFilesField
-            existingFiles={existingFiles}
-            pendingFiles={pendingFiles}
-            onAddPending={handleAddPendingFile}
-            onRemoveExisting={(path) => {
-              setRemovedPaths((current) => [...new Set([...current, path])]);
-              setExistingFiles((current) => current.filter((file) => file.path !== path));
-            }}
-            onRemovePending={(clientId) =>
-              setPendingFiles((current) => current.filter((file) => file.clientId !== clientId))
-            }
-            error={fieldErrors.files}
-            disabled={busy}
-          />
-
           {submitError && (
             <p className="text-caption text-error-600" role="alert">
               {submitError}
@@ -419,9 +303,9 @@ export default function EducationModal({
         </div>
 
         <KeyboardAwareFooter className="z-10 shrink-0 border-t border-app-border bg-app-card px-space-base pt-space-md">
-          <Button type="submit" form={formId} fullWidth loading={busy} className="gap-space-sm">
+          <Button type="submit" form={formId} fullWidth loading={loading} className="gap-space-sm">
             <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
-            {busy ? getUploadPhaseLabel(uploadPhase) || 'Guardando...' : 'Guardar'}
+            Guardar
           </Button>
         </KeyboardAwareFooter>
       </form>

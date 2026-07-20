@@ -5,7 +5,7 @@ import { GraduationCap } from '../../constants/icons';
 import { formatDateRange } from '../../utils/formatDate';
 import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
-const PREVIEW_COUNT = 2;
+const PREVIEW_COUNT = 1;
 
 function buildEducationMeta(item) {
   const dateRange = formatDateRange(

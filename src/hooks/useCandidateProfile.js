@@ -299,7 +299,7 @@ export function useCandidateProfile() {
           ...current,
           certifications: [...(current.certifications ?? []), row],
         }),
-      }).then(({ error: saveError }) => ({ error: saveError })),
+      }),
     [runMutation, userId],
   );
 
@@ -313,20 +313,30 @@ export function useCandidateProfile() {
             item.id === id ? { ...item, ...row } : item,
           ),
         }),
-      }).then(({ error: saveError }) => ({ error: saveError })),
+      }),
     [runMutation],
   );
 
   const deleteCertification = useCallback(
-    async (id) =>
-      runMutation({
+    async (id) => {
+      const existing = (profile?.certifications ?? []).find((item) => item.id === id);
+      const imagePath = existing?.image_path;
+
+      const result = await runMutation({
         execute: () => profileService.deleteCertification(id),
         patchCache: (current) => ({
           ...current,
           certifications: (current.certifications ?? []).filter((item) => item.id !== id),
         }),
-      }).then(({ error: saveError }) => ({ error: saveError })),
-    [runMutation],
+      });
+
+      if (!result.error && imagePath && userId) {
+        await storageService.deleteCertificationImage(userId, id, imagePath);
+      }
+
+      return result;
+    },
+    [profile?.certifications, runMutation, userId],
   );
 
   const addSkill = useCallback(

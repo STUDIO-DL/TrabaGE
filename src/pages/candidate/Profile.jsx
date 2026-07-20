@@ -176,11 +176,11 @@ export default function Profile() {
     return result;
   };
 
-  const saveCert = async (data, id) => {
+  const saveCert = async (data, id, options = {}) => {
     setSaving(true);
     const result = id ? await updateCertification(id, data) : await addCertification(data);
     setSaving(false);
-    if (!result.error) showToast('Certificación guardada.', 'success');
+    if (!result.error && !options.silent) showToast('Certificación guardada.', 'success');
     return result;
   };
 
@@ -425,6 +425,7 @@ export default function Profile() {
         initial={editingCert}
         onSave={saveCert}
         loading={saving}
+        userId={user?.id}
       />
       <LanguageModal
         isOpen={languageOpen}
