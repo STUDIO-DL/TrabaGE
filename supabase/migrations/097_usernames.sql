@@ -626,6 +626,9 @@ GRANT SELECT ON public.company_profiles_public TO anon, authenticated, service_r
 
 -- ─── 7. Search RPCs: match username + prefer /@ paths ────────────────────────
 
+-- Return type changed (added username) — must drop before recreate.
+DROP FUNCTION IF EXISTS public.search_candidates(TEXT, INT);
+
 CREATE OR REPLACE FUNCTION public.search_candidates(keyword TEXT, p_limit INT DEFAULT 20)
 RETURNS TABLE (
   user_id UUID,

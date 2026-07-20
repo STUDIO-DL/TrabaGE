@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import { usernameService } from '../services/username.service';
-import { isEmployerRole } from '../constants/roles';
-import { ProfilePageSkeleton } from '../components/common/Skeleton';
-import PageContainer from '../components/layout/PageContainer';
+import { usernameService } from '../../services/username.service';
+import { isEmployerRole } from '../../constants/roles';
+import { ProfilePageSkeleton } from '../../components/common/Skeleton';
+import PageContainer from '../../components/layout/PageContainer';
 
 /**
  * Resolves /@username → personal or company public profile (UUID routes).

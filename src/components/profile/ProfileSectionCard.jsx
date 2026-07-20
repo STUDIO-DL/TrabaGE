@@ -50,7 +50,7 @@ export default function ProfileSectionCard({
   if (isEmpty && !isOwn) return null;
 
   return (
-    <section id={id} className="surface-card p-space-md">
+    <section id={id} className={`surface-card p-space-md${id ? ' scroll-mt-24' : ''}`}>
       <div className="mb-space-md flex items-center justify-between gap-space-sm">
         <h3 className={`${profileSectionTitleClass} min-w-0 flex-1`}>{title}</h3>
         {isOwn && onAdd && (
