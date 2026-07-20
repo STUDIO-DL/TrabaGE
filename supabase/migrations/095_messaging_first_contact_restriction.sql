@@ -1,5 +1,5 @@
 -- =============================================
--- 094_messaging_first_contact_restriction.sql
+-- 095_messaging_first_contact_restriction.sql
 -- TikTok-style first-contact rule: one message until the other participant replies.
 -- =============================================
 

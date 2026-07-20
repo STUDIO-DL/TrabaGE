@@ -16,6 +16,7 @@ export default defineConfig({
           supabase: ['@supabase/supabase-js'],
           telemetry: ['@sentry/react', 'react-onesignal'],
           icons: ['lucide-react'],
+          cvGenerator: ['@react-pdf/renderer'],
         },
       },
     },

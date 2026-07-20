@@ -157,12 +157,16 @@ export default function Profile() {
   };
 
   const handleUploadCV = async (file, errorMsg) => {
-    if (errorMsg) return showToast(errorMsg, 'error');
+    if (errorMsg) {
+      showToast(errorMsg, 'error');
+      return { error: { message: errorMsg } };
+    }
     setCvLoading(true);
     const { error } = await uploadCV(file, { onProgress: ({ phase }) => setCvPhase(phase) });
     setCvLoading(false);
     setCvPhase(null);
     showToast(error ? error.message : 'CV subido correctamente.', error ? 'error' : 'success');
+    return { error };
   };
 
   const handleSaveCoverLetter = async (text) => {
@@ -406,6 +410,8 @@ export default function Profile() {
         />
 
         <DocumentsSection
+          profile={profile}
+          accountEmail={user?.email}
           cvName={profile?.cv_name}
           coverLetter={profile?.cover_letter}
           isOwn={canEdit}
@@ -414,6 +420,10 @@ export default function Profile() {
           coverSaving={coverLoading}
           onUploadCV={handleUploadCV}
           onSaveCoverLetter={handleSaveCoverLetter}
+          onRefetchProfile={async () => {
+            const result = await refetch();
+            return result.data ?? null;
+          }}
         />
 
       </CandidateProfileLayout>
