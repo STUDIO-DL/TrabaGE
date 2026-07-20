@@ -75,7 +75,7 @@ export default function CompanyServicesSection({
   const body = (
     <>
       {!hasItems && !readOnly ? (
-        <div className="rounded-radius-lg border border-dashed border-app-border bg-app-surface px-space-base py-space-xl text-center">
+        <div className="rounded-radius-lg border border-dashed border-app-border bg-app-surface px-space-base py-space-xl text-left">
           <p className="text-body-small text-app-muted">
             Añade los servicios que ofrece tu empresa para que los visitantes te conozcan mejor.
           </p>

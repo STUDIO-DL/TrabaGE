@@ -15,13 +15,14 @@ export default function CompanyProfileSectionCard({
   const toneClass = SECTION_ICON_TONES[iconTone] ?? SECTION_ICON_TONES.about;
 
   return (
-    <section id={id} className={`surface-card p-space-md ${className}`.trim()}>
+    <section id={id} className={`surface-card p-space-base sm:p-space-md ${className}`.trim()}>
       {(title || action) && (
-        <div className="mb-space-md flex items-center justify-between gap-space-sm">
+        <header className="mb-space-md flex items-center justify-between gap-space-sm">
           <div className="flex min-w-0 items-center gap-space-sm">
             {icon ? (
               <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-radius-md ${toneClass}`}
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-radius-md sm:h-9 sm:w-9 ${toneClass}`}
+                aria-hidden
               >
                 <AppIcon icon={icon} size={ICON_SIZES.default} className={ICON_COLORS.default} />
               </span>
@@ -35,7 +36,7 @@ export default function CompanyProfileSectionCard({
             ) : null}
           </div>
           {action ? <div className="shrink-0">{action}</div> : null}
-        </div>
+        </header>
       )}
       {children}
     </section>

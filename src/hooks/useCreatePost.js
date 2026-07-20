@@ -15,6 +15,7 @@ import { getCompanyDisplayName } from '../utils/companyProfile';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import { TOAST } from '../utils/copyLabels';
+import { DEEP_LINK_PATHS } from '../utils/deepLinks';
 
 export function useCreatePost() {
   const { user, isPreviewMode, role } = useAuth();
@@ -153,7 +154,9 @@ export function useCreatePost() {
         type: 'new_post',
         title: companyName ? `Nueva publicación de ${companyName}` : 'Nueva publicación',
         message: preview || 'Nueva actualización',
-        link: `/companies/${user.id}`,
+        link: DEEP_LINK_PATHS.post(savedPost.id),
+        postId: savedPost.id,
+        actorId: user.id,
       });
     }
 

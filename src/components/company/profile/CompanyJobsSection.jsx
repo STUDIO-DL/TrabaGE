@@ -109,8 +109,8 @@ function filterJobs(jobs, filters) {
 function JobsEmptyState({ readOnly, manageLink, profile }) {
   const viewer = resolveOrgViewerContext({ isOwn: !readOnly, profile });
   return (
-    <div className="rounded-radius-lg border border-dashed border-app-border bg-app-surface px-space-base py-space-xl text-center">
-      <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-radius-md bg-app-surface ring-1 ring-app-border">
+    <div className="rounded-radius-lg border border-dashed border-app-border bg-app-surface px-space-base py-space-xl text-left">
+      <span className="flex h-11 w-11 items-center justify-center rounded-radius-md bg-app-surface ring-1 ring-app-border">
         <AppIcon icon={Briefcase} size={ICON_SIZES.lg} className="text-app-text" />
       </span>
       <p className="mt-space-sm text-body-small text-app-muted">
@@ -173,7 +173,7 @@ export default function CompanyJobsSection({
         {jobCount > 0 ? <JobFilters filters={filters} onChange={setFilters} /> : null}
         {listContent}
         {filteredJobs.length === 0 && jobCount > 0 ? (
-          <p className="py-space-base text-center text-body-small text-app-muted">
+          <p className="py-space-base text-left text-body-small text-app-muted">
             No hay ofertas que coincidan con los filtros seleccionados.
           </p>
         ) : null}

@@ -154,11 +154,17 @@ export const notificationsService = {
     message,
     link,
     type = 'company_update',
+    postId,
+    jobId,
+    actorId,
   }) => {
     const metadata = {
       link,
       target_type: targetType,
       target_id: targetId,
+      ...(postId ? { post_id: postId } : {}),
+      ...(jobId ? { job_id: jobId } : {}),
+      ...(actorId ? { actor_id: actorId } : {}),
     };
 
     const { data: recipientIds, error } = await supabase.rpc('notify_followers', {

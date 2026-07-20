@@ -1,7 +1,9 @@
 /** Shared layout tokens for company / organization profiles (mobile-first). */
 
-export const profileContentShellClass = 'mx-auto w-full min-w-0 max-w-lg overflow-x-hidden';
+/** Full-width content column — left-aligned; no mx-auto / centered max-width. */
+export const profileContentShellClass = 'w-full min-w-0 overflow-x-hidden';
 
+/** Horizontal padding matches profile header (`px-space-base`). */
 export const profileSectionStackClass = 'space-y-space-md px-space-base py-space-md';
 
 export const profileInicioGridClass = 'space-y-space-md';
@@ -12,11 +14,9 @@ export const sectionLinkClass =
   'shrink-0 inline-flex min-h-touch items-center text-caption font-medium text-primary-600 transition-colors duration-fast hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
 
 export const profileMetaLineClass =
-  'text-user-content flex min-w-0 flex-wrap items-center gap-x-space-xs gap-y-0.5 break-words text-caption leading-snug text-app-muted';
+  'text-user-content min-w-0 break-words text-caption leading-snug text-app-muted';
 
 export const profileMetaIconClass = 'mt-0.5 shrink-0 text-app-text';
-
-export const profileMetaSeparatorClass = 'select-none text-app-subtle';
 
 export const profileCoverOverlayClass =
   'absolute inset-0 bg-gradient-to-b from-black/10 via-black/25 to-black/55';
@@ -54,8 +54,13 @@ export const profileFollowerCountClass =
 /** Compact profile action buttons — primary CTAs flex on narrow screens */
 export const profileActionButtonClass = 'h-btn-md min-h-touch shrink-0 px-space-md';
 
-export const profileActionRowClass =
-  'flex w-full flex-wrap items-center gap-space-sm sm:flex-nowrap';
+/** Outer row: CTAs can wrap; overflow (⋯) stays pinned on the right, vertically centered */
+export const profileActionRowClass = 'flex w-full items-center gap-space-sm';
+
+export const profileActionClusterClass =
+  'flex min-w-0 flex-1 flex-wrap items-center gap-space-sm';
+
+export const profileActionOverflowClass = 'shrink-0 self-center';
 
 export const profileActionPrimaryClass = `${profileActionButtonClass} flex-1 basis-[calc(50%-0.25rem)] sm:flex-none sm:basis-auto`;
 
@@ -72,7 +77,7 @@ export const profileBannerFollowFollowingClass =
   'inline-flex h-btn-md min-h-touch shrink-0 items-center justify-center gap-space-xs rounded-radius-md bg-white/15 px-space-md text-body-small font-semibold text-white ring-1 ring-inset ring-white/70 transition-colors duration-fast hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-700 disabled:cursor-not-allowed disabled:opacity-50';
 
 export const profileTabNavInnerClass =
-  'mx-auto flex h-12 w-full max-w-lg overflow-x-auto scrollbar-none px-space-xs';
+  'flex h-12 w-full justify-start overflow-x-auto scrollbar-none px-space-base';
 
 export const profileTabButtonClass =
   'relative flex h-12 shrink-0 items-center px-space-md text-body-small font-medium transition-colors duration-fast';

@@ -87,15 +87,21 @@ export function matchesCategory(notification, category) {
  */
 export function getNotificationLink(notification, role = ROLES.PERSONAL) {
   const metadata = notification?.metadata ?? {};
-  if (metadata.link) return metadata.link;
-
   const resolvedRole = normalizeRole(role) ?? (isEmployerRole(role) ? ROLES.BUSINESS : ROLES.PERSONAL);
+  const category = getNotificationCategory(notification);
+
+  // Post notifications must open the publication itself — post_id wins over a
+  // legacy metadata.link that pointed at the company profile.
+  if (category === NOTIFICATION_CATEGORY.POSTS) {
+    const postId = metadata.post_id ?? (metadata.target_type === 'post' ? metadata.target_id : null);
+    if (postId) return DEEP_LINK_PATHS.post(postId);
+  }
+
+  if (metadata.link) return metadata.link;
 
   if (notification?.type === 'new_message' && metadata.conversation_id) {
     return rolePath(resolvedRole, `/messages/${metadata.conversation_id}`);
   }
-
-  const category = getNotificationCategory(notification);
 
   if (category === NOTIFICATION_CATEGORY.JOBS) {
     if (notification?.type === 'new_application' && metadata.candidate_id) {
@@ -113,9 +119,13 @@ export function getNotificationLink(notification, role = ROLES.PERSONAL) {
   }
 
   if (category === NOTIFICATION_CATEGORY.POSTS) {
-    const postId = metadata.post_id ?? (metadata.target_type === 'post' ? metadata.target_id : null);
-    if (postId) return DEEP_LINK_PATHS.post(postId);
-    const companyId = metadata.target_type === 'company' ? metadata.target_id : metadata.actor_id;
+    const companyId =
+      metadata.actor_id ??
+      (metadata.target_type === 'company' ||
+      metadata.target_type === 'business' ||
+      metadata.target_type === 'organization'
+        ? metadata.target_id
+        : null);
     if (companyId) return DEEP_LINK_PATHS.company(companyId);
   }
 

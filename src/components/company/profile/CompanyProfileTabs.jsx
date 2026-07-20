@@ -1,4 +1,4 @@
-import { profileTabButtonClass } from './companyProfileStyles';
+import { profileTabButtonClass, profileTabNavInnerClass } from './companyProfileStyles';
 
 const BASE_TABS = [
   { id: 'inicio', label: 'Inicio' },
@@ -23,16 +23,18 @@ export default function CompanyProfileTabs({ activeTab, onTabChange, hasServices
       className={`${stickyTop} border-b border-app-border bg-app-card shadow-[0_1px_0_rgba(0,0,0,0.04)] supports-[backdrop-filter]:bg-app-card/95 supports-[backdrop-filter]:backdrop-blur`}
       aria-label="Secciones del perfil"
     >
-      <div className="flex h-12 overflow-x-auto scrollbar-none px-space-xs">
+      <div className={profileTabNavInnerClass} role="tablist">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               type="button"
+              role="tab"
+              aria-selected={isActive}
               onClick={() => onTabChange(tab.id)}
               className={`${profileTabButtonClass} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
-                isActive ? 'text-primary-700' : 'text-app-muted hover:text-app-text'
+                isActive ? 'font-semibold text-primary-700' : 'text-app-muted hover:text-app-text'
               }`}
               aria-current={isActive ? 'page' : undefined}
             >
