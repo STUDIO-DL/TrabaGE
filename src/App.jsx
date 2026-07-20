@@ -58,7 +58,6 @@ const DiscoverEvents = lazy(() => import('./pages/discover/Events'));
 const DiscoverCalls = lazy(() => import('./pages/discover/Calls'));
 const DiscoverCourses = lazy(() => import('./pages/discover/Courses'));
 const DiscoverEntrepreneurs = lazy(() => import('./pages/discover/Entrepreneurs'));
-const DiscoverNewCompanies = lazy(() => import('./pages/discover/NewCompanies'));
 const DiscoverVolunteering = lazy(() => import('./pages/discover/Volunteering'));
 const DiscoverInternational = lazy(() => import('./pages/discover/International'));
 const DemoCompanyEntry = lazy(() => import('./pages/demo/DemoCompanyEntry'));
@@ -70,6 +69,35 @@ const AppInfo = lazy(() => import('./pages/shared/AppInfo'));
 const Maintenance = lazy(() => import('./pages/shared/Maintenance'));
 const NotFound = lazy(() => import('./pages/shared/NotFound'));
 
+const CompanyFeed = lazy(() => import('./pages/company/Feed'));
+const Dashboard = lazy(() => import('./pages/company/Dashboard'));
+const CompanyPublish = lazy(() => import('./pages/company/Publish'));
+const CompanyJobs = lazy(() => import('./pages/company/Jobs'));
+const PublishJob = lazy(() => import('./pages/company/PublishJob'));
+const Applicants = lazy(() => import('./pages/company/Applicants'));
+const CompanyNotifications = lazy(() => import('./pages/company/Notifications'));
+const CompanyProfile = lazy(() => import('./pages/company/Profile'));
+const CompanySettings = lazy(() => import('./pages/company/Settings'));
+const CompanyAppearance = lazy(() => import('./pages/company/Appearance'));
+const CompanyNotificationSettings = lazy(() => import('./pages/company/NotificationSettings'));
+const Verification = lazy(() => import('./pages/company/Verification'));
+const MessagesInbox = lazy(() => import('./pages/shared/MessagesInbox'));
+const Conversation = lazy(() => import('./pages/shared/Conversation'));
+
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
+const AdminOrganizations = lazy(() => import('./pages/admin/AdminOrganizations'));
+const AdminVerifications = lazy(() => import('./pages/admin/AdminVerifications'));
+const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
+const AdminPosts = lazy(() => import('./pages/admin/AdminPosts'));
+const AdminTopics = lazy(() => import('./pages/admin/AdminTopics'));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
+const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
+const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+
 function AppToasts() {
   const { toasts, dismissToast } = useNotificationContext();
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
@@ -78,12 +106,10 @@ function AppToasts() {
 /** Controlled logout after 5 minutes of real inactivity; form drafts stay in localStorage. */
 function SessionManager() {
   const { isAuthenticated, isPreviewMode, logout } = useAuth();
-  const { showToast } = useNotificationContext();
 
   useInactivityLogout({
     enabled: isAuthenticated && !isPreviewMode,
     onTimeout: () => {
-      showToast('Sesión cerrada por inactividad. Tu borrador se ha guardado.', 'info');
       void logout();
     },
   });
@@ -119,7 +145,6 @@ function DiscoverAppRoutes() {
       <Route path="discover/calls" element={<DiscoverCalls />} />
       <Route path="discover/courses" element={<DiscoverCourses />} />
       <Route path="discover/entrepreneurs" element={<DiscoverEntrepreneurs />} />
-      <Route path="discover/new-companies" element={<DiscoverNewCompanies />} />
       <Route path="discover/volunteering" element={<DiscoverVolunteering />} />
       <Route path="discover/international" element={<DiscoverInternational />} />
     </>
@@ -225,6 +250,7 @@ function AppRoutes() {
                   <Route path="/admin/verifications" element={<AdminVerifications />} />
                   <Route path="/admin/jobs" element={<AdminJobs />} />
                   <Route path="/admin/posts" element={<AdminPosts />} />
+                  <Route path="/admin/topics" element={<AdminTopics />} />
                   <Route path="/admin/reports" element={<AdminReports />} />
                   <Route path="/admin/notifications" element={<AdminNotifications />} />
                   <Route path="/admin/profile" element={<AdminProfile />} />
@@ -258,7 +284,7 @@ function AppRoutes() {
             <Route path="/company/help" element={<Navigate to="/business/help" replace />} />
 
             {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
-            <Route path="/@:username" element={<UsernameProfileRedirect />} />
+            {/* /@:username does not match in RR6 — use /:atHandle and resolve only @* segments */}
             <Route path="/profile/:userId" element={<PublicProfile />} />
             <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
             <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
@@ -280,6 +306,7 @@ function AppRoutes() {
               <Route path="/legal/help" element={<HelpCenter />} />
             </Route>
 
+            <Route path="/:atHandle" element={<UsernameProfileRedirect />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

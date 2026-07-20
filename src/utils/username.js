@@ -7,14 +7,10 @@ export function stripUsernameAt(value) {
   return trimmed.startsWith('@') ? trimmed.slice(1) : trimmed;
 }
 
-export function formatUsernameDisplay(username) {
-  const clean = stripUsernameAt(username);
-  if (!clean) return null;
-  return `@${clean}`;
-}
-
 /**
  * Client-side validation. Returns { valid, error } with Spanish messages.
+ *
+ * Usernames are share-link identifiers only — never render them in the UI.
  */
 export function validateUsername(raw) {
   const value = stripUsernameAt(raw);

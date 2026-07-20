@@ -13,6 +13,7 @@ import {
 import {
   NOTIFICATION_PERMISSION_STATUS,
 } from '../constants/notificationPreferences';
+import { shouldAllowForegroundRefresh } from '../utils/backgroundGracePeriod';
 import { useAuth } from './useAuth';
 
 const foregroundSyncListeners = new Set();
@@ -28,15 +29,14 @@ function notifyForegroundSyncListeners() {
 }
 
 if (typeof document !== 'undefined') {
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      notifyForegroundSyncListeners();
-    }
-  });
-
-  window.addEventListener('focus', () => {
+  const handleForegroundResume = () => {
+    if (document.visibilityState !== 'visible') return;
+    if (!shouldAllowForegroundRefresh()) return;
     notifyForegroundSyncListeners();
-  });
+  };
+
+  document.addEventListener('visibilitychange', handleForegroundResume);
+  window.addEventListener('focus', handleForegroundResume);
 }
 
 export function subscribePushForegroundSync(listener) {

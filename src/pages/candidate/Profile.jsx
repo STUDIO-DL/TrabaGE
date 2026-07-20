@@ -51,6 +51,7 @@ export default function Profile() {
     addEducation,
     updateEducation,
     deleteEducation,
+    syncEducationIntro,
     addCertification,
     updateCertification,
     deleteCertification,
@@ -171,6 +172,15 @@ export default function Profile() {
   const saveEducation = async (data, id, options = {}) => {
     setSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
+    if (!result.error && typeof options.showInIntro === 'boolean') {
+      const educationId = id || result.data?.id;
+      const introResult = await syncEducationIntro(educationId, options.showInIntro);
+      if (introResult.error) {
+        setSaving(false);
+        if (!options.silent) showToast(introResult.error.message, 'error');
+        return introResult;
+      }
+    }
     setSaving(false);
     if (!result.error && !options.silent) showToast('Educación guardada.', 'success');
     return result;
@@ -418,6 +428,11 @@ export default function Profile() {
         onSave={saveEducation}
         loading={saving}
         userId={user?.id}
+        showInIntro={Boolean(
+          profile?.show_education_in_intro &&
+            editingEducation?.id &&
+            String(profile?.intro_education_id) === String(editingEducation.id),
+        )}
       />
       <CertificationModal
         isOpen={certOpen}

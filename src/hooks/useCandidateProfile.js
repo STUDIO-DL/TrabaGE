@@ -279,16 +279,63 @@ export function useCandidateProfile() {
     [runMutation],
   );
 
+  /**
+   * Keep candidate_profiles.show_education_in_intro / intro_education_id
+   * in sync with the education entry the user chose for the intro header.
+   */
+  const syncEducationIntro = useCallback(
+    async (educationId, showInIntro) => {
+      if (showInIntro) {
+        if (!educationId) {
+          return { error: { message: 'No se pudo vincular el centro a la intro.' } };
+        }
+        const alreadySelected =
+          profile?.show_education_in_intro &&
+          String(profile?.intro_education_id) === String(educationId);
+        if (alreadySelected) return { error: null };
+
+        return updateBasicInfo({
+          show_education_in_intro: true,
+          intro_education_id: educationId,
+        });
+      }
+
+      const wasSelected = String(profile?.intro_education_id ?? '') === String(educationId ?? '');
+      if (!wasSelected) return { error: null };
+
+      return updateBasicInfo({
+        show_education_in_intro: false,
+        intro_education_id: null,
+      });
+    },
+    [profile?.intro_education_id, profile?.show_education_in_intro, updateBasicInfo],
+  );
+
   const deleteEducation = useCallback(
-    async (id) =>
-      runMutation({
+    async (id) => {
+      const wasIntro = String(profile?.intro_education_id ?? '') === String(id);
+      const result = await runMutation({
         execute: () => profileService.deleteEducation(id),
         patchCache: (current) => ({
           ...current,
           education: (current.education ?? []).filter((item) => item.id !== id),
+          ...(wasIntro
+            ? { show_education_in_intro: false, intro_education_id: null }
+            : null),
         }),
-      }).then(({ error: saveError }) => ({ error: saveError })),
-    [runMutation],
+      });
+
+      if (!result.error && wasIntro) {
+        const introResult = await updateBasicInfo({
+          show_education_in_intro: false,
+          intro_education_id: null,
+        });
+        if (introResult.error) return introResult;
+      }
+
+      return { error: result.error };
+    },
+    [profile?.intro_education_id, runMutation, updateBasicInfo],
   );
 
   const addCertification = useCallback(
@@ -480,6 +527,7 @@ export function useCandidateProfile() {
     addEducation,
     updateEducation,
     deleteEducation,
+    syncEducationIntro,
     addCertification,
     updateCertification,
     deleteCertification,

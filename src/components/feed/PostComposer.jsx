@@ -11,6 +11,7 @@ import { useProfile } from '../../hooks/useProfile';
 import { isEmployerRole } from '../../constants/roles';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
+import TopicSelector from './TopicSelector';
 
 export default function PostComposer({ onSubmit, loading = false, uploadPhase = null, onClose }) {
   const navigate = useNavigate();
@@ -22,12 +23,14 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadError, setUploadError] = useState('');
+  const [selectedTopics, setSelectedTopics] = useState([]);
 
   const isCompany = isEmployerRole(role);
   const trimmedContent = content.trim();
   const hasText = Boolean(trimmedContent);
   const hasImage = Boolean(imageFile);
-  const canPublish = hasText || hasImage;
+  const hasTopics = selectedTopics.length >= 1 && selectedTopics.length <= 3;
+  const canPublish = (hasText || hasImage) && hasTopics;
   const handleClose = onClose ?? (() => navigate(-1));
   const { footerPaddingBottom } = useKeyboard();
 
@@ -64,8 +67,13 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!canPublish) return;
-    await onSubmit?.({ content: trimmedContent, imageFile });
+    await onSubmit?.({
+      content: trimmedContent,
+      imageFile,
+      topicIds: selectedTopics.map((topic) => topic.id),
+    });
     setContent('');
+    setSelectedTopics([]);
     clearImage();
   };
 
@@ -103,7 +111,7 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
         </Button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-space-base pt-space-md">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-space-base pt-space-md pb-space-md">
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
@@ -128,6 +136,14 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
         )}
 
         {uploadError && <p className="mt-2 shrink-0 text-sm text-red-600">{uploadError}</p>}
+
+        <div className="mt-auto pt-space-md">
+          <TopicSelector
+            selected={selectedTopics}
+            onChange={setSelectedTopics}
+            disabled={loading}
+          />
+        </div>
       </div>
 
       <footer

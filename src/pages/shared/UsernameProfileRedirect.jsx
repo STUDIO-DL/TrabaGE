@@ -4,15 +4,34 @@ import { usernameService } from '../../services/username.service';
 import { isEmployerRole } from '../../constants/roles';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import PageContainer from '../../components/layout/PageContainer';
+import { stripUsernameAt } from '../../utils/username';
+import NotFound from './NotFound';
 
 /**
  * Resolves /@username → personal or company public profile (UUID routes).
+ *
+ * React Router 6 cannot match path "/@:username" against "/@handle" (matchPath
+ * returns null). We therefore register "/:atHandle" and only treat segments that
+ * start with "@" as username deep links; anything else is a real 404.
  */
 export default function UsernameProfileRedirect() {
-  const { username } = useParams();
+  const { atHandle, username: usernameParam } = useParams();
+  const raw = atHandle ?? usernameParam ?? '';
+  const isAtHandle = typeof raw === 'string' && raw.startsWith('@') && raw.length > 1;
+  const username = isAtHandle ? stripUsernameAt(raw) : stripUsernameAt(usernameParam);
+
   const [state, setState] = useState({ loading: true, userId: null, role: null, error: false });
 
   useEffect(() => {
+    if (!isAtHandle && !usernameParam) {
+      setState({ loading: false, userId: null, role: null, error: true });
+      return undefined;
+    }
+    if (!username) {
+      setState({ loading: false, userId: null, role: null, error: true });
+      return undefined;
+    }
+
     let cancelled = false;
 
     (async () => {
@@ -36,7 +55,12 @@ export default function UsernameProfileRedirect() {
     return () => {
       cancelled = true;
     };
-  }, [username]);
+  }, [username, isAtHandle, usernameParam, raw]);
+
+  // Single-segment paths that are not /@handle (e.g. /foobar) → NotFound
+  if (atHandle != null && !isAtHandle) {
+    return <NotFound />;
+  }
 
   if (state.loading) {
     return (

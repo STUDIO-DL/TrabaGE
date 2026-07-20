@@ -10,6 +10,7 @@ import { generatePostUrl } from '../../utils/generateShareUrl';
 import { resolvePostImageUrl } from '../../utils/storagePaths';
 import TimeAgo from '../common/TimeAgo';
 import PostImage from './PostImage';
+import TopicChips from './TopicChips';
 import { AUTHOR_TYPES, isEmployerAuthor } from '../../constants/authorTypes';
 
 function PostCard({
@@ -93,6 +94,8 @@ function PostCard({
       {hasText && <ExpandableText text={post.content} defaultExpanded={defaultTextExpanded} />}
 
       <PostImage src={postImageSrc} />
+
+      <TopicChips topics={post.topics} />
     </Card>
   );
 }

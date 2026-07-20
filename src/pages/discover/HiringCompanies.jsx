@@ -28,7 +28,7 @@ export default function HiringCompanies() {
 
   return (
     <DiscoverSectionPage
-      title="Empresas contratando"
+      title="Empresas que están contratando"
       loading={loading}
       error={error}
       onRetry={load}

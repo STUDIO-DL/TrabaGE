@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from './useAuth';
+import { useForegroundResumeRefresh } from './useForegroundResumeRefresh';
 import { supabase } from '../config/supabase';
 import { messagesService, MESSAGES_PAGE_SIZE } from '../services/messages.service';
 
@@ -210,21 +211,14 @@ export function useMessages(conversationId) {
       )
       .subscribe();
 
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        void fetchMessages();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-    window.addEventListener('focus', handleVisibility);
-
     return () => {
       supabase.removeChannel(channel);
-      document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('focus', handleVisibility);
     };
   }, [conversationId, fetchMessages, isPreviewMode, markRead, syncParticipants, syncSendState, user?.id]);
+
+  useForegroundResumeRefresh(() => {
+    void fetchMessages();
+  }, [fetchMessages]);
 
   return {
     messages,

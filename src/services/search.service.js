@@ -22,16 +22,12 @@ function isOwnSearchResult(type, resultId, user) {
 }
 function mapGlobalSearchRow(item, user) {
   const type = normalizeSearchEntityType(item.result_type);
-  const rpcPath = typeof item.path === 'string' ? item.path.trim() : '';
   const resolvedPath = resolveSearchResultPath(
     { type, id: item.result_id, result_type: item.result_type, result_id: item.result_id },
     user,
   );
-  const isOwnerPath =
-    resolvedPath.startsWith('/personal/') ||
-    resolvedPath.startsWith('/business/') ||
-    resolvedPath.startsWith('/organization/');
-  const path = isOwnerPath ? resolvedPath : rpcPath.startsWith('/@') ? rpcPath : resolvedPath;
+  // Always use UUID deep links for in-app search clicks. /@username is for share URLs only.
+  const path = resolvedPath;
   const mapped = {
     type,
     id: item.result_id,

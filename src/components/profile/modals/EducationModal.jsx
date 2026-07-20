@@ -35,10 +35,11 @@ const emptyForm = {
   activities: '',
   description: '',
   skills: [],
+  showInIntro: false,
 };
 
-function buildFormState(initial) {
-  if (!initial) return emptyForm;
+function buildFormState(initial, showInIntro = false) {
+  if (!initial) return { ...emptyForm, showInIntro: Boolean(showInIntro) };
   const start = parseMonthYear(initial.start_date);
   const end = parseMonthYear(initial.end_date);
   const isCurrent = Boolean(initial.is_current ?? !initial.end_date);
@@ -56,6 +57,7 @@ function buildFormState(initial) {
     activities: initial.activities || '',
     description: initial.description || '',
     skills: Array.isArray(initial.skills) ? initial.skills : [],
+    showInIntro: Boolean(showInIntro),
   };
 }
 
@@ -101,6 +103,7 @@ export default function EducationModal({
   onSave,
   loading,
   userId,
+  showInIntro = false,
 }) {
   const formId = useId();
   const { user } = useAuth();
@@ -110,7 +113,7 @@ export default function EducationModal({
   const { values: form, setValues: setForm, clearDraft } = useFormDraft({
     draftKey,
     userId: resolvedUserId,
-    initialValues: buildFormState(initial),
+    initialValues: buildFormState(initial, showInIntro),
     enabled: isOpen && Boolean(resolvedUserId),
   });
 
@@ -158,7 +161,9 @@ export default function EducationModal({
       skills: form.skills,
     };
 
-    const { error: saveError } = await onSave(payload, initial?.id);
+    const { error: saveError } = await onSave(payload, initial?.id, {
+      showInIntro: form.showInIntro,
+    });
     if (saveError) {
       setSubmitError(saveError.message);
       return;
@@ -248,6 +253,16 @@ export default function EducationModal({
               className="h-4 w-4 rounded border-app-border text-primary-600 focus:ring-primary-500"
             />
             <span className="text-body-small text-app-text">Actualmente estudio aquí</span>
+          </label>
+
+          <label className="flex min-h-touch cursor-pointer items-center gap-space-sm rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
+            <input
+              type="checkbox"
+              checked={form.showInIntro}
+              onChange={(event) => setField({ showInIntro: event.target.checked })}
+              className="h-4 w-4 rounded border-app-border text-primary-600 focus:ring-primary-500"
+            />
+            <span className="text-body-small text-app-text">Mostrar centro en mi intro</span>
           </label>
 
           <Input

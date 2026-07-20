@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from './useAuth';
+import { useForegroundResumeRefresh } from './useForegroundResumeRefresh';
 import { supabase } from '../config/supabase';
 import {
   notificationsService,
@@ -158,21 +159,12 @@ export function useNotifications() {
       )
       .subscribe();
 
-    const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        fetchNotifications();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibility);
-    window.addEventListener('focus', handleVisibility);
-
     return () => {
       supabase.removeChannel(channel);
-      document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('focus', handleVisibility);
     };
   }, [fetchNotifications, isPreviewMode, user?.id]);
+
+  useForegroundResumeRefresh(fetchNotifications, [fetchNotifications]);
 
   return {
     notifications,

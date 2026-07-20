@@ -19,7 +19,6 @@ export function useFormDraft({
   autosaveDelay = AUTOSAVE_DELAY_MS,
 }) {
   const [values, setValuesState] = useState(initialValues);
-  const [restoredFromDraft, setRestoredFromDraft] = useState(false);
   const hydratedRef = useRef(false);
   const prevEnabledRef = useRef(false);
   const skipSaveRef = useRef(false);
@@ -51,7 +50,6 @@ export function useFormDraft({
     const draft = loadFormDraft(userId, draftKey);
     if (draft?.data && typeof draft.data === 'object') {
       setValuesState({ ...initialRef.current, ...draft.data });
-      setRestoredFromDraft(true);
     } else {
       setValuesState(initialRef.current);
     }
@@ -82,7 +80,6 @@ export function useFormDraft({
       skipSaveRef.current = true;
       clearFormDraft(userId, draftKey);
     }
-    setRestoredFromDraft(false);
   }, [userId, draftKey]);
 
   const resetToInitial = useCallback((nextInitial) => {
@@ -96,7 +93,6 @@ export function useFormDraft({
     setValues,
     clearDraft,
     resetToInitial,
-    restoredFromDraft,
     isHydrated: hydratedRef.current,
   };
 }

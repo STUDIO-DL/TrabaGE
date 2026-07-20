@@ -213,14 +213,9 @@ export default function PublishJob() {
       await jobsService.notifyJobPublished(job);
     }
 
-    showToast(
-      jobId
-        ? 'Oferta actualizada'
-        : status === 'draft'
-          ? 'Borrador guardado'
-          : 'Empleo publicado',
-      'success',
-    );
+    if (status !== 'draft') {
+      showToast(jobId ? 'Oferta actualizada' : 'Empleo publicado', 'success');
+    }
     navigate(rolePath(base, '/jobs'), { replace: true });
   };
 

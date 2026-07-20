@@ -34,7 +34,6 @@ import {
   getIntroEducationLine,
 } from '../../utils/profileIntro';
 import { getDisplayName } from '../../utils/displayIdentity';
-import { formatUsernameDisplay } from '../../utils/username';
 import { useAuth } from '../../hooks/useAuth';
 
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
@@ -189,11 +188,6 @@ export default function CandidateProfileHeader({
                   >
                     Añade tu nombre
                   </button>
-                ) : null}
-                {formatUsernameDisplay(profile?.username) ? (
-                  <p className="mt-0.5 text-sm font-normal text-app-muted">
-                    {formatUsernameDisplay(profile.username)}
-                  </p>
                 ) : null}
               </div>
 

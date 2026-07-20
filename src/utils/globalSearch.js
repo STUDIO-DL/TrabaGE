@@ -100,7 +100,8 @@ function formatOrganizationCategory(value) {
 
 /**
  * Splits the RPC-composed subtitle into professional secondary info and optional location.
- * global_search builds subtitles as: headline • city | sector • city | company_type • city
+ * Prefer: headline • city | sector • city | company_type • city
+ * Legacy RPC may still prepend "@username" — strip those parts for UI display.
  */
 export function resolveSearchResultDisplay(item) {
   const type = normalizeSearchType(item.type);
@@ -113,7 +114,9 @@ export function resolveSearchResultDisplay(item) {
   const parts = subtitle
     .split(' • ')
     .map((part) => part.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    // Username is for share URLs only — never show @handle in search results.
+    .filter((part) => !part.startsWith('@'));
 
   if (type === 'organization') {
     return {
@@ -129,5 +132,5 @@ export function resolveSearchResultDisplay(item) {
     };
   }
 
-  return { secondary: subtitle, location: null };
+  return { secondary: subtitle.startsWith('@') ? null : subtitle, location: null };
 }

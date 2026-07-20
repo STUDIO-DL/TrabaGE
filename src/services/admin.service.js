@@ -491,4 +491,39 @@ export const adminService = {
     if (data?.error) return { data: null, error: new Error(String(data.error)) };
     return { data, error: null };
   },
+
+  listTopics: async () => {
+    const { data, error } = await supabase.rpc('admin_list_topics');
+    return { data: data ?? [], error };
+  },
+
+  createTopic: async (name) => {
+    const { data, error } = await supabase.rpc('admin_create_topic', {
+      p_name: name,
+    });
+    return { data, error };
+  },
+
+  updateTopic: async (topicId, { name = null, isActive = null } = {}) => {
+    const { data, error } = await supabase.rpc('admin_update_topic', {
+      p_topic_id: topicId,
+      p_name: name,
+      p_is_active: isActive,
+    });
+    return { data, error };
+  },
+
+  deactivateTopic: async (topicId) => {
+    const { data, error } = await supabase.rpc('admin_deactivate_topic', {
+      p_topic_id: topicId,
+    });
+    return { data, error };
+  },
+
+  deleteUnusedTopic: async (topicId) => {
+    const { data, error } = await supabase.rpc('admin_delete_unused_topic', {
+      p_topic_id: topicId,
+    });
+    return { data, error };
+  },
 };

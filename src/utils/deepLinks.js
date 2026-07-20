@@ -33,7 +33,8 @@ export const DEEP_LINK_ROUTE_PATTERNS = {
   job: '/job/:id',
   profile: '/profile/:userId',
   company: '/companies/:companyId',
-  byUsername: '/@:username',
+  /** RR6 cannot match "/@:username"; App uses "/:atHandle" and filters @* segments. */
+  byUsername: '/:atHandle',
 };
 
 /**

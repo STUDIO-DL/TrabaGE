@@ -22,7 +22,6 @@ import {
   getCompanySectorText,
   resolveCompanyHeaderName,
 } from '../../../utils/companyProfile';
-import { formatUsernameDisplay } from '../../../utils/username';
 import { formatFollowerNumber } from '../../../utils/formatFollowerCount';
 import { useAuth } from '../../../hooks/useAuth';
 import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
@@ -274,11 +273,6 @@ export default function CompanyProfileHeader({
                   >
                     Añade el nombre de tu cuenta
                   </button>
-                ) : null}
-                {formatUsernameDisplay(profile?.username) ? (
-                  <p className="mt-0.5 text-sm font-normal text-app-muted">
-                    {formatUsernameDisplay(profile.username)}
-                  </p>
                 ) : null}
               </div>
 

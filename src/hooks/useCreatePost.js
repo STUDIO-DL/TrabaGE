@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { postsService } from '../services/posts.service';
+import { topicsService } from '../services/topics.service';
 import { notificationsService } from '../services/notifications.service';
 import { companyService } from '../services/company.service';
 import { FOLLOWS_TARGET } from '../services/follows.service';
@@ -21,16 +22,22 @@ export function useCreatePost() {
   const [loading, setLoading] = useState(false);
   const [uploadPhase, setUploadPhase] = useState(null);
 
-  const createPost = async ({ content, imageFile }) => {
+  const createPost = async ({ content, imageFile, topicIds = [] }) => {
     if (isPreviewMode) {
       showToast(GUEST_MODE_MESSAGE, 'info');
       return { ok: false };
     }
 
     const trimmedContent = content?.trim?.() ?? '';
+    const uniqueTopicIds = [...new Set((topicIds ?? []).filter(Boolean))];
 
     if (!trimmedContent && !imageFile) {
       showToast('Escribe algo o añade una imagen.', 'error');
+      return { ok: false };
+    }
+
+    if (uniqueTopicIds.length < 1 || uniqueTopicIds.length > 3) {
+      showToast('Selecciona entre 1 y 3 temas.', 'error');
       return { ok: false };
     }
 
@@ -56,7 +63,22 @@ export function useCreatePost() {
       return { ok: false };
     }
 
-    let savedPost = post;
+    const { data: topics, error: topicsError } = await topicsService.setPostTopics(
+      post.id,
+      uniqueTopicIds,
+    );
+
+    if (topicsError) {
+      await postsService.delete(post.id);
+      showToast(
+        getSupabaseErrorMessage(topicsError, 'No se pudieron asignar los temas. Inténtalo de nuevo.'),
+        'error',
+      );
+      setLoading(false);
+      return { ok: false };
+    }
+
+    let savedPost = { ...post, topics: topics ?? [] };
 
     if (imageFile && post?.id) {
       try {
@@ -103,7 +125,10 @@ export function useCreatePost() {
         return { ok: true, post: savedPost };
       }
 
-      savedPost = updatedPost ?? { ...post, post_image_path: path };
+      savedPost = {
+        ...(updatedPost ?? { ...post, post_image_path: path }),
+        topics: savedPost.topics,
+      };
       setUploadPhase(null);
     }
 

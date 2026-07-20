@@ -26,10 +26,13 @@ export function formatCurrentPosition(experienceItem) {
 
 export function formatEducationIntroLine(educationItem) {
   if (!educationItem?.institution?.trim()) return null;
+  return educationItem.institution.trim();
+}
 
-  const parts = [educationItem.institution.trim()];
-  if (educationItem.program?.trim()) parts.push(educationItem.program.trim());
-  return parts.join(' · ');
+export function formatEducationOptionLabel(educationItem) {
+  if (!educationItem) return 'Centro educativo';
+  const parts = [educationItem.institution?.trim(), educationItem.program?.trim()].filter(Boolean);
+  return parts.join(' · ') || 'Centro educativo';
 }
 
 export function getIntroEducationItem(profile) {
@@ -60,7 +63,7 @@ export function buildEducationSelectOptions(education = []) {
     { value: '', label: 'Seleccionar centro' },
     ...education.map((item) => ({
       value: item.id,
-      label: formatEducationIntroLine(item) || item.institution || 'Centro educativo',
+      label: formatEducationOptionLabel(item),
     })),
   ];
 }

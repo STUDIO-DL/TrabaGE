@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
@@ -74,11 +74,11 @@ export default function EditIntro() {
     updateExperience,
     addEducation,
     updateEducation,
+    syncEducationIntro,
   } = useCandidateProfile();
 
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const draftRestoreNotifiedRef = useRef(false);
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState(null);
@@ -104,19 +104,12 @@ export default function EditIntro() {
     values: form,
     setValues: setForm,
     clearDraft,
-    restoredFromDraft,
   } = useFormDraft({
     draftKey: FORM_DRAFT_KEYS.editIntro,
     userId: user?.id,
     initialValues: initialForm,
     enabled: Boolean(user?.id) && !loading,
   });
-
-  useEffect(() => {
-    if (!restoredFromDraft || draftRestoreNotifiedRef.current) return;
-    draftRestoreNotifiedRef.current = true;
-    showToast('Se restauró tu borrador sin guardar.', 'info');
-  }, [restoredFromDraft, showToast]);
 
   const currentExperience = useMemo(
     () => getCurrentExperience(profile?.experience),
@@ -192,20 +185,41 @@ export default function EditIntro() {
     return result;
   };
 
-  const saveEducation = async (data, id) => {
+  const saveEducation = async (data, id, options = {}) => {
     setModalSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
-    setModalSaving(false);
     if (!result.error) {
-      if (!id && result.data?.id) {
-        setForm((prev) => ({
-          ...prev,
-          intro_education_id: result.data.id,
-          show_education_in_intro: true,
-        }));
+      const educationId = id || result.data?.id;
+
+      if (typeof options.showInIntro === 'boolean' && educationId) {
+        const showInIntro = options.showInIntro;
+        const introResult = await syncEducationIntro(educationId, showInIntro);
+        if (introResult.error) {
+          setModalSaving(false);
+          showToast(introResult.error.message, 'error');
+          return introResult;
+        }
+        setForm((prev) => {
+          if (showInIntro) {
+            return {
+              ...prev,
+              intro_education_id: educationId,
+              show_education_in_intro: true,
+            };
+          }
+          if (String(prev.intro_education_id) === String(educationId)) {
+            return {
+              ...prev,
+              intro_education_id: '',
+              show_education_in_intro: false,
+            };
+          }
+          return prev;
+        });
       }
       showToast('Educación guardada.', 'success');
     }
+    setModalSaving(false);
     return result;
   };
 
@@ -407,6 +421,11 @@ export default function EditIntro() {
         onSave={saveEducation}
         loading={modalSaving}
         userId={user?.id}
+        showInIntro={Boolean(
+          form.show_education_in_intro &&
+            editingEducation?.id &&
+            String(form.intro_education_id) === String(editingEducation.id),
+        )}
       />
     </>
   );

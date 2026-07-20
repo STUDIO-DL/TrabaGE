@@ -14,8 +14,10 @@ import { jobsService } from './jobs.service';
 import { applicationsService } from './applications.service';
 import { followsService, FOLLOWS_TARGET } from './follows.service';
 import { profileService } from './profile.service';
+import { topicsService } from './topics.service';
 import { dedupeFeedItems } from '../utils/feedRanking';
 import { resolvePostAuthorName } from '../utils/displayIdentity';
+import { normalizePostsTopics } from '../utils/normalizePostTopics';
 
 // The Home (Inicio) feed shows posts only. Job offers live exclusively in
 // Empleos; news, events, courses, and recommendation cards are excluded here.
@@ -41,14 +43,16 @@ async function fetchFeedPoolFallback(_userId, _role, { limit, offset }) {
   const poolSize = limit * 2;
   const postsResult = await supabase
     .from('posts')
-    .select('*')
+    .select(`*, ${topicsService.POST_TOPICS_EMBED}`)
     .eq('is_hidden', false)
     .order('created_at', { ascending: false })
     .range(offset, offset + poolSize - 1);
 
   if (postsResult.error) return { data: [], error: postsResult.error };
 
-  const items = (postsResult.data ?? []).map((post) => ({
+  const posts = normalizePostsTopics(postsResult.data ?? []);
+
+  const items = posts.map((post) => ({
     item_key: `post:${post.id}`,
     content_type:
       post.content_type === 'advice' ||
@@ -70,7 +74,7 @@ async function enrichPosts(posts, user) {
   const companyIds = [...new Set(posts.filter((p) => isEmployerAuthor(p.author_type)).map((p) => p.author_id))];
   const candidateIds = [...new Set(posts.filter((p) => isPersonalAuthor(p.author_type)).map((p) => p.author_id))];
 
-  const [companiesResult, candidatesResult] = await Promise.all([
+  const [companiesResult, candidatesResult, postsWithTopics] = await Promise.all([
     companyIds.length
       ? supabase
           .from('company_profiles')
@@ -83,13 +87,14 @@ async function enrichPosts(posts, user) {
           .select('user_id, full_name, headline, avatar_path')
           .in('user_id', candidateIds)
       : Promise.resolve({ data: [] }),
+    topicsService.attachTopicsToPosts(posts),
   ]);
 
   const enriched = new Map();
   const companies = new Map((companiesResult.data ?? []).map((row) => [row.user_id, row]));
   const candidates = new Map((candidatesResult.data ?? []).map((row) => [row.user_id, row]));
 
-  posts.forEach((post) => {
+  postsWithTopics.forEach((post) => {
     const isOwner = user?.id === post.author_id;
     if (isEmployerAuthor(post.author_type)) {
       const company = companies.get(post.author_id);

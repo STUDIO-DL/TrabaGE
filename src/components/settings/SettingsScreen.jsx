@@ -33,7 +33,6 @@ import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { getCompanyDisplayName } from '../../utils/companyProfile';
 import { getDisplayName } from '../../utils/displayIdentity';
-import { formatUsernameDisplay } from '../../utils/username';
 import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -149,11 +148,6 @@ function AccountSummaryCard({ email, profile, loading, isCompany, accountType, u
         <h2 className="mt-space-base max-w-full truncate text-title font-bold tracking-tight text-app-text">
           {displayName}
         </h2>
-        {formatUsernameDisplay(profile?.username) ? (
-          <p className="mt-1 max-w-full truncate text-sm text-app-muted">
-            {formatUsernameDisplay(profile.username)}
-          </p>
-        ) : null}
         <p className="mt-space-sm max-w-full truncate text-caption text-app-subtle">
           {email || 'Cuenta sin correo'}
         </p>
@@ -250,8 +244,12 @@ export default function SettingsScreen({ accountType }) {
               <Divider />
               <SettingsRow
                 icon={AtSign}
-                title="Nombre de usuario"
-                subtitle={formatUsernameDisplay(profile?.username) || 'Elige un nombre único'}
+                title="Enlace público del perfil"
+                subtitle={
+                  profile?.username
+                    ? 'Usado al compartir tu perfil'
+                    : 'Elige un nombre único para compartir'
+                }
                 onClick={() => {
                   if (isPreviewMode) {
                     showToast(GUEST_MODE_MESSAGE, 'info');

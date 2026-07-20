@@ -12,6 +12,7 @@ const PAGE_TITLES = {
   '/admin/verifications': 'Verificaciones',
   '/admin/jobs': 'Ofertas de trabajo',
   '/admin/posts': 'Publicaciones',
+  '/admin/topics': 'Temas',
   '/admin/reports': 'Reportes',
   '/admin/notifications': 'Notificaciones',
   '/admin/profile': 'Perfil admin',

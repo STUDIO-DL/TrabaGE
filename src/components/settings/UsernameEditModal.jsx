@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
-import { AtSign } from '../../constants/icons';
 import { usernameService } from '../../services/username.service';
 import { stripUsernameAt, validateUsername } from '../../utils/username';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
@@ -49,23 +48,24 @@ export default function UsernameEditModal({
       return;
     }
 
-    showToast?.('Nombre de usuario actualizado.', 'success');
+    showToast?.('Enlace público actualizado.', 'success');
     onSaved?.(data);
     onClose?.();
   };
 
+  const slug = stripUsernameAt(value) || 'tu-enlace';
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Nombre de usuario" size="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title="Enlace público del perfil" size="sm">
       <div className="space-y-4">
         <p className="text-sm text-app-muted">
-          Tu enlace público será{' '}
-          <span className="font-medium text-app-text">
-            trabage.org/@{stripUsernameAt(value) || 'usuario'}
+          Este identificador solo se usa al compartir tu perfil. El enlace será{' '}
+          <span className="font-medium text-app-text break-all">
+            https://trabage.org/@{slug}
           </span>
         </p>
         <Input
-          label="Nombre de usuario"
-          icon={AtSign}
+          label="Identificador del enlace"
           value={value}
           onChange={(e) => {
             setValue(stripUsernameAt(e.target.value));
@@ -76,6 +76,7 @@ export default function UsernameEditModal({
           spellCheck={false}
           maxLength={30}
           error={error}
+          placeholder="ej. davidnguema"
         />
         <div className="flex flex-col gap-2 sm:flex-row-reverse">
           <Button type="button" variant="primary" fullWidth className="sm:flex-1" loading={saving} onClick={handleSave}>
