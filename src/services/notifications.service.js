@@ -1,6 +1,5 @@
 import { supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
-import { getRolePathPrefix } from '../constants/roles';
 
 const PUSH_FUNCTION = 'send_push';
 const PUSH_BATCH_SIZE = 2000;
@@ -198,37 +197,40 @@ export const notificationsService = {
   },
 
   /**
-   * Creates in-app notification for a new internal message.
-   * Primary delivery is handled server-side by notify_new_message trigger.
+   * Sends OS push for a new internal message.
+   * In-app row is created by notify_new_message trigger; this only dispatches push.
    */
-  sendInternalMessagePush: async ({
-    recipientId,
-    recipientRole = 'personal',
-    senderName = 'TrabaGE',
-    preview = 'Tienes un nuevo mensaje.',
-    conversationId = null,
-  }) => {
-    if (!recipientId) return { data: null, error: new Error('Destinatario requerido') };
+  dispatchNewMessagePush: async ({ messageId, recipientId }) => {
+    if (!messageId || !recipientId) return;
 
-    const title = `Nuevo mensaje de ${senderName}`;
-    const body = preview;
-    const rolePrefix = getRolePathPrefix(recipientRole) || '/personal';
-    const metadata = {
+    const { data: notification, error } = await supabase
+      .from('notifications')
+      .select('title, body, metadata')
+      .eq('recipient_id', recipientId)
+      .eq('type', 'new_message')
+      .eq('metadata->>message_id', String(messageId))
+      .maybeSingle();
+
+    if (error) {
+      reportError(error, { area: 'message_push_lookup', messageId, recipientId });
+      return;
+    }
+
+    if (!notification) return;
+
+    const metadata = notification.metadata ?? {};
+    const pushData = {
       type: 'new_message',
-      link: conversationId ? `${rolePrefix}/messages/${conversationId}` : `${rolePrefix}/messages`,
-      conversation_id: conversationId,
+      link: metadata.link ?? '',
+      conversation_id: metadata.conversation_id ?? '',
+      message_id: metadata.message_id ?? messageId,
     };
 
-    const { error } = await notificationsService.notifyUser({
-      recipientId,
-      type: 'new_message',
-      title,
-      body,
-      metadata,
-    });
-
-    if (error) return { data: null, error };
-
-    return { data: { sent: true }, error: null };
+    await sendPushBatch(
+      [recipientId],
+      notification.title,
+      notification.body ?? '',
+      pushData,
+    );
   },
 };

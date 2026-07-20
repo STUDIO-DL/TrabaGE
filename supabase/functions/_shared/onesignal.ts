@@ -20,6 +20,8 @@ export type OneSignalSendPayload = {
   link?: string;
   externalIds?: string[];
   idempotencyKey?: string;
+  iosBadgeType?: 'Increase' | 'Set';
+  iosBadgeCount?: number;
 };
 
 export type OneSignalSendResult = {
@@ -75,8 +77,8 @@ export async function sendOneSignalNotification(
     data: payload.data ?? {},
     url: absoluteUrl,
     web_url: absoluteUrl,
-    ios_badgeType: 'Increase',
-    ios_badgeCount: 1,
+    ios_badgeType: payload.iosBadgeType ?? 'Increase',
+    ios_badgeCount: payload.iosBadgeCount ?? 1,
   };
 
   if (payload.idempotencyKey) {

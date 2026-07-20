@@ -3,6 +3,8 @@ import { executeWrite } from '../utils/supabaseMutation';
 import { getDisplayName, getDisplayAvatar } from '../utils/displayIdentity';
 import { ROLES, isEmployerRole } from '../constants/roles';
 import { isOrganizationProfile } from '../utils/orgLabels';
+import { notificationsService } from './notifications.service';
+import { reportError } from '../utils/logger';
 
 export const MESSAGES_PAGE_SIZE = 20;
 export const MESSAGE_MAX_LENGTH = 2000;
@@ -22,6 +24,21 @@ function mapMessageSendError(error) {
   }
 
   return error;
+}
+
+async function dispatchMessagePushNotification(conversationId, senderId, message) {
+  try {
+    const { data: participants } = await messagesService.getConversationParticipants(conversationId);
+    const recipient = (participants ?? []).find((participant) => participant.user_id !== senderId);
+    if (!recipient?.user_id || !message?.id) return;
+
+    await notificationsService.dispatchNewMessagePush({
+      messageId: message.id,
+      recipientId: recipient.user_id,
+    });
+  } catch (error) {
+    reportError(error, { area: 'message_push_dispatch', conversationId, messageId: message?.id });
+  }
 }
 
 function resolveParticipantRole(profile) {
