@@ -157,6 +157,7 @@ export const notificationsService = {
     postId,
     jobId,
     actorId,
+    actorType,
   }) => {
     const metadata = {
       link,
@@ -165,6 +166,7 @@ export const notificationsService = {
       ...(postId ? { post_id: postId } : {}),
       ...(jobId ? { job_id: jobId } : {}),
       ...(actorId ? { actor_id: actorId } : {}),
+      ...(actorType ? { actor_type: actorType } : targetType ? { actor_type: targetType } : {}),
     };
 
     const { data: recipientIds, error } = await supabase.rpc('notify_followers', {

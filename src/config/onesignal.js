@@ -3,6 +3,7 @@ import { NOTIFICATION_PREFERENCE_FIELDS } from '../constants/notificationPrefere
 import { pushSubscriptionsService } from '../services/pushSubscriptions.service';
 import { readViteEnv } from './env';
 import { reportError } from '../utils/logger';
+import { getNotificationLink } from '../utils/notificationCategories';
 
 let initPromise = null;
 let initialized = false;
@@ -78,12 +79,15 @@ function attachOneSignalListeners() {
         event?.notification?.launchUrl ??
         event?.notification?.url ??
         null;
+      // Same resolver as in-app rows: post_id / /post/:id wins over a legacy
+      // company-profile link that may still be present in older payloads.
+      const resolvedPath = additionalData
+        ? getNotificationLink({ type: additionalData.type, metadata: additionalData })
+        : null;
       const target =
+        resolvePushNavigationTarget(resolvedPath) ??
         resolvePushNavigationTarget(additionalData?.link) ??
         resolvePushNavigationTarget(launchUrl);
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'C',location:'onesignal.js:click',message:'push notification clicked',data:{additionalData,launchUrl,target,postId:additionalData?.post_id??null,type:additionalData?.type??null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       if (target && typeof window !== 'undefined') {
         window.location.assign(target);
       }

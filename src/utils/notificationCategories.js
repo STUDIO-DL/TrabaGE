@@ -41,6 +41,30 @@ const POST_TYPES = new Set([
   'post_interaction',
 ]);
 
+const COMPANY_PROFILE_LINK_RE = /\/companies\/[^/?#]+/i;
+const POST_LINK_RE = /\/post\/([^/?#]+)/i;
+
+/**
+ * Extract a publication id from notification metadata (explicit fields or deep link).
+ * @param {object} metadata
+ * @returns {string | null}
+ */
+export function extractPostIdFromMetadata(metadata = {}) {
+  const explicit =
+    metadata.post_id ??
+    metadata.postId ??
+    (metadata.target_type === 'post' ? metadata.target_id : null);
+  if (explicit) return String(explicit);
+
+  const link = typeof metadata.link === 'string' ? metadata.link : '';
+  const match = link.match(POST_LINK_RE);
+  return match?.[1] ? String(match[1]) : null;
+}
+
+function isCompanyProfileLink(link) {
+  return typeof link === 'string' && COMPANY_PROFILE_LINK_RE.test(link);
+}
+
 /**
  * Resolve the primary category of a notification, preferring metadata hints
  * over the raw type when the type is ambiguous.
@@ -62,7 +86,12 @@ export function getNotificationCategory(notification) {
   if (metadata.job_id || metadata.target_type === 'job' || /\/jobs?\//.test(link)) {
     return NOTIFICATION_CATEGORY.JOBS;
   }
-  if (metadata.target_type === 'post' || /\/post\//.test(link)) {
+  if (
+    metadata.post_id ||
+    metadata.postId ||
+    metadata.target_type === 'post' ||
+    /\/post\//.test(link)
+  ) {
     return NOTIFICATION_CATEGORY.POSTS;
   }
 
@@ -79,8 +108,9 @@ export function matchesCategory(notification, category) {
 
 /**
  * Resolve the in-app route to open when a notification is clicked.
- * Prefers the stored `metadata.link`; otherwise derives a sensible route from
- * the type + metadata so navigation stays correct even for legacy rows.
+ * Post notifications always open the publication when a post id can be resolved
+ * (including from `/post/:id` links). Legacy company-profile links are ignored
+ * for the Posts category so taps never land on the company profile by mistake.
  * @param {object} notification
  * @param {string} [role] - 'candidate' | 'company' (affects scoped fallbacks)
  * @returns {string | null}
@@ -90,25 +120,19 @@ export function getNotificationLink(notification, role = ROLES.PERSONAL) {
   const resolvedRole = normalizeRole(role) ?? (isEmployerRole(role) ? ROLES.BUSINESS : ROLES.PERSONAL);
   const category = getNotificationCategory(notification);
 
-  // Post notifications must open the publication itself — post_id wins over a
-  // legacy metadata.link that pointed at the company profile.
+  // Post notifications must open the publication itself — never the company profile.
   if (category === NOTIFICATION_CATEGORY.POSTS) {
-    const postId = metadata.post_id ?? (metadata.target_type === 'post' ? metadata.target_id : null);
-    if (postId) {
-      const link = DEEP_LINK_PATHS.post(postId);
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'A',location:'notificationCategories.js:getNotificationLink',message:'resolved via post_id',data:{type:notification?.type,category,postId,link,metadataKeys:Object.keys(metadata),metadataLink:metadata.link??null,targetType:metadata.target_type??null,targetId:metadata.target_id??null,actorId:metadata.actor_id??null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      return link;
+    const postId = extractPostIdFromMetadata(metadata);
+    if (postId) return DEEP_LINK_PATHS.post(postId);
+
+    // Prefer a non-company link if present; never fall back to /companies/:id.
+    if (metadata.link && !isCompanyProfileLink(metadata.link)) {
+      return metadata.link;
     }
+    return null;
   }
 
-  if (metadata.link) {
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'B',location:'notificationCategories.js:getNotificationLink',message:'resolved via metadata.link',data:{type:notification?.type,category,link:metadata.link,hasPostId:Boolean(metadata.post_id),targetType:metadata.target_type??null,actorId:metadata.actor_id??null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-    return metadata.link;
-  }
+  if (metadata.link) return metadata.link;
 
   if (notification?.type === 'new_message' && metadata.conversation_id) {
     return rolePath(resolvedRole, `/messages/${metadata.conversation_id}`);
@@ -129,25 +153,5 @@ export function getNotificationLink(notification, role = ROLES.PERSONAL) {
       : rolePath(ROLES.PERSONAL, '/applications');
   }
 
-  if (category === NOTIFICATION_CATEGORY.POSTS) {
-    const companyId =
-      metadata.actor_id ??
-      (metadata.target_type === 'company' ||
-      metadata.target_type === 'business' ||
-      metadata.target_type === 'organization'
-        ? metadata.target_id
-        : null);
-    if (companyId) {
-      const link = DEEP_LINK_PATHS.company(companyId);
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'A',location:'notificationCategories.js:getNotificationLink',message:'POSTS fallback to company (no post_id)',data:{type:notification?.type,category,companyId,link,metadataKeys:Object.keys(metadata),targetType:metadata.target_type??null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      return link;
-    }
-  }
-
-  // #region agent log
-  fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'E',location:'notificationCategories.js:getNotificationLink',message:'resolved null',data:{type:notification?.type,category,metadataKeys:Object.keys(metadata)},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   return null;
 }

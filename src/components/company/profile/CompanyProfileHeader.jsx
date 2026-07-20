@@ -145,8 +145,8 @@ export default function CompanyProfileHeader({
     navigate(getHomePath?.() || '/explore', { replace: true });
   };
 
+  // Avoid overflow-hidden on the section — it clips the ⋯ ActionMenu portal fallback / absolute menus.
   return (
-    {/* Avoid overflow-hidden on the section — it clips the ⋯ ActionMenu portal fallback / absolute menus. */}
     <section className="border-b border-app-border bg-app-card">
       {/* Cover / banner */}
       <div className={`relative ${profileCompanyCoverHeightClass} overflow-hidden`}>

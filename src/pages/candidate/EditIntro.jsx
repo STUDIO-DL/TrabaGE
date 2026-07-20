@@ -117,6 +117,12 @@ export default function EditIntro() {
     [profile?.experience],
   );
 
+  const educationModalShowInIntro = Boolean(
+    form.show_education_in_intro &&
+      editingEducation?.id &&
+      String(form.intro_education_id) === String(editingEducation.id),
+  );
+
   // #region agent log
   useEffect(() => {
     if (!draftEnabled) return;
@@ -128,6 +134,11 @@ export default function EditIntro() {
     const list = profile?.experience ?? [];
     fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'C',location:'EditIntro.jsx:currentExperience',message:'resolved current experience',data:{count:list.length,selectedId:currentExperience?.id||null,selectedPosition:currentExperience?.position||null,selectedEnd:currentExperience?.end_date||null,selectedIsCurrent:currentExperience?.is_current??null,all:list.map((e)=>({id:e.id,position:e.position,end_date:e.end_date||null,is_current:e.is_current??null})),pickedEndedJob:Boolean(currentExperience?.end_date)},timestamp:Date.now()})}).catch(()=>{});
   }, [draftEnabled, currentExperience, profile?.experience]);
+
+  useEffect(() => {
+    if (!educationOpen) return;
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E1',location:'EditIntro.jsx:EducationModalProps',message:'showInIntro prop resolved for education modal',data:{mode:editingEducation?.id?'edit':'add',editingId:editingEducation?.id||null,formShowEdu:Boolean(form.show_education_in_intro),formIntroEduId:form.intro_education_id||null,resolvedShowInIntro:educationModalShowInIntro},timestamp:Date.now()})}).catch(()=>{});
+  }, [educationOpen, editingEducation, form.show_education_in_intro, form.intro_education_id, educationModalShowInIntro]);
   // #endregion
 
   const educationOptions = useMemo(
@@ -383,9 +394,6 @@ export default function EditIntro() {
                 Añade tu formación para mostrarla en la intro.
               </p>
             )}
-            <Button type="button" variant="outlined" fullWidth onClick={() => openEducation()}>
-              + Añadir educación
-            </Button>
             {profile?.education?.length ? (
               <Select
                 label="Centro educativo principal"
@@ -456,19 +464,7 @@ export default function EditIntro() {
         onSave={saveEducation}
         loading={modalSaving}
         userId={user?.id}
-        showInIntro={(() => {
-          const resolved = Boolean(
-            form.show_education_in_intro &&
-              editingEducation?.id &&
-              String(form.intro_education_id) === String(editingEducation.id),
-          );
-          // #region agent log
-          if (educationOpen) {
-            fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E1',location:'EditIntro.jsx:EducationModalProps',message:'showInIntro prop resolved for education modal',data:{mode:editingEducation?.id?'edit':'add',editingId:editingEducation?.id||null,formShowEdu:Boolean(form.show_education_in_intro),formIntroEduId:form.intro_education_id||null,resolvedShowInIntro:resolved},timestamp:Date.now()})}).catch(()=>{});
-          }
-          // #endregion
-          return resolved;
-        })()}
+        showInIntro={educationModalShowInIntro}
       />
     </>
   );

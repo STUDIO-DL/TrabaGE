@@ -157,6 +157,7 @@ export function useCreatePost() {
         link: DEEP_LINK_PATHS.post(savedPost.id),
         postId: savedPost.id,
         actorId: user.id,
+        actorType: targetType,
       });
     }
 
