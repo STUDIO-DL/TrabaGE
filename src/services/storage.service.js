@@ -20,11 +20,6 @@ import { storageCompressionService } from './storageCompression.service';
 const WEBP_CONTENT_TYPE = 'image/webp';
 const PDF_CONTENT_TYPE = 'application/pdf';
 
-async function removeIfExists(bucket, path) {
-  if (!path) return;
-  await supabase.storage.from(bucket).remove([path]);
-}
-
 async function uploadReplace(bucket, path, file, contentType) {
   const { data, error } = await supabase.storage
     .from(bucket)
@@ -101,8 +96,7 @@ export const storageService = {
     return { error };
   },
 
-  uploadAvatar: async (userId, file, oldPath, options = {}) => {
-    await storageService.deleteOldAvatar(userId, oldPath);
+  uploadAvatar: async (userId, file, _oldPath, options = {}) => {
     const path = avatarPath(userId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
@@ -125,8 +119,7 @@ export const storageService = {
     return { error };
   },
 
-  uploadCandidateCover: async (userId, file, oldPath, options = {}) => {
-    if (oldPath) await removeIfExists(STORAGE_BUCKETS.CANDIDATE_AVATARS, oldPath);
+  uploadCandidateCover: async (userId, file, _oldPath, options = {}) => {
     const path = candidateCoverPath(userId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
@@ -141,8 +134,7 @@ export const storageService = {
     );
   },
 
-  uploadCompanyLogo: async (companyId, file, oldPath, options = {}) => {
-    await storageService.deleteOldLogo(companyId, oldPath);
+  uploadCompanyLogo: async (companyId, file, _oldPath, options = {}) => {
     const path = logoPath(companyId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
@@ -157,8 +149,7 @@ export const storageService = {
     );
   },
 
-  uploadCompanyCover: async (companyId, file, oldPath, options = {}) => {
-    if (oldPath) await removeIfExists(STORAGE_BUCKETS.COMPANY_LOGOS, oldPath);
+  uploadCompanyCover: async (companyId, file, _oldPath, options = {}) => {
     const path = companyCoverPath(companyId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
@@ -173,8 +164,7 @@ export const storageService = {
     );
   },
 
-  uploadCV: async (userId, file, oldPath, options = {}) => {
-    await storageService.deleteOldCV(userId, oldPath);
+  uploadCV: async (userId, file, _oldPath, options = {}) => {
     const path = cvPath(userId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
@@ -189,8 +179,7 @@ export const storageService = {
     );
   },
 
-  uploadPostImage: async (userId, postId, file, oldPath, options = {}) => {
-    await storageService.deleteOldPostImage(userId, postId, oldPath);
+  uploadPostImage: async (userId, postId, file, _oldPath, options = {}) => {
     const path = postImagePath(userId, postId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
@@ -205,11 +194,8 @@ export const storageService = {
     );
   },
 
-  uploadVerificationDoc: async (companyId, file, oldPath, options = {}) => {
+  uploadVerificationDoc: async (companyId, file, _oldPath, options = {}) => {
     const path = companyVerificationDocPath(companyId);
-    if (oldPath && oldPath !== path) {
-      await removeIfExists(STORAGE_BUCKETS.COMPANY_VERIFICATIONS, oldPath);
-    }
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
       UPLOAD_COMPRESSION_TYPES.VERIFICATION_DOC,
@@ -227,11 +213,8 @@ export const storageService = {
     };
   },
 
-  uploadRepresentativeVerificationDoc: async (companyId, file, oldPath, options = {}) => {
+  uploadRepresentativeVerificationDoc: async (companyId, file, _oldPath, options = {}) => {
     const path = representativeVerificationDocPath(companyId);
-    if (oldPath && oldPath !== path) {
-      await removeIfExists(STORAGE_BUCKETS.COMPANY_VERIFICATIONS, oldPath);
-    }
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
       UPLOAD_COMPRESSION_TYPES.REPRESENTATIVE_VERIFICATION_DOC,
@@ -300,8 +283,7 @@ export const storageService = {
     return { error };
   },
 
-  uploadProjectImage: async (userId, projectId, file, oldPath, options = {}) => {
-    if (oldPath) await removeIfExists(STORAGE_BUCKETS.PROFILE_PROJECTS, oldPath);
+  uploadProjectImage: async (userId, projectId, file, _oldPath, options = {}) => {
     const path = projectImagePath(userId, projectId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
