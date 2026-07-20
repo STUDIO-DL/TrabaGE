@@ -140,7 +140,7 @@ export default function CandidateProfileHeader({
                 name={displayName}
                 alt={displayName}
                 size="xl"
-                className="sm:!h-[7rem] sm:!w-[7rem]"
+                className="sm:!h-[7.5rem] sm:!w-[7.5rem]"
               />
             </div>
 

@@ -29,7 +29,7 @@ export const profileCoverHeightClass = 'h-[8rem] sm:h-[9rem]';
 export const profileHeaderContentClass = 'px-space-base pb-space-lg pt-0';
 
 /** Logo overlaps cover (~50%); identity block is a separate sibling below */
-export const profileCompanyLogoOverlapClass = '-mt-[3.25rem] sm:-mt-[3.75rem]';
+export const profileCompanyLogoOverlapClass = '-mt-[3.75rem] sm:-mt-[3.75rem]';
 
 export const profileCompanyLogoFrameClass =
   'rounded-radius-md bg-app-card p-1 ring-4 ring-app-card shadow-elevation-2';
@@ -81,7 +81,7 @@ export const profileHeaderBodyClass =
 
 export const profileCompanyHeaderBodyClass = 'flex flex-col items-stretch gap-0';
 
-export const profilePersonalAvatarOverlapClass = '-mt-[2.25rem] sm:-mt-[3.5rem]';
+export const profilePersonalAvatarOverlapClass = '-mt-[2.5rem] sm:-mt-[3.75rem]';
 
 export const profilePersonalAvatarFrameClass =
   'rounded-radius-circular bg-app-card p-0.5 ring-4 ring-app-card shadow-elevation-2';

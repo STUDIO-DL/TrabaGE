@@ -36,7 +36,7 @@ import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
-const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7rem] w-[7rem]'; // matches AppAvatar size="2xl"
+const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7.5rem] w-[7.5rem]'; // matches AppAvatar size="2xl"
 
 function SectionCard({ title, children }) {
   return (

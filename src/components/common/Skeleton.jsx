@@ -162,7 +162,7 @@ export function ProfilePageSkeleton() {
     <div className="space-y-space-base p-space-base" aria-busy="true" aria-label="Cargando perfil">
       <div className="overflow-hidden rounded-radius-lg border border-app-border bg-app-card shadow-elevation-1">
         <Skeleton className="h-28 w-full rounded-none" />
-        <div className="-mt-10 px-space-base pb-space-base">
+        <div className="-mt-[2.5rem] px-space-base pb-space-base">
           <Skeleton className="h-20 w-20 rounded-radius-circular ring-4 ring-app-card" />
           <Skeleton className="mt-space-md h-5 w-1/2" />
           <Skeleton className="mt-space-sm h-3.5 w-2/3" />
