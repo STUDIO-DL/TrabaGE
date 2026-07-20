@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Briefcase,
   Copy,
+  MessageSquare,
   MoreHorizontal,
   Phone,
   Share2,
@@ -117,6 +118,8 @@ export default function CompanyProfileActionBar({
   reportTargetId,
   onContact,
   contactDisabled = false,
+  onMessage,
+  messageLoading = false,
 }) {
   const [reportOpen, setReportOpen] = useState(false);
   const { isPreviewMode, user } = useAuth();
@@ -146,6 +149,19 @@ export default function CompanyProfileActionBar({
   return (
     <>
       <div className="flex flex-wrap items-center gap-space-sm">
+        {onMessage && (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={onMessage}
+            className={profileActionButtonClass}
+            loading={messageLoading}
+          >
+            <AppIcon icon={MessageSquare} size={ICON_SIZES.sm} className="text-current" />
+            Enviar mensaje
+          </Button>
+        )}
+
         {showFollow && (
           <FollowButton
             isFollowing={isFollowing}

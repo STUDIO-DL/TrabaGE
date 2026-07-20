@@ -59,6 +59,8 @@ export default function CompanyProfileView({
   onToggleFollow,
   onContact,
   contactDisabled = false,
+  onMessage,
+  messageLoading = false,
   shareUrl,
   shareTitle,
   reportTargetId,
@@ -78,7 +80,7 @@ export default function CompanyProfileView({
   const services = profile?.company_services ?? [];
   const hasServices = services.length > 0;
   const showFollowerCount = readOnly || isOwn;
-  const showPublicActions = readOnly && (showFollowButton || onContact || shareUrl);
+  const showPublicActions = readOnly && (showFollowButton || onContact || onMessage || shareUrl);
   const shouldLoadPosts = activeTab === 'inicio' || activeTab === 'publicaciones';
 
   const {
@@ -138,6 +140,8 @@ export default function CompanyProfileView({
         reportTargetId={reportTargetId}
         onContact={onContact}
         contactDisabled={contactDisabled}
+        onMessage={onMessage}
+        messageLoading={messageLoading}
       />
 
       {isOwn && !readOnly ? (

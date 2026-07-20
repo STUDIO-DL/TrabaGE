@@ -13,17 +13,21 @@ import PersonalSocialSection from '../../components/profile/PersonalSocialSectio
 import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useProfile } from '../../hooks/useProfile';
+import { useAuth } from '../../hooks/useAuth';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
 import useContactAction from '../../hooks/useContactAction';
+import { useStartConversation } from '../../hooks/useStartConversation';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { getDisplayName } from '../../utils/displayIdentity';
 import { ROLES } from '../../constants/roles';
 
 export default function PublicProfile() {
   const { userId } = useParams();
+  const { user } = useAuth();
   const { profile, loading, error, refetch } = useProfile(userId);
   const { showToast } = useNotificationContext();
   const { handleContact, contactPickerModal } = useContactAction({ showToast });
+  const { startConversation, starting } = useStartConversation();
 
   const displayName = getDisplayName(profile, ROLES.PERSONAL, {
     fallbackAuthorName: profile?.full_name,
@@ -68,6 +72,8 @@ export default function PublicProfile() {
         shareTitle={displayName || 'Perfil en TrabaGE'}
         reportTargetId={userId}
         onContact={() => handleContact(profile)}
+        onMessage={user?.id !== userId ? () => startConversation(userId) : undefined}
+        messageLoading={starting}
       >
         <AboutSection about={profile.about} />
         <PersonalSocialSection socialLinks={profile.social_links} />

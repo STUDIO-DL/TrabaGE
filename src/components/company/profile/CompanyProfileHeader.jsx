@@ -118,6 +118,8 @@ export default function CompanyProfileHeader({
   reportTargetId,
   onContact,
   contactDisabled = false,
+  onMessage,
+  messageLoading = false,
 }) {
   const navigate = useNavigate();
   const { role, user, getHomePath } = useAuth();
@@ -351,6 +353,8 @@ export default function CompanyProfileHeader({
                   reportTargetId={reportTargetId}
                   onContact={onContact}
                   contactDisabled={contactDisabled}
+                  onMessage={onMessage}
+                  messageLoading={messageLoading}
                 />
               </div>
             ) : null}

@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { generateCompanyUrl } from '../../utils/generateShareUrl';
 import { BUSINESS_CONTACT_METHODS, hasCompanyActionableContact } from '../../utils/contact';
 import useContactAction from '../../hooks/useContactAction';
+import { useStartConversation } from '../../hooks/useStartConversation';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { useFollow } from '../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../services/follows.service';
@@ -28,6 +29,7 @@ export default function CompanyPublicProfile() {
     methodIds: BUSINESS_CONTACT_METHODS,
     pickerTitle: 'Contactar empresa',
   });
+  const { startConversation, starting } = useStartConversation();
   const [profile, setProfile] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -195,6 +197,8 @@ export default function CompanyPublicProfile() {
           canFollow={canFollow || !isAuthenticated}
           onToggleFollow={handleToggleFollow}
           onContact={onContact}
+          onMessage={user?.id !== companyId ? () => startConversation(companyId) : undefined}
+          messageLoading={starting}
           contactDisabled={!hasCompanyActionableContact(profile)}
           shareUrl={generateCompanyUrl(companyId)}
           shareTitle={profile?.company_name || orgLabels.defaultName}

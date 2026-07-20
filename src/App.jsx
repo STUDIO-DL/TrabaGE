@@ -73,6 +73,8 @@ const AdminOrganizations = lazy(() => import('./pages/admin/AdminOrganizations')
 const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const MessagesInbox = lazy(() => import('./pages/shared/MessagesInbox'));
+const Conversation = lazy(() => import('./pages/shared/Conversation'));
 const CompanyPublicProfile = lazy(() => import('./pages/shared/CompanyPublicProfile'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
 const PostDetail = lazy(() => import('./pages/PostDetail'));
@@ -136,6 +138,8 @@ function EmployerAppRoutes() {
       <Route path="jobs/:jobId/edit" element={<PublishJob />} />
       <Route path="publish-job" element={<EmployerPublishJobRedirect />} />
       <Route path="applicants" element={<Applicants />} />
+      <Route path="messages" element={<MessagesInbox />} />
+      <Route path="messages/:conversationId" element={<Conversation />} />
       <Route path="notifications" element={<CompanyNotifications />} />
       <Route path="profile" element={<CompanyProfile />} />
       <Route path="settings" element={<CompanySettings />} />
@@ -189,6 +193,8 @@ function AppRoutes() {
                   <Route path="/personal/jobs/:id/apply" element={<ApplyJob />} />
                   <Route path="/personal/saved-jobs" element={<CandidateSavedJobs />} />
                   <Route path="/personal/applications" element={<CandidateApplications />} />
+                  <Route path="/personal/messages" element={<MessagesInbox />} />
+                  <Route path="/personal/messages/:conversationId" element={<Conversation />} />
                   <Route path="/personal/notifications" element={<CandidateNotifications />} />
                   <Route path="/personal/profile" element={<CandidateProfile />} />
                   <Route path="/personal/profile/edit-intro" element={<EditIntro />} />

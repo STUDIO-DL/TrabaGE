@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
+import { getRolePathPrefix } from '../constants/roles';
 
 const PUSH_FUNCTION = 'send_push';
 const PUSH_BATCH_SIZE = 2000;
@@ -197,11 +198,12 @@ export const notificationsService = {
   },
 
   /**
-   * Stub for future internal messaging module.
-   * Creates in-app notification + push when messaging ships.
+   * Creates in-app notification for a new internal message.
+   * Primary delivery is handled server-side by notify_new_message trigger.
    */
   sendInternalMessagePush: async ({
     recipientId,
+    recipientRole = 'personal',
     senderName = 'TrabaGE',
     preview = 'Tienes un nuevo mensaje.',
     conversationId = null,
@@ -210,11 +212,11 @@ export const notificationsService = {
 
     const title = `Nuevo mensaje de ${senderName}`;
     const body = preview;
+    const rolePrefix = getRolePathPrefix(recipientRole) || '/personal';
     const metadata = {
       type: 'new_message',
-      link: '/personal/notifications',
+      link: conversationId ? `${rolePrefix}/messages/${conversationId}` : `${rolePrefix}/messages`,
       conversation_id: conversationId,
-      stub: true,
     };
 
     const { error } = await notificationsService.notifyUser({
@@ -227,6 +229,6 @@ export const notificationsService = {
 
     if (error) return { data: null, error };
 
-    return { data: { sent: true, stub: true }, error: null };
+    return { data: { sent: true }, error: null };
   },
 };

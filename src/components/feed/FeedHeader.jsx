@@ -7,6 +7,7 @@ import { ROLES, isEmployerRole, rolePath } from '../../constants/roles';
 import AppAvatar from '../common/AppAvatar';
 import { avatarTypeFromRole } from '../../constants/avatarDefaults';
 import SearchBarTrigger from '../search/SearchBarTrigger';
+import MessagesButton from '../messages/MessagesButton';
 import NotificationBellButton from '../notifications/NotificationBellButton';
 import { getDisplayName } from '../../utils/displayIdentity';
 import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
@@ -39,6 +40,7 @@ export default function FeedHeader() {
 
         <SearchBarTrigger placeholder="Buscar usuarios y empresas…" />
 
+        <MessagesButton />
         <NotificationBellButton />
       </div>
     </header>
