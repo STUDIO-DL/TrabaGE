@@ -57,8 +57,23 @@
           const hasSeenFullSplash =
             localStorage.getItem('trabage_full_splash_seen') === 'true';
           const markedInstalled = localStorage.getItem('trabage_pwa_installed') === 'true';
-          const quickBoot = isStandalone || hasSeenFullSplash || markedInstalled;
-          document.documentElement.dataset.bootSplash = quickBoot ? 'quick' : 'full';
+          const onboardingComplete =
+            localStorage.getItem('trabage_onboarding_complete') === 'true';
+          const hasAuthSession = Boolean(localStorage.getItem('trabage-auth'));
+          const hasThemePref = Boolean(localStorage.getItem('trabage_theme'));
+          const hasSearchHistory = Boolean(localStorage.getItem('trabage_search_history'));
+          const isReturningUser =
+            isStandalone ||
+            hasSeenFullSplash ||
+            markedInstalled ||
+            onboardingComplete ||
+            hasAuthSession ||
+            hasThemePref ||
+            hasSearchHistory;
+          document.documentElement.dataset.bootSplash = isReturningUser ? 'quick' : 'full';
+          if (isReturningUser && !hasSeenFullSplash) {
+            localStorage.setItem('trabage_full_splash_seen', 'true');
+          }
         } catch {
           document.documentElement.dataset.theme = 'light';
           document.documentElement.dataset.bootSplash = 'full';

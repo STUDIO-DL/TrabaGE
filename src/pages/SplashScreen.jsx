@@ -8,8 +8,8 @@ import TrabaGEWordmark from '../components/splash/TrabaGEWordmark';
 import { getOnboardingComplete } from '../context/AuthContext';
 import { useAuth } from '../hooks/useAuth';
 import { useStartupPreload, runStartupPreload } from '../hooks/useStartupPreload';
-import { isPwaInstalled } from '../hooks/useInstallPrompt';
 import {
+  bootstrapLegacyStartupFlags,
   markFullSplashSeen,
   resolveStartupSplashMode,
 } from '../utils/startup';
@@ -56,9 +56,7 @@ export default function SplashScreen() {
   });
 
   useEffect(() => {
-    if (isPwaInstalled()) {
-      markFullSplashSeen();
-    }
+    bootstrapLegacyStartupFlags();
   }, []);
 
   useEffect(() => {
