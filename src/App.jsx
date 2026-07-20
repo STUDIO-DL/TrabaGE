@@ -135,18 +135,20 @@ function LegacyCompanyJobEditRedirect() {
   return <Navigate to={`/business/jobs/${jobId}/edit`} replace />;
 }
 
-function DiscoverAppRoutes() {
+/** Discover topic routes. Pass basePath for absolute mounts (e.g. "/personal"); omit when nested under /business or /organization. */
+function DiscoverAppRoutes({ basePath = '' } = {}) {
+  const path = (segment) => (basePath ? `${basePath}/${segment}` : segment);
   return (
     <>
-      <Route path="discover/hiring" element={<DiscoverHiring />} />
-      <Route path="discover/scholarships" element={<DiscoverScholarships />} />
-      <Route path="discover/internships" element={<DiscoverInternships />} />
-      <Route path="discover/events" element={<DiscoverEvents />} />
-      <Route path="discover/calls" element={<DiscoverCalls />} />
-      <Route path="discover/courses" element={<DiscoverCourses />} />
-      <Route path="discover/entrepreneurs" element={<DiscoverEntrepreneurs />} />
-      <Route path="discover/volunteering" element={<DiscoverVolunteering />} />
-      <Route path="discover/international" element={<DiscoverInternational />} />
+      <Route path={path('discover/hiring')} element={<DiscoverHiring />} />
+      <Route path={path('discover/scholarships')} element={<DiscoverScholarships />} />
+      <Route path={path('discover/internships')} element={<DiscoverInternships />} />
+      <Route path={path('discover/events')} element={<DiscoverEvents />} />
+      <Route path={path('discover/calls')} element={<DiscoverCalls />} />
+      <Route path={path('discover/courses')} element={<DiscoverCourses />} />
+      <Route path={path('discover/entrepreneurs')} element={<DiscoverEntrepreneurs />} />
+      <Route path={path('discover/volunteering')} element={<DiscoverVolunteering />} />
+      <Route path={path('discover/international')} element={<DiscoverInternational />} />
     </>
   );
 }
@@ -228,7 +230,7 @@ function AppRoutes() {
                   <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
                   <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />
                   <Route path="/help" element={<HelpCenter />} />
-                  {DiscoverAppRoutes()}
+                  {DiscoverAppRoutes({ basePath: '/personal' })}
                 </Route>
               </Route>
 

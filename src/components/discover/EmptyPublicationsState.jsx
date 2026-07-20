@@ -4,9 +4,9 @@ import { Newspaper } from '../../constants/icons';
 import { ROLES, rolePath } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 
-export const EMPTY_PUBLICATIONS_TITLE = 'Aún no hay publicaciones aquí';
+export const EMPTY_PUBLICATIONS_TITLE = 'No hay contenido todavía';
 export const EMPTY_PUBLICATIONS_DESCRIPTION =
-  'Todavía nadie ha compartido contenido sobre este tema. Vuelve más tarde o sé el primero en publicar.';
+  'Revisa más tarde — pronto habrá novedades en esta sección.';
 
 export function canUserPublishContent(role) {
   return Boolean(role) && role !== ROLES.ADMIN;
