@@ -1,5 +1,6 @@
 import { DEEP_LINK_PATHS } from './deepLinks';
 import { readViteEnv } from '../config/env';
+import { stripUsernameAt } from './username';
 
 /** Prefer configured production URL; never bake placeholder/localhost into share links. */
 function getAppOrigin() {
@@ -16,7 +17,18 @@ export const generateShareUrl = (path) => {
   return `${getAppOrigin()}${normalized}`;
 };
 
-export const generateProfileUrl = (userId) => generateShareUrl(DEEP_LINK_PATHS.profile(userId));
-export const generateCompanyUrl = (companyId) => generateShareUrl(DEEP_LINK_PATHS.company(companyId));
+/** Prefer /@username when available; fall back to UUID profile path. */
+export const generateProfileUrl = (userId, username) => {
+  const byUser = username ? DEEP_LINK_PATHS.byUsername(stripUsernameAt(username)) : null;
+  if (byUser) return generateShareUrl(byUser);
+  return generateShareUrl(DEEP_LINK_PATHS.profile(userId));
+};
+
+export const generateCompanyUrl = (companyId, username) => {
+  const byUser = username ? DEEP_LINK_PATHS.byUsername(stripUsernameAt(username)) : null;
+  if (byUser) return generateShareUrl(byUser);
+  return generateShareUrl(DEEP_LINK_PATHS.company(companyId));
+};
+
 export const generateJobUrl = (jobId) => generateShareUrl(DEEP_LINK_PATHS.job(jobId));
 export const generatePostUrl = (postId) => generateShareUrl(DEEP_LINK_PATHS.post(postId));

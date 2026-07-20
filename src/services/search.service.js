@@ -9,6 +9,7 @@ import {
   rankSearchJobsForCandidate,
 } from '../utils/searchMatching';
 import { resolveSearchResultDisplay } from '../utils/globalSearch';
+import { normalizeSearchUsernameQuery } from '../utils/username';
 
 const RESULT_LIMIT = 8;
 const GLOBAL_SEARCH_LIMIT_PER_TYPE = 5;
@@ -55,7 +56,7 @@ export const searchService = {
     matchingContext = null,
     includeJobs = false,
   }) {
-    const trimmedQuery = query?.trim();
+    const trimmedQuery = normalizeSearchUsernameQuery(query?.trim() || '');
 
     if (!trimmedQuery) {
       return { data: [], error: null };

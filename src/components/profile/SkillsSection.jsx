@@ -46,6 +46,7 @@ export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
 
   return (
     <ProfileSectionCard
+      id="skills"
       icon={PROFILE_SECTION_ICONS.skills}
       iconTone="skills"
       title="Habilidades principales"

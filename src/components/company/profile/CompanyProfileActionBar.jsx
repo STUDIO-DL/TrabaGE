@@ -6,7 +6,6 @@ import {
   Copy,
   MessageSquare,
   MoreHorizontal,
-  Phone,
   Share2,
   ICON_SIZES,
 } from '../../../constants/icons';
@@ -23,8 +22,6 @@ import { profileActionButtonClass } from './companyProfileStyles';
 function ProfileOverflowMenu({
   onShare,
   onCopy,
-  onContact,
-  contactDisabled,
   onReport,
 }) {
   const menuRef = useRef(null);
@@ -78,17 +75,6 @@ function ProfileOverflowMenu({
               Copiar enlace
             </button>
           )}
-          {onContact && (
-            <button
-              type="button"
-              onClick={() => run(onContact)}
-              disabled={contactDisabled}
-              className="flex w-full min-h-touch items-center gap-space-sm px-space-base py-space-sm text-left text-body-small text-app-text transition-colors duration-fast hover:bg-app-surface disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <AppIcon icon={Phone} size={ICON_SIZES.sm} className="text-app-subtle" />
-              Contactar
-            </button>
-          )}
           {onReport && (
             <button
               type="button"
@@ -116,8 +102,6 @@ export default function CompanyProfileActionBar({
   shareUrl,
   shareTitle = 'TrabaGE',
   reportTargetId,
-  onContact,
-  contactDisabled = false,
   onMessage,
   messageLoading = false,
 }) {
@@ -187,8 +171,6 @@ export default function CompanyProfileActionBar({
         <ProfileOverflowMenu
           onShare={shareUrl ? handleShare : undefined}
           onCopy={shareUrl ? handleCopy : undefined}
-          onContact={onContact}
-          contactDisabled={contactDisabled}
           onReport={reportTargetId ? handleReport : undefined}
         />
       </div>

@@ -3,6 +3,8 @@ function hasText(value, minLength = 1) {
 }
 
 export function getCompanyProfileChecklist(profile, jobCount = 0) {
+  const socialLinks = Object.values(profile?.social_links ?? {}).filter(Boolean);
+
   return [
     {
       key: 'logo',
@@ -15,11 +17,9 @@ export function getCompanyProfileChecklist(profile, jobCount = 0) {
       done: hasText(profile?.description, 40),
     },
     {
-      key: 'contact',
-      label: 'Datos de contacto',
-      done: hasText(
-        profile?.contact_email || profile?.contact_whatsapp || profile?.contact_phone,
-      ),
+      key: 'social',
+      label: 'Redes sociales',
+      done: socialLinks.length > 0,
     },
     {
       key: 'jobs',
@@ -49,7 +49,6 @@ export function getCompanyCompletenessDetails(profile) {
     socialLinks.length > 0,
     hasText(profile?.company_size),
     Boolean(profile?.founded_year),
-    hasText(profile?.contact_email || profile?.contact_whatsapp || profile?.contact_phone),
   ];
 
   const passed = checks.filter(Boolean).length;

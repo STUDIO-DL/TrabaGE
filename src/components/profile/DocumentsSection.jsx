@@ -1,4 +1,5 @@
 import { useEffect, useState, lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ProfileSectionCard from './ProfileSectionCard';
 import FileUpload from '../ui/FileUpload';
 import Textarea from '../ui/Textarea';
@@ -9,6 +10,8 @@ import { FILE_HINTS } from '../../utils/validateFile';
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { loadCvGeneratorModal } from '../../features/cv-generator';
+import { getCvReadiness, goToCvReadinessTarget } from '../../features/cv-generator/cvReadiness';
+import CvIncompleteProfileModal from '../../features/cv-generator/CvIncompleteProfileModal';
 
 const CvGeneratorModal = lazy(async () => {
   const Component = await loadCvGeneratorModal();
@@ -56,12 +59,35 @@ export default function DocumentsSection({
   cvPhase = null,
   coverSaving = false,
 }) {
+  const navigate = useNavigate();
   const [cvModalOpen, setCvModalOpen] = useState(false);
+  const [incompleteOpen, setIncompleteOpen] = useState(false);
+  const [firstMissingTarget, setFirstMissingTarget] = useState(null);
 
   if (!isOwn) return null;
 
+  const handleGenerateClick = () => {
+    const { ready, missing } = getCvReadiness(profile);
+    if (!ready) {
+      setFirstMissingTarget(missing[0]?.target ?? '/personal/profile');
+      setIncompleteOpen(true);
+      return;
+    }
+    setCvModalOpen(true);
+  };
+
+  const handleCompleteProfile = () => {
+    setIncompleteOpen(false);
+    goToCvReadinessTarget(firstMissingTarget, navigate);
+  };
+
   return (
-    <ProfileSectionCard icon={PROFILE_SECTION_ICONS.document} iconTone="document" title="Documentos">
+    <ProfileSectionCard
+      id="documents"
+      icon={PROFILE_SECTION_ICONS.document}
+      iconTone="document"
+      title="Documentos"
+    >
       <div className="space-y-5">
         <div>
           <p className="mb-1 text-sm font-semibold text-gray-900">Curriculum Vitae</p>
@@ -84,7 +110,7 @@ export default function DocumentsSection({
               variant="primary"
               fullWidth
               className="sm:flex-1"
-              onClick={() => setCvModalOpen(true)}
+              onClick={handleGenerateClick}
             >
               <AppIcon icon={FileText} size={ICON_SIZES.default} />
               Generar CV
@@ -116,6 +142,12 @@ export default function DocumentsSection({
           />
         </div>
       </div>
+
+      <CvIncompleteProfileModal
+        isOpen={incompleteOpen}
+        onClose={() => setIncompleteOpen(false)}
+        onComplete={handleCompleteProfile}
+      />
 
       {cvModalOpen ? (
         <Suspense fallback={null}>

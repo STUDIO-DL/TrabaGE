@@ -17,7 +17,6 @@ import CompanyJobsSection from './CompanyJobsSection';
 import CompanyPostsSection, { CompanyPostsFeed } from './CompanyPostsSection';
 import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
 import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
-import CompanyContactSection from './CompanyContactSection';
 import CompanyProfileSectionCard from './CompanyProfileSectionCard';
 import ProjectsSection from '../../profile/ProjectsSection';
 import { usePosts } from '../../../hooks/usePosts';
@@ -29,7 +28,6 @@ import {
   profileInicioGridClass,
 } from './companyProfileStyles';
 import { hasCompanyDescription } from '../../../utils/companyProfile';
-import { hasCompanyActionableContact } from '../../../utils/contact';
 
 export default function CompanyProfileView({
   profile,
@@ -45,8 +43,6 @@ export default function CompanyProfileView({
   onUploadCover,
   onAddService,
   onDeleteService,
-  onSaveContact,
-  contactSaving = false,
   logoLoading = false,
   logoPhase = null,
   coverLoading = false,
@@ -57,8 +53,6 @@ export default function CompanyProfileView({
   followLoading = false,
   canFollow = true,
   onToggleFollow,
-  onContact,
-  contactDisabled = false,
   onMessage,
   messageLoading = false,
   shareUrl,
@@ -80,7 +74,7 @@ export default function CompanyProfileView({
   const services = profile?.company_services ?? [];
   const hasServices = services.length > 0;
   const showFollowerCount = readOnly || isOwn;
-  const showPublicActions = readOnly && (showFollowButton || onContact || onMessage || shareUrl);
+  const showPublicActions = readOnly && (showFollowButton || onMessage || shareUrl);
   const shouldLoadPosts = activeTab === 'inicio' || activeTab === 'publicaciones';
 
   const {
@@ -138,8 +132,6 @@ export default function CompanyProfileView({
         shareUrl={shareUrl}
         shareTitle={shareTitle}
         reportTargetId={reportTargetId}
-        onContact={onContact}
-        contactDisabled={contactDisabled}
         onMessage={onMessage}
         messageLoading={messageLoading}
       />
@@ -268,22 +260,6 @@ export default function CompanyProfileView({
                 />
               </CompanyProfileSectionCard>
             ) : null}
-
-            {(!readOnly || hasCompanyActionableContact(profile)) ? (
-              <CompanyProfileSectionCard
-                title="Contacto"
-                icon={PROFILE_SECTION_ICONS.contact}
-                iconTone="contact"
-              >
-                <CompanyContactSection
-                  profile={profile}
-                  readOnly={readOnly}
-                  onSave={onSaveContact}
-                  saving={contactSaving}
-                  embedded
-                />
-              </CompanyProfileSectionCard>
-            ) : null}
           </div>
         </div>
       )}
@@ -331,8 +307,6 @@ export default function CompanyProfileView({
           readOnly={readOnly}
           onEditAbout={onEditAbout}
           onEditDetails={onEditDetails}
-          onSaveContact={onSaveContact}
-          contactSaving={contactSaving}
         />
       )}
 

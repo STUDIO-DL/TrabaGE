@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CandidateProfileLayout from '../../components/profile/CandidateProfileLayout';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import AboutSection from '../../components/profile/AboutSection';
-import ContactSection from '../../components/profile/ContactSection';
 import PersonalSocialSection from '../../components/profile/PersonalSocialSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
@@ -80,7 +79,6 @@ export default function Profile() {
   const [editingLanguage, setEditingLanguage] = useState(null);
   const [saving, setSaving] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
-  const [contactSaving, setContactSaving] = useState(false);
   const [socialSaving, setSocialSaving] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [avatarPhase, setAvatarPhase] = useState(null);
@@ -92,26 +90,12 @@ export default function Profile() {
 
   const canEdit = !isPreviewMode;
 
-  useEffect(() => {
-    if (loading) return;
-    if (window.location.hash === '#contacto') {
-      document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [loading]);
 
   const handleSaveAbout = async (about) => {
     setAboutSaving(true);
     const { error } = await updateBasicInfo({ about });
     setAboutSaving(false);
     showToast(error ? error.message : 'Descripción guardada.', error ? 'error' : 'success');
-    return { error };
-  };
-
-  const handleSaveContact = async (data) => {
-    setContactSaving(true);
-    const { error } = await updateBasicInfo(data);
-    setContactSaving(false);
-    showToast(error ? error.message : TOAST.contactSaved, error ? 'error' : 'success');
     return { error };
   };
 
@@ -245,7 +229,7 @@ export default function Profile() {
     shareContent({
       title: profile?.full_name || 'Perfil en TrabaGE',
       text: getShareDescription('profile'),
-      url: generateProfileUrl(user?.id),
+      url: generateProfileUrl(user?.id, profile?.username),
       showToast,
     });
   };
@@ -309,14 +293,6 @@ export default function Profile() {
           isOwn={canEdit}
           onSave={handleSaveAbout}
           saving={aboutSaving}
-        />
-
-        <ContactSection
-          contactEmail={profile?.contact_email}
-          contactWhatsapp={profile?.contact_whatsapp}
-          isOwn={canEdit}
-          onSave={handleSaveContact}
-          loading={contactSaving}
         />
 
         <PersonalSocialSection

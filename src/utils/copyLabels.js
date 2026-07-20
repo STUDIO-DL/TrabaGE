@@ -59,7 +59,6 @@ const PROFILE_SECTION_OWN = {
   services: 'Aún no has añadido servicios.',
   projects: 'Aún no has añadido proyectos.',
   languages: 'Aún no has añadido idiomas.',
-  contact: 'Aún no has añadido datos de contacto.',
   social: 'Aún no has añadido redes sociales.',
 };
 
@@ -97,7 +96,6 @@ export const TOAST = {
   postDeleted: 'Publicación eliminada.',
   jobPublished: 'Oferta publicada.',
   jobDeleted: 'Oferta eliminada.',
-  contactSaved: 'Contacto guardado.',
   appearanceUpdated: 'Apariencia actualizada.',
   applicationWithdrawn: 'Solicitud retirada.',
   statusUpdated: 'Estado actualizado.',

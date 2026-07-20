@@ -23,7 +23,6 @@ export default function CandidateProfileLayout({
   reportTargetId,
   onSettings,
   onEditIntro,
-  onContact,
   onMessage,
   messageLoading = false,
   sidebar,
@@ -58,7 +57,6 @@ export default function CandidateProfileLayout({
       />
       <ProfileActionBar
         isOwn={isOwn}
-        onContact={onContact}
         onMessage={onMessage}
         messageLoading={messageLoading}
       />

@@ -18,6 +18,7 @@ import {
   LogOut,
   Mail,
   ShieldCheck,
+  AtSign,
   SlidersHorizontal,
   Trash2,
   User,
@@ -32,9 +33,11 @@ import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { getCompanyDisplayName } from '../../utils/companyProfile';
 import { getDisplayName } from '../../utils/displayIdentity';
+import { formatUsernameDisplay } from '../../utils/username';
 import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import UsernameEditModal from './UsernameEditModal';
 
 const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7.5rem] w-[7.5rem]'; // matches AppAvatar size="2xl"
 
@@ -146,6 +149,11 @@ function AccountSummaryCard({ email, profile, loading, isCompany, accountType, u
         <h2 className="mt-space-base max-w-full truncate text-title font-bold tracking-tight text-app-text">
           {displayName}
         </h2>
+        {formatUsernameDisplay(profile?.username) ? (
+          <p className="mt-1 max-w-full truncate text-sm text-app-muted">
+            {formatUsernameDisplay(profile.username)}
+          </p>
+        ) : null}
         <p className="mt-space-sm max-w-full truncate text-caption text-app-subtle">
           {email || 'Cuenta sin correo'}
         </p>
@@ -156,13 +164,14 @@ function AccountSummaryCard({ email, profile, loading, isCompany, accountType, u
 
 export default function SettingsScreen({ accountType }) {
   const { user, logout, role, isPreviewMode } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading: profileLoading, refetch } = useProfile();
   const { showToast } = useNotificationContext();
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [usernameOpen, setUsernameOpen] = useState(false);
 
   const activeRole = accountType || role;
   const isCompany = isEmployerRole(activeRole);
@@ -240,6 +249,19 @@ export default function SettingsScreen({ accountType }) {
               <SettingsRow icon={User} title="Gestionar perfil" to={routes.profile} />
               <Divider />
               <SettingsRow
+                icon={AtSign}
+                title="Nombre de usuario"
+                subtitle={formatUsernameDisplay(profile?.username) || 'Elige un nombre único'}
+                onClick={() => {
+                  if (isPreviewMode) {
+                    showToast(GUEST_MODE_MESSAGE, 'info');
+                    return;
+                  }
+                  setUsernameOpen(true);
+                }}
+              />
+              <Divider />
+              <SettingsRow
                 icon={ShieldCheck}
                 title="Contraseña y seguridad"
                 subtitle="Actualizar contraseña y acceso"
@@ -314,6 +336,17 @@ export default function SettingsScreen({ accountType }) {
           </div>
         </div>
       </div>
+
+      <UsernameEditModal
+        isOpen={usernameOpen}
+        onClose={() => setUsernameOpen(false)}
+        currentUsername={profile?.username}
+        isPreviewMode={isPreviewMode}
+        showToast={showToast}
+        onSaved={async () => {
+          await refetch?.();
+        }}
+      />
 
       <LogoutConfirmModal
         isOpen={logoutOpen}

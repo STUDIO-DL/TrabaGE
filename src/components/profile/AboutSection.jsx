@@ -41,6 +41,7 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
 
   return (
     <ProfileSectionCard
+      id="about"
       icon={PROFILE_SECTION_ICONS.about}
       iconTone="about"
       title="Sobre mí"

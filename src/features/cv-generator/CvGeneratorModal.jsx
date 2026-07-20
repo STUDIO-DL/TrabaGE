@@ -17,12 +17,11 @@ export default function CvGeneratorModal({
     status,
     error,
     previewUrl,
-    isSparse,
     uploading,
     generate,
     regenerate,
     download,
-    useAsOfficialCv,
+    saveAsOfficialCv,
     reset,
   } = useCvGenerator({ profile, accountEmail, onUploadCV, refetchProfile });
 
@@ -38,7 +37,7 @@ export default function CvGeneratorModal({
   };
 
   const handleUseCv = async () => {
-    const result = await useAsOfficialCv();
+    const result = await saveAsOfficialCv();
     if (!result?.error) {
       handleClose();
     }
@@ -67,12 +66,6 @@ export default function CvGeneratorModal({
 
         {status === 'ready' && previewUrl ? (
           <>
-            {isSparse ? (
-              <p className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs leading-relaxed text-gray-600">
-                Completa más secciones de tu perfil para un CV más completo.
-              </p>
-            ) : null}
-
             <div className="min-h-[50dvh] flex-1 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
               <iframe
                 title="Vista previa del CV"

@@ -71,7 +71,7 @@ export function useCvGenerator({ profile, accountEmail, onUploadCV, refetchProfi
     link.remove();
   }, [blob, filename, previewUrl]);
 
-  const useAsOfficialCv = useCallback(async () => {
+  const saveAsOfficialCv = useCallback(async () => {
     if (!blob || !onUploadCV) return { error: { message: 'No hay CV generado.' } };
 
     setUploading(true);
@@ -93,7 +93,7 @@ export function useCvGenerator({ profile, accountEmail, onUploadCV, refetchProfi
     generate,
     regenerate: generate,
     download,
-    useAsOfficialCv,
+    saveAsOfficialCv,
     reset,
   };
 }

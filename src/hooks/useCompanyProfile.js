@@ -204,12 +204,6 @@ export function useCompanyProfile() {
     [runMutation],
   );
 
-  const saveContact = useCallback(
-    async (contactData, { companyNameFallback } = {}) =>
-      updateCompanyProfile(contactData, { companyNameFallback }),
-    [updateCompanyProfile],
-  );
-
   return {
     profile,
     loading,
@@ -220,6 +214,5 @@ export function useCompanyProfile() {
     uploadCover,
     addCompanyService,
     deleteCompanyService,
-    saveContact,
   };
 }

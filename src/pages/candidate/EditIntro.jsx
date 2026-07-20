@@ -58,8 +58,6 @@ const emptyForm = {
   sector: '',
   country: DEFAULT_COUNTRY,
   city: '',
-  contact_email: '',
-  contact_whatsapp: '',
   show_education_in_intro: false,
   intro_education_id: '',
 };
@@ -97,8 +95,6 @@ export default function EditIntro() {
       sector: profile?.sector || '',
       country: profile?.country || DEFAULT_COUNTRY,
       city: profile?.city || identity.city || '',
-      contact_email: profile?.contact_email || '',
-      contact_whatsapp: profile?.contact_whatsapp || '',
       show_education_in_intro: Boolean(profile?.show_education_in_intro),
       intro_education_id: profile?.intro_education_id || '',
     };
@@ -169,8 +165,6 @@ export default function EditIntro() {
       sector: form.sector.trim(),
       country: form.country.trim(),
       city: form.city.trim(),
-      contact_email: form.contact_email.trim() || null,
-      contact_whatsapp: form.contact_whatsapp.trim() || null,
       show_education_in_intro: form.show_education_in_intro,
       intro_education_id: form.show_education_in_intro ? form.intro_education_id || null : null,
     };
@@ -394,30 +388,6 @@ export default function EditIntro() {
                 { value: '', label: 'Seleccionar ciudad' },
                 ...CITIES.map((city) => ({ value: city, label: city })),
               ]}
-            />
-          </EditIntroSection>
-
-          <EditIntroSection
-            title="Datos de contacto"
-            description="Tu correo y WhatsApp de contacto se muestran cuando alguien pulsa «Contactar» en tu perfil."
-          >
-            <Input
-              label="Correo de contacto (Gmail u otro)"
-              name="contact_email"
-              type="email"
-              placeholder="tu@email.com"
-              value={form.contact_email}
-              onChange={setField('contact_email')}
-              autoComplete="email"
-            />
-            <Input
-              label="WhatsApp (con código de país)"
-              name="contact_whatsapp"
-              type="tel"
-              placeholder="240XXXXXXXX"
-              value={form.contact_whatsapp}
-              onChange={setField('contact_whatsapp')}
-              autoComplete="tel"
             />
           </EditIntroSection>
         </form>

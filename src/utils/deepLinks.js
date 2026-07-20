@@ -15,6 +15,13 @@ export const DEEP_LINK_PATHS = {
   job: (id) => `/job/${id}`,
   profile: (id) => `/profile/${id}`,
   company: (id) => `/companies/${id}`,
+  /** Prefer for shareable public profile when username is known. */
+  byUsername: (username) => {
+    const clean = String(username ?? '')
+      .trim()
+      .replace(/^@/, '');
+    return clean ? `/@${clean}` : null;
+  },
 };
 
 /**
@@ -26,6 +33,7 @@ export const DEEP_LINK_ROUTE_PATTERNS = {
   job: '/job/:id',
   profile: '/profile/:userId',
   company: '/companies/:companyId',
+  byUsername: '/@:username',
 };
 
 /**

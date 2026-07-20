@@ -14,8 +14,6 @@ export const CANDIDATE_PROFILE_COLUMNS = [
   'avatar_path',
   'cover_path',
   'years_experience',
-  'contact_email',
-  'contact_whatsapp',
   'phone_number',
   'website_url',
   'linkedin_url',
@@ -39,15 +37,23 @@ export const CANDIDATE_PROFILE_COLUMNS = [
 const PUBLIC_PROFILE_SELECT = `
   user_id, full_name, headline, about, city, province, country, sector, avatar_path, cover_path,
   years_experience, show_education_in_intro, intro_education_id,
-  contact_email, contact_whatsapp, social_links, setup_complete, is_active,
+  social_links, setup_complete, is_active, username,
   created_at, updated_at
 `;
+
+async function attachUsername(profile) {
+  if (!profile?.user_id) return profile;
+  if (profile.username) return profile;
+
+  const { data } = await supabase.rpc('get_username_for_user', { p_user_id: profile.user_id });
+  return { ...profile, username: data ?? null };
+}
 
 async function attachCandidateSections(profile) {
   if (!profile?.user_id) return profile;
 
   const userId = profile.user_id;
-  const [education, experience, certifications, skills, candidate_links, services, languages, projects] =
+  const [education, experience, certifications, skills, candidate_links, services, languages, projects, withUsername] =
     await Promise.all([
       supabase.from('education').select('*').eq('user_id', userId),
       supabase.from('experience').select('*').eq('user_id', userId),
@@ -61,10 +67,11 @@ async function attachCandidateSections(profile) {
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false }),
+      attachUsername(profile),
     ]);
 
   return {
-    ...profile,
+    ...withUsername,
     education: education.data ?? [],
     experience: experience.data ?? [],
     certifications: certifications.data ?? [],

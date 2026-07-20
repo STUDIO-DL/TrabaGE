@@ -47,34 +47,7 @@ const CandidateSettings = lazy(() => import('./pages/candidate/Settings'));
 const CandidateAppearance = lazy(() => import('./pages/candidate/Appearance'));
 const CandidateNotificationSettings = lazy(() => import('./pages/candidate/NotificationSettings'));
 const PublicProfile = lazy(() => import('./pages/candidate/PublicProfile'));
-
-const CompanyFeed = lazy(() => import('./pages/company/Feed'));
-const CompanyPublish = lazy(() => import('./pages/company/Publish'));
-const Dashboard = lazy(() => import('./pages/company/Dashboard'));
-const PublishJob = lazy(() => import('./pages/company/PublishJob'));
-const CompanyJobs = lazy(() => import('./pages/company/Jobs'));
-const Applicants = lazy(() => import('./pages/company/Applicants'));
-const CompanyNotifications = lazy(() => import('./pages/company/Notifications'));
-const CompanyProfile = lazy(() => import('./pages/company/Profile'));
-const CompanySettings = lazy(() => import('./pages/company/Settings'));
-const CompanyAppearance = lazy(() => import('./pages/company/Appearance'));
-const CompanyNotificationSettings = lazy(() => import('./pages/company/NotificationSettings'));
-const Verification = lazy(() => import('./pages/company/Verification'));
-
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
-const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
-const AdminVerifications = lazy(() => import('./pages/admin/AdminVerifications'));
-const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
-const AdminPosts = lazy(() => import('./pages/admin/AdminPosts'));
-const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
-const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
-const AdminOrganizations = lazy(() => import('./pages/admin/AdminOrganizations'));
-const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
-const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
-const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
-const MessagesInbox = lazy(() => import('./pages/shared/MessagesInbox'));
-const Conversation = lazy(() => import('./pages/shared/Conversation'));
+const UsernameProfileRedirect = lazy(() => import('./pages/shared/UsernameProfileRedirect'));
 const CompanyPublicProfile = lazy(() => import('./pages/shared/CompanyPublicProfile'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
 const PostDetail = lazy(() => import('./pages/PostDetail'));
@@ -285,6 +258,7 @@ function AppRoutes() {
             <Route path="/company/help" element={<Navigate to="/business/help" replace />} />
 
             {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
+            <Route path="/@:username" element={<UsernameProfileRedirect />} />
             <Route path="/profile/:userId" element={<PublicProfile />} />
             <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
             <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />

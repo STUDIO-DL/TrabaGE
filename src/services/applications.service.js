@@ -68,7 +68,7 @@ export const applicationsService = {
     const profilesResult = await supabase
       .from('candidate_profiles')
       .select(
-        'user_id, full_name, avatar_path, headline, about, city, country, years_experience, contact_email, contact_whatsapp, job_preferences, expected_salary, skills(name), experience(position), education(institution, program, grade), languages(language, level)',
+        'user_id, full_name, avatar_path, headline, about, city, country, years_experience, job_preferences, expected_salary, skills(name), experience(position), education(institution, program, grade), languages(language, level)',
       )
       .in('user_id', candidateIds);
 

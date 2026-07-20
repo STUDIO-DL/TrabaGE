@@ -30,6 +30,7 @@ export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onD
 
   return (
     <ProfileSectionCard
+      id="education"
       icon={PROFILE_SECTION_ICONS.education}
       iconTone="education"
       title="Educación"

@@ -6,7 +6,7 @@ import Button from '../ui/Button';
 import Select from '../ui/Select';
 import AppIcon from '../common/AppIcon';
 import { getUserProfilePath } from '../../utils/profileRoutes';
-import { Download, Eye, Phone, ICON_SIZES } from '../../constants/icons';
+import { Download, Eye, MessageSquare, ICON_SIZES } from '../../constants/icons';
 import {
   EMPLOYER_APPLICATION_STATUSES,
   getApplicationStatus,
@@ -15,7 +15,8 @@ import {
 export default function ApplicantCard({
   application,
   onDownloadCv,
-  onContact,
+  onMessage,
+  messageLoading = false,
   onStatusChange,
   statusUpdating = false,
 }) {
@@ -77,10 +78,11 @@ export default function ApplicantCard({
           variant="ghost"
           size="sm"
           className="inline-flex items-center gap-1.5"
-          onClick={() => onContact?.(application)}
+          onClick={() => onMessage?.(application)}
+          loading={messageLoading}
         >
-          <AppIcon icon={Phone} size={ICON_SIZES.default} />
-          Contactar
+          <AppIcon icon={MessageSquare} size={ICON_SIZES.default} />
+          Mensaje
         </Button>
       </div>
     </Card>

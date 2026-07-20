@@ -22,6 +22,7 @@ import {
   getCompanySectorText,
   resolveCompanyHeaderName,
 } from '../../../utils/companyProfile';
+import { formatUsernameDisplay } from '../../../utils/username';
 import { formatFollowerNumber } from '../../../utils/formatFollowerCount';
 import { useAuth } from '../../../hooks/useAuth';
 import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
@@ -116,8 +117,6 @@ export default function CompanyProfileHeader({
   shareUrl,
   shareTitle,
   reportTargetId,
-  onContact,
-  contactDisabled = false,
   onMessage,
   messageLoading = false,
 }) {
@@ -276,6 +275,11 @@ export default function CompanyProfileHeader({
                     Añade el nombre de tu cuenta
                   </button>
                 ) : null}
+                {formatUsernameDisplay(profile?.username) ? (
+                  <p className="mt-0.5 text-sm font-normal text-app-muted">
+                    {formatUsernameDisplay(profile.username)}
+                  </p>
+                ) : null}
               </div>
 
               {!readOnly && onEditIntro && name ? (
@@ -351,8 +355,6 @@ export default function CompanyProfileHeader({
                   shareUrl={shareUrl}
                   shareTitle={shareTitle}
                   reportTargetId={reportTargetId}
-                  onContact={onContact}
-                  contactDisabled={contactDisabled}
                   onMessage={onMessage}
                   messageLoading={messageLoading}
                 />

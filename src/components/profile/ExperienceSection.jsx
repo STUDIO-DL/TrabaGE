@@ -13,6 +13,7 @@ export default function ExperienceSection({ items = [], isOwn, onAdd, onEdit, on
 
   return (
     <ProfileSectionCard
+      id="experience"
       icon={PROFILE_SECTION_ICONS.experience}
       iconTone="experience"
       title="Experiencia laboral"

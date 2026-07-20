@@ -4,9 +4,7 @@ import {
   Calendar,
   ExternalLink,
   Globe,
-  Mail,
   MapPin,
-  Phone,
   Users,
   ICON_SIZES,
 } from '../../../constants/icons';
@@ -71,13 +69,6 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
   const sector = getCompanySectorText(profile);
   const website = profile?.website?.trim();
   const websiteHref = normalizeWebsiteHref(website);
-  const email = profile?.contact_email?.trim();
-  const phone = profile?.contact_phone?.trim() || profile?.contact_whatsapp?.trim();
-  const phoneHref = profile?.contact_phone?.trim()
-    ? `tel:${profile.contact_phone.replace(/\s/g, '')}`
-    : profile?.contact_whatsapp?.trim()
-      ? `https://wa.me/${profile.contact_whatsapp.replace(/\D/g, '')}`
-      : null;
   const address = profile?.address?.trim();
   const excludeHeaderMeta = variant === 'inicio';
 
@@ -90,22 +81,6 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
       href: websiteHref,
       show: Boolean(website),
       external: true,
-    },
-    {
-      key: 'email',
-      icon: Mail,
-      label: 'Correo',
-      value: email,
-      href: email ? `mailto:${email}` : null,
-      show: Boolean(email),
-    },
-    {
-      key: 'phone',
-      icon: Phone,
-      label: 'Teléfono',
-      value: phone,
-      href: phoneHref,
-      show: Boolean(phone),
     },
     {
       key: 'location',
@@ -161,15 +136,11 @@ export function hasVisibleCompanyInfoRows(profile, variant = 'minimal') {
   const location = getCompanyLocationText(profile);
   const sector = getCompanySectorText(profile);
   const website = profile?.website?.trim();
-  const email = profile?.contact_email?.trim();
-  const phone = profile?.contact_phone?.trim() || profile?.contact_whatsapp?.trim();
   const address = profile?.address?.trim();
   const excludeHeaderMeta = variant === 'inicio';
 
   const checks = [
     Boolean(website),
-    Boolean(email),
-    Boolean(phone),
     Boolean(address) || (!excludeHeaderMeta && Boolean(location)),
     Boolean(profile?.founded_year),
     Boolean(profile?.company_size?.trim()) && !excludeHeaderMeta,

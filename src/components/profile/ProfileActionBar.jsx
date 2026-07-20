@@ -1,12 +1,10 @@
 import AppIcon from '../common/AppIcon';
-import { Phone, MessageSquare, Share2, ICON_SIZES } from '../../constants/icons';
+import { MessageSquare, Share2, ICON_SIZES } from '../../constants/icons';
 import Button from '../ui/Button';
 import FollowButton from '../follow/FollowButton';
 
 export default function ProfileActionBar({
   isOwn = false,
-  onContact,
-  contactLabel = 'Contactar',
   onMessage,
   messageLabel = 'Mensaje',
   messageLoading = false,
@@ -42,18 +40,6 @@ export default function ProfileActionBar({
           >
             <AppIcon icon={MessageSquare} size={ICON_SIZES.md} className="text-current" />
             {messageLabel}
-          </Button>
-        )}
-        {onContact && (
-          <Button
-            type="button"
-            onClick={onContact}
-            variant={showFollow || onMessage ? 'secondary' : 'primary'}
-            className="sm:flex-1"
-            fullWidth
-          >
-            <AppIcon icon={Phone} size={ICON_SIZES.md} className="text-current" />
-            {contactLabel}
           </Button>
         )}
         {onShare && (
