@@ -18,6 +18,8 @@ export function useMessages(conversationId) {
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState(null);
   const [sending, setSending] = useState(false);
+  const [canSend, setCanSend] = useState(true);
+  const [blockedReason, setBlockedReason] = useState(null);
   const cursorRef = useRef(null);
   const loadingMoreRef = useRef(false);
   const markedReadRef = useRef(false);
@@ -36,6 +38,18 @@ export function useMessages(conversationId) {
     setOtherLastReadAt(other?.last_read_at ?? null);
   }, [conversationId, user?.id]);
 
+  const syncSendState = useCallback(async () => {
+    if (!conversationId || !user?.id || isPreviewMode) {
+      setCanSend(true);
+      setBlockedReason(null);
+      return;
+    }
+
+    const { data } = await messagesService.getConversationSendState(conversationId);
+    setCanSend(data?.canSend ?? true);
+    setBlockedReason(data?.blockedReason ?? null);
+  }, [conversationId, isPreviewMode, user?.id]);
+
   const fetchMessages = useCallback(async () => {
     if (!conversationId) return;
 
@@ -43,6 +57,8 @@ export function useMessages(conversationId) {
       setMessages([]);
       setHasMore(false);
       setError(null);
+      setCanSend(true);
+      setBlockedReason(null);
       setLoading(false);
       return;
     }
@@ -54,6 +70,7 @@ export function useMessages(conversationId) {
     const [{ data: page, error: pageError }] = await Promise.all([
       messagesService.getMessages(conversationId, { cursor: null, limit: MESSAGES_PAGE_SIZE }),
       syncParticipants(),
+      syncSendState(),
     ]);
 
     const rows = page ?? [];
@@ -62,7 +79,7 @@ export function useMessages(conversationId) {
     cursorRef.current = cursorFromPage(rows);
     setError(pageError?.message ?? null);
     setLoading(false);
-  }, [conversationId, isPreviewMode, syncParticipants]);
+  }, [conversationId, isPreviewMode, syncParticipants, syncSendState]);
 
   const loadMore = useCallback(async () => {
     if (!conversationId || isPreviewMode) return;
@@ -133,10 +150,11 @@ export function useMessages(conversationId) {
           data,
         ]),
       );
+      await syncSendState();
       setSending(false);
       return { data, error: null };
     },
-    [conversationId, isPreviewMode, user?.id],
+    [conversationId, isPreviewMode, syncSendState, user?.id],
   );
 
   useEffect(() => {
@@ -174,6 +192,7 @@ export function useMessages(conversationId) {
           });
           if (incoming.sender_id !== user?.id) {
             void markRead();
+            void syncSendState();
           }
         },
       )
@@ -205,7 +224,7 @@ export function useMessages(conversationId) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('focus', handleVisibility);
     };
-  }, [conversationId, fetchMessages, isPreviewMode, markRead, syncParticipants, user?.id]);
+  }, [conversationId, fetchMessages, isPreviewMode, markRead, syncParticipants, syncSendState, user?.id]);
 
   return {
     messages,
@@ -215,6 +234,8 @@ export function useMessages(conversationId) {
     hasMore,
     error,
     sending,
+    canSend,
+    blockedReason,
     sendMessage,
     loadMore,
     refetch: fetchMessages,

@@ -158,7 +158,7 @@ export default function CompanyProfileActionBar({
             loading={messageLoading}
           >
             <AppIcon icon={MessageSquare} size={ICON_SIZES.sm} className="text-current" />
-            Enviar mensaje
+            Mensaje
           </Button>
         )}
 

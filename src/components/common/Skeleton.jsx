@@ -465,3 +465,65 @@ export function AuthConfirmSkeleton() {
   );
 }
 
+export function DiscoverCardSkeleton() {
+  return (
+    <article
+      className="rounded-radius-lg border border-app-border bg-app-card p-space-md shadow-elevation-1"
+      aria-hidden="true"
+    >
+      <Skeleton className="mb-space-sm h-10 w-10 rounded-radius-md" />
+      <Skeleton className="h-4 w-3/4" />
+      <Skeleton className="mt-space-sm h-3 w-full" />
+    </article>
+  );
+}
+
+export function HiringCompaniesSkeleton() {
+  return (
+    <article
+      className="rounded-radius-lg border border-app-border bg-app-card p-space-md shadow-elevation-1"
+      aria-hidden="true"
+    >
+      <div className="mb-space-md flex items-center gap-space-sm">
+        <Skeleton className="h-9 w-9 rounded-radius-md" />
+        <div className="flex-1 space-y-space-sm">
+          <Skeleton className="h-4 w-2/3" />
+          <Skeleton className="h-3 w-1/2" />
+        </div>
+      </div>
+      {Array.from({ length: 4 }, (_, i) => (
+        <div key={i} className="flex items-center gap-space-md py-space-sm">
+          <Skeleton className="h-10 w-10 shrink-0 rounded-radius-sm" />
+          <div className="flex-1 space-y-space-sm">
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-3 w-1/4" />
+          </div>
+        </div>
+      ))}
+    </article>
+  );
+}
+
+export function DiscoverHubSkeleton({ showFeatured = true, cardCount = 6 }) {
+  return (
+    <div className="space-y-space-md p-space-base" aria-busy="true" aria-label="Cargando oportunidades">
+      {showFeatured ? <HiringCompaniesSkeleton /> : null}
+      <div className="grid grid-cols-2 gap-space-sm">
+        {Array.from({ length: cardCount }, (_, i) => (
+          <DiscoverCardSkeleton key={i} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function DiscoverListSkeleton({ count = 4 }) {
+  return (
+    <div className="space-y-space-md p-space-base" aria-busy="true" aria-label="Cargando listado">
+      {Array.from({ length: count }, (_, i) => (
+        <JobCardSkeleton key={i} />
+      ))}
+    </div>
+  );
+}
+

@@ -13,7 +13,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import { isEmployerRole } from '../../constants/roles';
-import { messagesService } from '../../services/messages.service';
+import { messagesService, MESSAGE_WAIT_FOR_REPLY } from '../../services/messages.service';
 
 function ConversationSkeleton() {
   return (
@@ -49,6 +49,8 @@ export default function ConversationView({ conversationId, role }) {
     hasMore,
     error,
     sending,
+    canSend,
+    blockedReason,
     sendMessage,
     loadMore,
     refetch,
@@ -225,7 +227,12 @@ export default function ConversationView({ conversationId, role }) {
         ) : null}
 
         <div style={{ paddingBottom: footerPaddingBottom }}>
-          <MessageComposer onSend={handleSend} sending={sending} disabled={loading || Boolean(error)} />
+          <MessageComposer
+            onSend={handleSend}
+            sending={sending}
+            disabled={loading || Boolean(error) || !canSend}
+            blockedReason={!canSend ? (blockedReason ?? MESSAGE_WAIT_FOR_REPLY) : null}
+          />
         </div>
       </div>
     </PageContainer>

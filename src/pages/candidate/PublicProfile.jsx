@@ -6,6 +6,7 @@ import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
 import SkillsSection from '../../components/profile/SkillsSection';
+import LanguagesReadOnlySection from '../../components/profile/LanguagesReadOnlySection';
 import ServicesSection from '../../components/profile/ServicesSection';
 import ProjectsSection from '../../components/profile/ProjectsSection';
 import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
@@ -72,7 +73,7 @@ export default function PublicProfile() {
         shareTitle={displayName || 'Perfil en TrabaGE'}
         reportTargetId={userId}
         onContact={() => handleContact(profile)}
-        onMessage={user?.id !== userId ? () => startConversation(userId) : undefined}
+        onMessage={user?.id && user.id !== userId ? () => startConversation(userId) : undefined}
         messageLoading={starting}
       >
         <AboutSection about={profile.about} />
@@ -81,6 +82,7 @@ export default function PublicProfile() {
         <EducationSection items={profile.education} />
         <CertificationsSection items={profile.certifications} />
         <SkillsSection items={profile.skills} />
+        <LanguagesReadOnlySection items={profile.languages} />
         <PortfolioLinksSection items={profile.candidate_links} />
         <ServicesSection items={profile.services} />
         <ProjectsSection items={profile.projects} />

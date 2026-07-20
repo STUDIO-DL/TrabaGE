@@ -8,7 +8,7 @@ export default function ProfileActionBar({
   onContact,
   contactLabel = 'Contactar',
   onMessage,
-  messageLabel = 'Enviar mensaje',
+  messageLabel = 'Mensaje',
   messageLoading = false,
   showFollow = false,
   isFollowing = false,

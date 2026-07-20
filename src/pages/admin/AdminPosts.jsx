@@ -13,6 +13,7 @@ import { AvatarType, avatarTypeFromAuthorType } from '../../constants/avatarDefa
 import { formatDate } from '../../utils/formatDate';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { NEWS_CATEGORIES } from '../../constants/feedContentTypes';
+import AdminDiscoverPanel from '../../components/admin/AdminDiscoverPanel';
 
 const EMPTY_NEWS_FORM = {
   title: '',
@@ -333,9 +334,18 @@ export default function AdminPosts() {
         >
           Noticias del feed
         </Button>
+        <Button
+          size="sm"
+          variant={activeTab === 'discover' ? 'primary' : 'secondary'}
+          onClick={() => setActiveTab('discover')}
+        >
+          Descubrir
+        </Button>
       </div>
 
-      {activeTab === 'news' && (
+      {activeTab === 'discover' ? <AdminDiscoverPanel /> : null}
+
+      {activeTab !== 'discover' && activeTab === 'news' && (
         <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4">
           <h3 className="text-sm font-semibold text-gray-900">Nueva noticia manual</h3>
           <Input
@@ -375,12 +385,14 @@ export default function AdminPosts() {
         </div>
       )}
 
-      <Input
-        label={activeTab === 'posts' ? 'Buscar publicaciones' : 'Buscar noticias'}
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder={activeTab === 'posts' ? 'Buscar por autor, contenido o estado' : 'Buscar por título, categoría o fuente'}
-      />
+      {activeTab !== 'discover' ? (
+        <Input
+          label={activeTab === 'posts' ? 'Buscar publicaciones' : 'Buscar noticias'}
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={activeTab === 'posts' ? 'Buscar por autor, contenido o estado' : 'Buscar por título, categoría o fuente'}
+        />
+      ) : null}
 
       {activeTab === 'posts' ? (
         <AdminTable
@@ -389,14 +401,14 @@ export default function AdminPosts() {
           loading={loading}
           emptyMessage="No hay publicaciones."
         />
-      ) : (
+      ) : activeTab === 'news' ? (
         <AdminTable
           columns={newsColumns}
           rows={filteredNews.map((article) => ({ ...article, id: article.id }))}
           loading={loading}
           emptyMessage="No hay noticias."
         />
-      )}
+      ) : null}
     </div>
   );
 }

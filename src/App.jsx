@@ -78,6 +78,16 @@ const Conversation = lazy(() => import('./pages/shared/Conversation'));
 const CompanyPublicProfile = lazy(() => import('./pages/shared/CompanyPublicProfile'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
 const PostDetail = lazy(() => import('./pages/PostDetail'));
+const DiscoverHiring = lazy(() => import('./pages/discover/HiringCompanies'));
+const DiscoverScholarships = lazy(() => import('./pages/discover/Scholarships'));
+const DiscoverInternships = lazy(() => import('./pages/discover/Internships'));
+const DiscoverEvents = lazy(() => import('./pages/discover/Events'));
+const DiscoverCalls = lazy(() => import('./pages/discover/Calls'));
+const DiscoverCourses = lazy(() => import('./pages/discover/Courses'));
+const DiscoverEntrepreneurs = lazy(() => import('./pages/discover/Entrepreneurs'));
+const DiscoverNewCompanies = lazy(() => import('./pages/discover/NewCompanies'));
+const DiscoverVolunteering = lazy(() => import('./pages/discover/Volunteering'));
+const DiscoverInternational = lazy(() => import('./pages/discover/International'));
 const DemoCompanyEntry = lazy(() => import('./pages/demo/DemoCompanyEntry'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const PrivacyPolicy = lazy(() => import('./pages/shared/PrivacyPolicy'));
@@ -126,6 +136,23 @@ function LegacyCompanyJobEditRedirect() {
   return <Navigate to={`/business/jobs/${jobId}/edit`} replace />;
 }
 
+function DiscoverAppRoutes() {
+  return (
+    <>
+      <Route path="discover/hiring" element={<DiscoverHiring />} />
+      <Route path="discover/scholarships" element={<DiscoverScholarships />} />
+      <Route path="discover/internships" element={<DiscoverInternships />} />
+      <Route path="discover/events" element={<DiscoverEvents />} />
+      <Route path="discover/calls" element={<DiscoverCalls />} />
+      <Route path="discover/courses" element={<DiscoverCourses />} />
+      <Route path="discover/entrepreneurs" element={<DiscoverEntrepreneurs />} />
+      <Route path="discover/new-companies" element={<DiscoverNewCompanies />} />
+      <Route path="discover/volunteering" element={<DiscoverVolunteering />} />
+      <Route path="discover/international" element={<DiscoverInternational />} />
+    </>
+  );
+}
+
 /** Shared employer app routes under /business/* and /organization/*. */
 function EmployerAppRoutes() {
   return (
@@ -147,6 +174,7 @@ function EmployerAppRoutes() {
       <Route path="settings/notifications" element={<CompanyNotificationSettings />} />
       <Route path="verification" element={<Verification />} />
       <Route path="help" element={<HelpCenter />} />
+      {DiscoverAppRoutes()}
     </>
   );
 }
@@ -202,6 +230,7 @@ function AppRoutes() {
                   <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
                   <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />
                   <Route path="/help" element={<HelpCenter />} />
+                  {DiscoverAppRoutes()}
                 </Route>
               </Route>
 

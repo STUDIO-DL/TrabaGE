@@ -300,6 +300,30 @@ export const adminService = {
   setNewsActive: (id, isActive) =>
     supabase.from('news_articles').update({ is_active: isActive }).eq('id', id).select().single(),
 
+  getFeedEvents: () =>
+    supabase.from('feed_events').select('*').order('starts_at', { ascending: false }),
+
+  createFeedEvent: (data) => supabase.from('feed_events').insert(data).select().single(),
+
+  updateFeedEvent: (id, data) => supabase.from('feed_events').update(data).eq('id', id).select().single(),
+
+  deleteFeedEvent: (id) => supabase.from('feed_events').delete().eq('id', id),
+
+  setFeedEventActive: (id, isActive) =>
+    supabase.from('feed_events').update({ is_active: isActive }).eq('id', id).select().single(),
+
+  getFeedCourses: () =>
+    supabase.from('feed_courses').select('*').order('created_at', { ascending: false }),
+
+  createFeedCourse: (data) => supabase.from('feed_courses').insert(data).select().single(),
+
+  updateFeedCourse: (id, data) => supabase.from('feed_courses').update(data).eq('id', id).select().single(),
+
+  deleteFeedCourse: (id) => supabase.from('feed_courses').delete().eq('id', id),
+
+  setFeedCourseActive: (id, isActive) =>
+    supabase.from('feed_courses').update({ is_active: isActive }).eq('id', id).select().single(),
+
   getReports: async () => {
     const { data: reports, error } = await supabase
       .from('reports')

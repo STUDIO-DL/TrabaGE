@@ -197,7 +197,7 @@ export default function CompanyPublicProfile() {
           canFollow={canFollow || !isAuthenticated}
           onToggleFollow={handleToggleFollow}
           onContact={onContact}
-          onMessage={user?.id !== companyId ? () => startConversation(companyId) : undefined}
+          onMessage={user?.id && user.id !== companyId ? () => startConversation(companyId) : undefined}
           messageLoading={starting}
           contactDisabled={!hasCompanyActionableContact(profile)}
           shareUrl={generateCompanyUrl(companyId)}

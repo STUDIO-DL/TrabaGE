@@ -63,7 +63,10 @@ export function scoreFeedItem(item, context = {}) {
         score += 35;
       }
       if (profile) {
-        const userKeywords = new Set(extractUserKeywords(profile));
+        const userKeywords = new Set([
+          ...extractUserKeywords(profile),
+          ...(context.recentActivityKeywords ?? []),
+        ]);
         const postTokens = tokenize(
           [post?.content, post?.author_name, post?.author_headline, post?.category]
             .filter(Boolean)
@@ -71,6 +74,29 @@ export function scoreFeedItem(item, context = {}) {
         );
         const keywordMatches = postTokens.filter((token) => userKeywords.has(token)).length;
         score += Math.min(25, keywordMatches * 5);
+
+        if (profile.sector) {
+          const sectorTokens = tokenize(profile.sector);
+          const sectorMatches = postTokens.filter((token) => sectorTokens.includes(token)).length;
+          score += Math.min(30, sectorMatches * 10);
+        }
+
+        if (profile.city) {
+          const cityToken = tokenize(profile.city)[0];
+          if (cityToken && postTokens.includes(cityToken)) score += 15;
+        }
+
+        if (profile.province) {
+          const provinceToken = tokenize(profile.province)[0];
+          if (provinceToken && postTokens.includes(provinceToken)) score += 10;
+        }
+      } else if (context.companyProfile?.sector) {
+        const postTokens = tokenize(
+          [post?.content, post?.author_name, post?.category].filter(Boolean).join(' '),
+        );
+        const sectorTokens = tokenize(context.companyProfile.sector);
+        const sectorMatches = postTokens.filter((token) => sectorTokens.includes(token)).length;
+        score += Math.min(30, sectorMatches * 10);
       }
       if (isEmployerAuthor(post?.author_type)) score += institutionMode ? 6 : 10;
       if (item.content_type === FEED_CONTENT_TYPES.ADVICE) score += 8;
@@ -173,7 +199,38 @@ export function interleaveFeedItems(
 
 export function rankAndInterleaveFeed(items, context = {}, options = {}) {
   const scored = items.map((item) => scoreFeedItem(item, context));
-  return interleaveFeedItems(scored, options);
+  const filtered = filterRelevantFeedItems(scored, context);
+  return interleaveFeedItems(filtered, options);
+}
+
+const MIN_RELEVANCE_SCORE = 18;
+
+function isFollowedPost(item, context) {
+  const post = item.payload;
+  const authorId = post?.author_id;
+  if (!authorId) return false;
+  return (
+    context.followedCompanyIds?.includes(authorId) ||
+    context.followedInstitutionIds?.includes(authorId)
+  );
+}
+
+/** Drop posts with no personalization signal when the user has a profile. */
+export function filterRelevantFeedItems(items, context = {}) {
+  const hasProfile = Boolean(context.profile);
+  const hasEmployerContext = Boolean(context.companyProfile);
+
+  if (!hasProfile && !hasEmployerContext) return items;
+
+  const relevant = items.filter((item) => {
+    if (item.content_type !== FEED_CONTENT_TYPES.POST && item.content_type !== FEED_CONTENT_TYPES.ADVICE) {
+      return true;
+    }
+    if (isFollowedPost(item, context)) return true;
+    return (item._score ?? 0) >= MIN_RELEVANCE_SCORE;
+  });
+
+  return relevant.length > 0 ? relevant : items.filter((item) => isFollowedPost(item, context));
 }
 
 export function dedupeFeedItems(items) {

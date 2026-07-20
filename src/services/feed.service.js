@@ -11,6 +11,7 @@ import {
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { companyService } from './company.service';
 import { jobsService } from './jobs.service';
+import { applicationsService } from './applications.service';
 import { followsService, FOLLOWS_TARGET } from './follows.service';
 import { profileService } from './profile.service';
 import { dedupeFeedItems } from '../utils/feedRanking';
@@ -227,24 +228,56 @@ async function buildCandidateRecommendationCards(profile, { limit = 3 } = {}) {
 }
 
 async function buildFeedContext(userId, role) {
-  if (!userId) return { profile: null, followedCompanyIds: [], followedInstitutionIds: [], companyJobs: [], institutionMode: false };
+  if (!userId) {
+    return {
+      profile: null,
+      companyProfile: null,
+      followedCompanyIds: [],
+      followedInstitutionIds: [],
+      companyJobs: [],
+      institutionMode: false,
+      recentActivityKeywords: [],
+    };
+  }
 
   if (role === ROLES.PERSONAL) {
-    const [profileResult, followsCompanies, followsInstitutions] = await Promise.all([
-      profileService.getCandidateFullProfile(userId),
-      followsService.getFollowing(userId, FOLLOWS_TARGET.BUSINESS),
-      followsService.getFollowing(userId, FOLLOWS_TARGET.ORGANIZATION),
-    ]);
+    const [profileResult, followsCompanies, followsInstitutions, savedJobsResult, applicationsResult] =
+      await Promise.all([
+        profileService.getCandidateFullProfile(userId),
+        followsService.getFollowing(userId, FOLLOWS_TARGET.BUSINESS),
+        followsService.getFollowing(userId, FOLLOWS_TARGET.ORGANIZATION),
+        jobsService.getSavedJobs(userId),
+        applicationsService.getCandidateApplications(userId),
+      ]);
 
     const prefs = profileResult.data?.job_preferences;
+    const recentActivityKeywords = [
+      ...(savedJobsResult.data ?? []).flatMap((row) => [
+        row.jobs?.title,
+        row.jobs?.sector,
+        row.jobs?.company_profiles?.sector,
+      ]),
+      ...(applicationsResult.data ?? []).flatMap((row) => [
+        row.jobs?.title,
+        row.jobs?.sector,
+        row.jobs?.company_profiles?.sector,
+      ]),
+    ]
+      .filter(Boolean)
+      .flatMap((value) => String(value).toLowerCase().split(/\s+/))
+      .filter((token) => token.length > 2);
+
     return {
       profile: profileResult.data,
+      companyProfile: null,
       followedCompanyIds: (followsCompanies.data ?? []).map((row) => row.target_id),
       followedInstitutionIds: (followsInstitutions.data ?? []).map((row) => row.target_id),
       companyJobs: [],
       institutionMode: false,
+      recentActivityKeywords: [...new Set(recentActivityKeywords)],
       preferredCategories: [
         ...(prefs?.preferred_sectors?.length ? ['employment', 'labor'] : []),
+        ...(prefs?.preferred_categories ?? []),
         'tech',
         'business',
       ],
@@ -259,10 +292,12 @@ async function buildFeedContext(userId, role) {
   const companyType = companyResult.data?.company_type;
   return {
     profile: null,
+    companyProfile: companyResult.data,
     followedCompanyIds: [],
     followedInstitutionIds: [],
     companyJobs: (jobsResult.data ?? []).filter((job) => job.status === 'active'),
     institutionMode: INSTITUTION_COMPANY_TYPES.includes(companyType),
+    recentActivityKeywords: [],
     preferredCategories: INSTITUTION_COMPANY_TYPES.includes(companyType)
       ? ['education', 'employment']
       : ['employment', 'labor', 'business'],

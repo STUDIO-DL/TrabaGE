@@ -3,13 +3,14 @@ import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
 import { MESSAGE_MAX_LENGTH } from '../../services/messages.service';
 
-export default function MessageComposer({ onSend, sending = false, disabled = false }) {
+export default function MessageComposer({ onSend, sending = false, disabled = false, blockedReason = null }) {
   const [value, setValue] = useState('');
+  const isBlocked = Boolean(blockedReason);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const trimmed = value.trim();
-    if (!trimmed || sending || disabled) return;
+    if (!trimmed || sending || disabled || isBlocked) return;
 
     const result = await onSend(trimmed);
     if (!result?.error) {
@@ -28,7 +29,7 @@ export default function MessageComposer({ onSend, sending = false, disabled = fa
         placeholder="Escribe un mensaje…"
         rows={2}
         maxLength={MESSAGE_MAX_LENGTH}
-        disabled={disabled || sending}
+        disabled={disabled || sending || isBlocked}
         className="mb-space-sm min-h-[44px] resize-none"
         onKeyDown={(event) => {
           if (event.key === 'Enter' && !event.shiftKey) {
@@ -37,8 +38,13 @@ export default function MessageComposer({ onSend, sending = false, disabled = fa
           }
         }}
       />
+      {isBlocked ? (
+        <p className="mb-space-sm text-caption text-app-subtle" role="status">
+          {blockedReason}
+        </p>
+      ) : null}
       <div className="flex justify-end">
-        <Button type="submit" loading={sending} disabled={disabled || !value.trim()}>
+        <Button type="submit" loading={sending} disabled={disabled || isBlocked || !value.trim()}>
           Enviar
         </Button>
       </div>

@@ -446,6 +446,7 @@ export default function Profile() {
         initial={editingLanguage}
         onSave={saveLanguage}
         loading={saving}
+        existingLanguages={profile?.languages ?? []}
       />
       <ProjectModal
         isOpen={projectOpen}

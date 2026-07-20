@@ -6,6 +6,23 @@ import { isOrganizationProfile } from '../utils/orgLabels';
 
 export const MESSAGES_PAGE_SIZE = 20;
 export const MESSAGE_MAX_LENGTH = 2000;
+export const MESSAGE_WAIT_FOR_REPLY =
+  'Debes esperar a que esta persona responda antes de enviar otro mensaje.';
+
+function mapMessageSendError(error) {
+  if (!error) return error;
+
+  const message = String(error.message ?? '');
+  if (
+    message.includes(MESSAGE_WAIT_FOR_REPLY) ||
+    message.includes('respond') ||
+    error.code === 'P0001'
+  ) {
+    return { ...error, message: MESSAGE_WAIT_FOR_REPLY };
+  }
+
+  return error;
+}
 
 function resolveParticipantRole(profile) {
   if (!profile) return ROLES.PERSONAL;
@@ -117,7 +134,7 @@ export const messagesService = {
       return { data: null, error: { message: 'No autenticado' } };
     }
 
-    return executeWrite(
+    const result = await executeWrite(
       supabase
         .from('messages')
         .insert({
@@ -128,6 +145,36 @@ export const messagesService = {
         .select('*')
         .single(),
     );
+
+    if (result.error) {
+      return { data: null, error: mapMessageSendError(result.error) };
+    }
+
+    return result;
+  },
+
+  getConversationSendState: async (conversationId) => {
+    if (!conversationId) {
+      return { data: { canSend: false, blockedReason: null }, error: null };
+    }
+
+    const { data, error } = await supabase.rpc('get_conversation_send_state', {
+      p_conversation_id: conversationId,
+    });
+
+    if (error) {
+      return { data: { canSend: true, blockedReason: null }, error };
+    }
+
+    const row = Array.isArray(data) ? data[0] : data;
+
+    return {
+      data: {
+        canSend: Boolean(row?.can_send ?? true),
+        blockedReason: row?.blocked_reason ?? null,
+      },
+      error: null,
+    };
   },
 
   markConversationRead: async (conversationId) => {
