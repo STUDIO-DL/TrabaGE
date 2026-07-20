@@ -3,6 +3,7 @@ import AppIcon from '../common/AppIcon';
 import TimeAgo from '../common/TimeAgo';
 import { Trash2, Briefcase, Newspaper, ICON_SIZES } from '../../constants/icons';
 import { getNotificationCategory, NOTIFICATION_CATEGORY } from '../../utils/notificationCategories';
+import { getUserProfilePath } from '../../utils/profileRoutes';
 
 const CATEGORY_BADGE = {
   [NOTIFICATION_CATEGORY.JOBS]: { icon: Briefcase, className: 'bg-primary-600' },
@@ -21,9 +22,16 @@ export default function NotificationItem({
   const actorId = notification.metadata?.actor_id;
   const actorType = notification.metadata?.actor_type ?? 'candidate';
   const isUnread = !notification.read;
+  const actorProfilePath = actorId ? getUserProfilePath(actorId, actorType) : null;
 
   const category = getNotificationCategory(notification);
   const badge = CATEGORY_BADGE[category];
+
+  const logActorNav = (surface) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'D',location:'NotificationItem.jsx:actorLink',message:'actor avatar/name tapped (profile, not post)',data:{surface,notificationId:notification?.id,type:notification?.type,actorId,actorType,actorProfilePath,postId:notification?.metadata?.post_id??null,metadataLink:notification?.metadata?.link??null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  };
 
   return (
     <div
@@ -47,7 +55,7 @@ export default function NotificationItem({
         )}
       </span>
 
-      <div className="relative shrink-0">
+      <div className="relative shrink-0" onClickCapture={() => logActorNav('avatar')}>
         <UserProfileLink
           userId={actorId}
           userType={actorType}
@@ -69,6 +77,7 @@ export default function NotificationItem({
 
       <div className="min-w-0 flex-1">
         {actorId && avatarAlt ? (
+          <span onClickCapture={() => logActorNav('name')} className="block min-w-0">
           <UserProfileLink
             userId={actorId}
             userType={actorType}
@@ -80,6 +89,7 @@ export default function NotificationItem({
             }`}
             className="block min-w-0"
           />
+          </span>
         ) : (
           <p
             className={`truncate text-body-small ${

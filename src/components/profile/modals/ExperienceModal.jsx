@@ -65,6 +65,9 @@ export default function ExperienceModal({ isOpen, onClose, initial, onSave, load
       start_date: form.start_date || null,
       end_date: form.is_current ? null : form.end_date || null,
     };
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'D',location:'ExperienceModal.jsx:handleSubmit',message:'experience payload before save',data:{editingId:initial?.id||null,formIsCurrent:Boolean(form.is_current),payloadHasIsCurrent:'is_current' in payload,end_date:payload.end_date,inconsistent:!form.is_current&&!payload.end_date},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const { error: saveError } = await onSave(payload, initial?.id);
     if (saveError) {
       setError(saveError.message);

@@ -287,11 +287,17 @@ export function useCandidateProfile() {
     async (educationId, showInIntro) => {
       if (showInIntro) {
         if (!educationId) {
+          // #region agent log
+          fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E2',location:'useCandidateProfile.js:syncEducationIntro',message:'sync aborted missing educationId',data:{showInIntro:true},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
           return { error: { message: 'No se pudo vincular el centro a la intro.' } };
         }
         const alreadySelected =
           profile?.show_education_in_intro &&
           String(profile?.intro_education_id) === String(educationId);
+        // #region agent log
+        fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E3',location:'useCandidateProfile.js:syncEducationIntro',message:'syncEducationIntro show path',data:{educationId,showInIntro:true,alreadySelected,profileShow:Boolean(profile?.show_education_in_intro),profileIntroId:profile?.intro_education_id||null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (alreadySelected) return { error: null };
 
         return updateBasicInfo({
@@ -301,6 +307,9 @@ export function useCandidateProfile() {
       }
 
       const wasSelected = String(profile?.intro_education_id ?? '') === String(educationId ?? '');
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E3',location:'useCandidateProfile.js:syncEducationIntro',message:'syncEducationIntro hide path',data:{educationId:educationId||null,showInIntro:false,wasSelected,profileIntroId:profile?.intro_education_id||null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       if (!wasSelected) return { error: null };
 
       return updateBasicInfo({

@@ -81,6 +81,9 @@ function attachOneSignalListeners() {
       const target =
         resolvePushNavigationTarget(additionalData?.link) ??
         resolvePushNavigationTarget(launchUrl);
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'C',location:'onesignal.js:click',message:'push notification clicked',data:{additionalData,launchUrl,target,postId:additionalData?.post_id??null,type:additionalData?.type??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       if (target && typeof window !== 'undefined') {
         window.location.assign(target);
       }

@@ -94,10 +94,21 @@ export function getNotificationLink(notification, role = ROLES.PERSONAL) {
   // legacy metadata.link that pointed at the company profile.
   if (category === NOTIFICATION_CATEGORY.POSTS) {
     const postId = metadata.post_id ?? (metadata.target_type === 'post' ? metadata.target_id : null);
-    if (postId) return DEEP_LINK_PATHS.post(postId);
+    if (postId) {
+      const link = DEEP_LINK_PATHS.post(postId);
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'A',location:'notificationCategories.js:getNotificationLink',message:'resolved via post_id',data:{type:notification?.type,category,postId,link,metadataKeys:Object.keys(metadata),metadataLink:metadata.link??null,targetType:metadata.target_type??null,targetId:metadata.target_id??null,actorId:metadata.actor_id??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      return link;
+    }
   }
 
-  if (metadata.link) return metadata.link;
+  if (metadata.link) {
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'B',location:'notificationCategories.js:getNotificationLink',message:'resolved via metadata.link',data:{type:notification?.type,category,link:metadata.link,hasPostId:Boolean(metadata.post_id),targetType:metadata.target_type??null,actorId:metadata.actor_id??null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    return metadata.link;
+  }
 
   if (notification?.type === 'new_message' && metadata.conversation_id) {
     return rolePath(resolvedRole, `/messages/${metadata.conversation_id}`);
@@ -126,8 +137,17 @@ export function getNotificationLink(notification, role = ROLES.PERSONAL) {
       metadata.target_type === 'organization'
         ? metadata.target_id
         : null);
-    if (companyId) return DEEP_LINK_PATHS.company(companyId);
+    if (companyId) {
+      const link = DEEP_LINK_PATHS.company(companyId);
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'A',location:'notificationCategories.js:getNotificationLink',message:'POSTS fallback to company (no post_id)',data:{type:notification?.type,category,companyId,link,metadataKeys:Object.keys(metadata),targetType:metadata.target_type??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      return link;
+    }
   }
 
+  // #region agent log
+  fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'49d13a'},body:JSON.stringify({sessionId:'49d13a',runId:'pre-fix',hypothesisId:'E',location:'notificationCategories.js:getNotificationLink',message:'resolved null',data:{type:notification?.type,category,metadataKeys:Object.keys(metadata)},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
   return null;
 }
