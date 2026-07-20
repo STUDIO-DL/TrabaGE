@@ -1,17 +1,26 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { jobsService } from '../services/jobs.service';
 
 export function useJobs(filters = {}) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const jobsRef = useRef([]);
+  jobsRef.current = jobs;
 
   const fetchJobs = useCallback(async () => {
-    setLoading(true);
+    const hasExisting = jobsRef.current.length > 0;
+    if (!hasExisting) setLoading(true);
     setError(null);
     const { data, error: fetchError } = await jobsService.getActiveJobs(filters);
+    if (fetchError) {
+      setError(fetchError?.message ?? null);
+      if (!hasExisting) setJobs([]);
+      setLoading(false);
+      return;
+    }
     setJobs(data ?? []);
-    setError(fetchError?.message ?? null);
+    setError(null);
     setLoading(false);
   }, [filters]);
 

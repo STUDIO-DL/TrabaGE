@@ -51,7 +51,7 @@ export default function CvGeneratorModal({
         {status === 'generating' ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12">
             <Spinner size="lg" />
-            <p className="text-sm text-gray-600">Generando tu CV...</p>
+            <p className="text-sm text-app-muted">Generando tu CV...</p>
           </div>
         ) : null}
 
@@ -66,6 +66,7 @@ export default function CvGeneratorModal({
 
         {status === 'ready' && previewUrl ? (
           <>
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
             <div className="min-h-[50dvh] flex-1 overflow-hidden rounded-xl border border-gray-200 bg-gray-50">
               <iframe
                 title="Vista previa del CV"

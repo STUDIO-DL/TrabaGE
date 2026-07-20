@@ -40,6 +40,7 @@ export default function CertificationModal({
   const [error, setError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadPhase, setUploadPhase] = useState(null);
+  const [createdId, setCreatedId] = useState(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -63,6 +64,7 @@ export default function CertificationModal({
     setError('');
     setUploading(false);
     setUploadPhase(null);
+    setCreatedId(initial?.id || null);
   }, [isOpen, initial]);
 
   useEffect(() => {
@@ -130,7 +132,7 @@ export default function CertificationModal({
     setUploadPhase(null);
     setError('');
 
-    const { data, error: saveError } = await onSave(payload, initial?.id);
+    const { data, error: saveError } = await onSave(payload, initial?.id || createdId);
     if (saveError) {
       setUploading(false);
       setUploadPhase(null);
@@ -138,7 +140,8 @@ export default function CertificationModal({
       return;
     }
 
-    const certificationId = data?.id || initial?.id;
+    const certificationId = data?.id || initial?.id || createdId;
+    if (data?.id) setCreatedId(data.id);
     if (!certificationId) {
       setUploading(false);
       setUploadPhase(null);

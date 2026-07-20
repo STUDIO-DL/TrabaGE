@@ -207,7 +207,7 @@ export default function PublishJob() {
       return;
     }
 
-    if (!jobId) clearDraft();
+    clearDraft();
 
     if (status === 'active' && job?.id && originalStatus !== 'active') {
       await jobsService.notifyJobPublished(job);

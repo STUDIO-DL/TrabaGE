@@ -189,6 +189,55 @@ async function main() {
     process.exit(1);
   }
 
+  if (process.env.TEST_MESSAGE_PUSH === '1') {
+    console.log('\n📨 Paso 3 (opcional): verificar push de mensaje (new_message)...');
+
+    const { data: messageNotification, error: messageLookupError } = await supabase
+      .from('notifications')
+      .select('title, body, metadata')
+      .eq('recipient_id', userId)
+      .eq('type', 'new_message')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (messageLookupError) {
+      console.error('❌ No se pudo buscar notificación new_message:', messageLookupError.message);
+      process.exit(1);
+    }
+
+    if (!messageNotification) {
+      console.log('⚠️  No hay notificaciones new_message recientes. Envía un mensaje desde otra cuenta primero.');
+    } else {
+      const metadata = messageNotification.metadata ?? {};
+      const { data: messagePushResult, error: messagePushError } = await supabase.functions.invoke('send_push', {
+        body: {
+          recipient_id: userId,
+          title: messageNotification.title,
+          body: messageNotification.body ?? '',
+          data: {
+            type: 'new_message',
+            link: metadata.link ?? '',
+            conversation_id: metadata.conversation_id ?? '',
+            message_id: metadata.message_id ?? '',
+          },
+        },
+      });
+
+      if (messagePushError) {
+        console.error('❌ send_push (new_message) error:', messagePushError.message);
+        process.exit(1);
+      }
+
+      if (messagePushResult?.error) {
+        console.error('❌ send_push (new_message) respuesta:', messagePushResult.error);
+        process.exit(1);
+      }
+
+      console.log('✅ Resultado send_push (new_message):', JSON.stringify(messagePushResult, null, 2));
+    }
+  }
+
   await supabase.auth.signOut();
 }
 

@@ -99,13 +99,16 @@ export function useCreatePost() {
           );
           setUploadPhase(null);
           setLoading(false);
-          return { ok: true, post: savedPost };
+          // #region agent log
+          fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'A',location:'useCreatePost.js:imageUploadFail',message:'image fail returns ok:false partial',data:{postId:post?.id??null,ok:false},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+          return { ok: false, partial: true, post: savedPost };
         }
       } catch (uploadError) {
         showToast(uploadError.message, 'error');
         setUploadPhase(null);
         setLoading(false);
-        return { ok: true, post: savedPost };
+        return { ok: false, partial: true, post: savedPost };
       }
 
       const path = postImagePath(user.id, post.id);
@@ -122,7 +125,7 @@ export function useCreatePost() {
           'error',
         );
         setLoading(false);
-        return { ok: true, post: savedPost };
+        return { ok: false, partial: true, post: savedPost };
       }
 
       savedPost = {

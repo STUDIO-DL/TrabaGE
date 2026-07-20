@@ -95,14 +95,32 @@ export function useNotifications() {
       }),
     );
     if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
-    await notificationsService.markAsRead(id);
+
+    const { error: markError } = await notificationsService.markAsRead(id);
+    if (markError && wasUnread) {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, read: false } : n)),
+      );
+      setUnreadCount((c) => c + 1);
+    }
   }, []);
 
   const markAllAsRead = useCallback(async () => {
     if (!user?.id) return;
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    let previous = null;
+    let previousUnread = 0;
+    setNotifications((prev) => {
+      previous = prev;
+      previousUnread = prev.filter((n) => !n.read).length;
+      return prev.map((n) => ({ ...n, read: true }));
+    });
     setUnreadCount(0);
-    await notificationsService.markAllAsRead(user.id);
+
+    const { error: markError } = await notificationsService.markAllAsRead(user.id);
+    if (markError && previous) {
+      setNotifications(previous);
+      setUnreadCount(previousUnread);
+    }
   }, [user?.id]);
 
   const deleteNotification = useCallback(async (id) => {

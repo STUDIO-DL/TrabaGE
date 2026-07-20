@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import AutocompleteInput from '../ui/AutocompleteInput';
+import Input from '../ui/Input';
 import AppIcon from '../common/AppIcon';
-import { X, ICON_SIZES } from '../../constants/icons';
+import { Check, Search } from '../../constants/icons';
 import { topicsService } from '../../services/topics.service';
 
 const MAX_TOPICS = 3;
@@ -35,85 +35,140 @@ export default function TopicSelector({
     [selected],
   );
 
-  const suggestions = useMemo(() => {
-    if (selected.length >= max) return [];
-
+  const filteredCatalog = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return catalog
-      .filter((topic) => !selectedIds.has(topic.id))
-      .filter((topic) => !q || topic.name.toLowerCase().includes(q))
-      .slice(0, 12)
-      .map((topic) => topic.name);
-  }, [catalog, max, query, selected.length, selectedIds]);
+    if (!q) return catalog;
+    return catalog.filter((topic) => topic.name.toLowerCase().includes(q));
+  }, [catalog, query]);
 
-  const handleSelectName = (name) => {
-    if (selected.length >= max || disabled) return;
-    const topic = catalog.find(
-      (item) => item.name.toLowerCase() === String(name).toLowerCase(),
-    );
-    if (!topic || selectedIds.has(topic.id)) return;
-    onChange?.([...selected, topic]);
-    setQuery('');
-  };
-
-  const handleRemove = (topicId) => {
+  const handleToggle = (topic) => {
     if (disabled) return;
-    onChange?.((selected ?? []).filter((topic) => topic.id !== topicId));
+
+    if (selectedIds.has(topic.id)) {
+      onChange?.((selected ?? []).filter((item) => item.id !== topic.id));
+      return;
+    }
+
+    if (selected.length >= max) return;
+    onChange?.([...selected, topic]);
   };
 
   const atLimit = selected.length >= max;
+  const remaining = Math.max(0, max - selected.length);
 
   return (
-    <section className="shrink-0 border-t border-app-border pt-space-md">
-      <h2 className="text-body-small font-semibold text-app-text">Temas</h2>
-      <p className="mt-space-xs text-caption text-app-muted">
-        Selecciona hasta {max} temas para clasificar tu publicación.
-      </p>
-
-      {selected.length > 0 && (
-        <div className="mt-space-sm flex flex-wrap gap-space-sm">
-          {selected.map((topic) => (
-            <span
-              key={topic.id}
-              className="inline-flex items-center gap-1 rounded-radius-md border border-app-border bg-app-surface px-2.5 py-1 text-caption text-app-text"
-            >
-              {topic.name}
-              <button
-                type="button"
-                onClick={() => handleRemove(topic.id)}
-                disabled={disabled}
-                className="inline-flex rounded-radius-circular p-0.5 text-app-muted transition-colors hover:bg-app-card hover:text-app-text disabled:opacity-50"
-                aria-label={`Quitar tema ${topic.name}`}
-              >
-                <AppIcon icon={X} size={ICON_SIZES.sm} />
-              </button>
-            </span>
-          ))}
+    <section
+      className="shrink-0 rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1"
+      aria-labelledby="topic-selector-heading"
+    >
+      <div className="flex items-start justify-between gap-space-sm">
+        <div className="min-w-0 flex-1">
+          <h2
+            id="topic-selector-heading"
+            className="text-body-small font-semibold text-app-text"
+          >
+            Temas
+          </h2>
+          <p className="mt-space-xs text-caption text-app-muted">
+            Elige entre 1 y {max} para clasificar tu publicación.
+          </p>
         </div>
-      )}
+        <span
+          className={[
+            'inline-flex shrink-0 items-center rounded-radius-md px-2.5 py-1 text-caption font-semibold tabular-nums',
+            selected.length >= 1
+              ? 'bg-primary-50 text-primary-700'
+              : 'bg-app-surface text-app-muted',
+          ].join(' ')}
+          aria-live="polite"
+        >
+          {selected.length}/{max}
+        </span>
+      </div>
 
-      <div className="mt-space-sm">
-        <AutocompleteInput
+      <div className="mt-space-md">
+        <Input
+          icon={Search}
           value={query}
-          onChange={setQuery}
-          onSelect={handleSelectName}
-          suggestions={suggestions}
-          placeholder={
-            atLimit
-              ? `Máximo ${max} temas`
-              : loading
-                ? 'Cargando temas…'
-                : 'Buscar tema…'
-          }
-          disabled={disabled || loading || atLimit}
-          inputClassName="!rounded-xl !border-app-border !bg-app-card !text-app-text focus:!border-app-border focus:!ring-1 focus:!ring-app-border"
-          listClassName="!border-app-border !bg-app-card !shadow-md"
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={loading ? 'Cargando temas…' : 'Buscar tema…'}
+          disabled={disabled || loading}
+          aria-label="Buscar tema"
         />
       </div>
 
-      {selected.length < 1 && (
-        <p className="mt-space-xs text-caption text-app-subtle">
+      <div
+        className="mt-space-sm max-h-52 overflow-y-auto overscroll-contain rounded-radius-md border border-app-border bg-app-bg [-webkit-overflow-scrolling:touch] sm:max-h-64"
+        role="listbox"
+        aria-multiselectable="true"
+        aria-label="Lista de temas"
+      >
+        {loading ? (
+          <p className="px-space-base py-space-md text-caption text-app-muted">
+            Cargando temas…
+          </p>
+        ) : filteredCatalog.length === 0 ? (
+          <p className="px-space-base py-space-md text-caption text-app-muted">
+            {query.trim()
+              ? 'No hay temas que coincidan con tu búsqueda.'
+              : 'No hay temas disponibles.'}
+          </p>
+        ) : (
+          <ul className="divide-y divide-app-border">
+            {filteredCatalog.map((topic) => {
+              const isSelected = selectedIds.has(topic.id);
+              const isDisabledOption = disabled || (!isSelected && atLimit);
+
+              return (
+                <li key={topic.id} role="option" aria-selected={isSelected}>
+                  <button
+                    type="button"
+                    onClick={() => handleToggle(topic)}
+                    disabled={isDisabledOption}
+                    className={[
+                      'flex min-h-touch w-full items-center gap-space-md px-space-base py-space-sm text-left transition-colors duration-fast ease-out',
+                      'focus:outline-none focus-visible:bg-primary-50 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-100',
+                      isSelected
+                        ? 'bg-primary-50/70 text-primary-900'
+                        : 'bg-transparent text-app-text hover:bg-app-surface active:bg-primary-50/40',
+                      isDisabledOption && !isSelected ? 'cursor-not-allowed opacity-50' : '',
+                    ].join(' ')}
+                  >
+                    <span
+                      className={[
+                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors',
+                        isSelected
+                          ? 'border-primary-600 bg-primary-600 text-white'
+                          : 'border-app-border bg-app-card text-transparent',
+                      ].join(' ')}
+                      aria-hidden
+                    >
+                      {isSelected ? (
+                        <AppIcon icon={Check} size={12} className="text-white" strokeWidth={3} />
+                      ) : null}
+                    </span>
+                    <span className="min-w-0 flex-1 text-body-small font-medium">
+                      {topic.name}
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      {selected.length < 1 ? (
+        <p className="mt-space-sm text-caption text-app-subtle">
           Elige al menos un tema para publicar.
+        </p>
+      ) : atLimit ? (
+        <p className="mt-space-sm text-caption text-app-muted">
+          Máximo de {max} temas alcanzado.
+        </p>
+      ) : (
+        <p className="mt-space-sm text-caption text-app-subtle">
+          Puedes añadir {remaining} más.
         </p>
       )}
     </section>

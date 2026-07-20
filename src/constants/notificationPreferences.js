@@ -156,7 +156,7 @@ const SHARED_NOTIFICATION_GROUPS = [
       {
         key: 'messages_new',
         title: 'Mensajes nuevos',
-        description: 'Cuando recibes un mensaje interno (próximamente).',
+        description: 'Cuando recibes un mensaje interno.',
         notificationTypes: NOTIFICATION_TYPE_MAP.messages_new,
       },
     ],

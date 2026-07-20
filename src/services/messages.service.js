@@ -167,6 +167,8 @@ export const messagesService = {
       return { data: null, error: mapMessageSendError(result.error) };
     }
 
+    void dispatchMessagePushNotification(conversationId, userId, result.data);
+
     return result;
   },
 
@@ -180,14 +182,23 @@ export const messagesService = {
     });
 
     if (error) {
-      return { data: { canSend: true, blockedReason: null }, error };
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'F',location:'messages.service.js:getConversationSendState',message:'send-state RPC error fail-closed',data:{conversationId,canSendReturned:false,errorMessage:error?.message??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      return {
+        data: {
+          canSend: false,
+          blockedReason: 'No se pudo verificar si puedes enviar mensajes.',
+        },
+        error,
+      };
     }
 
     const row = Array.isArray(data) ? data[0] : data;
 
     return {
       data: {
-        canSend: Boolean(row?.can_send ?? true),
+        canSend: Boolean(row?.can_send),
         blockedReason: row?.blocked_reason ?? null,
       },
       error: null,
@@ -208,6 +219,36 @@ export const messagesService = {
         .select('*')
         .single(),
     );
+  },
+
+  markMessageNotificationsRead: async (conversationId) => {
+    if (!conversationId) return { error: null };
+
+    const { error } = await supabase.rpc('mark_message_notifications_read', {
+      p_conversation_id: conversationId,
+    });
+
+    return { error };
+  },
+
+  upsertConversationActiveView: async (conversationId) => {
+    if (!conversationId) return { error: null };
+
+    const { error } = await supabase.rpc('upsert_conversation_active_view', {
+      p_conversation_id: conversationId,
+    });
+
+    return { error };
+  },
+
+  clearConversationActiveView: async (conversationId) => {
+    if (!conversationId) return { error: null };
+
+    const { error } = await supabase.rpc('clear_conversation_active_view', {
+      p_conversation_id: conversationId,
+    });
+
+    return { error };
   },
 
   getTotalUnreadCount: async (userId) => {

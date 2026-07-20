@@ -20,6 +20,7 @@ const ACTIVITY_EVENTS = [
 export function useInactivityLogout({ enabled, onTimeout, timeoutMs = INACTIVITY_TIMEOUT_MS }) {
   const timerRef = useRef(null);
   const lastActivityAtRef = useRef(Date.now());
+  const hiddenAtRef = useRef(null);
   const onTimeoutRef = useRef(onTimeout);
   onTimeoutRef.current = onTimeout;
 
@@ -60,8 +61,24 @@ export function useInactivityLogout({ enabled, onTimeout, timeoutMs = INACTIVITY
           window.clearTimeout(timerRef.current);
           timerRef.current = null;
         }
+        hiddenAtRef.current = Date.now();
+        // #region agent log
+        fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'D',location:'useInactivityLogout.js:hidden',message:'tab hidden — timer paused',data:{lastActivityAt:lastActivityAtRef.current,elapsedMs:Date.now()-lastActivityAtRef.current,timeoutMs},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         return;
       }
+
+      // Exclude wall-clock time spent in background from the idle clock.
+      if (hiddenAtRef.current != null) {
+        const backgroundMs = Date.now() - hiddenAtRef.current;
+        lastActivityAtRef.current += backgroundMs;
+        hiddenAtRef.current = null;
+      }
+
+      const elapsedOnVisible = Date.now() - lastActivityAtRef.current;
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'D',location:'useInactivityLogout.js:visible',message:'tab visible — background excluded from idle',data:{elapsedOnVisible,wouldLogout:elapsedOnVisible>=timeoutMs,timeoutMs},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       scheduleCheck();
     };
 

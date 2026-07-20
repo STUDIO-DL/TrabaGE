@@ -89,8 +89,13 @@ export function getNotificationLink(notification, role = ROLES.PERSONAL) {
   const metadata = notification?.metadata ?? {};
   if (metadata.link) return metadata.link;
 
-  const category = getNotificationCategory(notification);
   const resolvedRole = normalizeRole(role) ?? (isEmployerRole(role) ? ROLES.BUSINESS : ROLES.PERSONAL);
+
+  if (notification?.type === 'new_message' && metadata.conversation_id) {
+    return rolePath(resolvedRole, `/messages/${metadata.conversation_id}`);
+  }
+
+  const category = getNotificationCategory(notification);
 
   if (category === NOTIFICATION_CATEGORY.JOBS) {
     if (notification?.type === 'new_application' && metadata.candidate_id) {

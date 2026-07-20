@@ -67,11 +67,15 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!canPublish) return;
-    await onSubmit?.({
+    const result = await onSubmit?.({
       content: trimmedContent,
       imageFile,
       topicIds: selectedTopics.map((topic) => topic.id),
     });
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'A',location:'PostComposer.jsx:handleSubmit',message:'publish result before clear',data:{hasResult:result!==undefined,ok:result?.ok??null,willClear:result?.ok===true,contentLen:trimmedContent.length,topicCount:selectedTopics.length},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+    if (result?.ok !== true) return;
     setContent('');
     setSelectedTopics([]);
     clearImage();
@@ -79,11 +83,11 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
 
   return (
     <form onSubmit={handleSubmit} className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-app-bg text-app-text">
-      <header className="flex h-topbar shrink-0 items-center gap-space-sm border-b border-app-border px-space-base pt-safe">
+      <header className="flex h-topbar shrink-0 items-center gap-space-sm border-b border-app-border px-space-base pt-safe sm:px-space-lg">
         <button
           type="button"
           onClick={handleClose}
-          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface"
+          className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface active:bg-app-surface"
           aria-label="Cerrar"
         >
           <AppIcon icon={X} size={ICON_SIZES.md} />
@@ -98,7 +102,11 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
           variant={isCompany ? 'rounded' : 'circular'}
         />
 
-        <div className="flex-1" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-body-small font-semibold text-app-text">
+            Nueva publicación
+          </p>
+        </div>
 
         <Button
           type="submit"
@@ -111,43 +119,51 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
         </Button>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-space-base pt-space-md pb-space-md">
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="Comparte tus ideas…"
-          rows={8}
-          autoFocus
-          className="w-full flex-1 resize-none border-0 bg-transparent text-body leading-relaxed text-app-text outline-none placeholder:text-app-subtle placeholder:opacity-80"
-        />
-
-        {imagePreview && (
-          <div className="relative mt-4 shrink-0">
-            <img src={imagePreview} alt="" className="max-h-56 w-full rounded-xl object-cover" />
-            <button
-              type="button"
-              onClick={clearImage}
-              className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
-              aria-label="Quitar imagen"
-            >
-              <AppIcon icon={X} size={ICON_SIZES.sm} className="text-white" />
-            </button>
-          </div>
-        )}
-
-        {uploadError && <p className="mt-2 shrink-0 text-sm text-red-600">{uploadError}</p>}
-
-        <div className="mt-auto pt-space-md">
-          <TopicSelector
-            selected={selectedTopics}
-            onChange={setSelectedTopics}
-            disabled={loading}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain">
+        <div className="mx-auto flex w-full max-w-xl min-h-0 flex-1 flex-col px-space-base pt-space-md pb-space-base sm:px-space-lg sm:pt-space-lg">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Comparte tus ideas…"
+            rows={6}
+            autoFocus
+            className="w-full min-h-[9rem] flex-1 resize-none border-0 bg-transparent text-body leading-relaxed text-app-text outline-none placeholder:text-app-subtle placeholder:opacity-80 sm:min-h-[12rem]"
           />
+
+          {imagePreview && (
+            <div className="relative mt-space-md shrink-0">
+              <img
+                src={imagePreview}
+                alt=""
+                className="max-h-52 w-full rounded-radius-lg object-cover sm:max-h-64"
+              />
+              <button
+                type="button"
+                onClick={clearImage}
+                className="absolute right-space-sm top-space-sm inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular bg-black/50 text-white transition-colors hover:bg-black/70"
+                aria-label="Quitar imagen"
+              >
+                <AppIcon icon={X} size={ICON_SIZES.sm} className="text-white" />
+              </button>
+            </div>
+          )}
+
+          {uploadError && (
+            <p className="mt-space-sm shrink-0 text-body-small text-error-600">{uploadError}</p>
+          )}
+
+          <div className="mt-space-lg shrink-0 pt-space-sm sm:mt-auto sm:pt-space-md">
+            <TopicSelector
+              selected={selectedTopics}
+              onChange={setSelectedTopics}
+              disabled={loading}
+            />
+          </div>
         </div>
       </div>
 
       <footer
-        className="keyboard-aware-footer flex shrink-0 items-center justify-end gap-0.5 border-t border-app-border bg-app-card px-space-base py-space-sm"
+        className="keyboard-aware-footer flex shrink-0 items-center justify-between gap-space-sm border-t border-app-border bg-app-card px-space-base py-space-sm sm:px-space-lg"
         style={{ paddingBottom: footerPaddingBottom }}
       >
         <input
@@ -157,22 +173,27 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
           className="hidden"
           onChange={handleFileInputChange}
         />
-        <button
-          type="button"
-          onClick={openFilePicker}
-          className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface"
-          aria-label="Añadir imagen"
-        >
-          <AppIcon icon={Image} size={ICON_SIZES.md} />
-        </button>
-        <button
-          type="button"
-          onClick={openFilePicker}
-          className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface"
-          aria-label="Añadir archivo"
-        >
-          <AppIcon icon={Plus} size={ICON_SIZES.md} />
-        </button>
+        <div className="flex items-center gap-0.5">
+          <button
+            type="button"
+            onClick={openFilePicker}
+            className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface active:bg-app-surface"
+            aria-label="Añadir imagen"
+          >
+            <AppIcon icon={Image} size={ICON_SIZES.md} />
+          </button>
+          <button
+            type="button"
+            onClick={openFilePicker}
+            className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-circular text-app-muted transition-colors hover:bg-app-surface active:bg-app-surface"
+            aria-label="Añadir archivo"
+          >
+            <AppIcon icon={Plus} size={ICON_SIZES.md} />
+          </button>
+        </div>
+        <p className="text-caption text-app-subtle">
+          {hasTopics ? 'Listo para publicar' : 'Falta elegir temas'}
+        </p>
       </footer>
     </form>
   );

@@ -53,7 +53,7 @@ export const applicationsService = {
   getJobApplicants: async (companyId) => {
     const applicationsResult = await supabase
       .from('applications')
-      .select('*, jobs!inner(id, company_id, title, description, requirements, city, job_type, work_mode, salary, salary_negotiable, application_deadline, company_profiles(sector, country))')
+      .select('*, jobs!inner(id, company_id, title, description, requirements, city, job_type, work_mode, salary, salary_negotiable, application_deadline, custom_questions, company_profiles(sector, country))')
       .eq('jobs.company_id', companyId)
       .order('applied_at', { ascending: false });
 

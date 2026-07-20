@@ -52,6 +52,7 @@ export function AuthProvider({ children }) {
   /** True while role/profile hydrate runs after session is known — prevents Register flash. */
   const [hydrating, setHydrating] = useState(false);
   const hydrateGenRef = useRef(0);
+  const hydrateRetryRef = useRef(0);
 
   const fetchRoleAndSetup = useCallback(async (userId, userRole) => {
     const normalized = normalizeRole(userRole) ?? userRole;
@@ -127,6 +128,8 @@ export function AuthProvider({ children }) {
     setSession(currentSession);
     setUser(currentUser);
 
+    let keepHydrating = false;
+
     try {
       setSentryUser(currentUser);
 
@@ -140,6 +143,11 @@ export function AuthProvider({ children }) {
       ]);
 
       if (gen !== hydrateGenRef.current) return;
+
+      const roleFetchFailed = Boolean(roleResult?.error);
+      if (roleFetchFailed) {
+        reportError(roleResult.error, { area: 'auth_hydrate_role', userId: currentUser.id });
+      }
 
       let userRole = roleResult?.data?.role ?? null;
 
@@ -155,6 +163,31 @@ export function AuthProvider({ children }) {
         userRole =
           normalizeRole(userRole, { companyType: companyResult?.data?.company_type }) ?? userRole;
       }
+
+      // Fetch errors must not be treated as "no role" (that sends users to /register).
+      if (
+        !userRole &&
+        (roleFetchFailed || candidateResult?.error || companyResult?.error)
+      ) {
+        reportError(roleResult?.error || candidateResult?.error || companyResult?.error, {
+          area: 'auth_hydrate_role_unresolved',
+          userId: currentUser.id,
+        });
+        if (hydrateRetryRef.current < 3) {
+          hydrateRetryRef.current += 1;
+          keepHydrating = true;
+          // Keep AuthLoadingScreen up and retry a few times for transient failures.
+          window.setTimeout(() => {
+            if (hydrateGenRef.current !== gen) return;
+            void hydrateUser(currentSession);
+          }, 2000);
+          return;
+        }
+        hydrateRetryRef.current = 0;
+        return;
+      }
+
+      hydrateRetryRef.current = 0;
 
       if (!roleResult?.data?.role && userRole && currentUser.id && userRole !== ROLES.ADMIN) {
         await authService.setUserRole(currentUser.id, userRole);
@@ -242,7 +275,7 @@ export function AuthProvider({ children }) {
       // Do not clear an already-resolved role — that flashes Register during login.
       setSetupComplete((prev) => prev);
     } finally {
-      if (gen === hydrateGenRef.current) setHydrating(false);
+      if (gen === hydrateGenRef.current && !keepHydrating) setHydrating(false);
     }
   }, []);
 
@@ -252,22 +285,22 @@ export function AuthProvider({ children }) {
     if (getPreviewMode()) {
       hydratePreview();
       setLoading(false);
-      return undefined;
+    } else {
+      authService
+        .getSession()
+        .then(({ data }) => {
+          if (!mounted) return;
+          return hydrateUser(data.session);
+        })
+        .catch((err) => {
+          reportError(err, { area: 'auth_initial_session' });
+        })
+        .finally(() => {
+          if (mounted) setLoading(false);
+        });
     }
 
-    authService
-      .getSession()
-      .then(({ data }) => {
-        if (!mounted) return;
-        return hydrateUser(data.session);
-      })
-      .catch((err) => {
-        reportError(err, { area: 'auth_initial_session' });
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
-
+    // Always subscribe so leaving preview / logging in still receives token refresh & sign-out.
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {

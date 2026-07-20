@@ -45,7 +45,9 @@ export default function CandidateSetup() {
       }
 
       if (getCandidateBootstrapMissing(data).length === 0) {
-        navigate(ROLE_PROFILE[ROLES.PERSONAL], { replace: true });
+        void refreshSetupStatus().finally(() => {
+          navigate(ROLE_PROFILE[ROLES.PERSONAL], { replace: true });
+        });
         return;
       }
 
@@ -58,7 +60,7 @@ export default function CandidateSetup() {
     return () => {
       mounted = false;
     };
-  }, [user, navigate]);
+  }, [user, navigate, refreshSetupStatus]);
 
   const missingFields = useMemo(
     () => getCandidateBootstrapMissing(form),

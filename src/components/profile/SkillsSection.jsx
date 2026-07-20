@@ -65,9 +65,9 @@ export default function SkillsSection({ items = [], isOwn, onAdd, onDelete }) {
         {visibleItems.map((item) => (
           <span
             key={item.id}
-            className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-3.5 py-1.5 text-sm text-gray-700"
+            className="inline-flex max-w-full items-center gap-1 rounded-full border border-gray-200 bg-gray-50 px-3.5 py-1.5 text-sm text-gray-700"
           >
-            {item.name}
+            <span className="min-w-0 break-words [overflow-wrap:anywhere]">{item.name}</span>
             {isOwn && (
               <button
                 type="button"

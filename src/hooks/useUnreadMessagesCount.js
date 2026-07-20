@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import { useForegroundResumeRefresh } from './useForegroundResumeRefresh';
 import { supabase } from '../config/supabase';
 import { messagesService } from '../services/messages.service';
+import { syncAppBadge } from '../utils/appBadge';
 
 export function useUnreadMessagesCount() {
   const { user, isPreviewMode } = useAuth();
@@ -13,18 +14,26 @@ export function useUnreadMessagesCount() {
   const fetchCount = useCallback(async () => {
     if (!user?.id) {
       setCount(0);
+      syncAppBadge(0);
       setLoading(false);
       return;
     }
 
     if (isPreviewMode) {
       setCount(0);
+      syncAppBadge(0);
       setLoading(false);
       return;
     }
 
-    const { count: unreadCount } = await messagesService.getTotalUnreadCount(user.id);
-    setCount(unreadCount ?? 0);
+    const { count: unreadCount, error } = await messagesService.getTotalUnreadCount(user.id);
+    if (error) {
+      setLoading(false);
+      return;
+    }
+    const nextCount = unreadCount ?? 0;
+    setCount(nextCount);
+    syncAppBadge(nextCount);
     setLoading(false);
   }, [isPreviewMode, user?.id]);
 

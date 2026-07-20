@@ -24,6 +24,9 @@ export function useMessages(conversationId) {
   const cursorRef = useRef(null);
   const loadingMoreRef = useRef(false);
   const markedReadRef = useRef(false);
+  const activeConversationRef = useRef(conversationId);
+  const sendingLockRef = useRef(false);
+  activeConversationRef.current = conversationId;
 
   const cursorFromPage = (page) => {
     if (!page.length) return null;
@@ -34,7 +37,9 @@ export function useMessages(conversationId) {
   const syncParticipants = useCallback(async () => {
     if (!conversationId || !user?.id) return;
 
+    const requestedId = conversationId;
     const { data } = await messagesService.getConversationParticipants(conversationId);
+    if (activeConversationRef.current !== requestedId) return;
     const other = (data ?? []).find((row) => row.user_id !== user.id);
     setOtherLastReadAt(other?.last_read_at ?? null);
   }, [conversationId, user?.id]);
@@ -46,8 +51,21 @@ export function useMessages(conversationId) {
       return;
     }
 
-    const { data } = await messagesService.getConversationSendState(conversationId);
-    setCanSend(data?.canSend ?? true);
+    const requestedId = conversationId;
+    const { data, error: stateError } = await messagesService.getConversationSendState(conversationId);
+    if (activeConversationRef.current !== requestedId) return;
+
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'F',location:'useMessages.js:syncSendState',message:'send state applied',data:{requestedId,canSend:data?.canSend??null,hadError:Boolean(stateError)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
+    if (stateError) {
+      setCanSend(false);
+      setBlockedReason(data?.blockedReason ?? 'No se pudo verificar si puedes enviar mensajes.');
+      return;
+    }
+
+    setCanSend(Boolean(data?.canSend));
     setBlockedReason(data?.blockedReason ?? null);
   }, [conversationId, isPreviewMode, user?.id]);
 
@@ -64,6 +82,7 @@ export function useMessages(conversationId) {
       return;
     }
 
+    const requestedId = conversationId;
     setLoading(true);
     setError(null);
     cursorRef.current = null;
@@ -73,6 +92,12 @@ export function useMessages(conversationId) {
       syncParticipants(),
       syncSendState(),
     ]);
+
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'C',location:'useMessages.js:fetchMessages',message:'fetch completed',data:{requestedId,activeId:activeConversationRef.current,stale:activeConversationRef.current!==requestedId,rowCount:(page??[]).length,pageError:Boolean(pageError)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
+    if (activeConversationRef.current !== requestedId) return;
 
     const rows = page ?? [];
     setMessages(sortMessagesAscending(rows));
@@ -86,6 +111,7 @@ export function useMessages(conversationId) {
     if (!conversationId || isPreviewMode) return;
     if (loadingMoreRef.current || loading || !hasMore) return;
 
+    const requestedId = conversationId;
     loadingMoreRef.current = true;
     setLoadingMore(true);
 
@@ -93,6 +119,12 @@ export function useMessages(conversationId) {
       cursor: cursorRef.current,
       limit: MESSAGES_PAGE_SIZE,
     });
+
+    if (activeConversationRef.current !== requestedId) {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+      return;
+    }
 
     if (!pageError) {
       const page = data ?? [];
@@ -112,7 +144,10 @@ export function useMessages(conversationId) {
 
   const markRead = useCallback(async () => {
     if (!conversationId || isPreviewMode) return;
-    await messagesService.markConversationRead(conversationId);
+    await Promise.all([
+      messagesService.markConversationRead(conversationId),
+      messagesService.markMessageNotificationsRead(conversationId),
+    ]);
   }, [conversationId, isPreviewMode]);
 
   const sendMessage = useCallback(
@@ -121,8 +156,16 @@ export function useMessages(conversationId) {
         return { error: { message: 'No se pudo enviar el mensaje.' } };
       }
 
+      if (sendingLockRef.current) {
+        return { error: { message: 'Ya se está enviando un mensaje.' } };
+      }
+
       const trimmed = String(content ?? '').trim();
       if (!trimmed) return { error: { message: 'El mensaje no puede estar vacío.' } };
+
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'C',location:'useMessages.js:sendMessage:start',message:'send start',data:{conversationId,sendingLock:sendingLockRef.current},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       const optimisticId = `optimistic-${Date.now()}`;
       const optimisticMessage = {
@@ -134,24 +177,39 @@ export function useMessages(conversationId) {
         optimistic: true,
       };
 
+      const sendConversationId = conversationId;
+      sendingLockRef.current = true;
       setSending(true);
       setMessages((prev) => sortMessagesAscending([...prev, optimisticMessage]));
 
       const { data, error: sendError } = await messagesService.sendMessage(conversationId, trimmed);
 
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'C',location:'useMessages.js:sendMessage:done',message:'send completed',data:{sendConversationId,activeId:activeConversationRef.current,stale:activeConversationRef.current!==sendConversationId,hasError:Boolean(sendError),serverMsgId:data?.id??null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+
+      if (activeConversationRef.current !== sendConversationId) {
+        sendingLockRef.current = false;
+        setSending(false);
+        return sendError ? { error: sendError } : { data, error: null };
+      }
+
       if (sendError) {
         setMessages((prev) => prev.filter((item) => item.id !== optimisticId));
+        sendingLockRef.current = false;
         setSending(false);
         return { error: sendError };
       }
 
-      setMessages((prev) =>
-        sortMessagesAscending([
-          ...prev.filter((item) => item.id !== optimisticId),
-          data,
-        ]),
-      );
+      setMessages((prev) => {
+        const withoutOptimistic = prev.filter((item) => item.id !== optimisticId);
+        if (withoutOptimistic.some((item) => item.id === data.id)) {
+          return sortMessagesAscending(withoutOptimistic);
+        }
+        return sortMessagesAscending([...withoutOptimistic, data]);
+      });
       await syncSendState();
+      sendingLockRef.current = false;
       setSending(false);
       return { data, error: null };
     },
@@ -160,6 +218,8 @@ export function useMessages(conversationId) {
 
   useEffect(() => {
     markedReadRef.current = false;
+    sendingLockRef.current = false;
+    setSending(false);
     fetchMessages();
   }, [fetchMessages]);
 
@@ -171,6 +231,34 @@ export function useMessages(conversationId) {
 
     return undefined;
   }, [conversationId, isPreviewMode, markRead]);
+
+  useEffect(() => {
+    if (!conversationId || isPreviewMode) return undefined;
+
+    let heartbeatId = null;
+
+    const syncPresence = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      void messagesService.upsertConversationActiveView(conversationId);
+    };
+
+    syncPresence();
+    heartbeatId = window.setInterval(syncPresence, 30_000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        syncPresence();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (heartbeatId != null) window.clearInterval(heartbeatId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      void messagesService.clearConversationActiveView(conversationId);
+    };
+  }, [conversationId, isPreviewMode]);
 
   useEffect(() => {
     if (!conversationId || isPreviewMode) return undefined;
@@ -191,9 +279,10 @@ export function useMessages(conversationId) {
             if (prev.some((item) => item.id === incoming.id)) return prev;
             return sortMessagesAscending([...prev, incoming]);
           });
+          // Sync lock for both parties (incl. multi-tab own sends).
+          void syncSendState();
           if (incoming.sender_id !== user?.id) {
             void markRead();
-            void syncSendState();
           }
         },
       )
@@ -214,7 +303,7 @@ export function useMessages(conversationId) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [conversationId, fetchMessages, isPreviewMode, markRead, syncParticipants, syncSendState, user?.id]);
+  }, [conversationId, isPreviewMode, markRead, syncParticipants, syncSendState, user?.id]);
 
   useForegroundResumeRefresh(() => {
     void fetchMessages();

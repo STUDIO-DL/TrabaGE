@@ -72,12 +72,20 @@ export function useCvGenerator({ profile, accountEmail, onUploadCV, refetchProfi
   }, [blob, filename, previewUrl]);
 
   const saveAsOfficialCv = useCallback(async () => {
-    if (!blob || !onUploadCV) return { error: { message: 'No hay CV generado.' } };
+    if (!blob || !onUploadCV) {
+      const err = { message: 'No hay CV generado.' };
+      setError(err.message);
+      return { error: err };
+    }
 
     setUploading(true);
+    setError(null);
     const file = new File([blob], filename, { type: 'application/pdf' });
     const result = await onUploadCV(file);
     setUploading(false);
+    if (result?.error) {
+      setError(result.error.message || 'No se pudo guardar el CV.');
+    }
     return result;
   }, [blob, filename, onUploadCV]);
 

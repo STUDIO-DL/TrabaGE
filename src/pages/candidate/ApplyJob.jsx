@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import FormPageLayout from '../../components/layout/FormPageLayout';
@@ -50,6 +50,7 @@ export default function ApplyJob() {
   const [error, setError] = useState('');
   const [existingApplication, setExistingApplication] = useState(null);
   const [submitted, setSubmitted] = useState(false);
+  const coverLetterSeededRef = useRef(false);
 
   const customQuestions = parseCustomQuestions(job?.custom_questions);
   const hasSavedCv = Boolean(
@@ -76,10 +77,15 @@ export default function ApplyJob() {
   }, [isPreviewMode, jobId, user?.id]);
 
   useEffect(() => {
-    if (profile?.cover_letter && !coverLetter) {
-      setCoverLetter(profile.cover_letter);
-    }
-  }, [profile?.cover_letter, coverLetter]);
+    coverLetterSeededRef.current = false;
+  }, [jobId]);
+
+  useEffect(() => {
+    if (coverLetterSeededRef.current) return;
+    if (!profile?.cover_letter) return;
+    setCoverLetter(profile.cover_letter);
+    coverLetterSeededRef.current = true;
+  }, [profile?.cover_letter]);
 
   const resolveCvForSubmit = async () => {
     if (cvFile) {
