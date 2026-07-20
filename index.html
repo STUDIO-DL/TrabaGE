@@ -49,90 +49,13 @@
           document.documentElement.style.colorScheme = theme;
           const meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', theme === 'dark' ? '#0F172A' : '#2563EB');
-
-          const isStandalone =
-            window.matchMedia('(display-mode: standalone)').matches ||
-            window.matchMedia('(display-mode: fullscreen)').matches ||
-            window.navigator.standalone === true;
-          const hasSeenFullSplash =
-            localStorage.getItem('trabage_full_splash_seen') === 'true';
-          const markedInstalled = localStorage.getItem('trabage_pwa_installed') === 'true';
-          const onboardingComplete =
-            localStorage.getItem('trabage_onboarding_complete') === 'true';
-          const hasAuthSession = Boolean(localStorage.getItem('trabage-auth'));
-          const hasThemePref = Boolean(localStorage.getItem('trabage_theme'));
-          const hasSearchHistory = Boolean(localStorage.getItem('trabage_search_history'));
-          const isReturningUser =
-            isStandalone ||
-            hasSeenFullSplash ||
-            markedInstalled ||
-            onboardingComplete ||
-            hasAuthSession ||
-            hasThemePref ||
-            hasSearchHistory;
-          document.documentElement.dataset.bootSplash = isReturningUser ? 'quick' : 'full';
-          if (isReturningUser && !hasSeenFullSplash) {
-            localStorage.setItem('trabage_full_splash_seen', 'true');
-          }
         } catch {
           document.documentElement.dataset.theme = 'light';
-          document.documentElement.dataset.bootSplash = 'full';
         }
       })();
     </script>
-    <style>
-      #boot-splash {
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #ffffff;
-        padding-top: env(safe-area-inset-top, 0px);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-      }
-
-      html.dark #boot-splash {
-        background: #09090b;
-      }
-
-      #boot-splash svg {
-        display: none;
-        width: 3rem;
-        height: 3rem;
-      }
-
-      html[data-boot-splash='quick'] #boot-splash svg {
-        display: block;
-      }
-
-      #boot-splash .boot-t {
-        fill: #09090b;
-      }
-
-      html.dark #boot-splash .boot-t {
-        fill: #fafafa;
-      }
-    </style>
   </head>
   <body>
-    <div id="boot-splash" aria-hidden="true">
-      <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="TrabaGE">
-        <text
-          x="20"
-          y="20"
-          text-anchor="middle"
-          dominant-baseline="central"
-          font-family="Inter, system-ui, -apple-system, sans-serif"
-          font-size="28"
-          font-weight="700"
-          class="boot-t"
-        >
-          T
-        </text>
-      </svg>
-    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

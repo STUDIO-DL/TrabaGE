@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import ZarrelCredit from '../components/branding/ZarrelCredit';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import EquatorialGuineaMap from '../components/splash/EquatorialGuineaMap';
-import TrabaGEIconMark from '../components/splash/TrabaGEIconMark';
 import TrabaGEWordmark from '../components/splash/TrabaGEWordmark';
 import { getOnboardingComplete } from '../context/AuthContext';
 import { useAuth } from '../hooks/useAuth';
@@ -150,15 +149,7 @@ export default function SplashScreen() {
   ]);
 
   if (!isFullSplash) {
-    return (
-      <div
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-app-bg pt-safe pb-safe"
-        aria-busy="true"
-        aria-label="Abriendo TrabaGE"
-      >
-        <TrabaGEIconMark className="h-12 w-12" />
-      </div>
-    );
+    return null;
   }
 
   return (
