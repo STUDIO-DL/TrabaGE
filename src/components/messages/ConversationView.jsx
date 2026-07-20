@@ -7,6 +7,7 @@ import FetchErrorBanner from '../common/FetchErrorBanner';
 import Skeleton from '../common/Skeleton';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
+import KeyboardAwareFooter from '../layout/KeyboardAwareFooter';
 import { useMessages } from '../../hooks/useMessages';
 import { useConversations } from '../../hooks/useConversations';
 import { useAuth } from '../../hooks/useAuth';
@@ -226,14 +227,14 @@ export default function ConversationView({ conversationId, role }) {
           </div>
         ) : null}
 
-        <div style={{ paddingBottom: footerPaddingBottom }}>
+        <KeyboardAwareFooter as="div">
           <MessageComposer
             onSend={handleSend}
             sending={sending}
             disabled={loading || Boolean(error) || !canSend}
             blockedReason={!canSend ? (blockedReason ?? MESSAGE_WAIT_FOR_REPLY) : null}
           />
-        </div>
+        </KeyboardAwareFooter>
       </div>
     </PageContainer>
   );
