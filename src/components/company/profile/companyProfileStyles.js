@@ -1,6 +1,6 @@
 /** Shared layout tokens for company / organization profiles (mobile-first). */
 
-export const profileContentShellClass = 'mx-auto w-full max-w-lg';
+export const profileContentShellClass = 'mx-auto w-full min-w-0 max-w-lg overflow-x-hidden';
 
 export const profileSectionStackClass = 'space-y-space-base px-space-base py-space-base';
 
@@ -12,7 +12,7 @@ export const sectionLinkClass =
   'shrink-0 text-caption font-medium text-primary-600 transition-colors duration-fast hover:text-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2';
 
 export const profileMetaLineClass =
-  'flex items-start gap-space-sm break-words text-caption text-app-muted';
+  'text-user-content flex min-w-0 items-start gap-space-sm break-words text-caption text-app-muted';
 
 export const profileMetaIconClass = 'mt-0.5 shrink-0 text-app-text';
 
@@ -35,13 +35,13 @@ export const profileCompanyLogoFrameClass =
   'rounded-radius-md bg-app-card p-1 ring-4 ring-app-card shadow-elevation-2';
 
 export const profileCompanyNameHeadingClass =
-  'break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
+  'text-user-content break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
 
 export const profileCompanyNameRowClass =
   'flex min-w-0 flex-wrap items-center gap-x-space-sm gap-y-space-xs';
 
 export const profileHeadlineClass =
-  'break-words text-body-small leading-relaxed text-app-muted sm:text-body';
+  'text-user-content break-words text-body-small leading-relaxed text-app-muted sm:text-body';
 
 /** Compact profile action buttons — inline row, not full-width stack */
 export const profileActionButtonClass = 'h-btn-md min-h-touch shrink-0 px-space-md';
@@ -87,7 +87,7 @@ export const profilePersonalAvatarFrameClass =
   'rounded-radius-circular bg-app-card p-0.5 ring-4 ring-app-card shadow-elevation-2';
 
 export const profileNameHeadingClass =
-  'break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
+  'text-user-content break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
 
 export const profileHeaderInfoClass = 'min-w-0 flex-1 pt-space-xs sm:pt-space-md';
 

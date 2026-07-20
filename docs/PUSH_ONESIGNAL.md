@@ -142,7 +142,7 @@ Prerequisites:
 | 3 | App open | Run `npm run test-onesignal-push` | Toast/banner or system notification; tap opens `/personal/notifications` |
 | 4 | Background | Home button → run test script | System notification in tray; tap opens deep link |
 | 5 | Closed | Swipe away PWA → run test script | System notification in tray |
-| 6 | Opt-out | Disable **Estado de mis postulaciones** in settings → company changes application status | In-app notification only; no push |
+| 6 | Opt-out | Disable **Estado de mis postulaciones** in settings → company changes application status | No in-app or push notification |
 | 7 | Dedup | Trigger same event twice within 10 min | Second push skipped (`deduped: 1` in edge response) |
 | 8 | Admin broadcast | `/admin/notifications` → send to **Todos** | History row in `admin_push_broadcast_log`; push to opted-in users |
 | 9 | Logout | Sign out | `push_subscriptions.is_active=false` for device; `OneSignal.logout()` |

@@ -37,7 +37,7 @@ function InfoRow({ icon, label, value, href, external = false }) {
       <div className="min-w-0 flex-1">
         <p className="text-caption text-app-subtle">{label}</p>
         <p
-          className={`truncate text-body-small font-medium ${
+          className={`text-user-content text-body-small font-medium ${
             href ? 'text-primary-600' : 'text-app-text'
           }`}
         >

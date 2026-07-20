@@ -81,6 +81,8 @@
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
     background: rgb(var(--app-bg));
+    overflow-x: hidden;
+    max-width: 100%;
     transition: background-color var(--motion-normal) var(--ease-standard),
       color var(--motion-normal) var(--ease-standard);
   }
@@ -90,12 +92,16 @@
     background: rgb(var(--app-bg));
     color: rgb(var(--app-text));
     min-height: 100dvh;
+    overflow-x: hidden;
+    max-width: 100%;
     transition: background-color var(--motion-normal) var(--ease-standard),
       color var(--motion-normal) var(--ease-standard);
   }
 
   #root {
     min-height: 100dvh;
+    overflow-x: hidden;
+    max-width: 100%;
   }
 
   input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']),
@@ -113,7 +119,7 @@
 
 @layer components {
   .page-shell {
-    @apply min-h-dvh;
+    @apply min-h-dvh min-w-0 max-w-full overflow-x-hidden;
     padding-bottom: calc(
       var(--bottom-nav-height) + var(--safe-area-bottom) + var(--keyboard-offset, 0px)
     );
@@ -424,7 +430,19 @@
 
   /* Single surface system for cards across the app */
   .surface-card {
-    @apply rounded-radius-lg border border-app-border bg-app-card text-app-text shadow-elevation-1;
+    @apply min-w-0 max-w-full overflow-hidden rounded-radius-lg border border-app-border bg-app-card text-app-text shadow-elevation-1;
+  }
+
+  /**
+   * User-generated text — never expand layout horizontally.
+   * Apply to names, headlines, descriptions, URLs, etc.
+   */
+  .text-user-content {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
   }
 
   .dark .surface-card {

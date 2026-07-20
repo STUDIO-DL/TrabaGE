@@ -229,9 +229,9 @@ export default function CandidateProfileHeader({
             ) : null}
 
             {locationText ? (
-              <p className="mt-space-sm flex items-center gap-1.5 text-caption text-app-muted">
-                <AppIcon icon={MapPin} size={ICON_SIZES.default} className="shrink-0" />
-                {locationText}
+              <p className="text-user-content mt-space-sm flex items-start gap-1.5 text-caption text-app-muted">
+                <AppIcon icon={MapPin} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
+                <span>{locationText}</span>
               </p>
             ) : null}
 

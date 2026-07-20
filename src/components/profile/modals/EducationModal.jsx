@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
@@ -18,6 +18,9 @@ import {
 } from '../../../utils/educationDates';
 import { storageService } from '../../../services/storage.service';
 import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
+import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
+import { useAuth } from '../../../hooks/useAuth';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 const ACTIVITIES_MAX = 500;
 const DESCRIPTION_MAX = 1000;
@@ -118,7 +121,17 @@ export default function EducationModal({
   userId,
 }) {
   const formId = useId();
-  const [form, setForm] = useState(emptyForm);
+  const { user } = useAuth();
+  const resolvedUserId = userId || user?.id;
+  const draftKey = FORM_DRAFT_KEYS.educationModal(initial?.id);
+
+  const { values: form, setValues: setForm, clearDraft } = useFormDraft({
+    draftKey,
+    userId: resolvedUserId,
+    initialValues: buildFormState(initial),
+    enabled: isOpen && Boolean(resolvedUserId),
+  });
+
   const [existingFiles, setExistingFiles] = useState([]);
   const [pendingFiles, setPendingFiles] = useState([]);
   const [removedPaths, setRemovedPaths] = useState([]);
@@ -126,10 +139,13 @@ export default function EducationModal({
   const [submitError, setSubmitError] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadPhase, setUploadPhase] = useState(null);
+  const prevOpenRef = useRef(false);
 
+  // File lists only reset when the modal opens — not when parent profile refetches.
   useEffect(() => {
-    if (!isOpen) return;
-    setForm(buildFormState(initial));
+    const justOpened = isOpen && !prevOpenRef.current;
+    prevOpenRef.current = isOpen;
+    if (!justOpened) return;
     setExistingFiles(normalizeMediaFiles(initial?.media_files));
     setPendingFiles([]);
     setRemovedPaths([]);
@@ -137,16 +153,14 @@ export default function EducationModal({
     setSubmitError('');
   }, [isOpen, initial]);
 
-  const busy = loading || uploading;
-
-  const setField = (patch) => {
+  const setField = useCallback((patch) => {
     setForm((current) => ({ ...current, ...patch }));
     setFieldErrors((current) => {
       const next = { ...current };
       Object.keys(patch).forEach((key) => delete next[key]);
       return next;
     });
-  };
+  }, [setForm]);
 
   const handleAddPendingFile = (file, errorMessage) => {
     if (errorMessage) {
@@ -249,8 +263,11 @@ export default function EducationModal({
       setUploadPhase(null);
     }
 
+    clearDraft();
     onClose();
   };
+
+  const busy = loading || uploading;
 
   const activitiesCount = form.activities.length;
   const descriptionCount = form.description.length;

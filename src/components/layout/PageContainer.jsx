@@ -12,7 +12,7 @@ export default function PageContainer({
   contentClassName = '',
 }) {
   const shellClass = [
-    bottomNav ? 'page-shell' : 'min-h-dvh',
+    bottomNav ? 'page-shell' : 'min-h-dvh min-w-0 max-w-full overflow-x-hidden',
     'mx-auto max-w-lg bg-app-bg text-app-text',
     className,
   ]
@@ -26,7 +26,7 @@ export default function PageContainer({
           (backButton || actions || title ? (
             <TopBar title={title} backButton={backButton} actions={actions} />
           ) : null))}
-      <main className={contentClassName || undefined}>{children}</main>
+      <main className={`min-w-0 max-w-full ${contentClassName || ''}`.trim() || undefined}>{children}</main>
       {bottomNav && <BottomNav />}
     </div>
   );

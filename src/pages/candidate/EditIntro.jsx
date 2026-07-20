@@ -13,8 +13,10 @@ import { CITIES } from '../../constants/cities';
 import { COUNTRIES, DEFAULT_COUNTRY } from '../../constants/countries';
 import { SECTORS } from '../../constants/sectors';
 import { GraduationCap } from '../../constants/icons';
+import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { formatDateRange } from '../../utils/formatDate';
@@ -76,21 +78,19 @@ export default function EditIntro() {
     updateEducation,
   } = useCandidateProfile();
 
-  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const formInitializedRef = useRef(false);
+  const draftRestoreNotifiedRef = useRef(false);
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [modalSaving, setModalSaving] = useState(false);
 
-  useEffect(() => {
-    if (!user || loading) return;
-
+  const initialForm = useMemo(() => {
+    if (!user) return emptyForm;
     const identity = readIdentityFromUser(user);
-    const nextForm = {
+    return {
       full_name: profile?.full_name || identity.full_name || '',
       headline: profile?.headline || '',
       about: profile?.about || '',
@@ -102,18 +102,25 @@ export default function EditIntro() {
       show_education_in_intro: Boolean(profile?.show_education_in_intro),
       intro_education_id: profile?.intro_education_id || '',
     };
+  }, [profile, user]);
 
-    if (!formInitializedRef.current) {
-      formInitializedRef.current = true;
-      setForm(nextForm);
-      return;
-    }
+  const {
+    values: form,
+    setValues: setForm,
+    clearDraft,
+    restoredFromDraft,
+  } = useFormDraft({
+    draftKey: FORM_DRAFT_KEYS.editIntro,
+    userId: user?.id,
+    initialValues: initialForm,
+    enabled: Boolean(user?.id) && !loading,
+  });
 
-    setForm((prev) => {
-      const unchanged = Object.keys(nextForm).every((key) => prev[key] === nextForm[key]);
-      return unchanged ? prev : nextForm;
-    });
-  }, [profile, user, loading]);
+  useEffect(() => {
+    if (!restoredFromDraft || draftRestoreNotifiedRef.current) return;
+    draftRestoreNotifiedRef.current = true;
+    showToast('Se restauró tu borrador sin guardar.', 'info');
+  }, [restoredFromDraft, showToast]);
 
   const currentExperience = useMemo(
     () => getCurrentExperience(profile?.experience),
@@ -176,6 +183,7 @@ export default function EditIntro() {
       return;
     }
 
+    clearDraft();
     showToast(TOAST.saved, 'success');
     navigate('/personal/profile');
   };

@@ -103,6 +103,48 @@ export const notificationsService = {
   },
 
   /**
+   * Creates an in-app notification and sends push when the recipient allows both.
+   * Push is skipped when in-app delivery is blocked by preferences.
+   */
+  notifyUser: async ({
+    recipientId,
+    type,
+    title,
+    body = null,
+    metadata = {},
+    pushData = null,
+  }) => {
+    if (!recipientId) {
+      return { data: null, error: new Error('Destinatario requerido') };
+    }
+
+    const { data, error } = await notificationsService.create({
+      recipient_id: recipientId,
+      type,
+      title,
+      body,
+      metadata,
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    if (!data) {
+      return { data: null, error: null, skipped: true };
+    }
+
+    const pushPayload = pushData ?? {
+      type,
+      ...metadata,
+    };
+
+    await sendPushBatch([recipientId], title, body ?? '', pushPayload);
+
+    return { data, error: null };
+  },
+
+  /**
    * Notify all followers of a company/institution (in-app + OneSignal-ready push).
    */
   notifyFollowers: async ({
@@ -175,8 +217,8 @@ export const notificationsService = {
       stub: true,
     };
 
-    const { error } = await notificationsService.create({
-      recipient_id: recipientId,
+    const { error } = await notificationsService.notifyUser({
+      recipientId,
       type: 'new_message',
       title,
       body,
@@ -185,7 +227,6 @@ export const notificationsService = {
 
     if (error) return { data: null, error };
 
-    await sendPushBatch([recipientId], title, body, metadata);
     return { data: { sent: true, stub: true }, error: null };
   },
 };

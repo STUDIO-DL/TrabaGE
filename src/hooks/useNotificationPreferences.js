@@ -8,17 +8,32 @@ import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   NOTIFICATION_PERMISSION_STATUS,
 } from '../constants/notificationPreferences';
+import { isPersonalRole } from '../constants/roles';
 import {
   normalizeNotificationPreferences,
   notificationPreferencesService,
 } from '../services/notificationPreferences.service';
+import { profileService } from '../services/profile.service';
 import {
   usePushForegroundSync,
   usePushPermissionActions,
 } from './usePushPermission';
 import { reportError } from '../utils/logger';
 
-export function useNotificationPreferences(userId, { disabled = false } = {}) {
+async function syncCandidateJobAlerts(userId, enabled) {
+  if (!userId) return;
+
+  try {
+    await profileService.updateCandidateProfile(userId, {
+      notifications_enabled: enabled,
+      ...(enabled ? { notification_frequency: 'instant' } : {}),
+    });
+  } catch (error) {
+    reportError(error, { area: 'notification_job_alerts_sync', userId, enabled });
+  }
+}
+
+export function useNotificationPreferences(userId, { disabled = false, role = null } = {}) {
   const {
     requestPermission,
     disablePushSubscription,
@@ -64,8 +79,11 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
       setSavedKey(key);
       window.setTimeout(() => setSavedKey((current) => (current === key ? null : current)), 1800);
 
-      if (normalized.push_enabled && isPermissionGranted()) {
-        void refreshToken();
+      if (
+        normalized.push_enabled &&
+        (normalized.permission_status === NOTIFICATION_PERMISSION_STATUS.GRANTED || isPermissionGranted())
+      ) {
+        await refreshToken();
         void syncOneSignalNotificationTags(normalized);
       }
 
@@ -164,6 +182,9 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
 
       if (!enabled) {
         await disablePushSubscription();
+        if (isPersonalRole(role)) {
+          void syncCandidateJobAlerts(userId, false);
+        }
         return savePatch({ push_enabled: false }, 'push_enabled');
       }
 
@@ -184,6 +205,9 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
         if (!result.error) {
           setPermissionMessage('granted');
           void syncOneSignalNotificationTags({ ...preferences, push_enabled: true });
+          if (isPersonalRole(role)) {
+            void syncCandidateJobAlerts(userId, true);
+          }
         }
         return result;
       }
@@ -215,10 +239,13 @@ export function useNotificationPreferences(userId, { disabled = false } = {}) {
       if (!result.error) {
         setPermissionMessage('granted');
         void syncOneSignalNotificationTags({ ...preferences, push_enabled: true });
+        if (isPersonalRole(role)) {
+          void syncCandidateJobAlerts(userId, true);
+        }
       }
       return result;
     },
-    [disablePushSubscription, getPermissionStatus, preferences, requestPermission, savePatch],
+    [disablePushSubscription, getPermissionStatus, preferences, requestPermission, role, savePatch, userId],
   );
 
   const setPreference = useCallback(

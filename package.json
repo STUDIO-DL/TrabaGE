@@ -22,7 +22,8 @@
     "qa:email-verification": "node scripts/qa-email-verification.mjs",
     "qa:register-verify-ui": "node scripts/qa-register-verify-ui.mjs",
     "generate-icons": "node scripts/generate-pwa-icons.mjs",
-    "test-onesignal-push": "node scripts/test-onesignal-push.mjs"
+    "test-onesignal-push": "node scripts/test-onesignal-push.mjs",
+    "test-notification-delivery": "node scripts/test-notification-delivery.mjs"
   },
   "dependencies": {
     "@sentry/react": "^9.30.0",

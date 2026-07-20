@@ -39,10 +39,10 @@ function ExpandableText({ text, className = '', defaultExpanded = false }) {
   const maxHeight = expanded ? fullHeight : collapsedHeight;
 
   return (
-    <div className={`relative ${className}`.trim()}>
+    <div className={`relative min-w-0 max-w-full ${className}`.trim()}>
       <p
         ref={measureRef}
-        className="pointer-events-none absolute left-0 top-0 -z-10 w-full opacity-0 whitespace-pre-wrap text-body-small"
+        className="pointer-events-none absolute left-0 top-0 -z-10 w-full max-w-full opacity-0 whitespace-pre-wrap text-body-small text-user-content"
         aria-hidden
       >
         {trimmed}
@@ -58,7 +58,7 @@ function ExpandableText({ text, className = '', defaultExpanded = false }) {
       >
         <p
           id={contentId}
-          className={`whitespace-pre-wrap text-body-small text-app-text ${
+          className={`text-user-content whitespace-pre-wrap text-body-small text-app-text ${
             needsTruncation && !expanded ? LINE_CLAMP_CLASS : ''
           }`}
         >

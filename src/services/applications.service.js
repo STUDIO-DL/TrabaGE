@@ -103,8 +103,8 @@ export const applicationsService = {
       const notificationType = `application_${status}`;
       const applicationsLink = '/personal/applications';
 
-      await notificationsService.create({
-        recipient_id: result.data.candidate_id,
+      await notificationsService.notifyUser({
+        recipientId: result.data.candidate_id,
         type: notificationType,
         title: copy.title,
         body: copy.body(jobTitle),
@@ -112,18 +112,6 @@ export const applicationsService = {
           application_id: id,
           job_id: result.data.job_id,
           link: applicationsLink,
-        },
-      });
-
-      await notificationsService.sendPush({
-        recipientIds: [result.data.candidate_id],
-        title: copy.title,
-        body: copy.body(jobTitle),
-        data: {
-          type: notificationType,
-          link: applicationsLink,
-          application_id: id,
-          job_id: result.data.job_id,
         },
       });
     }

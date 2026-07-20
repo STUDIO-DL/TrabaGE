@@ -12,8 +12,10 @@ import Card from '../../components/ui/Card';
 import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { CITIES } from '../../constants/cities';
 import { WORK_MODES } from '../../constants/workModes';
+import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import { ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
@@ -29,6 +31,20 @@ import {
 } from '../../utils/jobParsing';
 
 const TEXT_MAX = 5000;
+
+const EMPTY_JOB_FORM = {
+  title: '',
+  role: '',
+  description: '',
+  requirements: '',
+  benefits: '',
+  salary: '',
+  salaryNegotiable: false,
+  city: '',
+  work_mode: '',
+  application_deadline: '',
+  customQuestions: [''],
+};
 
 function buildJobPayload(form, companyId, status) {
   const customQuestions = form.customQuestions
@@ -90,19 +106,19 @@ export default function PublishJob() {
   const profileCheckPending = !isPreviewMode && (profileLoading || !profileFetched);
   const profileIncomplete =
     !isPreviewMode && profileFetched && !isCompanyRequiredComplete(profile);
-  const [form, setForm] = useState({
-    title: '',
-    role: '',
-    description: '',
-    requirements: '',
-    benefits: '',
-    salary: '',
-    salaryNegotiable: false,
-    city: '',
-    work_mode: '',
-    application_deadline: '',
-    customQuestions: [''],
+  const [editForm, setEditForm] = useState(EMPTY_JOB_FORM);
+  const {
+    values: draftForm,
+    setValues: setDraftForm,
+    clearDraft,
+  } = useFormDraft({
+    draftKey: FORM_DRAFT_KEYS.publishJob(jobId),
+    userId: user?.id,
+    initialValues: EMPTY_JOB_FORM,
+    enabled: Boolean(user?.id) && !jobId && !profileCheckPending,
   });
+  const form = jobId ? editForm : draftForm;
+  const setForm = jobId ? setEditForm : setDraftForm;
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(Boolean(jobId));
   const [error, setError] = useState('');
@@ -126,7 +142,7 @@ export default function PublishJob() {
         return;
       }
 
-      setForm({
+      setEditForm({
         title: data.title || '',
         role: data.role || '',
         description: data.description || '',
@@ -190,6 +206,8 @@ export default function PublishJob() {
       setLoading(false);
       return;
     }
+
+    if (!jobId) clearDraft();
 
     if (status === 'active' && job?.id && originalStatus !== 'active') {
       await jobsService.notifyJobPublished(job);

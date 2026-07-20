@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ProfilePageShell from '../../profile/ProfilePageShell';
 import AppIcon from '../../common/AppIcon';
 import Button from '../../ui/Button';
@@ -68,9 +68,12 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
   const isOpen = Boolean(mode);
   const [form, setForm] = useState({});
   const [introError, setIntroError] = useState('');
+  const prevOpenRef = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    const justOpened = isOpen && !prevOpenRef.current;
+    prevOpenRef.current = isOpen;
+    if (!justOpened) return;
 
     setIntroError('');
     setForm({
@@ -92,7 +95,7 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
       x: profile?.social_links?.x || '',
       youtube: profile?.social_links?.youtube || '',
     });
-  }, [isOpen, profile]);
+  }, [isOpen, profile, mode]);
 
   const setField = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));

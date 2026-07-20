@@ -3,7 +3,8 @@ import { supabase } from '../config/supabase';
 import { authService, isEmailVerified } from '../services/auth.service';
 import { isAuthConfirmPath } from '../constants/authUrls';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
-import { clearOneSignalUserId, bindOneSignalUser } from '../config/onesignal';
+import { clearOneSignalUserId, bindOneSignalUser, isOneSignalConfigured } from '../config/onesignal';
+import { notificationPreferencesService } from '../services/notificationPreferences.service';
 import {
   ROLE_HOME,
   ROLE_SETUP,
@@ -173,11 +174,15 @@ export function AuthProvider({ children }) {
 
       setRole(userRole);
 
-      void bindOneSignalUser(currentUser.id, {
-        role: userRole,
-        city: candidateResult?.data?.city ?? companyResult?.data?.city ?? null,
-        sector: candidateResult?.data?.sector ?? companyResult?.data?.sector ?? null,
-      });
+      void notificationPreferencesService.getOrCreate(currentUser.id);
+
+      if (isOneSignalConfigured()) {
+        void bindOneSignalUser(currentUser.id, {
+          role: userRole,
+          city: candidateResult?.data?.city ?? companyResult?.data?.city ?? null,
+          sector: candidateResult?.data?.sector ?? companyResult?.data?.sector ?? null,
+        });
+      }
 
       if (userRole && userRole !== ROLES.ADMIN) {
         const profileInactive = isPersonalRole(userRole)

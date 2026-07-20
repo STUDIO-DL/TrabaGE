@@ -5,23 +5,6 @@ import { ROLES, normalizeRole, rolePath } from '../constants/roles';
 import { VERIFICATION_BUCKET } from '../utils/companyVerification';
 import { reportError } from '../utils/logger';
 
-const PUSH_FUNCTION = 'send_push';
-
-async function sendPushNotification(recipientId, title, body, data = {}) {
-  try {
-    await supabase.functions.invoke(PUSH_FUNCTION, {
-      body: {
-        recipient_id: recipientId,
-        title,
-        body,
-        data,
-      },
-    });
-  } catch (error) {
-    reportError(error, { area: 'verification_push_notification', recipientId });
-  }
-}
-
 async function createVerificationNotification(recipientId, type, title, body, metadata = {}) {
   const { data: roleData } = await authService.getUserRole(recipientId);
   const role =
@@ -32,8 +15,8 @@ async function createVerificationNotification(recipientId, type, title, body, me
     request_id: metadata.request_id ?? null,
   };
 
-  const { error } = await notificationsService.create({
-    recipient_id: recipientId,
+  const { error } = await notificationsService.notifyUser({
+    recipientId,
     type,
     title,
     body,
@@ -42,13 +25,7 @@ async function createVerificationNotification(recipientId, type, title, body, me
 
   if (error) {
     reportError(error, { area: 'verification_notification_create', recipientId, type });
-    return;
   }
-
-  await sendPushNotification(recipientId, title, body, {
-    type,
-    ...enrichedMetadata,
-  });
 }
 
 export const verificationService = {

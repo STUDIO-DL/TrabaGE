@@ -43,6 +43,7 @@ export default function PushPermissionPrompt() {
   const { user, isAuthenticated, isPreviewMode, setupComplete, role, loading } = useAuth();
   const { preferences, setMasterEnabled, status } = useNotificationPreferences(user?.id, {
     disabled: isPreviewMode,
+    role,
   });
   const { requestPermission, getPermissionStatus } = usePushPermissionActions();
   const [visible, setVisible] = useState(false);
@@ -118,7 +119,9 @@ export default function PushPermissionPrompt() {
         return;
       }
 
-      void setMasterEnabled(true);
+      if (getPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.DENIED) {
+        dismiss();
+      }
     } finally {
       setActivating(false);
     }
@@ -139,7 +142,7 @@ export default function PushPermissionPrompt() {
         <div className="min-w-0 flex-1">
           <p className="text-[14px] font-semibold text-slate-950">Activa las notificaciones</p>
           <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
-            Recibe avisos con sonido en la bandeja del sistema sobre ofertas, postulaciones y novedades de cuentas que sigues.
+            Recibe avisos en la bandeja de TrabaGE y como notificaciones del sistema sobre ofertas, postulaciones y novedades de cuentas que sigues.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button

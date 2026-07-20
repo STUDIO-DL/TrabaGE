@@ -185,8 +185,8 @@ export default function ApplyJob() {
           ROLES.BUSINESS;
         const applicantsLink = rolePath(employerRole, '/applicants');
 
-        await notificationsService.create({
-          recipient_id: job.company_id,
+        await notificationsService.notifyUser({
+          recipientId: job.company_id,
           type: 'new_application',
           title: notificationTitle,
           body: notificationBody,
@@ -196,18 +196,6 @@ export default function ApplyJob() {
             actor_id: user.id,
             actor_type: 'personal',
             link: applicantsLink,
-          },
-        });
-
-        await notificationsService.sendPush({
-          recipientIds: [job.company_id],
-          title: notificationTitle,
-          body: notificationBody,
-          data: {
-            type: 'new_application',
-            link: applicantsLink,
-            job_id: jobId,
-            candidate_id: user.id,
           },
         });
       }

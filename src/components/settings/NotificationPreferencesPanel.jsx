@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 import AppIcon from '../common/AppIcon';
+import Button from '../ui/Button';
 import { ICON_SIZES, ShieldCheck } from '../../constants/icons';
 import {
   getNotificationGroupsForRole,
@@ -8,10 +9,14 @@ import {
   NOTIFICATION_SAVED_COPY,
 } from '../../constants/notificationPreferences';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { isOneSignalConfigured } from '../../config/onesignal';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
+import { rolePath } from '../../constants/roles';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { notificationsService } from '../../services/notifications.service';
+import { getNotificationsInboxPath } from '../../utils/notificationSetup';
 
 function PreferenceSwitch({ checked, disabled, onChange, label }) {
   return (
@@ -141,13 +146,14 @@ export default function NotificationPreferencesPanel({ accountType }) {
   const { showToast } = useNotificationContext();
   const activeRole = accountType || role;
   const groups = getNotificationGroupsForRole(activeRole);
+  const [sendingTest, setSendingTest] = useState(false);
   const {
     preferences,
     setMasterEnabled,
     setPreference,
     status,
     clearPermissionMessage,
-  } = useNotificationPreferences(user?.id, { disabled: isPreviewMode });
+  } = useNotificationPreferences(user?.id, { disabled: isPreviewMode, role: activeRole });
 
   useEffect(() => {
     if (status.permissionMessage === 'granted') {
@@ -184,6 +190,39 @@ export default function NotificationPreferencesPanel({ accountType }) {
     if (error) showToast(getSupabaseErrorMessage(error, 'No se pudo actualizar la preferencia.'), 'error');
   };
 
+  const handleSendTestNotification = async () => {
+    if (!import.meta.env.DEV || isPreviewMode || !user?.id || !status.pushToggleChecked) return;
+
+    setSendingTest(true);
+    try {
+      const title = 'Prueba TrabaGE';
+      const body = 'Notificación de prueba — in-app y push.';
+      const link = getNotificationsInboxPath(rolePath(activeRole, ''));
+
+      const { data, error, skipped } = await notificationsService.notifyUser({
+        recipientId: user.id,
+        type: 'system_update',
+        title,
+        body,
+        metadata: { link, test: true },
+      });
+
+      if (error) {
+        showToast(getSupabaseErrorMessage(error, 'No se pudo enviar la notificación de prueba.'), 'error');
+        return;
+      }
+
+      if (skipped || !data) {
+        showToast('Notificación omitida — revisa que las alertas del sistema estén activadas.', 'info');
+        return;
+      }
+
+      showToast('Notificación de prueba enviada. Revisa la bandeja in-app y el sistema.', 'success');
+    } finally {
+      setSendingTest(false);
+    }
+  };
+
   const disabledCategories = !status.pushToggleChecked || status.savingKey === 'push_enabled' || isPreviewMode;
 
   return (
@@ -213,6 +252,26 @@ export default function NotificationPreferencesPanel({ accountType }) {
         {status.osPermissionDenied ? (
           <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-900">
             {NOTIFICATION_SAVED_COPY.blocked}
+          </div>
+        ) : null}
+
+        {!isOneSignalConfigured() ? (
+          <div className="mt-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-[12px] leading-relaxed text-amber-900">
+            Push del sistema no disponible en este entorno. Configura <code className="font-mono">VITE_ONESIGNAL_APP_ID</code> en <code className="font-mono">.env.local</code> y reinicia el servidor. Las notificaciones in-app seguirán funcionando.
+          </div>
+        ) : null}
+
+        {import.meta.env.DEV && status.pushToggleChecked ? (
+          <div className="mt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={sendingTest || isPreviewMode}
+              onClick={handleSendTestNotification}
+            >
+              {sendingTest ? 'Enviando prueba…' : 'Enviar notificación de prueba'}
+            </Button>
           </div>
         ) : null}
 

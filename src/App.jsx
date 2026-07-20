@@ -6,6 +6,8 @@ import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { KeyboardProvider } from './context/KeyboardContext';
+import { useAuth } from './hooks/useAuth';
+import { useInactivityLogout } from './hooks/useInactivityLogout';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import GuestOnlyRoute from './components/routing/GuestOnlyRoute';
 import RoleRoute from './components/routing/RoleRoute';
@@ -86,6 +88,22 @@ const NotFound = lazy(() => import('./pages/shared/NotFound'));
 function AppToasts() {
   const { toasts, dismissToast } = useNotificationContext();
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
+}
+
+/** Controlled logout after 5 minutes of real inactivity; form drafts stay in localStorage. */
+function SessionManager() {
+  const { isAuthenticated, isPreviewMode, logout } = useAuth();
+  const { showToast } = useNotificationContext();
+
+  useInactivityLogout({
+    enabled: isAuthenticated && !isPreviewMode,
+    onTimeout: () => {
+      showToast('Sesión cerrada por inactividad. Tu borrador se ha guardado.', 'info');
+      void logout();
+    },
+  });
+
+  return null;
 }
 
 function LegacyPathRedirect({ toPrefix }) {
@@ -269,6 +287,7 @@ export default function App() {
             <KeyboardProvider>
               <NotificationProvider>
                 <AppToasts />
+                <SessionManager />
                 <AppRoutes />
               </NotificationProvider>
             </KeyboardProvider>

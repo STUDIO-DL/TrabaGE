@@ -42,7 +42,7 @@ export default function JobCard({
     : null;
 
   return (
-    <article className="rounded-radius-md border border-app-border bg-app-surface p-3 shadow-elevation-1 transition-colors duration-fast ease-out hover:border-primary-200/70 hover:bg-primary-50/30 dark:hover:bg-primary-950/20">
+    <article className="min-w-0 max-w-full overflow-hidden rounded-radius-md border border-app-border bg-app-surface p-3 shadow-elevation-1 transition-colors duration-fast ease-out hover:border-primary-200/70 hover:bg-primary-50/30 dark:hover:bg-primary-950/20">
       <div className="flex items-start gap-3">
         {companyProfilePath ? (
           <Link
@@ -76,7 +76,7 @@ export default function JobCard({
 
         <div className="min-w-0 flex-1 space-y-0.5">
           <Link to={detailPath} className="block min-w-0">
-            <h3 className="truncate text-body-small font-semibold leading-tight text-app-text">
+            <h3 className="text-user-content text-body-small font-semibold leading-tight text-app-text">
               {job.title}
             </h3>
           </Link>

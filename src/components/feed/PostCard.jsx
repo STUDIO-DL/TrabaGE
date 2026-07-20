@@ -30,7 +30,7 @@ function PostCard({
   const hasText = Boolean(post.content?.trim());
 
   return (
-    <Card className="mb-space-md" elevation={1}>
+    <Card className="mb-space-md min-w-0 max-w-full overflow-hidden" elevation={1}>
       <div className="mb-space-md flex items-start gap-space-md">
         <UserProfileLink
           userId={authorId}
@@ -54,7 +54,9 @@ function PostCard({
               <VerifiedBadge size="sm" />
             )}
           </div>
-          {authorHeadline && <p className="text-body-small text-app-muted">{authorHeadline}</p>}
+          {authorHeadline && (
+            <p className="text-user-content text-body-small text-app-muted">{authorHeadline}</p>
+          )}
           <TimeAgo date={post.created_at} className="mt-space-xs text-caption text-app-subtle" />
         </div>
         <div className="flex shrink-0 flex-col items-end gap-space-xs">

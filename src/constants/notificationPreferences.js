@@ -199,14 +199,15 @@ export function getNotificationGroupsForRole(role) {
 export const NOTIFICATION_MASTER_CARD = {
   icon: Bell,
   title: 'Recibir notificaciones',
-  description: 'Permite que TrabaGE te envíe notificaciones importantes en este dispositivo.',
+  description:
+    'Activa avisos in-app y push en este dispositivo para ofertas, postulaciones, mensajes y novedades de cuentas que sigues.',
 };
 
 export const NOTIFICATION_SAVED_COPY = {
   saved: 'Guardado',
   saving: 'Guardando...',
-  activated: 'Las notificaciones han sido activadas.',
-  denied: 'No se concedió el permiso para recibir notificaciones.',
+  activated: 'Notificaciones in-app y push activadas en este dispositivo.',
+  denied: 'No se concedió el permiso para recibir notificaciones push.',
   blocked:
     'Las notificaciones están bloqueadas en tu dispositivo. Actívalas desde los ajustes del navegador o del sistema para recibir avisos de TrabaGE.',
   securityAlwaysOn: 'Las alertas críticas de cuenta y seguridad permanecen siempre activas para proteger tu cuenta.',

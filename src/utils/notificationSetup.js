@@ -2,7 +2,7 @@ import { hasJobPreferences } from '../constants/jobPreferences';
 
 /**
  * Returns true when the user has completed the minimum notification setup:
- * push enabled, job alerts enabled, and at least one job-alert preference signal.
+ * push enabled (master toggle), job alerts enabled, and at least one job-alert preference signal.
  */
 export function areNotificationsConfigured({ pushPreferences, profile } = {}) {
   if (!pushPreferences?.push_enabled) return false;

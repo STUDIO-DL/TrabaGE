@@ -37,7 +37,7 @@ export default function ProfilePageShell({
   };
 
   return (
-    <div className="profile-page min-h-full bg-app-surface">
+    <div className="profile-page min-h-full min-w-0 max-w-full overflow-x-hidden bg-app-surface">
       {!hideHeader && (
       <header className={topBarOuterClass}>
         <div className={topBarInnerClass}>
