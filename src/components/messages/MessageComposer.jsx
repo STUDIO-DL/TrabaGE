@@ -61,6 +61,7 @@ export default function MessageComposer({ onSend, sending = false, disabled = fa
   return (
     <form
       onSubmit={handleSubmit}
+      data-chat-compose=""
       className="border-t border-app-border bg-app-card px-space-base py-space-sm"
     >
       {isBlocked ? (

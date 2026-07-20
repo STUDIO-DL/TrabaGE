@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageContainer from '../layout/PageContainer';
 import TopBar from '../layout/TopBar';
@@ -12,9 +12,11 @@ import { useMessages } from '../../hooks/useMessages';
 import { useConversations } from '../../hooks/useConversations';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
-import { useKeyboard } from '../../hooks/useKeyboard';
 import { isEmployerRole } from '../../constants/roles';
 import { messagesService, MESSAGE_WAIT_FOR_REPLY } from '../../services/messages.service';
+
+const BOTTOM_THRESHOLD = 50;
+const COMPOSE_INSET_FALLBACK = 72;
 
 function ConversationSkeleton() {
   return (
@@ -35,9 +37,12 @@ function ConversationSkeleton() {
 export default function ConversationView({ conversationId, role }) {
   const { user } = useAuth();
   const { showToast } = useNotificationContext();
-  const { footerPaddingBottom } = useKeyboard();
   const scrollRef = useRef(null);
+  const composeRef = useRef(null);
+  const bottomAnchorRef = useRef(null);
   const topSentinelRef = useRef(null);
+  const isAtBottomRef = useRef(true);
+  const [composeInset, setComposeInset] = useState(COMPOSE_INSET_FALLBACK);
   const {
     conversations,
     loading: conversationsLoading,
@@ -94,11 +99,54 @@ export default function ConversationView({ conversationId, role }) {
       : `/profile/${displayParticipant.userId}`
     : null;
 
+  const checkIsAtBottom = useCallback(() => {
+    const node = scrollRef.current;
+    if (!node) return true;
+    const distance = node.scrollHeight - node.scrollTop - node.clientHeight;
+    return distance <= BOTTOM_THRESHOLD;
+  }, []);
+
+  const scrollToBottom = useCallback((behavior = 'auto') => {
+    const node = scrollRef.current;
+    if (!node) return;
+    node.scrollTo({ top: node.scrollHeight, behavior });
+  }, []);
+
+  useEffect(() => {
+    const node = composeRef.current;
+    if (!node) return undefined;
+
+    const measure = () => {
+      setComposeInset(node.getBoundingClientRect().height || COMPOSE_INSET_FALLBACK);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [loading, blockedReason, canSend, error]);
+
   useEffect(() => {
     const node = scrollRef.current;
-    if (!node || loading) return;
-    node.scrollTop = node.scrollHeight;
-  }, [conversationId, loading]);
+    if (!node || loading) return undefined;
+
+    const handleScroll = () => {
+      isAtBottomRef.current = checkIsAtBottom();
+    };
+
+    handleScroll();
+    node.addEventListener('scroll', handleScroll, { passive: true });
+    return () => node.removeEventListener('scroll', handleScroll);
+  }, [loading, checkIsAtBottom]);
+
+  useEffect(() => {
+    if (loading) return;
+    isAtBottomRef.current = true;
+    requestAnimationFrame(() => {
+      scrollToBottom('auto');
+      requestAnimationFrame(() => scrollToBottom('auto'));
+    });
+  }, [conversationId, loading, scrollToBottom]);
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -107,16 +155,36 @@ export default function ConversationView({ conversationId, role }) {
     const lastMessage = messages[messages.length - 1];
     if (!lastMessage) return;
 
-    const distanceFromBottom = node.scrollHeight - node.scrollTop - node.clientHeight;
     const shouldStickToBottom =
       lastMessage.sender_id === user?.id ||
       lastMessage.optimistic ||
-      distanceFromBottom < 120;
+      isAtBottomRef.current;
 
     if (shouldStickToBottom) {
-      node.scrollTop = node.scrollHeight;
+      isAtBottomRef.current = true;
+      requestAnimationFrame(() => {
+        scrollToBottom('auto');
+        requestAnimationFrame(() => scrollToBottom('auto'));
+      });
     }
-  }, [loading, loadingMore, messages, user?.id]);
+  }, [loading, loadingMore, messages, user?.id, scrollToBottom]);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+
+    const handleViewportChange = () => {
+      if (!isAtBottomRef.current) return;
+      requestAnimationFrame(() => scrollToBottom('auto'));
+    };
+
+    vv.addEventListener('resize', handleViewportChange);
+    vv.addEventListener('scroll', handleViewportChange);
+    return () => {
+      vv.removeEventListener('resize', handleViewportChange);
+      vv.removeEventListener('scroll', handleViewportChange);
+    };
+  }, [scrollToBottom]);
 
   useEffect(() => {
     const sentinel = topSentinelRef.current;
@@ -136,9 +204,15 @@ export default function ConversationView({ conversationId, role }) {
   }, [loadMore]);
 
   const handleSend = async (content) => {
+    isAtBottomRef.current = true;
     const result = await sendMessage(content);
     if (result.error) {
       showToast(result.error.message ?? 'No se pudo enviar el mensaje.', 'error');
+    } else {
+      requestAnimationFrame(() => {
+        scrollToBottom('auto');
+        requestAnimationFrame(() => scrollToBottom('auto'));
+      });
     }
     return result;
   };
@@ -181,11 +255,12 @@ export default function ConversationView({ conversationId, role }) {
     <PageContainer
       topBar={<TopBar backButton center={headerCenter} />}
       bottomNav={false}
-      className="flex min-h-0 flex-col"
+      className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden"
+      contentClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
     >
-      <div className="flex min-h-0 flex-1 flex-col">
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
         {error ? (
-          <div className="p-space-base">
+          <div className="shrink-0 p-space-base">
             <FetchErrorBanner message={error} onRetry={refetch} />
           </div>
         ) : null}
@@ -195,8 +270,8 @@ export default function ConversationView({ conversationId, role }) {
         {!loading ? (
           <div
             ref={scrollRef}
-            className="flex-1 overflow-y-auto overflow-x-hidden px-space-base py-space-md"
-            style={{ paddingBottom: footerPaddingBottom }}
+            className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-space-base py-space-md"
+            style={{ paddingBottom: composeInset }}
           >
             <div ref={topSentinelRef} className="h-px w-full" aria-hidden="true" />
             {loadingMore ? (
@@ -224,16 +299,19 @@ export default function ConversationView({ conversationId, role }) {
                 );
               })}
             </div>
+            <div ref={bottomAnchorRef} className="h-px w-full shrink-0" aria-hidden="true" />
           </div>
         ) : null}
 
-        <KeyboardAwareFooter as="div">
-          <MessageComposer
-            onSend={handleSend}
-            sending={sending}
-            disabled={loading || Boolean(error) || !canSend}
-            blockedReason={!canSend ? (blockedReason ?? MESSAGE_WAIT_FOR_REPLY) : null}
-          />
+        <KeyboardAwareFooter fixed as="div">
+          <div ref={composeRef}>
+            <MessageComposer
+              onSend={handleSend}
+              sending={sending}
+              disabled={loading || Boolean(error) || !canSend}
+              blockedReason={!canSend ? (blockedReason ?? MESSAGE_WAIT_FOR_REPLY) : null}
+            />
+          </div>
         </KeyboardAwareFooter>
       </div>
     </PageContainer>

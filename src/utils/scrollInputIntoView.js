@@ -99,10 +99,15 @@ export function isFocusableInput(element) {
   return Boolean(element?.matches?.(FOCUSABLE));
 }
 
+function shouldSkipKeyboardScroll(element) {
+  return Boolean(element?.closest?.('[data-chat-compose]'));
+}
+
 export function attachGlobalInputScroll(options = {}) {
   const handleFocusIn = (event) => {
     const target = event.target;
     if (!isFocusableInput(target)) return;
+    if (shouldSkipKeyboardScroll(target)) return;
     scrollInputIntoView(target, options);
   };
 

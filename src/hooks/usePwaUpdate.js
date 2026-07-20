@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 
 /** Minimum time in background before checking for updates again. */
@@ -8,16 +8,31 @@ export const PWA_BACKGROUND_MIN_MS = 30 * 60 * 1000;
 export const PWA_PERIODIC_CHECK_MS = 4 * 60 * 60 * 1000;
 
 export function usePwaUpdate() {
+  const [needRefresh, setNeedRefresh] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const updateSWRef = useRef(null);
   const registrationRef = useRef(null);
   const hiddenAtRef = useRef(null);
+  const refreshingRef = useRef(false);
 
   useEffect(() => {
     if (!import.meta.env.PROD || !('serviceWorker' in navigator)) {
       return undefined;
     }
 
-    registerSW({
+    const onControllerChange = () => {
+      if (refreshingRef.current) return;
+      refreshingRef.current = true;
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+
+    const updateSW = registerSW({
       immediate: true,
+      onNeedRefresh() {
+        setNeedRefresh(true);
+      },
       onRegisteredSW(_swUrl, registration) {
         registrationRef.current = registration ?? null;
       },
@@ -26,7 +41,11 @@ export function usePwaUpdate() {
       },
     });
 
+    updateSWRef.current = updateSW;
+
     return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
+      updateSWRef.current = null;
       registrationRef.current = null;
     };
   }, []);
@@ -66,4 +85,28 @@ export function usePwaUpdate() {
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [checkForUpdates]);
+
+  const applyUpdate = useCallback(async () => {
+    const updateSW = updateSWRef.current;
+    if (!updateSW) return;
+
+    setIsUpdating(true);
+    refreshingRef.current = false;
+    try {
+      await updateSW(true);
+    } catch {
+      setIsUpdating(false);
+    }
+  }, []);
+
+  const dismissUpdate = useCallback(() => {
+    setNeedRefresh(false);
+  }, []);
+
+  return {
+    needRefresh,
+    isUpdating,
+    applyUpdate,
+    dismissUpdate,
+  };
 }
