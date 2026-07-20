@@ -1,4 +1,5 @@
 import { Building2, Share2, PROFILE_SECTION_ICONS } from '../../../constants/icons';
+import { hasCompanyActionableContact } from '../../../utils/contact';
 import CompanyAboutSection from './CompanyAboutSection';
 import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
 import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
