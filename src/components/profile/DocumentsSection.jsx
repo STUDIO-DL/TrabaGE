@@ -9,7 +9,7 @@ import { FileText, ICON_SIZES } from '../../constants/icons';
 import { FILE_HINTS } from '../../utils/validateFile';
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
-import { loadCvGeneratorModal } from '../../features/cv-generator';
+import { loadCvGeneratorModal } from '../../features/cv-generator/loadCvGeneratorModal';
 import { getCvReadiness, goToCvReadinessTarget } from '../../features/cv-generator/cvReadiness';
 import CvIncompleteProfileModal from '../../features/cv-generator/CvIncompleteProfileModal';
 
