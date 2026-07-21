@@ -43,6 +43,9 @@ export function useProfile(userId) {
   const query = useQuery({
     queryKey: queryKey ?? ['profile', 'disabled'],
     enabled: Boolean(queryKey) && Boolean(targetId) && !isPreviewMode,
+    // Always re-read full profile (with education/experience/…) on mount so a
+    // base-only cache entry from auth hydrate cannot hide persisted sections.
+    refetchOnMount: 'always',
     queryFn: () =>
       fetchProfileForKey(targetId, {
         role,

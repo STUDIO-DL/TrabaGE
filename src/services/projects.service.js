@@ -47,5 +47,6 @@ export const projectsService = {
   updateProject: (id, data) =>
     executeWrite(supabase.from('projects').update(data).eq('id', id).select('*').maybeSingle()),
 
-  deleteProject: (id) => executeDelete(supabase.from('projects').delete().eq('id', id)),
+  deleteProject: (id) =>
+    executeDelete(supabase.from('projects').delete().eq('id', id).select('id')),
 };

@@ -226,6 +226,12 @@ export default function EducationModal({
     }
 
     const educationId = data?.id || initial?.id;
+    if (!educationId) {
+      setUploading(false);
+      setUploadPhase(null);
+      setSubmitError('No se pudo confirmar el guardado en el servidor. Inténtalo de nuevo.');
+      return;
+    }
     if (educationId && (pendingFiles.length || removedPaths.length)) {
       const { mediaFiles, error: mediaError } = await syncMediaFiles(educationId);
       if (mediaError) {

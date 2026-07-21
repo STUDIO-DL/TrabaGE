@@ -77,6 +77,14 @@ export default function AuthCallback() {
         return;
       }
 
+      // PKCE: exchange code explicitly if detectSessionInUrl has not finished yet.
+      if (authCode) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
+        if (exchangeError) {
+          // Already exchanged by detectSessionInUrl, or invalid — poll session next.
+        }
+      }
+
       const redirectFromSession = async (session, event = null) => {
         if (!session?.user?.id || cancelled || resolved) return false;
         resolved = true;

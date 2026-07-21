@@ -35,14 +35,8 @@ import { getOnboardingComplete } from '../../context/AuthContext';
 import { authService } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
 import { queueWelcomeEmailOnRegistrationComplete } from '../../services/welcomeEmail.service';
-import { mapAuthError, formatAuthErrorDetail } from '../../utils/errors';
+import { mapAuthError } from '../../utils/errors';
 import { getErrorMessage } from '../../utils/i18n';
-
-function formatRegisterError(error) {
-  const friendly = mapAuthError(error);
-  const technical = formatAuthErrorDetail(error);
-  return `${friendly}\n\nDetalle técnico:\n${technical}`;
-}
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
 const fieldClassName =
@@ -375,7 +369,7 @@ export default function Register() {
     submitLockRef.current = false;
 
     if (registerError) {
-      setError(formatRegisterError(registerError));
+      setError(mapAuthError(registerError));
       setLoading(false);
       return;
     }

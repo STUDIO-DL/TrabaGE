@@ -27,7 +27,16 @@ export async function executeWrite(promise, options) {
 }
 
 export async function executeDelete(promise) {
-  const { error } = await promise;
+  const { data, error } = await promise;
   if (error) return { data: null, error };
+
+  // When the caller uses .select(), an empty array means RLS blocked or no row matched.
+  if (Array.isArray(data) && data.length === 0) {
+    return {
+      data: null,
+      error: { message: WRITE_NO_ROW_MESSAGE, code: 'WRITE_NO_ROW' },
+    };
+  }
+
   return { data: true, error: null };
 }

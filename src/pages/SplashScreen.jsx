@@ -13,8 +13,9 @@ import {
   markFullSplashSeen,
   resolveStartupSplashMode,
 } from '../utils/startup';
+import { getResumePathWithinGrace, touchLastActive } from '../utils/appLifecycle';
 
-const ROLE_WAIT_MS = 8000;
+const ROLE_WAIT_MS = 20000;
 
 function resolveGuestDestination() {
   return getOnboardingComplete() ? '/login' : '/onboarding';
@@ -28,26 +29,32 @@ export default function SplashScreen() {
     user,
     getHomePath,
     loading,
-    logout,
     refreshAuthState,
   } = useAuth();
 
-  const splashMode = useMemo(() => resolveStartupSplashMode(), []);
+  const splashMode = useMemo(() => {
+    const resumePath = getResumePathWithinGrace();
+    if (resumePath) {
+      return { mode: 'quick', minDurationMs: 0, resumePath };
+    }
+    return { ...resolveStartupSplashMode(), resumePath: null };
+  }, []);
   const isFullSplash = splashMode.mode === 'full';
 
-  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(splashMode.minDurationMs === 0);
   const [roleWaitExpired, setRoleWaitExpired] = useState(false);
   const roleRetryRef = useRef(false);
   const navigatingRef = useRef(false);
 
   const pendingDestination = useMemo(() => {
     if (loading) return null;
+    if (splashMode.resumePath) return splashMode.resumePath;
     if (isAuthenticated) {
       if (!role) return null;
       return getHomePath() || '/login';
     }
     return resolveGuestDestination();
-  }, [getHomePath, isAuthenticated, loading, role]);
+  }, [getHomePath, isAuthenticated, loading, role, splashMode.resumePath]);
 
   const preloadRef = useStartupPreload({
     enabled: !isFullSplash,
@@ -98,16 +105,23 @@ export default function SplashScreen() {
           return;
         }
         navigatingRef.current = true;
-        void logout().then(() => navigate('/login', { replace: true }));
+        // Soft exit: do not destroy a possibly-valid session on slow role hydrate.
+        navigate('/login', { replace: true });
         return;
       }
 
-      const home = getHomePath() || '/login';
+      const home = splashMode.resumePath || getHomePath() || '/login';
       navigatingRef.current = true;
+      touchLastActive();
 
       const navigateHome = () => {
         navigate(home, { replace: true });
       };
+
+      if (splashMode.resumePath || splashMode.minDurationMs === 0) {
+        navigateHome();
+        return;
+      }
 
       if (isFullSplash) {
         void runStartupPreload({ destination: home, userId: user?.id }).finally(navigateHome);
@@ -119,12 +133,17 @@ export default function SplashScreen() {
       return;
     }
 
-    const destination = resolveGuestDestination();
+    const destination = splashMode.resumePath || resolveGuestDestination();
     navigatingRef.current = true;
 
     const navigateGuest = () => {
       navigate(destination, { replace: true });
     };
+
+    if (splashMode.resumePath || splashMode.minDurationMs === 0) {
+      navigateGuest();
+      return;
+    }
 
     if (isFullSplash) {
       void runStartupPreload({ destination, userId: null }).finally(navigateGuest);
@@ -139,13 +158,14 @@ export default function SplashScreen() {
     isAuthenticated,
     isFullSplash,
     loading,
-    logout,
     minTimeElapsed,
     navigate,
     preloadRef,
     refreshAuthState,
     role,
     roleWaitExpired,
+    splashMode.minDurationMs,
+    splashMode.resumePath,
     user?.id,
   ]);
 

@@ -538,9 +538,9 @@ export function isBrandNewAuthUser(user) {
 
 /**
  * A TrabaGE account exists when the user already has a profile, is admin,
- * has confirmed email (email signup), has signup metadata, or is a returning
- * auth user with a role. Only a brand-new Google-only OAuth row (LOGIN without
- * prior signup) is treated as unregistered — never delete confirmed users.
+ * has signup metadata, confirmed email from a non-Google-only identity, or is
+ * a returning auth user with a role. Pure Google OAuth always sets
+ * email_confirmed_at — that alone is NOT a TrabaGE account (LOGIN without signup).
  */
 export async function isRegisteredTrabaGEAccount(user) {
   if (!user?.id) return false;
@@ -548,9 +548,12 @@ export async function isRegisteredTrabaGEAccount(user) {
   const profileRole = await getExistingProfileRole(user.id);
   if (profileRole) return true;
 
-  // Email confirmation or prior signup metadata ⇒ real account, even inside
-  // the first-minute window (welcome email → Google login race).
-  if (user.email_confirmed_at || hasSignupMetadata(user)) return true;
+  // Prior signup form metadata ⇒ real account, even inside the first-minute window.
+  if (hasSignupMetadata(user)) return true;
+
+  // Email confirmation from password/email signup (or linked non-Google identity).
+  // Google-only OAuth confirms email automatically — ignore that alone.
+  if (user.email_confirmed_at && !isGoogleOnlyIdentity(user)) return true;
 
   const identities = user.identities || [];
   if (identities.length > 1) return true;
@@ -577,12 +580,12 @@ export async function isRegisteredTrabaGEAccount(user) {
 /**
  * Removes the orphan auth session created by Google OAuth when the user tried
  * to sign in without an existing TrabaGE account. Never leaves them logged in.
- * Hard-delete only for brand-new Google-only orphans — never confirmed emails.
+ * Hard-delete only for brand-new Google-only orphans — Google always has
+ * email_confirmed_at, so that flag alone must not block cleanup.
  */
 export async function discardUnregisteredOAuthSession(user = null) {
   const canHardDelete =
     user &&
-    !user.email_confirmed_at &&
     !hasSignupMetadata(user) &&
     isGoogleOnlyIdentity(user) &&
     isBrandNewAuthUser(user);

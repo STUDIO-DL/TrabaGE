@@ -4,6 +4,7 @@ import AppIcon from '../../common/AppIcon';
 import { FileText, Image, Trash2, Upload, ICON_SIZES } from '../../../constants/icons';
 import { validateFile } from '../../../utils/validateFile';
 import { formatFileSize } from '../../../utils/formatFileSize';
+import { beginNativeFilePick, endNativeFilePick } from '../../../utils/appLifecycle';
 
 export const MAX_EDUCATION_FILES = 5;
 
@@ -26,6 +27,7 @@ export default function EducationFilesField({
   const atLimit = totalCount >= MAX_EDUCATION_FILES;
 
   const handlePick = (event) => {
+    endNativeFilePick();
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file || disabled || atLimit) return;
@@ -121,7 +123,10 @@ export default function EducationFilesField({
           variant="secondary"
           size="sm"
           className="inline-flex items-center gap-space-sm"
-          onClick={() => inputRef.current?.click()}
+          onClick={() => {
+            beginNativeFilePick();
+            inputRef.current?.click();
+          }}
         >
           <AppIcon icon={Upload} size={ICON_SIZES.default} />
           Añadir archivo

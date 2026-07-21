@@ -11,6 +11,7 @@ import { reportError } from '../utils/logger';
 import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
 import { getOwnCandidateProfileKey, getProfileQueryKey } from '../constants/profileQueryKeys';
 import { withSetupComplete } from '../utils/profilePersistence';
+import { mergeCandidateProfileRow } from '../utils/candidateProfileSections';
 
 function friendlyProfileError(error) {
   if (!error) return null;
@@ -33,9 +34,7 @@ function friendlyProfileError(error) {
 }
 
 function mergeBaseProfileRow(current, row) {
-  if (!row) return current ?? null;
-  if (!current) return row;
-  return { ...current, ...row };
+  return mergeCandidateProfileRow(current, row);
 }
 
 export function useCandidateProfile() {

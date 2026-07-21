@@ -184,7 +184,16 @@ export default function Profile() {
     setSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
     setSaving(false);
-    if (!result.error && !options.silent) showToast('Educación guardada.', 'success');
+    if (result.error) {
+      if (!options.silent) showToast(result.error.message || 'No se pudo guardar la educación.', 'error');
+      return result;
+    }
+    if (!result.data?.id && !id) {
+      const err = { message: 'No se pudo confirmar el guardado en el servidor.' };
+      if (!options.silent) showToast(err.message, 'error');
+      return { data: null, error: err };
+    }
+    if (!options.silent) showToast('Educación guardada.', 'success');
     return result;
   };
 
@@ -293,8 +302,8 @@ export default function Profile() {
               onAdd={() => openLanguage()}
               onEdit={openLanguage}
               onDelete={async (id) => {
-                await deleteLanguage(id);
-                showToast('Idioma eliminado.', 'success');
+                const { error } = await deleteLanguage(id);
+                showToast(error ? error.message : 'Idioma eliminado.', error ? 'error' : 'success');
               }}
             />
           </>
@@ -328,8 +337,8 @@ export default function Profile() {
           onAdd={() => openEducation()}
           onEdit={openEducation}
           onDelete={async (id) => {
-            await deleteEducation(id);
-            showToast('Educación eliminada.', 'success');
+            const { error } = await deleteEducation(id);
+            showToast(error ? error.message : 'Educación eliminada.', error ? 'error' : 'success');
           }}
         />
 
@@ -339,8 +348,11 @@ export default function Profile() {
           onAdd={() => openCert()}
           onEdit={openCert}
           onDelete={async (id) => {
-            await deleteCertification(id);
-            showToast('Certificación eliminada.', 'success');
+            const { error } = await deleteCertification(id);
+            showToast(
+              error ? error.message : 'Certificación eliminada.',
+              error ? 'error' : 'success',
+            );
           }}
         />
 
@@ -352,8 +364,8 @@ export default function Profile() {
             showToast(error ? error.message : 'Habilidad añadida.', error ? 'error' : 'success');
           }}
           onDelete={async (id) => {
-            await deleteSkill(id);
-            showToast('Habilidad eliminada.', 'success');
+            const { error } = await deleteSkill(id);
+            showToast(error ? error.message : 'Habilidad eliminada.', error ? 'error' : 'success');
           }}
         />
 
@@ -365,8 +377,8 @@ export default function Profile() {
             showToast(error ? error.message : 'Enlace añadido.', error ? 'error' : 'success');
           }}
           onDelete={async (id) => {
-            await deleteCandidateLink(id);
-            showToast('Enlace eliminado.', 'success');
+            const { error } = await deleteCandidateLink(id);
+            showToast(error ? error.message : 'Enlace eliminado.', error ? 'error' : 'success');
           }}
         />
 
@@ -378,8 +390,8 @@ export default function Profile() {
             showToast(error ? error.message : 'Servicio añadido.', error ? 'error' : 'success');
           }}
           onDelete={async (id) => {
-            await deleteService(id);
-            showToast('Servicio eliminado.', 'success');
+            const { error } = await deleteService(id);
+            showToast(error ? error.message : 'Servicio eliminado.', error ? 'error' : 'success');
           }}
         />
 
@@ -400,8 +412,11 @@ export default function Profile() {
           onAdd={() => openExperience()}
           onEdit={openExperience}
           onDelete={async (id) => {
-            await deleteExperience(id);
-            showToast('Experiencia eliminada.', 'success');
+            const { error } = await deleteExperience(id);
+            showToast(
+              error ? error.message : 'Experiencia eliminada.',
+              error ? 'error' : 'success',
+            );
           }}
         />
 

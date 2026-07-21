@@ -1,24 +1,18 @@
 import { Component } from 'react';
 import { Outlet } from 'react-router-dom';
 import { reportError } from '../../utils/logger';
-import { formatAuthErrorDetail } from '../../utils/errors';
+import { isChunkLoadError, recoverFromChunkError } from '../../utils/chunkRecovery';
 
-function RouteErrorFallback({ onRetry, error }) {
+function RouteErrorFallback({ onRetry }) {
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
-      <h1 className="text-xl font-semibold text-gray-900">Error de ruta</h1>
-      <p className="mt-2 text-sm text-gray-500">
-        Ha ocurrido un error inesperado al cargar esta sección. Puedes reintentar.
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-space-md bg-app-bg p-space-lg text-center">
+      <p className="max-w-sm text-body text-app-text">
+        No se puede cargar esta sección. Puedes reintentar.
       </p>
-      {error ? (
-        <pre className="mt-4 max-h-64 w-full max-w-xl overflow-auto rounded-xl border border-red-200 bg-red-50 p-3 text-left text-xs text-red-800 whitespace-pre-wrap">
-          {formatAuthErrorDetail(error)}
-        </pre>
-      ) : null}
       <button
         type="button"
         onClick={onRetry}
-        className="mt-6 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
+        className="rounded-radius-md bg-primary-600 px-space-lg py-space-sm text-label font-medium text-white transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
       >
         Reintentar
       </button>
@@ -39,25 +33,37 @@ export default class RouteErrorBoundary extends Component {
   componentDidCatch(error, info) {
     reportError(error, { area: 'route_error_boundary', componentStack: info?.componentStack });
 
-    // One silent auto-retry for transient chunk/network glitches during navigation.
+    // Stale deploy / PWA shell: one automatic hard reload.
+    if (isChunkLoadError(error) && recoverFromChunkError(error)) {
+      return;
+    }
+
+    // One soft auto-retry for transient network glitches during navigation.
     if (!this.state.autoRetried) {
       window.setTimeout(() => {
-        this.setState({ hasError: false, autoRetried: true });
+        this.setState({ hasError: false, autoRetried: true, error: null });
       }, 500);
     }
   }
 
   handleRetry = () => {
+    if (isChunkLoadError(this.state.error) && recoverFromChunkError(this.state.error)) {
+      return;
+    }
+    if (isChunkLoadError(this.state.error)) {
+      window.location.reload();
+      return;
+    }
     this.setState({ hasError: false, autoRetried: false, error: null });
   };
 
   render() {
     if (this.state.hasError && this.state.autoRetried) {
-      return <RouteErrorFallback onRetry={this.handleRetry} error={this.state.error} />;
+      return <RouteErrorFallback onRetry={this.handleRetry} />;
     }
 
     if (this.state.hasError) {
-      // Quiet wait during the single auto-retry window.
+      // Quiet wait during the single auto-retry / chunk-reload window.
       return (
         <div
           className="flex min-h-dvh items-center justify-center bg-app-bg"

@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import AuthLoadingScreen from '../auth/AuthLoadingScreen';
 
-const ROLE_RESOLVE_TIMEOUT_MS = 8000;
+const ROLE_RESOLVE_TIMEOUT_MS = 20000;
 
 /**
  * Blocks authenticated users from guest auth pages (login, verify-email, etc.).

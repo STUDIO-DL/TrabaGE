@@ -5,7 +5,7 @@ import { ROLE_HOME, ROLE_SETUP, normalizeRole } from '../../constants/roles';
 import { getPreviewRole, isPreviewActive } from '../../constants/preview';
 import AuthLoadingScreen from '../auth/AuthLoadingScreen';
 
-const ROLE_RESOLVE_TIMEOUT_MS = 8000;
+const ROLE_RESOLVE_TIMEOUT_MS = 20000;
 
 /**
  * @param {object} props

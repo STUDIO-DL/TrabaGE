@@ -194,16 +194,23 @@ export default function EditIntro() {
     setModalSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
     setModalSaving(false);
-    if (!result.error) {
-      if (!id && result.data?.id) {
-        setForm((prev) => ({
-          ...prev,
-          intro_education_id: result.data.id,
-          show_education_in_intro: true,
-        }));
-      }
-      showToast('Educación guardada.', 'success');
+    if (result.error) {
+      showToast(result.error.message || 'No se pudo guardar la educación.', 'error');
+      return result;
     }
+    if (!id && !result.data?.id) {
+      const err = { message: 'No se pudo confirmar el guardado en el servidor.' };
+      showToast(err.message, 'error');
+      return { data: null, error: err };
+    }
+    if (!id && result.data?.id) {
+      setForm((prev) => ({
+        ...prev,
+        intro_education_id: result.data.id,
+        show_education_in_intro: true,
+      }));
+    }
+    showToast('Educación guardada.', 'success');
     return result;
   };
 

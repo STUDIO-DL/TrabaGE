@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './config/queryClient';
@@ -19,6 +19,7 @@ import { useNotificationContext } from './context/NotificationContext';
 import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
 import SplashScreen from './pages/SplashScreen';
 import { ROLES } from './constants/roles';
+import { markAppBackground, markAppForeground, rememberLastPath, installNativeFilePickGuards } from './utils/appLifecycle';
 const OnboardingFlow = lazy(() => import('./pages/onboarding/OnboardingFlow'));
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 const AuthConfirm = lazy(() => import('./pages/auth/AuthConfirm'));
@@ -130,6 +131,32 @@ function EmployerAppRoutes() {
 }
 
 function AppRoutes() {
+  const location = useLocation();
+
+  useEffect(() => {
+    rememberLastPath(location.pathname + location.search + location.hash);
+  }, [location.pathname, location.search, location.hash]);
+
+  useEffect(() => {
+    const uninstallFilePickGuards = installNativeFilePickGuards();
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        markAppBackground();
+        return;
+      }
+      if (document.visibilityState === 'visible') {
+        markAppForeground();
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      uninstallFilePickGuards();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
+
   return (
     <>
       <GuestBar />
@@ -138,10 +165,10 @@ function AppRoutes() {
       <PushPermissionPrompt />
       <Suspense fallback={<AuthLoadingScreen />}>
         <Routes>
-            <Route path="/" element={<SplashScreen />} />
-            <Route path="/onboarding" element={<OnboardingFlow />} />
-
             <Route element={<RouteSectionLayout />}>
+              <Route path="/" element={<SplashScreen />} />
+              <Route path="/onboarding" element={<OnboardingFlow />} />
+
               <Route element={<GuestOnlyRoute />}>
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -156,14 +183,12 @@ function AppRoutes() {
               <Route path="/register-method" element={<Navigate to="/register" replace />} />
               <Route path="/demo/company" element={<DemoCompanyEntry />} />
               <Route path="/jobs/:id" element={<JobDetail />} />
-            </Route>
 
-            <Route element={<ProtectedRoute />}>
-              <Route path="/auth/set-password" element={<SetPassword />} />
-              <Route path="/search" element={<SearchResults />} />
+              <Route element={<ProtectedRoute />}>
+                <Route path="/auth/set-password" element={<SetPassword />} />
+                <Route path="/search" element={<SearchResults />} />
 
-              <Route element={<RoleRoute role={ROLES.PERSONAL} />}>
-                <Route element={<RouteSectionLayout />}>
+                <Route element={<RoleRoute role={ROLES.PERSONAL} />}>
                   <Route path="/setup/personal" element={<CandidateSetup />} />
                   <Route path="/personal/feed" element={<CandidateFeed />} />
                   <Route path="/personal/jobs" element={<CandidateJobs />} />
@@ -179,68 +204,64 @@ function AppRoutes() {
                   <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />
                   <Route path="/help" element={<HelpCenter />} />
                 </Route>
-              </Route>
 
-              <Route element={<RoleRoute roles={[ROLES.BUSINESS, ROLES.ORGANIZATION]} />}>
-                <Route element={<RouteSectionLayout />}>
+                <Route element={<RoleRoute roles={[ROLES.BUSINESS, ROLES.ORGANIZATION]} />}>
                   <Route path="/setup/business" element={<CompanySetup />} />
                   <Route path="/setup/organization" element={<CompanySetup />} />
                   <Route path="/business">{EmployerAppRoutes()}</Route>
                   <Route path="/organization">{EmployerAppRoutes()}</Route>
                 </Route>
-              </Route>
 
-              <Route element={<RoleRoute role={ROLES.ADMIN} />}>
-                <Route element={<AdminLayout />}>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/companies" element={<AdminCompanies />} />
-                  <Route path="/admin/organizations" element={<AdminOrganizations />} />
-                  <Route path="/admin/verifications" element={<AdminVerifications />} />
-                  <Route path="/admin/jobs" element={<AdminJobs />} />
-                  <Route path="/admin/posts" element={<AdminPosts />} />
-                  <Route path="/admin/reports" element={<AdminReports />} />
-                  <Route path="/admin/notifications" element={<AdminNotifications />} />
-                  <Route path="/admin/profile" element={<AdminProfile />} />
-                  <Route path="/admin/settings" element={<AdminSettings />} />
-                  <Route path="/admin/help" element={<HelpCenter />} />
+                <Route element={<RoleRoute role={ROLES.ADMIN} />}>
+                  <Route element={<AdminLayout />}>
+                    <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/users" element={<AdminUsers />} />
+                    <Route path="/admin/companies" element={<AdminCompanies />} />
+                    <Route path="/admin/organizations" element={<AdminOrganizations />} />
+                    <Route path="/admin/verifications" element={<AdminVerifications />} />
+                    <Route path="/admin/jobs" element={<AdminJobs />} />
+                    <Route path="/admin/posts" element={<AdminPosts />} />
+                    <Route path="/admin/reports" element={<AdminReports />} />
+                    <Route path="/admin/notifications" element={<AdminNotifications />} />
+                    <Route path="/admin/profile" element={<AdminProfile />} />
+                    <Route path="/admin/settings" element={<AdminSettings />} />
+                    <Route path="/admin/help" element={<HelpCenter />} />
+                  </Route>
                 </Route>
               </Route>
-            </Route>
 
-            {/* Legacy path redirects — explicit company app paths before /company/:companyId */}
-            <Route path="/setup/candidate" element={<Navigate to="/setup/personal" replace />} />
-            <Route path="/setup/company" element={<Navigate to="/setup/business" replace />} />
-            <Route path="/candidate/jobs/:id" element={<JobDetail />} />
-            <Route path="/candidate/*" element={<LegacyPathRedirect toPrefix="/personal" />} />
-            <Route path="/company/feed" element={<Navigate to="/business/feed" replace />} />
-            <Route path="/company/dashboard" element={<Navigate to="/business/dashboard" replace />} />
-            <Route path="/company/jobs/create" element={<Navigate to="/business/jobs/create" replace />} />
-            <Route
-              path="/company/jobs/:jobId/edit"
-              element={<LegacyCompanyJobEditRedirect />}
-            />
-            <Route path="/company/jobs" element={<Navigate to="/business/jobs" replace />} />
-            <Route path="/company/publish-job" element={<Navigate to="/business/publish" replace />} />
-            <Route path="/company/applicants" element={<Navigate to="/business/applicants" replace />} />
-            <Route path="/company/notifications" element={<Navigate to="/business/notifications" replace />} />
-            <Route path="/company/profile" element={<Navigate to="/business/profile" replace />} />
-            <Route path="/company/settings/appearance" element={<Navigate to="/business/settings/appearance" replace />} />
-            <Route path="/company/settings/notifications" element={<Navigate to="/business/settings/notifications" replace />} />
-            <Route path="/company/settings" element={<Navigate to="/business/settings" replace />} />
-            <Route path="/company/verification" element={<Navigate to="/business/verification" replace />} />
-            <Route path="/company/help" element={<Navigate to="/business/help" replace />} />
+              {/* Legacy path redirects — explicit company app paths before /company/:companyId */}
+              <Route path="/setup/candidate" element={<Navigate to="/setup/personal" replace />} />
+              <Route path="/setup/company" element={<Navigate to="/setup/business" replace />} />
+              <Route path="/candidate/jobs/:id" element={<JobDetail />} />
+              <Route path="/candidate/*" element={<LegacyPathRedirect toPrefix="/personal" />} />
+              <Route path="/company/feed" element={<Navigate to="/business/feed" replace />} />
+              <Route path="/company/dashboard" element={<Navigate to="/business/dashboard" replace />} />
+              <Route path="/company/jobs/create" element={<Navigate to="/business/jobs/create" replace />} />
+              <Route
+                path="/company/jobs/:jobId/edit"
+                element={<LegacyCompanyJobEditRedirect />}
+              />
+              <Route path="/company/jobs" element={<Navigate to="/business/jobs" replace />} />
+              <Route path="/company/publish-job" element={<Navigate to="/business/publish" replace />} />
+              <Route path="/company/applicants" element={<Navigate to="/business/applicants" replace />} />
+              <Route path="/company/notifications" element={<Navigate to="/business/notifications" replace />} />
+              <Route path="/company/profile" element={<Navigate to="/business/profile" replace />} />
+              <Route path="/company/settings/appearance" element={<Navigate to="/business/settings/appearance" replace />} />
+              <Route path="/company/settings/notifications" element={<Navigate to="/business/settings/notifications" replace />} />
+              <Route path="/company/settings" element={<Navigate to="/business/settings" replace />} />
+              <Route path="/company/verification" element={<Navigate to="/business/verification" replace />} />
+              <Route path="/company/help" element={<Navigate to="/business/help" replace />} />
 
-            {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
-            <Route path="/profile/:userId" element={<PublicProfile />} />
-            <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
-            <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
-            <Route path="/job/:id" element={<JobDetail />} />
-            <Route path="/personal/jobs/:id" element={<JobDetail />} />
-            <Route path="/post/:postId" element={<PostDetail />} />
-            <Route path="/feed/post/:postId" element={<PostDetail />} />
+              {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
+              <Route path="/profile/:userId" element={<PublicProfile />} />
+              <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
+              <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
+              <Route path="/job/:id" element={<JobDetail />} />
+              <Route path="/personal/jobs/:id" element={<JobDetail />} />
+              <Route path="/post/:postId" element={<PostDetail />} />
+              <Route path="/feed/post/:postId" element={<PostDetail />} />
 
-            <Route element={<RouteSectionLayout />}>
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfUse />} />
               <Route path="/aviso-legal" element={<Navigate to="/terms#marcas-terceros-uso" replace />} />
@@ -251,9 +272,9 @@ function AppRoutes() {
               <Route path="/legal/terms" element={<Navigate to="/terms" replace />} />
               <Route path="/legal/aviso-legal" element={<Navigate to="/terms#marcas-terceros-uso" replace />} />
               <Route path="/legal/help" element={<HelpCenter />} />
-            </Route>
 
-            <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<NotFound />} />
+            </Route>
         </Routes>
       </Suspense>
     </>

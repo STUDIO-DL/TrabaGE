@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase';
 import { normalizeSkillName } from '../utils/normalizeSkill';
 import { executeDelete, executeWrite } from '../utils/supabaseMutation';
+import { reportError } from '../utils/logger';
 
 /** Never request onesignal_player_id — column is revoked for clients. */
 export const CANDIDATE_PROFILE_COLUMNS = [
@@ -44,12 +45,12 @@ const PUBLIC_PROFILE_SELECT = `
 `;
 
 async function attachCandidateSections(profile) {
-  if (!profile?.user_id) return profile;
+  if (!profile?.user_id) return { data: profile, error: null };
 
   const userId = profile.user_id;
   const [education, experience, certifications, skills, candidate_links, services, languages, projects] =
     await Promise.all([
-      supabase.from('education').select('*').eq('user_id', userId),
+      supabase.from('education').select('*').eq('user_id', userId).order('start_date', { ascending: false }),
       supabase.from('experience').select('*').eq('user_id', userId),
       supabase.from('certifications').select('*').eq('user_id', userId),
       supabase.from('skills').select('*').eq('user_id', userId),
@@ -63,17 +64,85 @@ async function attachCandidateSections(profile) {
         .order('created_at', { ascending: false }),
     ]);
 
+  const sectionError =
+    education.error ||
+    experience.error ||
+    certifications.error ||
+    skills.error ||
+    candidate_links.error ||
+    services.error ||
+    languages.error ||
+    projects.error;
+
+  if (sectionError) {
+    reportError(sectionError, { area: 'attach_candidate_sections', userId });
+    return { data: null, error: sectionError };
+  }
+
   return {
-    ...profile,
-    education: education.data ?? [],
-    experience: experience.data ?? [],
-    certifications: certifications.data ?? [],
-    skills: skills.data ?? [],
-    candidate_links: candidate_links.data ?? [],
-    services: services.data ?? [],
-    languages: languages.data ?? [],
-    projects: projects.data ?? [],
+    data: {
+      ...profile,
+      education: education.data ?? [],
+      experience: experience.data ?? [],
+      certifications: certifications.data ?? [],
+      skills: skills.data ?? [],
+      candidate_links: candidate_links.data ?? [],
+      services: services.data ?? [],
+      languages: languages.data ?? [],
+      projects: projects.data ?? [],
+    },
+    error: null,
   };
+}
+
+/** Normalize education payload so INSERT/UPDATE only send known columns. */
+function sanitizeEducationWrite(data = {}, { partial = false } = {}) {
+  const allowed = [
+    'institution',
+    'program',
+    'specialty',
+    'grade',
+    'start_date',
+    'end_date',
+    'is_current',
+    'activities',
+    'description',
+    'skills',
+    'media_files',
+    'user_id',
+  ];
+
+  const payload = {};
+  for (const key of allowed) {
+    if (partial && data[key] === undefined) continue;
+
+    if (key === 'skills') {
+      payload.skills = Array.isArray(data.skills) ? data.skills : [];
+      continue;
+    }
+    if (key === 'media_files') {
+      payload.media_files = Array.isArray(data.media_files) ? data.media_files : [];
+      continue;
+    }
+    if (key === 'is_current') {
+      if (data.is_current !== undefined) payload.is_current = Boolean(data.is_current);
+      else if (!partial) payload.is_current = false;
+      continue;
+    }
+    if (key === 'user_id') {
+      if (data.user_id) payload.user_id = data.user_id;
+      continue;
+    }
+
+    const value = data[key];
+    if (value === undefined) {
+      if (!partial) payload[key] = null;
+      continue;
+    }
+    payload[key] = value;
+  }
+
+  return payload;
 }
 
 export const profileService = {
@@ -131,8 +200,7 @@ export const profileService = {
 
     if (error || !data) return { data, error };
 
-    const full = await attachCandidateSections(data);
-    return { data: full, error: null };
+    return attachCandidateSections(data);
   },
 
   getPublicCandidateFullProfile: async (userId) => {
@@ -144,21 +212,35 @@ export const profileService = {
 
     if (error || !data) return { data, error };
 
-    const full = await attachCandidateSections(data);
-    return { data: full, error: null };
+    return attachCandidateSections(data);
   },
 
   addEducation: (data) =>
-    executeWrite(supabase.from('education').insert(data).select('*').maybeSingle()),
+    executeWrite(
+      supabase
+        .from('education')
+        .insert(sanitizeEducationWrite(data, { partial: false }))
+        .select('*')
+        .maybeSingle(),
+    ),
   updateEducation: (id, data) =>
-    executeWrite(supabase.from('education').update(data).eq('id', id).select('*').maybeSingle()),
-  deleteEducation: (id) => executeDelete(supabase.from('education').delete().eq('id', id)),
+    executeWrite(
+      supabase
+        .from('education')
+        .update(sanitizeEducationWrite(data, { partial: true }))
+        .eq('id', id)
+        .select('*')
+        .maybeSingle(),
+    ),
+  deleteEducation: (id) =>
+    executeDelete(supabase.from('education').delete().eq('id', id).select('id')),
 
   addExperience: (data) =>
     executeWrite(supabase.from('experience').insert(data).select('*').maybeSingle()),
   updateExperience: (id, data) =>
     executeWrite(supabase.from('experience').update(data).eq('id', id).select('*').maybeSingle()),
-  deleteExperience: (id) => executeDelete(supabase.from('experience').delete().eq('id', id)),
+  deleteExperience: (id) =>
+    executeDelete(supabase.from('experience').delete().eq('id', id).select('id')),
 
   addCertification: (data) =>
     executeWrite(supabase.from('certifications').insert(data).select('*').maybeSingle()),
@@ -167,7 +249,7 @@ export const profileService = {
       supabase.from('certifications').update(data).eq('id', id).select('*').maybeSingle(),
     ),
   deleteCertification: (id) =>
-    executeDelete(supabase.from('certifications').delete().eq('id', id)),
+    executeDelete(supabase.from('certifications').delete().eq('id', id).select('id')),
 
   addSkill: async (data) => {
     const normalized = normalizeSkillName(data?.name);
@@ -196,7 +278,8 @@ export const profileService = {
         .maybeSingle(),
     );
   },
-  deleteSkill: (id) => executeDelete(supabase.from('skills').delete().eq('id', id)),
+  deleteSkill: (id) =>
+    executeDelete(supabase.from('skills').delete().eq('id', id).select('id')),
 
   addCandidateLink: (data) =>
     executeWrite(supabase.from('candidate_links').insert(data).select('*').maybeSingle()),
@@ -205,17 +288,19 @@ export const profileService = {
       supabase.from('candidate_links').update(data).eq('id', id).select('*').maybeSingle(),
     ),
   deleteCandidateLink: (id) =>
-    executeDelete(supabase.from('candidate_links').delete().eq('id', id)),
+    executeDelete(supabase.from('candidate_links').delete().eq('id', id).select('id')),
 
   addService: (data) =>
     executeWrite(supabase.from('services').insert(data).select('*').maybeSingle()),
-  deleteService: (id) => executeDelete(supabase.from('services').delete().eq('id', id)),
+  deleteService: (id) =>
+    executeDelete(supabase.from('services').delete().eq('id', id).select('id')),
 
   addLanguage: (data) =>
     executeWrite(supabase.from('languages').insert(data).select('*').maybeSingle()),
   updateLanguage: (id, data) =>
     executeWrite(supabase.from('languages').update(data).eq('id', id).select('*').maybeSingle()),
-  deleteLanguage: (id) => executeDelete(supabase.from('languages').delete().eq('id', id)),
+  deleteLanguage: (id) =>
+    executeDelete(supabase.from('languages').delete().eq('id', id).select('id')),
 
   searchCandidates: (query, limit = 20) => {
     const term = query?.trim();

@@ -213,7 +213,7 @@ export const companyService = {
     executeWrite(supabase.from('company_services').insert(data).select('*').maybeSingle()),
 
   deleteCompanyService: (id) =>
-    executeDelete(supabase.from('company_services').delete().eq('id', id)),
+    executeDelete(supabase.from('company_services').delete().eq('id', id).select('id')),
 
   submitVerification: (data) =>
     executeWrite(supabase.from('verification_requests').insert(data).select('*').maybeSingle()),

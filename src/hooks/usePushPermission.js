@@ -14,10 +14,13 @@ import {
   NOTIFICATION_PERMISSION_STATUS,
 } from '../constants/notificationPreferences';
 import { useAuth } from './useAuth';
+import { isNativeFilePickActive } from '../utils/appLifecycle';
 
 const foregroundSyncListeners = new Set();
 
 function notifyForegroundSyncListeners() {
+  // Skip while the OS file picker is open/settling — sync must not remount UI mid-upload.
+  if (isNativeFilePickActive()) return;
   foregroundSyncListeners.forEach((listener) => {
     try {
       listener();
@@ -30,12 +33,13 @@ function notifyForegroundSyncListeners() {
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
-      notifyForegroundSyncListeners();
+      // Defer push OS sync slightly so auth soft-resume wins the first paint.
+      window.setTimeout(() => notifyForegroundSyncListeners(), 0);
     }
   });
 
   window.addEventListener('focus', () => {
-    notifyForegroundSyncListeners();
+    window.setTimeout(() => notifyForegroundSyncListeners(), 0);
   });
 }
 

@@ -29,7 +29,19 @@ import { companyService } from '../services/company.service';
 import { isProfileSetupComplete } from '../utils/profileRequirements';
 import { reportError } from '../utils/logger';
 import { queryClient } from '../config/queryClient';
+import {
+  clearAuthResumeCache,
+  isNativeFilePickActive,
+  isWithinForegroundGrace,
+  markAppForeground,
+  readAuthResumeCache,
+  writeAuthResumeCache,
+} from '../utils/appLifecycle';
 import { getOwnCandidateProfileKey, getOwnCompanyProfileKey } from '../constants/profileQueryKeys';
+import {
+  hasCandidateSections,
+  mergeCandidateProfileRow,
+} from '../utils/candidateProfileSections';
 
 const AuthContext = createContext(null);
 
@@ -41,16 +53,89 @@ export const getOnboardingComplete = () =>
 export const setOnboardingComplete = () =>
   localStorage.setItem(ONBOARDING_KEY, 'true');
 
+/**
+ * Seed the own-candidate React Query cache with a FULL profile (including education).
+ * Writing a base-only row here previously made Educación disappear after refresh:
+ * staleTime treated the incomplete cache as fresh, so useProfile never re-fetched sections.
+ */
+async function seedOwnCandidateProfileCache(userId, baseProfile) {
+  if (!userId || !baseProfile?.user_id) return null;
+  const key = getOwnCandidateProfileKey(userId);
+  const existing = queryClient.getQueryData(key);
+
+  if (hasCandidateSections(baseProfile)) {
+    queryClient.setQueryData(key, baseProfile);
+    return baseProfile;
+  }
+
+  if (hasCandidateSections(existing)) {
+    const merged = mergeCandidateProfileRow(existing, baseProfile);
+    queryClient.setQueryData(key, merged);
+    return merged;
+  }
+
+  const { data: full, error } = await profileService.getCandidateFullProfile(userId);
+  if (!error && full) {
+    queryClient.setQueryData(key, full);
+    return full;
+  }
+
+  // Never leave a base-only profile in cache — Profile would show empty Educación.
+  queryClient.removeQueries({ queryKey: key });
+  return null;
+}
+
+function readInitialAuthCache() {
+  if (typeof window === 'undefined') return null;
+  return readAuthResumeCache();
+}
+
+/** Best-effort session from Supabase persist key so cold start within grace keeps routes mounted. */
+function readOptimisticSession(cache) {
+  if (typeof window === 'undefined' || !cache?.userId) return null;
+  try {
+    const raw = localStorage.getItem('trabage-auth');
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const session =
+      parsed?.currentSession ??
+      parsed?.session ??
+      (parsed?.access_token && parsed?.user ? parsed : null);
+    if (!session?.access_token || !session?.user?.id) return null;
+    if (session.user.id !== cache.userId) return null;
+    if (!isEmailVerified(session.user)) return null;
+    return session;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [session, setSession] = useState(null);
-  const [user, setUser] = useState(null);
-  const [role, setRole] = useState(null);
-  const [setupComplete, setSetupComplete] = useState(false);
+  const initialCacheRef = useRef(readInitialAuthCache());
+  const optimisticSessionRef = useRef(readOptimisticSession(initialCacheRef.current));
+  const [session, setSession] = useState(() => optimisticSessionRef.current);
+  const [user, setUser] = useState(() => optimisticSessionRef.current?.user ?? null);
+  const [role, setRole] = useState(() => initialCacheRef.current?.role ?? null);
+  const [setupComplete, setSetupComplete] = useState(
+    () => Boolean(initialCacheRef.current?.setupComplete),
+  );
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // Within 5-minute grace with cached identity: stay interactive (no AuthLoadingScreen remount).
+  const [loading, setLoading] = useState(() => !optimisticSessionRef.current);
   /** True while role/profile hydrate runs after session is known — prevents Register flash. */
   const [hydrating, setHydrating] = useState(false);
   const hydrateGenRef = useRef(0);
+  const authEffectGenRef = useRef(0);
+  const userIdRef = useRef(initialCacheRef.current?.userId ?? null);
+  const roleRef = useRef(initialCacheRef.current?.role ?? null);
+
+  useEffect(() => {
+    userIdRef.current = user?.id ?? null;
+  }, [user?.id]);
+
+  useEffect(() => {
+    roleRef.current = role;
+  }, [role]);
 
   const fetchRoleAndSetup = useCallback(async (userId, userRole) => {
     const normalized = normalizeRole(userRole) ?? userRole;
@@ -89,10 +174,19 @@ export function AuthProvider({ children }) {
     const currentUser = currentSession?.user ?? null;
 
     if (!currentUser) {
+      // File picker / transient races may emit a null session — keep in-memory auth.
+      if (isNativeFilePickActive() && userIdRef.current) {
+        if (gen === hydrateGenRef.current) setHydrating(false);
+        return;
+      }
+
+      // Confirmed null session (e.g. getSession) — clear optimistic/zombie auth
+      // even inside foreground grace so stale resume cache cannot fake a login.
       setSession(null);
       setUser(null);
       setRole(null);
       setSetupComplete(false);
+      clearAuthResumeCache();
       clearSentryUser();
       void clearOneSignalUserId();
       if (gen === hydrateGenRef.current) setHydrating(false);
@@ -120,9 +214,30 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // Mark hydrating BEFORE publishing session so guest routes never treat
-    // "authenticated + no role yet" as "go to Register".
-    setHydrating(true);
+    // Only flip hydrating (and remount protected routes) when we do not already
+    // have a resolved account for this same user. Resume/token recovery must not
+    // tear down forms, scroll, or in-progress edits.
+    const cached = readAuthResumeCache();
+    const withinGrace = isWithinForegroundGrace();
+    const softResume =
+      Boolean(currentUser?.id) &&
+      ((userIdRef.current === currentUser.id && Boolean(roleRef.current)) ||
+        (withinGrace &&
+          cached?.userId === currentUser.id &&
+          Boolean(cached?.role)) ||
+        // Cold start within grace: same user from optimistic seed, role may still load.
+        (withinGrace && userIdRef.current === currentUser.id));
+
+    if (softResume && cached?.role && !roleRef.current) {
+      roleRef.current = cached.role;
+      userIdRef.current = cached.userId;
+      setRole(cached.role);
+      setSetupComplete(Boolean(cached.setupComplete));
+    }
+
+    if (!softResume) {
+      setHydrating(true);
+    }
     setSession(currentSession);
     setUser(currentUser);
 
@@ -162,16 +277,20 @@ export function AuthProvider({ children }) {
       if (gen !== hydrateGenRef.current) return;
 
       if (candidateResult?.data?.user_id) {
-        queryClient.setQueryData(
-          getOwnCandidateProfileKey(currentUser.id),
-          candidateResult.data,
-        );
+        await seedOwnCandidateProfileCache(currentUser.id, candidateResult.data);
       }
       if (companyResult?.data?.user_id) {
         queryClient.setQueryData(getOwnCompanyProfileKey(currentUser.id), companyResult.data);
       }
 
       setRole(userRole);
+      if (userRole) {
+        writeAuthResumeCache({
+          userId: currentUser.id,
+          role: userRole,
+          setupComplete: userRole === ROLES.ADMIN,
+        });
+      }
 
       void bindOneSignalUser(currentUser.id, {
         role: userRole,
@@ -191,6 +310,7 @@ export function AuthProvider({ children }) {
           setUser(null);
           setRole(null);
           setSetupComplete(false);
+          clearAuthResumeCache();
           clearSentryUser();
           void clearOneSignalUserId();
           await supabase.auth.signOut({ scope: 'local' });
@@ -205,7 +325,9 @@ export function AuthProvider({ children }) {
       if (gen !== hydrateGenRef.current) return;
 
       if (isPersonalRole(userRole)) {
-        const { data: candidateAfterBootstrap } = await profileService.getCandidateProfile(currentUser.id);
+        const { data: candidateAfterBootstrap } = await profileService.getCandidateFullProfile(
+          currentUser.id,
+        );
         if (gen !== hydrateGenRef.current) return;
         if (candidateAfterBootstrap?.user_id) {
           queryClient.setQueryData(
@@ -213,7 +335,13 @@ export function AuthProvider({ children }) {
             candidateAfterBootstrap,
           );
         }
-        setSetupComplete(isProfileSetupComplete(ROLES.PERSONAL, candidateAfterBootstrap));
+        const complete = isProfileSetupComplete(ROLES.PERSONAL, candidateAfterBootstrap);
+        setSetupComplete(complete);
+        writeAuthResumeCache({
+          userId: currentUser.id,
+          role: userRole,
+          setupComplete: complete,
+        });
       } else if (isEmployerRole(userRole)) {
         const { data: companyAfterBootstrap } = await companyService.getCompanyProfile(currentUser.id);
         if (gen !== hydrateGenRef.current) return;
@@ -225,10 +353,21 @@ export function AuthProvider({ children }) {
         }
         const resolvedRole =
           normalizeRole(userRole, { companyType: companyAfterBootstrap?.company_type }) ?? userRole;
+        const complete = isProfileSetupComplete(resolvedRole, companyAfterBootstrap);
         setRole(resolvedRole);
-        setSetupComplete(isProfileSetupComplete(resolvedRole, companyAfterBootstrap));
+        setSetupComplete(complete);
+        writeAuthResumeCache({
+          userId: currentUser.id,
+          role: resolvedRole,
+          setupComplete: complete,
+        });
       } else if (userRole === ROLES.ADMIN) {
         setSetupComplete(true);
+        writeAuthResumeCache({
+          userId: currentUser.id,
+          role: userRole,
+          setupComplete: true,
+        });
       } else {
         setSetupComplete(false);
       }
@@ -243,6 +382,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
+    const effectId = ++authEffectGenRef.current;
 
     if (getPreviewMode()) {
       hydratePreview();
@@ -266,15 +406,81 @@ export function AuthProvider({ children }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {
+      if (!mounted) return;
+
+      const nextUserId = newSession?.user?.id ?? null;
+      const sameUser = Boolean(nextUserId && nextUserId === userIdRef.current);
+      const alreadyReady = sameUser && Boolean(roleRef.current);
+      const withinGrace = isWithinForegroundGrace();
       if (getPreviewMode()) return;
+
       if (event === 'TOKEN_REFRESHED') {
         if (newSession) setSession(newSession);
         return;
       }
+
+      // Returning from background (or any re-emit of SIGNED_IN for the same
+      // already-hydrated user) must NOT remount the app tree.
+      const cached = readAuthResumeCache();
+      const cacheReady =
+        Boolean(nextUserId) &&
+        withinGrace &&
+        cached?.userId === nextUserId &&
+        Boolean(cached?.role);
+      if (cacheReady && !roleRef.current) {
+        roleRef.current = cached.role;
+        userIdRef.current = cached.userId;
+        setRole(cached.role);
+        setSetupComplete(Boolean(cached.setupComplete));
+      }
+      const readyForSoftResume = alreadyReady || cacheReady;
+      const filePickSoft =
+        isNativeFilePickActive() &&
+        Boolean(nextUserId) &&
+        (sameUser || cached?.userId === nextUserId);
+
+      if (
+        newSession?.user &&
+        (readyForSoftResume || filePickSoft) &&
+        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || withinGrace || filePickSoft)
+      ) {
+        if (filePickSoft && cached?.role && !roleRef.current) {
+          roleRef.current = cached.role;
+          userIdRef.current = cached.userId;
+          setRole(cached.role);
+          setSetupComplete(Boolean(cached.setupComplete));
+        }
+        setSession(newSession);
+        setUser(newSession.user);
+        markAppForeground();
+        return;
+      }
+
+      // Ignore spurious null INITIAL_SESSION (Strict Mode / race) — only SIGNED_OUT clears.
+      if (!newSession && event !== 'SIGNED_OUT') {
+        if (
+          readyForSoftResume ||
+          filePickSoft ||
+          (withinGrace && (userIdRef.current || cached?.userId))
+        ) {
+          return;
+        }
+      }
+
       // Defer Supabase API calls: awaiting them inside this callback deadlocks
       // the auth client during OAuth (SIGNED_IN on /auth/callback).
+      const capturedEvent = event;
+      const capturedSession = newSession;
+      const capturedEffectId = effectId;
       setTimeout(() => {
-        void hydrateUser(newSession);
+        if (!mounted || authEffectGenRef.current !== capturedEffectId) return;
+        // Re-check: another mount may have taken over (Strict Mode).
+        if (!capturedSession && capturedEvent !== 'SIGNED_OUT') {
+          if (userIdRef.current || readAuthResumeCache()?.userId) {
+            return;
+          }
+        }
+        void hydrateUser(capturedSession);
       }, 0);
     });
 
@@ -377,12 +583,14 @@ export function AuthProvider({ children }) {
       setUser(null);
       setRole(null);
       setSetupComplete(false);
+      clearAuthResumeCache();
       queryClient.clear();
       return;
     }
 
     await authService.logout();
     queryClient.clear();
+    clearAuthResumeCache();
     setSession(null);
     setUser(null);
     setRole(null);
