@@ -2,7 +2,6 @@ import { Building2, Share2, PROFILE_SECTION_ICONS } from '../../../constants/ico
 import CompanyAboutSection from './CompanyAboutSection';
 import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
 import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
-import CompanyContactSection from './CompanyContactSection';
 import CompanyProfileSectionCard from './CompanyProfileSectionCard';
 import { profileContentShellClass, profileSectionStackClass, sectionLinkClass } from './companyProfileStyles';
 
@@ -11,12 +10,9 @@ export default function CompanyAboutTabSection({
   readOnly = false,
   onEditAbout,
   onEditDetails,
-  onSaveContact,
-  contactSaving = false,
 }) {
   const showInfoCard = hasVisibleCompanyInfoRows(profile, 'full');
   const showSocialCard = hasCompanySocialLinks(profile) || !readOnly;
-  const showContactCard = !readOnly || hasCompanyActionableContact(profile);
 
   return (
     <div className={`${profileContentShellClass} ${profileSectionStackClass}`}>
@@ -66,22 +62,6 @@ export default function CompanyAboutTabSection({
             readOnly={readOnly}
             onAddSocial={onEditDetails}
             compact
-            embedded
-          />
-        </CompanyProfileSectionCard>
-      ) : null}
-
-      {showContactCard ? (
-        <CompanyProfileSectionCard
-          title="Contacto"
-          icon={PROFILE_SECTION_ICONS.contact}
-          iconTone="contact"
-        >
-          <CompanyContactSection
-            profile={profile}
-            readOnly={readOnly}
-            onSave={onSaveContact}
-            saving={contactSaving}
             embedded
           />
         </CompanyProfileSectionCard>

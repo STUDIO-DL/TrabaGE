@@ -15,8 +15,8 @@ function PostsEmptyState({ readOnly, profile }) {
   const publishPath = rolePath(role || ROLES.BUSINESS, '/publish');
 
   return (
-    <div className="rounded-radius-lg border border-dashed border-app-border bg-app-surface px-space-base py-space-xl text-center">
-      <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-radius-md bg-app-surface ring-1 ring-app-border">
+    <div className="rounded-radius-lg border border-dashed border-app-border bg-app-surface px-space-base py-space-xl text-left">
+      <span className="flex h-11 w-11 items-center justify-center rounded-radius-md bg-app-surface ring-1 ring-app-border">
         <AppIcon icon={Newspaper} size={ICON_SIZES.lg} className="text-app-text" />
       </span>
       <p className="mt-space-sm text-body-small text-app-muted">{getEmptyPostsCopy(viewer)}</p>
@@ -118,24 +118,16 @@ export function CompanyPostsFeed({
   profile = null,
 }) {
   if (loading) {
-    return (
-      <div className="px-space-base py-space-base">
-        <PostListSkeleton count={3} />
-      </div>
-    );
+    return <PostListSkeleton count={3} />;
   }
 
   if (posts.length === 0) {
-    return (
-      <div className="px-space-base py-space-base">
-        <PostsEmptyState readOnly={readOnly} profile={profile} />
-      </div>
-    );
+    return <PostsEmptyState readOnly={readOnly} profile={profile} />;
   }
 
   return (
-    <div className="px-space-base py-space-base">
-      <div className="space-y-space-base">
+    <div>
+      <div className="space-y-space-md">
         {posts.map((post) => renderPostCard(post, { canManage, onEdit, onDelete }))}
       </div>
       {hasMore ? (
@@ -144,7 +136,7 @@ export function CompanyPostsFeed({
           variant="ghost"
           fullWidth
           loading={loadingMore}
-          className="mt-space-base"
+          className="mt-space-md min-h-touch"
           onClick={onLoadMore}
         >
           Cargar más

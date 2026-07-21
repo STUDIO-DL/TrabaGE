@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
+import { useUnreadNotificationsCount } from '../../hooks/useUnreadNotificationsCount';
 import { ROLES, getRolePathPrefix, isEmployerRole, rolePath } from '../../constants/roles';
 import { getOwnCompanyProfileKey } from '../../constants/profileQueryKeys';
 import { companyService } from '../../services/company.service';
@@ -10,7 +11,6 @@ import { ICON_COLORS } from '../../constants/icons';
 import { NavIcon } from './NavIcons';
 import AppIcon from '../common/AppIcon';
 import { Plus, ICON_SIZES } from '../../constants/icons';
-import { notificationsService } from '../../services/notifications.service';
 import { useKeyboard } from '../../hooks/useKeyboard';
 
 function buildPersonalNav(role) {
@@ -59,7 +59,7 @@ export default function BottomNav() {
   const { role, user, isPreviewMode } = useAuth();
   const queryClient = useQueryClient();
   const { bottomBarInset, isKeyboardVisible } = useKeyboard();
-  const [unreadCount, setUnreadCount] = useState(0);
+  const { count: unreadCount } = useUnreadNotificationsCount();
   const [mounted, setMounted] = useState(false);
 
   const prefetchCompanyProfile = useCallback(() => {
@@ -89,26 +89,6 @@ export default function BottomNav() {
     () => (isEmployerRole(role) ? buildEmployerNav(role) : buildPersonalNav(ROLES.PERSONAL)),
     [role],
   );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadUnreadCount() {
-      if (!user?.id || isPreviewMode || role === ROLES.ADMIN) {
-        setUnreadCount(0);
-        return;
-      }
-
-      const { count } = await notificationsService.getUnreadCount(user.id);
-      if (!cancelled) setUnreadCount(count ?? 0);
-    }
-
-    loadUnreadCount();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isPreviewMode, role, user?.id]);
 
   if (role === ROLES.ADMIN || !mounted) return null;
 

@@ -17,7 +17,7 @@ export default function UserProfileLink({
   size = 'md',
   layout = 'row',
   className = '',
-  nameClassName = 'font-semibold text-gray-900 hover:text-primary-700 transition-colors',
+  nameClassName = 'text-user-content font-semibold text-gray-900 hover:text-primary-700 transition-colors',
   stopPropagation = false,
   path: explicitPath,
   children,
@@ -57,8 +57,8 @@ export default function UserProfileLink({
       <div className={`flex min-w-0 items-center gap-3 ${className}`}>
         {renderAvatar()}
         <div className="min-w-0 flex-1">
-          {name && <p className="font-semibold text-gray-900">{name}</p>}
-          {headline && <p className="text-sm text-gray-500">{headline}</p>}
+          {name && <p className="text-user-content font-semibold text-gray-900">{name}</p>}
+          {headline && <p className="text-user-content text-sm text-gray-500">{headline}</p>}
         </div>
       </div>
     );
@@ -79,7 +79,7 @@ export default function UserProfileLink({
 
   if (layout === 'name') {
     return (
-      <Link to={path} className={`${nameClassName} ${className}`} onClick={handleClick}>
+      <Link to={path} className={`text-user-content ${nameClassName} ${className}`} onClick={handleClick}>
         {name}
       </Link>
     );

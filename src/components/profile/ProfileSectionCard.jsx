@@ -1,6 +1,9 @@
 import AppIcon from '../common/AppIcon';
-import { ICON_COLORS, ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
-import { SECTION_ICON_TONES } from './ProfileIcons';
+import { ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
+
+/** Section headings — text only, no icons. */
+export const profileSectionTitleClass =
+  'text-user-content text-body font-bold tracking-tight text-app-text sm:text-subtitle';
 
 function EditActionButton({ onClick, label = 'Editar' }) {
   return (
@@ -30,8 +33,8 @@ function DeleteActionButton({ onClick, label = 'Eliminar' }) {
 
 export default function ProfileSectionCard({
   id,
-  icon,
-  iconTone = 'about',
+  icon: _icon,
+  iconTone: _iconTone,
   title,
   isOwn,
   onAdd,
@@ -42,24 +45,14 @@ export default function ProfileSectionCard({
   emptyText = 'Sin información.',
   children,
 }) {
-  const toneClass = SECTION_ICON_TONES[iconTone] ?? SECTION_ICON_TONES.about;
   const isEditAction = addLabel === 'Editar';
 
   if (isEmpty && !isOwn) return null;
 
   return (
-    <section id={id} className="surface-card p-space-md">
+    <section id={id} className={`surface-card p-space-md${id ? ' scroll-mt-24' : ''}`}>
       <div className="mb-space-md flex items-center justify-between gap-space-sm">
-        <div className="flex items-center gap-space-sm">
-          {icon && (
-            <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-radius-md ${toneClass}`}
-            >
-              <AppIcon icon={icon} size={ICON_SIZES.default} className={ICON_COLORS.default} />
-            </span>
-          )}
-          <h3 className="text-subtitle font-semibold text-app-text">{title}</h3>
-        </div>
+        <h3 className={`${profileSectionTitleClass} min-w-0 flex-1`}>{title}</h3>
         {isOwn && onAdd && (
           <button
             type="button"
@@ -104,26 +97,17 @@ export function ProfileEntryRow({
   isOwn,
   onEdit,
   onDelete,
-  entryIcon,
-  entryIconTone = 'experience',
+  entryIcon: _entryIcon,
+  entryIconTone: _entryIconTone,
+  children,
 }) {
-  const toneClass = SECTION_ICON_TONES[entryIconTone] ?? SECTION_ICON_TONES.experience;
-
   return (
-    <div className="flex gap-3 border-b border-app-divider py-4 first:pt-0 last:border-0 last:pb-0">
-      {entryIcon ? (
-        <span
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${toneClass}`}
-        >
-          <AppIcon icon={entryIcon} size={ICON_SIZES.lg} className={ICON_COLORS.default} />
-        </span>
-      ) : (
-        <div className="h-11 w-11 shrink-0 rounded-lg bg-app-surface" aria-hidden />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold text-app-text">{title || '—'}</p>
-        {subtitle && <p className="mt-0.5 text-sm text-app-muted">{subtitle}</p>}
-        {meta && <p className="mt-1 text-xs leading-relaxed text-app-subtle">{meta}</p>}
+    <div className="border-b border-app-divider py-4 first:pt-0 last:border-0 last:pb-0">
+      <div className="min-w-0">
+        <p className="text-user-content font-semibold text-app-text">{title || '—'}</p>
+        {subtitle && <p className="text-user-content mt-0.5 text-sm text-app-muted">{subtitle}</p>}
+        {meta && <p className="text-user-content mt-1 text-xs leading-relaxed text-app-subtle">{meta}</p>}
+        {children}
         {isOwn && (onEdit || onDelete) && (
           <div className="mt-2 flex gap-3">
             {onEdit && <EditActionButton onClick={onEdit} />}

@@ -6,6 +6,8 @@ import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { KeyboardProvider } from './context/KeyboardContext';
+import { useAuth } from './hooks/useAuth';
+import { useInactivityLogout } from './hooks/useInactivityLogout';
 import ProtectedRoute from './components/routing/ProtectedRoute';
 import GuestOnlyRoute from './components/routing/GuestOnlyRoute';
 import RoleRoute from './components/routing/RoleRoute';
@@ -46,35 +48,19 @@ const CandidateSettings = lazy(() => import('./pages/candidate/Settings'));
 const CandidateAppearance = lazy(() => import('./pages/candidate/Appearance'));
 const CandidateNotificationSettings = lazy(() => import('./pages/candidate/NotificationSettings'));
 const PublicProfile = lazy(() => import('./pages/candidate/PublicProfile'));
-
-const CompanyFeed = lazy(() => import('./pages/company/Feed'));
-const CompanyPublish = lazy(() => import('./pages/company/Publish'));
-const Dashboard = lazy(() => import('./pages/company/Dashboard'));
-const PublishJob = lazy(() => import('./pages/company/PublishJob'));
-const CompanyJobs = lazy(() => import('./pages/company/Jobs'));
-const Applicants = lazy(() => import('./pages/company/Applicants'));
-const CompanyNotifications = lazy(() => import('./pages/company/Notifications'));
-const CompanyProfile = lazy(() => import('./pages/company/Profile'));
-const CompanySettings = lazy(() => import('./pages/company/Settings'));
-const CompanyAppearance = lazy(() => import('./pages/company/Appearance'));
-const CompanyNotificationSettings = lazy(() => import('./pages/company/NotificationSettings'));
-const Verification = lazy(() => import('./pages/company/Verification'));
-
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
-const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
-const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
-const AdminVerifications = lazy(() => import('./pages/admin/AdminVerifications'));
-const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
-const AdminPosts = lazy(() => import('./pages/admin/AdminPosts'));
-const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
-const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
-const AdminOrganizations = lazy(() => import('./pages/admin/AdminOrganizations'));
-const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
-const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
-const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const UsernameProfileRedirect = lazy(() => import('./pages/shared/UsernameProfileRedirect'));
 const CompanyPublicProfile = lazy(() => import('./pages/shared/CompanyPublicProfile'));
 const SearchResults = lazy(() => import('./pages/SearchResults'));
 const PostDetail = lazy(() => import('./pages/PostDetail'));
+const DiscoverHiring = lazy(() => import('./pages/discover/HiringCompanies'));
+const DiscoverScholarships = lazy(() => import('./pages/discover/Scholarships'));
+const DiscoverInternships = lazy(() => import('./pages/discover/Internships'));
+const DiscoverEvents = lazy(() => import('./pages/discover/Events'));
+const DiscoverCalls = lazy(() => import('./pages/discover/Calls'));
+const DiscoverCourses = lazy(() => import('./pages/discover/Courses'));
+const DiscoverEntrepreneurs = lazy(() => import('./pages/discover/Entrepreneurs'));
+const DiscoverVolunteering = lazy(() => import('./pages/discover/Volunteering'));
+const DiscoverInternational = lazy(() => import('./pages/discover/International'));
 const DemoCompanyEntry = lazy(() => import('./pages/demo/DemoCompanyEntry'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const PrivacyPolicy = lazy(() => import('./pages/shared/PrivacyPolicy'));
@@ -84,9 +70,52 @@ const AppInfo = lazy(() => import('./pages/shared/AppInfo'));
 const Maintenance = lazy(() => import('./pages/shared/Maintenance'));
 const NotFound = lazy(() => import('./pages/shared/NotFound'));
 
+const CompanyFeed = lazy(() => import('./pages/company/Feed'));
+const Dashboard = lazy(() => import('./pages/company/Dashboard'));
+const CompanyPublish = lazy(() => import('./pages/company/Publish'));
+const CompanyJobs = lazy(() => import('./pages/company/Jobs'));
+const PublishJob = lazy(() => import('./pages/company/PublishJob'));
+const Applicants = lazy(() => import('./pages/company/Applicants'));
+const CompanyNotifications = lazy(() => import('./pages/company/Notifications'));
+const CompanyProfile = lazy(() => import('./pages/company/Profile'));
+const CompanySettings = lazy(() => import('./pages/company/Settings'));
+const CompanyAppearance = lazy(() => import('./pages/company/Appearance'));
+const CompanyNotificationSettings = lazy(() => import('./pages/company/NotificationSettings'));
+const Verification = lazy(() => import('./pages/company/Verification'));
+const MessagesInbox = lazy(() => import('./pages/shared/MessagesInbox'));
+const Conversation = lazy(() => import('./pages/shared/Conversation'));
+
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminCompanies = lazy(() => import('./pages/admin/AdminCompanies'));
+const AdminOrganizations = lazy(() => import('./pages/admin/AdminOrganizations'));
+const AdminVerifications = lazy(() => import('./pages/admin/AdminVerifications'));
+const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
+const AdminPosts = lazy(() => import('./pages/admin/AdminPosts'));
+const AdminTopics = lazy(() => import('./pages/admin/AdminTopics'));
+const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
+const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
+const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
+const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+
 function AppToasts() {
   const { toasts, dismissToast } = useNotificationContext();
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
+}
+
+/** Controlled logout after 5 minutes of real inactivity; form drafts stay in localStorage. */
+function SessionManager() {
+  const { isAuthenticated, isPreviewMode, logout } = useAuth();
+
+  useInactivityLogout({
+    enabled: isAuthenticated && !isPreviewMode,
+    onTimeout: () => {
+      void logout();
+    },
+  });
+
+  return null;
 }
 
 function LegacyPathRedirect({ toPrefix }) {
@@ -107,6 +136,24 @@ function LegacyCompanyJobEditRedirect() {
   return <Navigate to={`/business/jobs/${jobId}/edit`} replace />;
 }
 
+/** Discover topic routes. Pass basePath for absolute mounts (e.g. "/personal"); omit when nested under /business or /organization. */
+function DiscoverAppRoutes({ basePath = '' } = {}) {
+  const path = (segment) => (basePath ? `${basePath}/${segment}` : segment);
+  return (
+    <>
+      <Route path={path('discover/hiring')} element={<DiscoverHiring />} />
+      <Route path={path('discover/scholarships')} element={<DiscoverScholarships />} />
+      <Route path={path('discover/internships')} element={<DiscoverInternships />} />
+      <Route path={path('discover/events')} element={<DiscoverEvents />} />
+      <Route path={path('discover/calls')} element={<DiscoverCalls />} />
+      <Route path={path('discover/courses')} element={<DiscoverCourses />} />
+      <Route path={path('discover/entrepreneurs')} element={<DiscoverEntrepreneurs />} />
+      <Route path={path('discover/volunteering')} element={<DiscoverVolunteering />} />
+      <Route path={path('discover/international')} element={<DiscoverInternational />} />
+    </>
+  );
+}
+
 /** Shared employer app routes under /business/* and /organization/*. */
 function EmployerAppRoutes() {
   return (
@@ -119,6 +166,8 @@ function EmployerAppRoutes() {
       <Route path="jobs/:jobId/edit" element={<PublishJob />} />
       <Route path="publish-job" element={<EmployerPublishJobRedirect />} />
       <Route path="applicants" element={<Applicants />} />
+      <Route path="messages" element={<MessagesInbox />} />
+      <Route path="messages/:conversationId" element={<Conversation />} />
       <Route path="notifications" element={<CompanyNotifications />} />
       <Route path="profile" element={<CompanyProfile />} />
       <Route path="settings" element={<CompanySettings />} />
@@ -126,6 +175,7 @@ function EmployerAppRoutes() {
       <Route path="settings/notifications" element={<CompanyNotificationSettings />} />
       <Route path="verification" element={<Verification />} />
       <Route path="help" element={<HelpCenter />} />
+      {DiscoverAppRoutes()}
     </>
   );
 }
@@ -196,6 +246,8 @@ function AppRoutes() {
                   <Route path="/personal/jobs/:id/apply" element={<ApplyJob />} />
                   <Route path="/personal/saved-jobs" element={<CandidateSavedJobs />} />
                   <Route path="/personal/applications" element={<CandidateApplications />} />
+                  <Route path="/personal/messages" element={<MessagesInbox />} />
+                  <Route path="/personal/messages/:conversationId" element={<Conversation />} />
                   <Route path="/personal/notifications" element={<CandidateNotifications />} />
                   <Route path="/personal/profile" element={<CandidateProfile />} />
                   <Route path="/personal/profile/edit-intro" element={<EditIntro />} />
@@ -203,6 +255,7 @@ function AppRoutes() {
                   <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
                   <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />
                   <Route path="/help" element={<HelpCenter />} />
+                  {DiscoverAppRoutes({ basePath: '/personal' })}
                 </Route>
 
                 <Route element={<RoleRoute roles={[ROLES.BUSINESS, ROLES.ORGANIZATION]} />}>
@@ -212,6 +265,7 @@ function AppRoutes() {
                   <Route path="/organization">{EmployerAppRoutes()}</Route>
                 </Route>
 
+<<<<<<< HEAD
                 <Route element={<RoleRoute role={ROLES.ADMIN} />}>
                   <Route element={<AdminLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
@@ -227,6 +281,23 @@ function AppRoutes() {
                     <Route path="/admin/settings" element={<AdminSettings />} />
                     <Route path="/admin/help" element={<HelpCenter />} />
                   </Route>
+=======
+              <Route element={<RoleRoute role={ROLES.ADMIN} />}>
+                <Route element={<AdminLayout />}>
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/companies" element={<AdminCompanies />} />
+                  <Route path="/admin/organizations" element={<AdminOrganizations />} />
+                  <Route path="/admin/verifications" element={<AdminVerifications />} />
+                  <Route path="/admin/jobs" element={<AdminJobs />} />
+                  <Route path="/admin/posts" element={<AdminPosts />} />
+                  <Route path="/admin/topics" element={<AdminTopics />} />
+                  <Route path="/admin/reports" element={<AdminReports />} />
+                  <Route path="/admin/notifications" element={<AdminNotifications />} />
+                  <Route path="/admin/profile" element={<AdminProfile />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
+                  <Route path="/admin/help" element={<HelpCenter />} />
+>>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
                 </Route>
               </Route>
 
@@ -253,6 +324,7 @@ function AppRoutes() {
               <Route path="/company/verification" element={<Navigate to="/business/verification" replace />} />
               <Route path="/company/help" element={<Navigate to="/business/help" replace />} />
 
+<<<<<<< HEAD
               {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
               <Route path="/profile/:userId" element={<PublicProfile />} />
               <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
@@ -261,6 +333,17 @@ function AppRoutes() {
               <Route path="/personal/jobs/:id" element={<JobDetail />} />
               <Route path="/post/:postId" element={<PostDetail />} />
               <Route path="/feed/post/:postId" element={<PostDetail />} />
+=======
+            {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
+            {/* /@:username does not match in RR6 — use /:atHandle and resolve only @* segments */}
+            <Route path="/profile/:userId" element={<PublicProfile />} />
+            <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
+            <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
+            <Route path="/job/:id" element={<JobDetail />} />
+            <Route path="/personal/jobs/:id" element={<JobDetail />} />
+            <Route path="/post/:postId" element={<PostDetail />} />
+            <Route path="/feed/post/:postId" element={<PostDetail />} />
+>>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
 
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfUse />} />
@@ -273,8 +356,13 @@ function AppRoutes() {
               <Route path="/legal/aviso-legal" element={<Navigate to="/terms#marcas-terceros-uso" replace />} />
               <Route path="/legal/help" element={<HelpCenter />} />
 
+<<<<<<< HEAD
               <Route path="*" element={<NotFound />} />
             </Route>
+=======
+            <Route path="/:atHandle" element={<UsernameProfileRedirect />} />
+            <Route path="*" element={<NotFound />} />
+>>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
         </Routes>
       </Suspense>
     </>
@@ -290,6 +378,7 @@ export default function App() {
             <KeyboardProvider>
               <NotificationProvider>
                 <AppToasts />
+                <SessionManager />
                 <AppRoutes />
               </NotificationProvider>
             </KeyboardProvider>

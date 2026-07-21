@@ -9,6 +9,7 @@ import {
   rankSearchJobsForCandidate,
 } from '../utils/searchMatching';
 import { resolveSearchResultDisplay } from '../utils/globalSearch';
+import { normalizeSearchUsernameQuery } from '../utils/username';
 
 const RESULT_LIMIT = 8;
 const GLOBAL_SEARCH_LIMIT_PER_TYPE = 5;
@@ -21,10 +22,12 @@ function isOwnSearchResult(type, resultId, user) {
 }
 function mapGlobalSearchRow(item, user) {
   const type = normalizeSearchEntityType(item.result_type);
-  const path = resolveSearchResultPath(
+  const resolvedPath = resolveSearchResultPath(
     { type, id: item.result_id, result_type: item.result_type, result_id: item.result_id },
     user,
   );
+  // Always use UUID deep links for in-app search clicks. /@username is for share URLs only.
+  const path = resolvedPath;
   const mapped = {
     type,
     id: item.result_id,
@@ -55,7 +58,7 @@ export const searchService = {
     matchingContext = null,
     includeJobs = false,
   }) {
-    const trimmedQuery = query?.trim();
+    const trimmedQuery = normalizeSearchUsernameQuery(query?.trim() || '');
 
     if (!trimmedQuery) {
       return { data: [], error: null };

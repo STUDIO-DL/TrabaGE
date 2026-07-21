@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
@@ -9,15 +9,15 @@ import KeyboardAwareFooter from '../../layout/KeyboardAwareFooter';
 import AppIcon from '../../common/AppIcon';
 import { Save, ICON_SIZES } from '../../../constants/icons';
 import SkillTagsField from '../education/SkillTagsField';
-import EducationFilesField, { MAX_EDUCATION_FILES } from '../education/EducationFilesField';
 import {
   compareMonthYear,
   parseMonthYear,
   toEndDate,
   toStartDate,
 } from '../../../utils/educationDates';
-import { storageService } from '../../../services/storage.service';
-import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
+import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
+import { useAuth } from '../../../hooks/useAuth';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 const ACTIVITIES_MAX = 500;
 const DESCRIPTION_MAX = 1000;
@@ -35,22 +35,11 @@ const emptyForm = {
   activities: '',
   description: '',
   skills: [],
+  showInIntro: false,
 };
 
-function normalizeMediaFiles(value) {
-  if (!Array.isArray(value)) return [];
-  return value
-    .filter((item) => item && typeof item === 'object' && item.path)
-    .map((item) => ({
-      path: item.path,
-      name: item.name || 'Archivo',
-      size: item.size ?? 0,
-      mimeType: item.mimeType || item.mime_type || null,
-    }));
-}
-
-function buildFormState(initial) {
-  if (!initial) return emptyForm;
+function buildFormState(initial, showInIntro = false) {
+  if (!initial) return { ...emptyForm, showInIntro: Boolean(showInIntro) };
   const start = parseMonthYear(initial.start_date);
   const end = parseMonthYear(initial.end_date);
   const isCurrent = Boolean(initial.is_current ?? !initial.end_date);
@@ -68,10 +57,11 @@ function buildFormState(initial) {
     activities: initial.activities || '',
     description: initial.description || '',
     skills: Array.isArray(initial.skills) ? initial.skills : [],
+    showInIntro: Boolean(showInIntro),
   };
 }
 
-function validateForm(form, existingFiles, pendingFiles) {
+function validateForm(form) {
   const errors = {};
 
   if (!form.institution.trim()) {
@@ -102,9 +92,6 @@ function validateForm(form, existingFiles, pendingFiles) {
   if (form.description.length > DESCRIPTION_MAX) {
     errors.description = `Máximo ${DESCRIPTION_MAX} caracteres.`;
   }
-  if (existingFiles.length + pendingFiles.length > MAX_EDUCATION_FILES) {
-    errors.files = `Máximo ${MAX_EDUCATION_FILES} archivos.`;
-  }
 
   return errors;
 }
@@ -116,87 +103,55 @@ export default function EducationModal({
   onSave,
   loading,
   userId,
+  showInIntro = false,
 }) {
   const formId = useId();
-  const [form, setForm] = useState(emptyForm);
-  const [existingFiles, setExistingFiles] = useState([]);
-  const [pendingFiles, setPendingFiles] = useState([]);
-  const [removedPaths, setRemovedPaths] = useState([]);
+  const { user } = useAuth();
+  const resolvedUserId = userId || user?.id;
+  const draftKey = FORM_DRAFT_KEYS.educationModal(initial?.id);
+
+  const draftEnabled = isOpen && Boolean(resolvedUserId);
+  const initialForm = buildFormState(initial, showInIntro);
+  const { values: form, setValues: setForm, clearDraft } = useFormDraft({
+    draftKey,
+    userId: resolvedUserId,
+    initialValues: initialForm,
+    enabled: draftEnabled,
+  });
+
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
-  const [uploading, setUploading] = useState(false);
-  const [uploadPhase, setUploadPhase] = useState(null);
+  const prevOpenRef = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) return;
-    setForm(buildFormState(initial));
-    setExistingFiles(normalizeMediaFiles(initial?.media_files));
-    setPendingFiles([]);
-    setRemovedPaths([]);
+    const justOpened = isOpen && !prevOpenRef.current;
+    prevOpenRef.current = isOpen;
+    if (!justOpened) return;
     setFieldErrors({});
     setSubmitError('');
-  }, [isOpen, initial]);
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E1',location:'EducationModal.jsx:open',message:'education modal opened',data:{mode:initial?.id?'edit':'add',editingId:initial?.id||null,showInIntroProp:Boolean(showInIntro),draftKey,institution:initialForm.institution||'',formShowInIntro:Boolean(initialForm.showInIntro)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+  }, [isOpen, initial, showInIntro, draftKey, initialForm.institution, initialForm.showInIntro]);
 
-  const busy = loading || uploading;
-
-  const setField = (patch) => {
+  const setField = useCallback((patch) => {
     setForm((current) => ({ ...current, ...patch }));
     setFieldErrors((current) => {
       const next = { ...current };
       Object.keys(patch).forEach((key) => delete next[key]);
       return next;
     });
-  };
-
-  const handleAddPendingFile = (file, errorMessage) => {
-    if (errorMessage) {
-      setFieldErrors((current) => ({ ...current, files: errorMessage }));
-      return;
-    }
-    if (!file) return;
-    setPendingFiles((current) => [
-      ...current,
-      { clientId: crypto.randomUUID(), file, name: file.name, size: file.size, type: file.type },
-    ]);
-    setFieldErrors((current) => {
-      const next = { ...current };
-      delete next.files;
-      return next;
-    });
-  };
-
-  const syncMediaFiles = async (educationId) => {
-    if (!userId || !educationId) return { mediaFiles: existingFiles, error: null };
-
-    let nextFiles = existingFiles.filter((file) => !removedPaths.includes(file.path));
-
-    if (removedPaths.length) {
-      const { error } = await storageService.deleteEducationFiles(removedPaths);
-      if (error) return { mediaFiles: null, error };
-    }
-
-    for (const pending of pendingFiles) {
-      const fileId = crypto.randomUUID();
-      const { meta, error } = await storageService.uploadEducationFile(
-        userId,
-        educationId,
-        pending.file,
-        fileId,
-        { onProgress: ({ phase }) => setUploadPhase(phase) },
-      );
-      if (error) return { mediaFiles: null, error };
-      nextFiles = [...nextFiles, meta];
-    }
-
-    return { mediaFiles: nextFiles, error: null };
-  };
+  }, [setForm]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSubmitError('');
 
-    const errors = validateForm(form, existingFiles, pendingFiles);
+    const errors = validateForm(form);
     if (Object.keys(errors).length) {
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E4',location:'EducationModal.jsx:validation',message:'education modal validation failed',data:{mode:initial?.id?'edit':'add',errorKeys:Object.keys(errors),errors,institutionLen:(form.institution||'').length,hasStart:Boolean(form.startMonth&&form.startYear),isCurrent:Boolean(form.is_current),showInIntro:Boolean(form.showInIntro)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setFieldErrors(errors);
       return;
     }
@@ -212,19 +167,24 @@ export default function EducationModal({
       activities: form.activities.trim() || null,
       description: form.description.trim() || null,
       skills: form.skills,
-      media_files: existingFiles.filter((file) => !removedPaths.includes(file.path)),
     };
 
-    setUploading(true);
-    setUploadPhase(null);
-    const { data, error: saveError } = await onSave(payload, initial?.id);
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E1',location:'EducationModal.jsx:submit',message:'education modal submit',data:{mode:initial?.id?'edit':'add',editingId:initial?.id||null,showInIntro:Boolean(form.showInIntro),showInIntroProp:Boolean(showInIntro),institution:payload.institution,program:payload.program,start_date:payload.start_date,end_date:payload.end_date,is_current:payload.is_current,skillsCount:(payload.skills||[]).length},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
+    const { error: saveError } = await onSave(payload, initial?.id, {
+      showInIntro: form.showInIntro,
+    });
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E2',location:'EducationModal.jsx:afterSave',message:'education modal onSave returned',data:{ok:!saveError,errorMessage:saveError?.message||null,errorCode:saveError?.code||null,showInIntro:Boolean(form.showInIntro)},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     if (saveError) {
-      setUploading(false);
-      setUploadPhase(null);
       setSubmitError(saveError.message);
       return;
     }
 
+<<<<<<< HEAD
     const educationId = data?.id || initial?.id;
     if (!educationId) {
       setUploading(false);
@@ -255,6 +215,9 @@ export default function EducationModal({
       setUploadPhase(null);
     }
 
+=======
+    clearDraft();
+>>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
     onClose();
   };
 
@@ -340,6 +303,16 @@ export default function EducationModal({
             <span className="text-body-small text-app-text">Actualmente estudio aquí</span>
           </label>
 
+          <label className="flex min-h-touch cursor-pointer items-center gap-space-sm rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
+            <input
+              type="checkbox"
+              checked={form.showInIntro}
+              onChange={(event) => setField({ showInIntro: event.target.checked })}
+              className="h-4 w-4 rounded border-app-border text-primary-600 focus:ring-primary-500"
+            />
+            <span className="text-body-small text-app-text">Mostrar centro en mi intro</span>
+          </label>
+
           <Input
             label="Calificación"
             value={form.grade}
@@ -385,21 +358,6 @@ export default function EducationModal({
             error={fieldErrors.skills}
           />
 
-          <EducationFilesField
-            existingFiles={existingFiles}
-            pendingFiles={pendingFiles}
-            onAddPending={handleAddPendingFile}
-            onRemoveExisting={(path) => {
-              setRemovedPaths((current) => [...new Set([...current, path])]);
-              setExistingFiles((current) => current.filter((file) => file.path !== path));
-            }}
-            onRemovePending={(clientId) =>
-              setPendingFiles((current) => current.filter((file) => file.clientId !== clientId))
-            }
-            error={fieldErrors.files}
-            disabled={busy}
-          />
-
           {submitError && (
             <p className="text-caption text-error-600" role="alert">
               {submitError}
@@ -408,9 +366,9 @@ export default function EducationModal({
         </div>
 
         <KeyboardAwareFooter className="z-10 shrink-0 border-t border-app-border bg-app-card px-space-base pt-space-md">
-          <Button type="submit" form={formId} fullWidth loading={busy} className="gap-space-sm">
+          <Button type="submit" form={formId} fullWidth loading={loading} className="gap-space-sm">
             <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
-            {busy ? getUploadPhaseLabel(uploadPhase) || 'Guardando...' : 'Guardar'}
+            Guardar
           </Button>
         </KeyboardAwareFooter>
       </form>

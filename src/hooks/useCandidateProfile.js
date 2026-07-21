@@ -278,16 +278,72 @@ export function useCandidateProfile() {
     [runMutation],
   );
 
+  /**
+   * Keep candidate_profiles.show_education_in_intro / intro_education_id
+   * in sync with the education entry the user chose for the intro header.
+   */
+  const syncEducationIntro = useCallback(
+    async (educationId, showInIntro) => {
+      if (showInIntro) {
+        if (!educationId) {
+          // #region agent log
+          fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E2',location:'useCandidateProfile.js:syncEducationIntro',message:'sync aborted missing educationId',data:{showInIntro:true},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+          return { error: { message: 'No se pudo vincular el centro a la intro.' } };
+        }
+        const alreadySelected =
+          profile?.show_education_in_intro &&
+          String(profile?.intro_education_id) === String(educationId);
+        // #region agent log
+        fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E3',location:'useCandidateProfile.js:syncEducationIntro',message:'syncEducationIntro show path',data:{educationId,showInIntro:true,alreadySelected,profileShow:Boolean(profile?.show_education_in_intro),profileIntroId:profile?.intro_education_id||null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        if (alreadySelected) return { error: null };
+
+        return updateBasicInfo({
+          show_education_in_intro: true,
+          intro_education_id: educationId,
+        });
+      }
+
+      const wasSelected = String(profile?.intro_education_id ?? '') === String(educationId ?? '');
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E3',location:'useCandidateProfile.js:syncEducationIntro',message:'syncEducationIntro hide path',data:{educationId:educationId||null,showInIntro:false,wasSelected,profileIntroId:profile?.intro_education_id||null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+      if (!wasSelected) return { error: null };
+
+      return updateBasicInfo({
+        show_education_in_intro: false,
+        intro_education_id: null,
+      });
+    },
+    [profile?.intro_education_id, profile?.show_education_in_intro, updateBasicInfo],
+  );
+
   const deleteEducation = useCallback(
-    async (id) =>
-      runMutation({
+    async (id) => {
+      const wasIntro = String(profile?.intro_education_id ?? '') === String(id);
+      const result = await runMutation({
         execute: () => profileService.deleteEducation(id),
         patchCache: (current) => ({
           ...current,
           education: (current.education ?? []).filter((item) => item.id !== id),
+          ...(wasIntro
+            ? { show_education_in_intro: false, intro_education_id: null }
+            : null),
         }),
-      }).then(({ error: saveError }) => ({ error: saveError })),
-    [runMutation],
+      });
+
+      if (!result.error && wasIntro) {
+        const introResult = await updateBasicInfo({
+          show_education_in_intro: false,
+          intro_education_id: null,
+        });
+        if (introResult.error) return introResult;
+      }
+
+      return { error: result.error };
+    },
+    [profile?.intro_education_id, runMutation, updateBasicInfo],
   );
 
   const addCertification = useCallback(
@@ -298,7 +354,7 @@ export function useCandidateProfile() {
           ...current,
           certifications: [...(current.certifications ?? []), row],
         }),
-      }).then(({ error: saveError }) => ({ error: saveError })),
+      }),
     [runMutation, userId],
   );
 
@@ -312,20 +368,30 @@ export function useCandidateProfile() {
             item.id === id ? { ...item, ...row } : item,
           ),
         }),
-      }).then(({ error: saveError }) => ({ error: saveError })),
+      }),
     [runMutation],
   );
 
   const deleteCertification = useCallback(
-    async (id) =>
-      runMutation({
+    async (id) => {
+      const existing = (profile?.certifications ?? []).find((item) => item.id === id);
+      const imagePath = existing?.image_path;
+
+      const result = await runMutation({
         execute: () => profileService.deleteCertification(id),
         patchCache: (current) => ({
           ...current,
           certifications: (current.certifications ?? []).filter((item) => item.id !== id),
         }),
-      }).then(({ error: saveError }) => ({ error: saveError })),
-    [runMutation],
+      });
+
+      if (!result.error && imagePath && userId) {
+        await storageService.deleteCertificationImage(userId, id, imagePath);
+      }
+
+      return result;
+    },
+    [profile?.certifications, runMutation, userId],
   );
 
   const addSkill = useCallback(
@@ -469,6 +535,7 @@ export function useCandidateProfile() {
     addEducation,
     updateEducation,
     deleteEducation,
+    syncEducationIntro,
     addCertification,
     updateCertification,
     deleteCertification,

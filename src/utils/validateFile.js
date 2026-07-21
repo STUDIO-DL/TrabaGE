@@ -9,6 +9,7 @@ const MAX_SIZES = {
   document: UPLOAD_INPUT_MAX_BYTES.cv,
   image: UPLOAD_INPUT_MAX_BYTES.image,
   educationAttachment: UPLOAD_INPUT_MAX_BYTES.educationAttachment,
+  certificationImage: UPLOAD_INPUT_MAX_BYTES.image,
 };
 
 const ALLOWED_TYPES = {
@@ -26,6 +27,7 @@ const ALLOWED_TYPES = {
     'image/webp',
     'image/jpg',
   ],
+  certificationImage: ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
 };
 
 export const FILE_HINTS = {
@@ -37,6 +39,7 @@ export const FILE_HINTS = {
   image: 'JPG, PNG o WebP • Se optimiza al subir',
   verification: 'PDF • Max 10 MB (objetivo 2 MB)',
   educationAttachment: 'PDF o imágenes • Max 2 MB (se optimiza al subir)',
+  certificationImage: 'Solo JPG, PNG o WebP • Se comprime al subir',
 };
 
 const TYPE_ALIASES = {
@@ -59,6 +62,12 @@ export const validateFile = (file, type = 'document') => {
     }
     if (resolvedType === 'educationAttachment') {
       return { valid: false, error: 'Solo se permiten PDF o imágenes (JPG, PNG, WebP).' };
+    }
+    if (resolvedType === 'certificationImage') {
+      return {
+        valid: false,
+        error: 'Formato no válido. Solo se permiten imágenes JPG, JPEG, PNG o WEBP.',
+      };
     }
     return { valid: false, error: 'Tipo de archivo no permitido.' };
   }

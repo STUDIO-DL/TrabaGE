@@ -43,15 +43,29 @@ export function usePwaUpdate() {
   const updateSWRef = useRef(null);
   const registrationRef = useRef(null);
   const hiddenAtRef = useRef(null);
+<<<<<<< HEAD
   const pendingRefreshRef = useRef(false);
+=======
+  const refreshingRef = useRef(false);
+>>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
 
   useEffect(() => {
     if (!import.meta.env.PROD || !('serviceWorker' in navigator)) {
       return undefined;
     }
 
+<<<<<<< HEAD
     // Successful boot after a chunk recovery — allow another auto-reload later.
     clearChunkReloadGuard();
+=======
+    const onControllerChange = () => {
+      if (refreshingRef.current) return;
+      refreshingRef.current = true;
+      window.location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange);
+>>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
 
     const updateSW = registerSW({
       immediate: true,
@@ -74,6 +88,7 @@ export function usePwaUpdate() {
     updateSWRef.current = updateSW;
 
     return () => {
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange);
       updateSWRef.current = null;
       registrationRef.current = null;
     };
@@ -132,7 +147,11 @@ export function usePwaUpdate() {
     if (!updateSW) return;
 
     setIsUpdating(true);
+<<<<<<< HEAD
     clearDismissUntil();
+=======
+    refreshingRef.current = false;
+>>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
     try {
       await updateSW(true);
     } catch {

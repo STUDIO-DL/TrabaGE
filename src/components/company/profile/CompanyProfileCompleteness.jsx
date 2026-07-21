@@ -4,6 +4,7 @@ import {
   getCompanyCompletenessPercent,
   getCompanyProfileChecklist,
 } from '../../../utils/companyProfileCompleteness';
+import { profileContentShellClass } from './companyProfileStyles';
 
 export default function CompanyProfileCompleteness({ profile, jobCount = 0 }) {
   const checklist = getCompanyProfileChecklist(profile, jobCount);
@@ -13,8 +14,8 @@ export default function CompanyProfileCompleteness({ profile, jobCount = 0 }) {
   if (percent >= 100) return null;
 
   return (
-    <section className="border-b border-app-border bg-app-card px-space-base py-space-base">
-      <div className="mx-auto w-full max-w-lg rounded-radius-lg border border-app-border bg-app-surface p-space-base">
+    <section className="border-b border-app-border bg-app-card px-space-base py-space-md">
+      <div className={`${profileContentShellClass}`}>
         <div className="flex items-start justify-between gap-space-md">
           <div className="min-w-0 flex-1">
             <p className="text-body-small font-semibold text-app-text">Tu perfil está al {percent}%</p>
@@ -43,10 +44,12 @@ export default function CompanyProfileCompleteness({ profile, jobCount = 0 }) {
 
         <ul className="mt-space-md space-y-space-sm">
           {checklist.map((item) => (
-            <li key={item.key} className="flex items-center gap-space-sm text-body-small">
+            <li key={item.key} className="flex min-h-touch items-center gap-space-sm text-body-small">
               <span
                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-radius-circular ${
-                  item.done ? 'bg-app-surface text-app-text ring-1 ring-app-border' : 'bg-app-surface ring-1 ring-app-border'
+                  item.done
+                    ? 'bg-app-surface text-app-text ring-1 ring-app-border'
+                    : 'bg-app-surface ring-1 ring-app-border'
                 }`}
               >
                 {item.done ? (

@@ -171,7 +171,7 @@ export default function JobAlertPreferencesPanel() {
               Notificarme cuando existan ofertas relevantes
             </span>
             <span className="mt-0.5 block text-xs text-slate-500">
-              Recibirás alertas in-app y push según la frecuencia elegida.
+              Recibirás alertas in-app y push según tus preferencias de notificaciones y la frecuencia elegida.
             </span>
           </span>
         </label>

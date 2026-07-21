@@ -11,10 +11,13 @@ import {
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { companyService } from './company.service';
 import { jobsService } from './jobs.service';
+import { applicationsService } from './applications.service';
 import { followsService, FOLLOWS_TARGET } from './follows.service';
 import { profileService } from './profile.service';
+import { topicsService } from './topics.service';
 import { dedupeFeedItems } from '../utils/feedRanking';
 import { resolvePostAuthorName } from '../utils/displayIdentity';
+import { normalizePostsTopics } from '../utils/normalizePostTopics';
 
 // The Home (Inicio) feed shows posts only. Job offers live exclusively in
 // Empleos; news, events, courses, and recommendation cards are excluded here.
@@ -40,14 +43,16 @@ async function fetchFeedPoolFallback(_userId, _role, { limit, offset }) {
   const poolSize = limit * 2;
   const postsResult = await supabase
     .from('posts')
-    .select('*')
+    .select(`*, ${topicsService.POST_TOPICS_EMBED}`)
     .eq('is_hidden', false)
     .order('created_at', { ascending: false })
     .range(offset, offset + poolSize - 1);
 
   if (postsResult.error) return { data: [], error: postsResult.error };
 
-  const items = (postsResult.data ?? []).map((post) => ({
+  const posts = normalizePostsTopics(postsResult.data ?? []);
+
+  const items = posts.map((post) => ({
     item_key: `post:${post.id}`,
     content_type:
       post.content_type === 'advice' ||
@@ -69,7 +74,7 @@ async function enrichPosts(posts, user) {
   const companyIds = [...new Set(posts.filter((p) => isEmployerAuthor(p.author_type)).map((p) => p.author_id))];
   const candidateIds = [...new Set(posts.filter((p) => isPersonalAuthor(p.author_type)).map((p) => p.author_id))];
 
-  const [companiesResult, candidatesResult] = await Promise.all([
+  const [companiesResult, candidatesResult, postsWithTopics] = await Promise.all([
     companyIds.length
       ? supabase
           .from('company_profiles')
@@ -82,13 +87,14 @@ async function enrichPosts(posts, user) {
           .select('user_id, full_name, headline, avatar_path')
           .in('user_id', candidateIds)
       : Promise.resolve({ data: [] }),
+    topicsService.attachTopicsToPosts(posts),
   ]);
 
   const enriched = new Map();
   const companies = new Map((companiesResult.data ?? []).map((row) => [row.user_id, row]));
   const candidates = new Map((candidatesResult.data ?? []).map((row) => [row.user_id, row]));
 
-  posts.forEach((post) => {
+  postsWithTopics.forEach((post) => {
     const isOwner = user?.id === post.author_id;
     if (isEmployerAuthor(post.author_type)) {
       const company = companies.get(post.author_id);
@@ -227,24 +233,56 @@ async function buildCandidateRecommendationCards(profile, { limit = 3 } = {}) {
 }
 
 async function buildFeedContext(userId, role) {
-  if (!userId) return { profile: null, followedCompanyIds: [], followedInstitutionIds: [], companyJobs: [], institutionMode: false };
+  if (!userId) {
+    return {
+      profile: null,
+      companyProfile: null,
+      followedCompanyIds: [],
+      followedInstitutionIds: [],
+      companyJobs: [],
+      institutionMode: false,
+      recentActivityKeywords: [],
+    };
+  }
 
   if (role === ROLES.PERSONAL) {
-    const [profileResult, followsCompanies, followsInstitutions] = await Promise.all([
-      profileService.getCandidateFullProfile(userId),
-      followsService.getFollowing(userId, FOLLOWS_TARGET.BUSINESS),
-      followsService.getFollowing(userId, FOLLOWS_TARGET.ORGANIZATION),
-    ]);
+    const [profileResult, followsCompanies, followsInstitutions, savedJobsResult, applicationsResult] =
+      await Promise.all([
+        profileService.getCandidateFullProfile(userId),
+        followsService.getFollowing(userId, FOLLOWS_TARGET.BUSINESS),
+        followsService.getFollowing(userId, FOLLOWS_TARGET.ORGANIZATION),
+        jobsService.getSavedJobs(userId),
+        applicationsService.getCandidateApplications(userId),
+      ]);
 
     const prefs = profileResult.data?.job_preferences;
+    const recentActivityKeywords = [
+      ...(savedJobsResult.data ?? []).flatMap((row) => [
+        row.jobs?.title,
+        row.jobs?.sector,
+        row.jobs?.company_profiles?.sector,
+      ]),
+      ...(applicationsResult.data ?? []).flatMap((row) => [
+        row.jobs?.title,
+        row.jobs?.sector,
+        row.jobs?.company_profiles?.sector,
+      ]),
+    ]
+      .filter(Boolean)
+      .flatMap((value) => String(value).toLowerCase().split(/\s+/))
+      .filter((token) => token.length > 2);
+
     return {
       profile: profileResult.data,
+      companyProfile: null,
       followedCompanyIds: (followsCompanies.data ?? []).map((row) => row.target_id),
       followedInstitutionIds: (followsInstitutions.data ?? []).map((row) => row.target_id),
       companyJobs: [],
       institutionMode: false,
+      recentActivityKeywords: [...new Set(recentActivityKeywords)],
       preferredCategories: [
         ...(prefs?.preferred_sectors?.length ? ['employment', 'labor'] : []),
+        ...(prefs?.preferred_categories ?? []),
         'tech',
         'business',
       ],
@@ -259,10 +297,12 @@ async function buildFeedContext(userId, role) {
   const companyType = companyResult.data?.company_type;
   return {
     profile: null,
+    companyProfile: companyResult.data,
     followedCompanyIds: [],
     followedInstitutionIds: [],
     companyJobs: (jobsResult.data ?? []).filter((job) => job.status === 'active'),
     institutionMode: INSTITUTION_COMPANY_TYPES.includes(companyType),
+    recentActivityKeywords: [],
     preferredCategories: INSTITUTION_COMPANY_TYPES.includes(companyType)
       ? ['education', 'employment']
       : ['employment', 'labor', 'business'],

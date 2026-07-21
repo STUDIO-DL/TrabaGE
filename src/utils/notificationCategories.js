@@ -41,6 +41,30 @@ const POST_TYPES = new Set([
   'post_interaction',
 ]);
 
+const COMPANY_PROFILE_LINK_RE = /\/companies\/[^/?#]+/i;
+const POST_LINK_RE = /\/post\/([^/?#]+)/i;
+
+/**
+ * Extract a publication id from notification metadata (explicit fields or deep link).
+ * @param {object} metadata
+ * @returns {string | null}
+ */
+export function extractPostIdFromMetadata(metadata = {}) {
+  const explicit =
+    metadata.post_id ??
+    metadata.postId ??
+    (metadata.target_type === 'post' ? metadata.target_id : null);
+  if (explicit) return String(explicit);
+
+  const link = typeof metadata.link === 'string' ? metadata.link : '';
+  const match = link.match(POST_LINK_RE);
+  return match?.[1] ? String(match[1]) : null;
+}
+
+function isCompanyProfileLink(link) {
+  return typeof link === 'string' && COMPANY_PROFILE_LINK_RE.test(link);
+}
+
 /**
  * Resolve the primary category of a notification, preferring metadata hints
  * over the raw type when the type is ambiguous.
@@ -62,7 +86,12 @@ export function getNotificationCategory(notification) {
   if (metadata.job_id || metadata.target_type === 'job' || /\/jobs?\//.test(link)) {
     return NOTIFICATION_CATEGORY.JOBS;
   }
-  if (metadata.target_type === 'post' || /\/post\//.test(link)) {
+  if (
+    metadata.post_id ||
+    metadata.postId ||
+    metadata.target_type === 'post' ||
+    /\/post\//.test(link)
+  ) {
     return NOTIFICATION_CATEGORY.POSTS;
   }
 
@@ -79,18 +108,35 @@ export function matchesCategory(notification, category) {
 
 /**
  * Resolve the in-app route to open when a notification is clicked.
- * Prefers the stored `metadata.link`; otherwise derives a sensible route from
- * the type + metadata so navigation stays correct even for legacy rows.
+ * Post notifications always open the publication when a post id can be resolved
+ * (including from `/post/:id` links). Legacy company-profile links are ignored
+ * for the Posts category so taps never land on the company profile by mistake.
  * @param {object} notification
  * @param {string} [role] - 'candidate' | 'company' (affects scoped fallbacks)
  * @returns {string | null}
  */
 export function getNotificationLink(notification, role = ROLES.PERSONAL) {
   const metadata = notification?.metadata ?? {};
+  const resolvedRole = normalizeRole(role) ?? (isEmployerRole(role) ? ROLES.BUSINESS : ROLES.PERSONAL);
+  const category = getNotificationCategory(notification);
+
+  // Post notifications must open the publication itself — never the company profile.
+  if (category === NOTIFICATION_CATEGORY.POSTS) {
+    const postId = extractPostIdFromMetadata(metadata);
+    if (postId) return DEEP_LINK_PATHS.post(postId);
+
+    // Prefer a non-company link if present; never fall back to /companies/:id.
+    if (metadata.link && !isCompanyProfileLink(metadata.link)) {
+      return metadata.link;
+    }
+    return null;
+  }
+
   if (metadata.link) return metadata.link;
 
-  const category = getNotificationCategory(notification);
-  const resolvedRole = normalizeRole(role) ?? (isEmployerRole(role) ? ROLES.BUSINESS : ROLES.PERSONAL);
+  if (notification?.type === 'new_message' && metadata.conversation_id) {
+    return rolePath(resolvedRole, `/messages/${metadata.conversation_id}`);
+  }
 
   if (category === NOTIFICATION_CATEGORY.JOBS) {
     if (notification?.type === 'new_application' && metadata.candidate_id) {
@@ -105,13 +151,6 @@ export function getNotificationLink(notification, role = ROLES.PERSONAL) {
     return isEmployerRole(role)
       ? rolePath(resolvedRole, '/applicants')
       : rolePath(ROLES.PERSONAL, '/applications');
-  }
-
-  if (category === NOTIFICATION_CATEGORY.POSTS) {
-    const postId = metadata.post_id ?? (metadata.target_type === 'post' ? metadata.target_id : null);
-    if (postId) return DEEP_LINK_PATHS.post(postId);
-    const companyId = metadata.target_type === 'company' ? metadata.target_id : metadata.actor_id;
-    if (companyId) return DEEP_LINK_PATHS.company(companyId);
   }
 
   return null;

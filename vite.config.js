@@ -16,6 +16,7 @@ export default defineConfig({
           supabase: ['@supabase/supabase-js'],
           telemetry: ['@sentry/react', 'react-onesignal'],
           icons: ['lucide-react'],
+          cvGenerator: ['@react-pdf/renderer'],
         },
       },
     },
@@ -30,7 +31,7 @@ export default defineConfig({
       manifest: false,
       workbox: {
         skipWaiting: false,
-        clientsClaim: false,
+        clientsClaim: true,
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/\.netlify\//],

@@ -389,14 +389,14 @@ export default function AdminPosts() {
           loading={loading}
           emptyMessage="No hay publicaciones."
         />
-      ) : (
+      ) : activeTab === 'news' ? (
         <AdminTable
           columns={newsColumns}
           rows={filteredNews.map((article) => ({ ...article, id: article.id }))}
           loading={loading}
           emptyMessage="No hay noticias."
         />
-      )}
+      ) : null}
     </div>
   );
 }

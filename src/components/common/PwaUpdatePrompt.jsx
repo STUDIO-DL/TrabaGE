@@ -12,7 +12,7 @@ export default function PwaUpdatePrompt() {
 
   return (
     <div
-      className="pointer-events-none fixed left-0 right-0 top-4 z-[80] flex justify-center px-4"
+      className="pointer-events-none fixed left-0 right-0 top-4 z-[80] flex justify-center px-4 pt-[max(0.5rem,env(safe-area-inset-top,0px))]"
       role="region"
       aria-label="Actualización disponible"
     >
@@ -21,7 +21,7 @@ export default function PwaUpdatePrompt() {
           <AppIcon icon={RefreshCw} size={ICON_SIZES.sm} strokeWidth={2.1} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-semibold text-app-text">Hay una nueva versión disponible</p>
+          <p className="text-[14px] font-semibold text-app-text">Hay una nueva actualización disponible</p>
           <p className="mt-1 text-[12px] leading-relaxed text-app-subtle">
             Puedes actualizar ahora o seguir usando la app. Tus datos no se perderán.
           </p>
@@ -33,7 +33,7 @@ export default function PwaUpdatePrompt() {
               onClick={applyUpdate}
               disabled={isUpdating}
             >
-              {isUpdating ? 'Actualizando…' : 'Actualizar ahora'}
+              {isUpdating ? 'Actualizando…' : 'Actualizar'}
             </Button>
             <Button
               type="button"

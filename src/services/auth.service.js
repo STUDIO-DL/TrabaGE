@@ -564,7 +564,8 @@ export async function isRegisteredTrabaGEAccount(user) {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  if (error) return false;
+  // A read failure must not discard a real OAuth session as "unregistered".
+  if (error) return true;
 
   const role = normalizeStoredRole(roleRow?.role);
   if (role === ROLES.ADMIN) return true;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
@@ -13,8 +13,10 @@ import { CITIES } from '../../constants/cities';
 import { COUNTRIES, DEFAULT_COUNTRY } from '../../constants/countries';
 import { SECTORS } from '../../constants/sectors';
 import { GraduationCap } from '../../constants/icons';
+import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { formatDateRange } from '../../utils/formatDate';
@@ -56,8 +58,6 @@ const emptyForm = {
   sector: '',
   country: DEFAULT_COUNTRY,
   city: '',
-  contact_email: '',
-  contact_whatsapp: '',
   show_education_in_intro: false,
   intro_education_id: '',
 };
@@ -74,51 +74,72 @@ export default function EditIntro() {
     updateExperience,
     addEducation,
     updateEducation,
+    syncEducationIntro,
   } = useCandidateProfile();
 
-  const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const formInitializedRef = useRef(false);
   const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [modalSaving, setModalSaving] = useState(false);
 
-  useEffect(() => {
-    if (!user || loading) return;
-
+  const initialForm = useMemo(() => {
+    if (!user) return emptyForm;
     const identity = readIdentityFromUser(user);
-    const nextForm = {
+    return {
       full_name: profile?.full_name || identity.full_name || '',
       headline: profile?.headline || '',
       about: profile?.about || '',
       sector: profile?.sector || '',
       country: profile?.country || DEFAULT_COUNTRY,
       city: profile?.city || identity.city || '',
-      contact_email: profile?.contact_email || '',
-      contact_whatsapp: profile?.contact_whatsapp || '',
       show_education_in_intro: Boolean(profile?.show_education_in_intro),
       intro_education_id: profile?.intro_education_id || '',
     };
+  }, [profile, user]);
 
-    if (!formInitializedRef.current) {
-      formInitializedRef.current = true;
-      setForm(nextForm);
-      return;
-    }
-
-    setForm((prev) => {
-      const unchanged = Object.keys(nextForm).every((key) => prev[key] === nextForm[key]);
-      return unchanged ? prev : nextForm;
-    });
-  }, [profile, user, loading]);
+  const draftEnabled = Boolean(user?.id) && !loading;
+  const {
+    values: form,
+    setValues: setForm,
+    clearDraft,
+  } = useFormDraft({
+    draftKey: FORM_DRAFT_KEYS.editIntro,
+    userId: user?.id,
+    initialValues: initialForm,
+    enabled: draftEnabled,
+  });
 
   const currentExperience = useMemo(
     () => getCurrentExperience(profile?.experience),
     [profile?.experience],
   );
+
+  const educationModalShowInIntro = Boolean(
+    form.show_education_in_intro &&
+      editingEducation?.id &&
+      String(form.intro_education_id) === String(editingEducation.id),
+  );
+
+  // #region agent log
+  useEffect(() => {
+    if (!draftEnabled) return;
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'B',location:'EditIntro.jsx:draftHydrate',message:'edit-intro draft/form snapshot',data:{draftEnabled,loading,hasProfile:Boolean(profile),formName:form?.full_name||'',profileName:profile?.full_name||'',formSector:form?.sector||'',profileSector:profile?.sector||'',formShowEdu:Boolean(form?.show_education_in_intro),profileShowEdu:Boolean(profile?.show_education_in_intro),formIntroEduId:form?.intro_education_id||null,profileIntroEduId:profile?.intro_education_id||null,draftDiffers:Boolean(form&&profile&&(form.full_name!==(profile.full_name||'')||form.headline!==(profile.headline||'')||form.sector!==(profile.sector||'')))},timestamp:Date.now()})}).catch(()=>{});
+  }, [draftEnabled, loading, profile, form]);
+
+  useEffect(() => {
+    if (!draftEnabled) return;
+    const list = profile?.experience ?? [];
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'C',location:'EditIntro.jsx:currentExperience',message:'resolved current experience',data:{count:list.length,selectedId:currentExperience?.id||null,selectedPosition:currentExperience?.position||null,selectedEnd:currentExperience?.end_date||null,selectedIsCurrent:currentExperience?.is_current??null,all:list.map((e)=>({id:e.id,position:e.position,end_date:e.end_date||null,is_current:e.is_current??null})),pickedEndedJob:Boolean(currentExperience?.end_date)},timestamp:Date.now()})}).catch(()=>{});
+  }, [draftEnabled, currentExperience, profile?.experience]);
+
+  useEffect(() => {
+    if (!educationOpen) return;
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E1',location:'EditIntro.jsx:EducationModalProps',message:'showInIntro prop resolved for education modal',data:{mode:editingEducation?.id?'edit':'add',editingId:editingEducation?.id||null,formShowEdu:Boolean(form.show_education_in_intro),formIntroEduId:form.intro_education_id||null,resolvedShowInIntro:educationModalShowInIntro},timestamp:Date.now()})}).catch(()=>{});
+  }, [educationOpen, editingEducation, form.show_education_in_intro, form.intro_education_id, educationModalShowInIntro]);
+  // #endregion
 
   const educationOptions = useMemo(
     () => buildEducationSelectOptions(profile?.education),
@@ -147,6 +168,9 @@ export default function EditIntro() {
     const nextErrors = validateIntroForm(form);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'A',location:'EditIntro.jsx:handleSave:validation',message:'intro save blocked by validation',data:{errorKeys:Object.keys(nextErrors),errors:nextErrors},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       const firstError = Object.values(nextErrors)[0];
       showToast(firstError, 'error');
       const firstField = Object.keys(nextErrors)[0];
@@ -162,25 +186,35 @@ export default function EditIntro() {
       sector: form.sector.trim(),
       country: form.country.trim(),
       city: form.city.trim(),
-      contact_email: form.contact_email.trim() || null,
-      contact_whatsapp: form.contact_whatsapp.trim() || null,
       show_education_in_intro: form.show_education_in_intro,
       intro_education_id: form.show_education_in_intro ? form.intro_education_id || null : null,
     };
 
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'A',location:'EditIntro.jsx:handleSave:before',message:'intro save payload',data:{payload:{...payload,about:payload.about? '[set]':null},showEdu:payload.show_education_in_intro,introEduId:payload.intro_education_id},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
+
     const { error } = await updateBasicInfo(payload);
     setSaving(false);
+
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'A',location:'EditIntro.jsx:handleSave:after',message:'intro save result',data:{ok:!error,errorMessage:error?.message||null,errorCode:error?.code||null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
 
     if (error) {
       showToast(error.message, 'error');
       return;
     }
 
+    clearDraft();
     showToast(TOAST.saved, 'success');
     navigate('/personal/profile');
   };
 
   const saveExperience = async (data, id) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'D',location:'EditIntro.jsx:saveExperience',message:'experience save from edit-intro',data:{id:id||null,hasIsCurrent:'is_current' in (data||{}),is_current:data?.is_current??null,end_date:data?.end_date||null,position:data?.position||null},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     setModalSaving(true);
     const result = id ? await updateExperience(id, data) : await addExperience(data);
     setModalSaving(false);
@@ -190,9 +224,10 @@ export default function EditIntro() {
     return result;
   };
 
-  const saveEducation = async (data, id) => {
+  const saveEducation = async (data, id, options = {}) => {
     setModalSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
+<<<<<<< HEAD
     setModalSaving(false);
     if (result.error) {
       showToast(result.error.message || 'No se pudo guardar la educación.', 'error');
@@ -211,6 +246,47 @@ export default function EditIntro() {
       }));
     }
     showToast('Educación guardada.', 'success');
+=======
+    if (!result.error) {
+      const educationId = id || result.data?.id;
+
+      // #region agent log
+      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E',location:'EditIntro.jsx:saveEducation',message:'education save + intro sync path',data:{id:id||null,educationId:educationId||null,hasResultData:Boolean(result.data),showInIntro:options.showInIntro,willSync:typeof options.showInIntro==='boolean'&&Boolean(educationId)},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
+
+      if (typeof options.showInIntro === 'boolean' && educationId) {
+        const showInIntro = options.showInIntro;
+        const introResult = await syncEducationIntro(educationId, showInIntro);
+        // #region agent log
+        fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E',location:'EditIntro.jsx:syncEducationIntro',message:'syncEducationIntro result',data:{educationId,showInIntro,ok:!introResult.error,errorMessage:introResult.error?.message||null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
+        if (introResult.error) {
+          setModalSaving(false);
+          showToast(introResult.error.message, 'error');
+          return introResult;
+        }
+        setForm((prev) => {
+          if (showInIntro) {
+            return {
+              ...prev,
+              intro_education_id: educationId,
+              show_education_in_intro: true,
+            };
+          }
+          if (String(prev.intro_education_id) === String(educationId)) {
+            return {
+              ...prev,
+              intro_education_id: '',
+              show_education_in_intro: false,
+            };
+          }
+          return prev;
+        });
+      }
+      showToast('Educación guardada.', 'success');
+    }
+    setModalSaving(false);
+>>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
     return result;
   };
 
@@ -339,9 +415,6 @@ export default function EditIntro() {
                 Añade tu formación para mostrarla en la intro.
               </p>
             )}
-            <Button type="button" variant="outlined" fullWidth onClick={() => openEducation()}>
-              + Añadir educación
-            </Button>
             {profile?.education?.length ? (
               <Select
                 label="Centro educativo principal"
@@ -395,30 +468,6 @@ export default function EditIntro() {
               ]}
             />
           </EditIntroSection>
-
-          <EditIntroSection
-            title="Datos de contacto"
-            description="Tu correo y WhatsApp de contacto se muestran cuando alguien pulsa «Contactar» en tu perfil."
-          >
-            <Input
-              label="Correo de contacto (Gmail u otro)"
-              name="contact_email"
-              type="email"
-              placeholder="tu@email.com"
-              value={form.contact_email}
-              onChange={setField('contact_email')}
-              autoComplete="email"
-            />
-            <Input
-              label="WhatsApp (con código de país)"
-              name="contact_whatsapp"
-              type="tel"
-              placeholder="240XXXXXXXX"
-              value={form.contact_whatsapp}
-              onChange={setField('contact_whatsapp')}
-              autoComplete="tel"
-            />
-          </EditIntroSection>
         </form>
       </FormPageLayout>
 
@@ -436,6 +485,7 @@ export default function EditIntro() {
         onSave={saveEducation}
         loading={modalSaving}
         userId={user?.id}
+        showInIntro={educationModalShowInIntro}
       />
     </>
   );

@@ -29,8 +29,7 @@ export function useSavedJobs({ loadJobs = false } = {}) {
 
     if (result.error) {
       setError('No se pudieron cargar los empleos guardados.');
-      setSavedJobIds(new Set());
-      setSavedJobs([]);
+      // Keep last good saved state on transient fetch failures.
       setLoading(false);
       return;
     }

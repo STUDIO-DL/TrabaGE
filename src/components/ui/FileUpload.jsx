@@ -14,6 +14,7 @@ export default function FileUpload({
   fileType = 'document',
   loading = false,
   loadingLabel = null,
+  fullWidth = false,
 }) {
   const inputRef = useRef(null);
   const sizeHint = hint || maxSize || FILE_HINTS[fileType];
@@ -59,6 +60,7 @@ export default function FileUpload({
         type="button"
         variant="secondary"
         loading={loading}
+        fullWidth={fullWidth}
         className="inline-flex items-center gap-2"
         onClick={openPicker}
       >

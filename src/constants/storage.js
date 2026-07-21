@@ -2,6 +2,7 @@ export const STORAGE_BUCKETS = {
   CANDIDATE_CVS: 'candidate-cvs',
   CANDIDATE_AVATARS: 'candidate-avatars',
   CANDIDATE_EDUCATION_FILES: 'candidate-education-files',
+  CANDIDATE_CERTIFICATIONS: 'candidate-certifications',
   COMPANY_LOGOS: 'company-logos',
   POST_IMAGES: 'post-images',
   PROFILE_PROJECTS: 'profile-projects',
@@ -22,3 +23,5 @@ export const verificationDocPath = companyVerificationDocPath;
 export const educationFilePath = (userId, educationId, fileId, fileName) =>
   `${userId}/education/${educationId}/${fileId}-${fileName}`;
 export const projectImagePath = (userId, projectId) => `${userId}/projects/${projectId}.webp`;
+export const certificationImagePath = (userId, certificationId) =>
+  `${userId}/certifications/${certificationId}.webp`;

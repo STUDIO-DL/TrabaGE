@@ -18,6 +18,7 @@ import {
   LogOut,
   Mail,
   ShieldCheck,
+  AtSign,
   SlidersHorizontal,
   Trash2,
   User,
@@ -35,8 +36,9 @@ import { getDisplayName } from '../../utils/displayIdentity';
 import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import UsernameEditModal from './UsernameEditModal';
 
-const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7rem] w-[7rem]'; // matches AppAvatar size="2xl"
+const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7.5rem] w-[7.5rem]'; // matches AppAvatar size="2xl"
 
 function SectionCard({ title, children }) {
   return (
@@ -156,13 +158,14 @@ function AccountSummaryCard({ email, profile, loading, isCompany, accountType, u
 
 export default function SettingsScreen({ accountType }) {
   const { user, logout, role, isPreviewMode } = useAuth();
-  const { profile, loading: profileLoading } = useProfile();
+  const { profile, loading: profileLoading, refetch } = useProfile();
   const { showToast } = useNotificationContext();
   const navigate = useNavigate();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [usernameOpen, setUsernameOpen] = useState(false);
 
   const activeRole = accountType || role;
   const isCompany = isEmployerRole(activeRole);
@@ -240,6 +243,23 @@ export default function SettingsScreen({ accountType }) {
               <SettingsRow icon={User} title="Gestionar perfil" to={routes.profile} />
               <Divider />
               <SettingsRow
+                icon={AtSign}
+                title="Enlace público del perfil"
+                subtitle={
+                  profile?.username
+                    ? 'Usado al compartir tu perfil'
+                    : 'Elige un nombre único para compartir'
+                }
+                onClick={() => {
+                  if (isPreviewMode) {
+                    showToast(GUEST_MODE_MESSAGE, 'info');
+                    return;
+                  }
+                  setUsernameOpen(true);
+                }}
+              />
+              <Divider />
+              <SettingsRow
                 icon={ShieldCheck}
                 title="Contraseña y seguridad"
                 subtitle="Actualizar contraseña y acceso"
@@ -314,6 +334,17 @@ export default function SettingsScreen({ accountType }) {
           </div>
         </div>
       </div>
+
+      <UsernameEditModal
+        isOpen={usernameOpen}
+        onClose={() => setUsernameOpen(false)}
+        currentUsername={profile?.username}
+        isPreviewMode={isPreviewMode}
+        showToast={showToast}
+        onSaved={async () => {
+          await refetch?.();
+        }}
+      />
 
       <LogoutConfirmModal
         isOpen={logoutOpen}

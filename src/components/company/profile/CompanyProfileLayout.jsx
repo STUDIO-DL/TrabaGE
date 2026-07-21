@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ProfilePageShell from '../../profile/ProfilePageShell';
 import AppIcon from '../../common/AppIcon';
 import Button from '../../ui/Button';
@@ -33,6 +33,7 @@ import {
   COMPANY_INTRO_MAX_LENGTH,
   validateCompanyIntro,
 } from '../../../utils/companyProfile';
+import { GUEST_MODE_MESSAGE } from '../../../utils/guestMode';
 
 const COMPANY_SIZE_OPTIONS = [
   '1-10',
@@ -68,9 +69,12 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
   const isOpen = Boolean(mode);
   const [form, setForm] = useState({});
   const [introError, setIntroError] = useState('');
+  const prevOpenRef = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    const justOpened = isOpen && !prevOpenRef.current;
+    prevOpenRef.current = isOpen;
+    if (!justOpened) return;
 
     setIntroError('');
     setForm({
@@ -92,7 +96,7 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
       x: profile?.social_links?.x || '',
       youtube: profile?.social_links?.youtube || '',
     });
-  }, [isOpen, profile]);
+  }, [isOpen, profile, mode]);
 
   const setField = (field) => (event) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
@@ -319,7 +323,6 @@ export default function CompanyProfileLayout({
     uploadCover,
     addCompanyService,
     deleteCompanyService,
-    saveContact,
     updateCompanyProfile,
   } = useCompanyProfile();
   const { createProject, updateProject, deleteProject, loading: projectSaving } =
@@ -329,14 +332,12 @@ export default function CompanyProfileLayout({
   const [logoPhase, setLogoPhase] = useState(null);
   const [coverLoading, setCoverLoading] = useState(false);
   const [coverPhase, setCoverPhase] = useState(null);
-  const [contactSaving, setContactSaving] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
   const [editMode, setEditMode] = useState(null);
   const [projectOpen, setProjectOpen] = useState(false);
   const [editingProject, setEditingProject] = useState(null);
   const [previewMedia, setPreviewMedia] = useState({ cover: null, logo: null });
   const [previewServices] = useState(null);
-  const [previewContact] = useState(null);
 
   useEffect(() => {
     if (!isPreviewMode) return;
@@ -354,9 +355,8 @@ export default function CompanyProfileLayout({
       cover_url: previewMedia.cover ?? profile.cover_url,
       logo_path: previewMedia.logo ?? profile.logo_path,
       company_services: previewServices ?? profile.company_services ?? [],
-      ...(previewContact ?? {}),
     };
-  }, [profile, previewMedia.cover, previewMedia.logo, previewServices, previewContact]);
+  }, [profile, previewMedia.cover, previewMedia.logo, previewServices]);
   useEffect(() => {
     if (!userId) return;
 
@@ -450,27 +450,6 @@ export default function CompanyProfileLayout({
     }
 
     showToast('Servicio eliminado.', 'success');
-  };
-
-  const handleSaveContact = async (contactData) => {
-    if (isPreviewMode) {
-      onPreviewAction?.('save-contact');
-      return;
-    }
-
-    if (!userId) return;
-
-    setContactSaving(true);
-    const { error } = await saveContact(contactData, { companyNameFallback: fallbackCompanyName });
-    setContactSaving(false);
-
-    if (error) {
-      showToast(error.message, 'error');
-      return { error };
-    }
-
-    showToast(TOAST.contactSaved, 'success');
-    return { error: null };
   };
 
   const handleSaveProfile = async (data) => {
@@ -571,8 +550,6 @@ export default function CompanyProfileLayout({
         onUploadCover={readOnly ? undefined : (file) => uploadImage(file, 'cover')}
         onAddService={readOnly ? undefined : handleAddService}
         onDeleteService={readOnly ? undefined : handleDeleteService}
-        onSaveContact={readOnly ? undefined : handleSaveContact}
-        contactSaving={contactSaving}
         logoLoading={logoLoading}
         logoPhase={logoPhase}
         coverLoading={coverLoading}

@@ -41,6 +41,7 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
 
   return (
     <ProfileSectionCard
+      id="about"
       icon={PROFILE_SECTION_ICONS.about}
       iconTone="about"
       title="Sobre mí"
@@ -73,7 +74,7 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
       ) : (
         <>
           {hasContent && (
-            <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600">{displayText}</p>
+            <p className="text-user-content whitespace-pre-wrap text-sm leading-relaxed text-gray-600">{displayText}</p>
           )}
           {needsExpand && (
             <button

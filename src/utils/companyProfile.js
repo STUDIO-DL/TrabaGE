@@ -76,21 +76,3 @@ export function getCompanyLocationText(profile) {
 export function hasCompanyDescription(profile) {
   return Boolean(profile?.description?.trim());
 }
-
-export function hasCompanyContact(profile) {
-  return Boolean(
-    profile?.contact_name?.trim()
-    || profile?.contact_email?.trim()
-    || profile?.contact_whatsapp?.trim()
-    || profile?.contact_phone?.trim(),
-  );
-}
-
-export function getCompanyContactInitials(profile) {
-  const name = profile?.contact_name?.trim();
-  if (!name) return '';
-
-  const parts = name.split(/\s+/).filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
-}

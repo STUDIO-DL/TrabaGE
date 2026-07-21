@@ -20,6 +20,8 @@ export type OneSignalSendPayload = {
   link?: string;
   externalIds?: string[];
   idempotencyKey?: string;
+  iosBadgeType?: 'Increase' | 'Set';
+  iosBadgeCount?: number;
 };
 
 export type OneSignalSendResult = {
@@ -61,7 +63,18 @@ export async function sendOneSignalNotification(
     return { ok: false, error: 'No recipients' };
   }
 
-  const rawLink = payload.link?.trim() ?? payload.data?.link?.trim() ?? '';
+  // Prefer an explicit post_id so publication pushes never open a company profile
+  // when legacy data.link still points at /companies/:id.
+  const data = { ...(payload.data ?? {}) };
+  const postId = data.post_id ?? data.postId;
+  if (postId) {
+    data.post_id = postId;
+    data.link = `/post/${postId}`;
+  }
+  const rawLink =
+    data.link?.trim() ||
+    payload.link?.trim() ||
+    '';
   const absoluteUrl = rawLink
     ? (rawLink.startsWith('http') ? rawLink : `${appUrl.replace(/\/$/, '')}${rawLink.startsWith('/') ? rawLink : `/${rawLink}`}`)
     : undefined;
@@ -72,11 +85,11 @@ export async function sendOneSignalNotification(
     include_aliases: { external_id: externalIds },
     headings: { en: payload.title, es: payload.title },
     contents: { en: payload.body, es: payload.body },
-    data: payload.data ?? {},
+    data,
     url: absoluteUrl,
     web_url: absoluteUrl,
-    ios_badgeType: 'Increase',
-    ios_badgeCount: 1,
+    ios_badgeType: payload.iosBadgeType ?? 'Increase',
+    ios_badgeCount: payload.iosBadgeCount ?? 1,
   };
 
   if (payload.idempotencyKey) {

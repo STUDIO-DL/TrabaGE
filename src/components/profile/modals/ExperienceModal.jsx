@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import Button from '../../ui/Button';
 import AppIcon from '../../common/AppIcon';
 import { Save, ICON_SIZES } from '../../../constants/icons';
+import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
+import { useAuth } from '../../../hooks/useAuth';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 const empty = {
   company: '',
@@ -16,28 +19,37 @@ const empty = {
   is_current: false,
 };
 
+function buildInitialForm(initial) {
+  if (!initial) return empty;
+  return {
+    company: initial.company || '',
+    position: initial.position || '',
+    location: initial.location || '',
+    description: initial.description || '',
+    start_date: initial.start_date || '',
+    end_date: initial.end_date || '',
+    is_current: !initial.end_date,
+  };
+}
+
 export default function ExperienceModal({ isOpen, onClose, initial, onSave, loading }) {
-  const [form, setForm] = useState(empty);
+  const { user } = useAuth();
+  const draftKey = FORM_DRAFT_KEYS.experienceModal(initial?.id);
+  const initialForm = buildInitialForm(initial);
+
+  const { values: form, setValues: setForm, clearDraft } = useFormDraft({
+    draftKey,
+    userId: user?.id,
+    initialValues: initialForm,
+    enabled: isOpen && Boolean(user?.id),
+  });
+
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (isOpen) {
-      setForm(
-        initial
-          ? {
-              company: initial.company || '',
-              position: initial.position || '',
-              location: initial.location || '',
-              description: initial.description || '',
-              start_date: initial.start_date || '',
-              end_date: initial.end_date || '',
-              is_current: !initial.end_date,
-            }
-          : empty,
-      );
-      setError('');
-    }
-  }, [isOpen, initial]);
+  const updateForm = useCallback(
+    (patch) => setForm((prev) => ({ ...prev, ...patch })),
+    [setForm],
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,53 +65,72 @@ export default function ExperienceModal({ isOpen, onClose, initial, onSave, load
       start_date: form.start_date || null,
       end_date: form.is_current ? null : form.end_date || null,
     };
+    // #region agent log
+    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'D',location:'ExperienceModal.jsx:handleSubmit',message:'experience payload before save',data:{editingId:initial?.id||null,formIsCurrent:Boolean(form.is_current),payloadHasIsCurrent:'is_current' in payload,end_date:payload.end_date,inconsistent:!form.is_current&&!payload.end_date},timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     const { error: saveError } = await onSave(payload, initial?.id);
     if (saveError) {
       setError(saveError.message);
       return;
     }
+    clearDraft();
     onClose();
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={initial ? 'Editar experiencia' : 'Añadir experiencia'}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="Puesto" value={form.position} onChange={(e) => setForm({ ...form, position: e.target.value })} required />
-        <Input label="Empresa" value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} required />
-        <Input label="Ubicación" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
+        <Input
+          label="Puesto"
+          value={form.position}
+          onChange={(e) => updateForm({ position: e.target.value })}
+          required
+        />
+        <Input
+          label="Empresa"
+          value={form.company}
+          onChange={(e) => updateForm({ company: e.target.value })}
+          required
+        />
+        <Input
+          label="Ubicación"
+          value={form.location}
+          onChange={(e) => updateForm({ location: e.target.value })}
+        />
         <div className="grid grid-cols-2 gap-3">
           <Input
             label="Inicio"
             type="date"
             value={form.start_date}
-            onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+            onChange={(e) => updateForm({ start_date: e.target.value })}
           />
           <Input
             label="Fin"
             type="date"
             value={form.end_date}
             disabled={form.is_current}
-            onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+            onChange={(e) => updateForm({ end_date: e.target.value })}
           />
         </div>
-
-        <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2.5">
+        <label className="flex items-center gap-2 text-sm text-app-text">
           <input
             type="checkbox"
             checked={form.is_current}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                is_current: e.target.checked,
-                end_date: e.target.checked ? '' : form.end_date,
-              })
-            }
-            className="h-4 w-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+            onChange={(e) => updateForm({ is_current: e.target.checked, end_date: e.target.checked ? '' : form.end_date })}
           />
-          <span className="text-sm text-gray-700">Sigo trabajando aquí</span>
+          Trabajo aquí actualmente
         </label>
-        <Textarea label="Descripción" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        <Textarea
+          label="Descripción"
+          rows={4}
+          value={form.description}
+          onChange={(e) => updateForm({ description: e.target.value })}
+        />
+        {error && (
+          <p className="text-sm text-error-600" role="alert">
+            {error}
+          </p>
+        )}
         <Button type="submit" fullWidth loading={loading} className="gap-2">
           <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
           Guardar

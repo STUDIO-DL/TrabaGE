@@ -3,6 +3,7 @@ import { NOTIFICATION_PREFERENCE_FIELDS } from '../constants/notificationPrefere
 import { pushSubscriptionsService } from '../services/pushSubscriptions.service';
 import { readViteEnv } from './env';
 import { reportError } from '../utils/logger';
+import { getNotificationLink } from '../utils/notificationCategories';
 
 let initPromise = null;
 let initialized = false;
@@ -78,7 +79,13 @@ function attachOneSignalListeners() {
         event?.notification?.launchUrl ??
         event?.notification?.url ??
         null;
+      // Same resolver as in-app rows: post_id / /post/:id wins over a legacy
+      // company-profile link that may still be present in older payloads.
+      const resolvedPath = additionalData
+        ? getNotificationLink({ type: additionalData.type, metadata: additionalData })
+        : null;
       const target =
+        resolvePushNavigationTarget(resolvedPath) ??
         resolvePushNavigationTarget(additionalData?.link) ??
         resolvePushNavigationTarget(launchUrl);
       if (target && typeof window !== 'undefined') {

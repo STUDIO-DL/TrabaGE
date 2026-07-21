@@ -18,11 +18,6 @@ const COMPANY_PROFILE_COLUMNS = [
   'company_size',
   'logo_path',
   'cover_path',
-  'contact_name',
-  'contact_role',
-  'contact_email',
-  'contact_phone',
-  'contact_whatsapp',
   'social_links',
   'is_verified',
   'verification_status',
@@ -103,8 +98,15 @@ async function attachCompanyProjects(profile) {
     .eq('user_id', profile.user_id)
     .order('created_at', { ascending: false });
 
+  let username = profile.username ?? null;
+  if (!username) {
+    const { data } = await supabase.rpc('get_username_for_user', { p_user_id: profile.user_id });
+    username = data ?? null;
+  }
+
   return {
     ...profile,
+    username,
     projects: projects ?? [],
   };
 }
@@ -179,7 +181,7 @@ export const companyService = {
   getPublicProfile: async (userId) => {
     const publicResult = await supabase
       .from('company_profiles_public')
-      .select(COMPANY_PROFILE_COLUMNS)
+      .select(`${COMPANY_PROFILE_COLUMNS}, username`)
       .eq('user_id', userId)
       .maybeSingle();
 

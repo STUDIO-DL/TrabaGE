@@ -140,7 +140,7 @@ export default function CandidateProfileHeader({
                 name={displayName}
                 alt={displayName}
                 size="xl"
-                className="sm:!h-[7rem] sm:!w-[7rem]"
+                className="sm:!h-[7.5rem] sm:!w-[7.5rem]"
               />
             </div>
 
@@ -229,9 +229,9 @@ export default function CandidateProfileHeader({
             ) : null}
 
             {locationText ? (
-              <p className="mt-space-sm flex items-center gap-1.5 text-caption text-app-muted">
-                <AppIcon icon={MapPin} size={ICON_SIZES.default} className="shrink-0" />
-                {locationText}
+              <p className="text-user-content mt-space-sm flex items-start gap-1.5 text-caption text-app-muted">
+                <AppIcon icon={MapPin} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
+                <span>{locationText}</span>
               </p>
             ) : null}
 

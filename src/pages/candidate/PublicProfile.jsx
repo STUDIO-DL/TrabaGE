@@ -6,6 +6,7 @@ import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
 import CertificationsSection from '../../components/profile/CertificationsSection';
 import SkillsSection from '../../components/profile/SkillsSection';
+import LanguagesReadOnlySection from '../../components/profile/LanguagesReadOnlySection';
 import ServicesSection from '../../components/profile/ServicesSection';
 import ProjectsSection from '../../components/profile/ProjectsSection';
 import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
@@ -13,17 +14,17 @@ import PersonalSocialSection from '../../components/profile/PersonalSocialSectio
 import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useProfile } from '../../hooks/useProfile';
+import { useAuth } from '../../hooks/useAuth';
 import { generateProfileUrl } from '../../utils/generateShareUrl';
-import useContactAction from '../../hooks/useContactAction';
-import { useNotificationContext } from '../../context/NotificationContext';
+import { useStartConversation } from '../../hooks/useStartConversation';
 import { getDisplayName } from '../../utils/displayIdentity';
 import { ROLES } from '../../constants/roles';
 
 export default function PublicProfile() {
   const { userId } = useParams();
+  const { user } = useAuth();
   const { profile, loading, error, refetch } = useProfile(userId);
-  const { showToast } = useNotificationContext();
-  const { handleContact, contactPickerModal } = useContactAction({ showToast });
+  const { startConversation, starting } = useStartConversation();
 
   const displayName = getDisplayName(profile, ROLES.PERSONAL, {
     fallbackAuthorName: profile?.full_name,
@@ -64,10 +65,11 @@ export default function PublicProfile() {
       <CandidateProfileLayout
         backButton
         profile={profile}
-        shareUrl={generateProfileUrl(userId)}
+        shareUrl={generateProfileUrl(userId, profile?.username)}
         shareTitle={displayName || 'Perfil en TrabaGE'}
         reportTargetId={userId}
-        onContact={() => handleContact(profile)}
+        onMessage={user?.id !== userId ? () => startConversation(userId) : undefined}
+        messageLoading={starting}
       >
         <AboutSection about={profile.about} />
         <PersonalSocialSection socialLinks={profile.social_links} />
@@ -75,11 +77,11 @@ export default function PublicProfile() {
         <EducationSection items={profile.education} />
         <CertificationsSection items={profile.certifications} />
         <SkillsSection items={profile.skills} />
+        <LanguagesReadOnlySection items={profile.languages} />
         <PortfolioLinksSection items={profile.candidate_links} />
         <ServicesSection items={profile.services} />
         <ProjectsSection items={profile.projects} />
       </CandidateProfileLayout>
-      {contactPickerModal}
     </PageContainer>
   );
 }

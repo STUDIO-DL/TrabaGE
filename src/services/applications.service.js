@@ -53,7 +53,7 @@ export const applicationsService = {
   getJobApplicants: async (companyId) => {
     const applicationsResult = await supabase
       .from('applications')
-      .select('*, jobs!inner(id, company_id, title, description, requirements, city, job_type, work_mode, salary, salary_negotiable, application_deadline, company_profiles(sector, country))')
+      .select('*, jobs!inner(id, company_id, title, description, requirements, city, job_type, work_mode, salary, salary_negotiable, application_deadline, custom_questions, company_profiles(sector, country))')
       .eq('jobs.company_id', companyId)
       .order('applied_at', { ascending: false });
 
@@ -68,7 +68,7 @@ export const applicationsService = {
     const profilesResult = await supabase
       .from('candidate_profiles')
       .select(
-        'user_id, full_name, avatar_path, headline, about, city, country, years_experience, contact_email, contact_whatsapp, job_preferences, expected_salary, skills(name), experience(position), education(institution, program, grade), languages(language, level)',
+        'user_id, full_name, avatar_path, headline, about, city, country, years_experience, job_preferences, expected_salary, skills(name), experience(position), education(institution, program, grade), languages(language, level)',
       )
       .in('user_id', candidateIds);
 
@@ -103,8 +103,8 @@ export const applicationsService = {
       const notificationType = `application_${status}`;
       const applicationsLink = '/personal/applications';
 
-      await notificationsService.create({
-        recipient_id: result.data.candidate_id,
+      await notificationsService.notifyUser({
+        recipientId: result.data.candidate_id,
         type: notificationType,
         title: copy.title,
         body: copy.body(jobTitle),
@@ -112,18 +112,6 @@ export const applicationsService = {
           application_id: id,
           job_id: result.data.job_id,
           link: applicationsLink,
-        },
-      });
-
-      await notificationsService.sendPush({
-        recipientIds: [result.data.candidate_id],
-        title: copy.title,
-        body: copy.body(jobTitle),
-        data: {
-          type: notificationType,
-          link: applicationsLink,
-          application_id: id,
-          job_id: result.data.job_id,
         },
       });
     }

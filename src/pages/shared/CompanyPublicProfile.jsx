@@ -11,8 +11,7 @@ import { getPreviewMediaUrls, getPreviewProfile, PREVIEW_USER } from '../../cons
 import { isEmployerRole, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import { generateCompanyUrl } from '../../utils/generateShareUrl';
-import { BUSINESS_CONTACT_METHODS, hasCompanyActionableContact } from '../../utils/contact';
-import useContactAction from '../../hooks/useContactAction';
+import { useStartConversation } from '../../hooks/useStartConversation';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { useFollow } from '../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../services/follows.service';
@@ -23,11 +22,7 @@ export default function CompanyPublicProfile() {
   const { companyId } = useParams();
   const { isPreviewMode, user, role, isAuthenticated } = useAuth();
   const { showToast } = useNotificationContext();
-  const { handleContact: runContact, contactPickerModal } = useContactAction({
-    showToast,
-    methodIds: BUSINESS_CONTACT_METHODS,
-    pickerTitle: 'Contactar empresa',
-  });
+  const { startConversation, starting } = useStartConversation();
   const [profile, setProfile] = useState(null);
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -124,10 +119,6 @@ export default function CompanyPublicProfile() {
     });
   };
 
-  const onContact = () => {
-    runContact(profile);
-  };
-
   const handleToggleFollow = async () => {
     const result = await toggleFollow();
     if (result?.needsAuth) {
@@ -178,7 +169,7 @@ export default function CompanyPublicProfile() {
       <ProfilePageShell
         hideHeader
         backButton={false}
-        shareUrl={generateCompanyUrl(companyId)}
+        shareUrl={generateCompanyUrl(companyId, profile?.username)}
         shareTitle={profile?.company_name || orgLabels.defaultName}
         reportTargetId={companyId}
         isOwn={false}
@@ -194,15 +185,14 @@ export default function CompanyPublicProfile() {
           followLoading={followLoading}
           canFollow={canFollow || !isAuthenticated}
           onToggleFollow={handleToggleFollow}
-          onContact={onContact}
-          contactDisabled={!hasCompanyActionableContact(profile)}
-          shareUrl={generateCompanyUrl(companyId)}
+          onMessage={user?.id !== companyId ? () => startConversation(companyId) : undefined}
+          messageLoading={starting}
+          shareUrl={generateCompanyUrl(companyId, profile?.username)}
           shareTitle={profile?.company_name || orgLabels.defaultName}
           reportTargetId={companyId}
           followerCount={followerCount}
         />
       </ProfilePageShell>
-      {contactPickerModal}
     </PageContainer>
   );
 }

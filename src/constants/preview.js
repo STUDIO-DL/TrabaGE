@@ -100,11 +100,6 @@ export const PREVIEW_COMPANY_PROFILE = {
   company_size: null,
   founded_year: null,
   website: null,
-  contact_name: null,
-  contact_role: null,
-  contact_email: null,
-  contact_whatsapp: null,
-  contact_phone: null,
   company_services: [],
 };
 

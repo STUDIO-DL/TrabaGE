@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CandidateProfileLayout from '../../components/profile/CandidateProfileLayout';
 import ProfileSidebar from '../../components/profile/ProfileSidebar';
 import AboutSection from '../../components/profile/AboutSection';
-import ContactSection from '../../components/profile/ContactSection';
 import PersonalSocialSection from '../../components/profile/PersonalSocialSection';
 import ExperienceSection from '../../components/profile/ExperienceSection';
 import EducationSection from '../../components/profile/EducationSection';
@@ -52,6 +51,7 @@ export default function Profile() {
     addEducation,
     updateEducation,
     deleteEducation,
+    syncEducationIntro,
     addCertification,
     updateCertification,
     deleteCertification,
@@ -80,7 +80,6 @@ export default function Profile() {
   const [editingLanguage, setEditingLanguage] = useState(null);
   const [saving, setSaving] = useState(false);
   const [aboutSaving, setAboutSaving] = useState(false);
-  const [contactSaving, setContactSaving] = useState(false);
   const [socialSaving, setSocialSaving] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
   const [avatarPhase, setAvatarPhase] = useState(null);
@@ -92,26 +91,12 @@ export default function Profile() {
 
   const canEdit = !isPreviewMode;
 
-  useEffect(() => {
-    if (loading) return;
-    if (window.location.hash === '#contacto') {
-      document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [loading]);
 
   const handleSaveAbout = async (about) => {
     setAboutSaving(true);
     const { error } = await updateBasicInfo({ about });
     setAboutSaving(false);
     showToast(error ? error.message : 'Descripción guardada.', error ? 'error' : 'success');
-    return { error };
-  };
-
-  const handleSaveContact = async (data) => {
-    setContactSaving(true);
-    const { error } = await updateBasicInfo(data);
-    setContactSaving(false);
-    showToast(error ? error.message : TOAST.contactSaved, error ? 'error' : 'success');
     return { error };
   };
 
@@ -157,12 +142,16 @@ export default function Profile() {
   };
 
   const handleUploadCV = async (file, errorMsg) => {
-    if (errorMsg) return showToast(errorMsg, 'error');
+    if (errorMsg) {
+      showToast(errorMsg, 'error');
+      return { error: { message: errorMsg } };
+    }
     setCvLoading(true);
     const { error } = await uploadCV(file, { onProgress: ({ phase }) => setCvPhase(phase) });
     setCvLoading(false);
     setCvPhase(null);
     showToast(error ? error.message : 'CV subido correctamente.', error ? 'error' : 'success');
+    return { error };
   };
 
   const handleSaveCoverLetter = async (text) => {
@@ -183,6 +172,15 @@ export default function Profile() {
   const saveEducation = async (data, id, options = {}) => {
     setSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
+    if (!result.error && typeof options.showInIntro === 'boolean') {
+      const educationId = id || result.data?.id;
+      const introResult = await syncEducationIntro(educationId, options.showInIntro);
+      if (introResult.error) {
+        setSaving(false);
+        if (!options.silent) showToast(introResult.error.message, 'error');
+        return introResult;
+      }
+    }
     setSaving(false);
     if (result.error) {
       if (!options.silent) showToast(result.error.message || 'No se pudo guardar la educación.', 'error');
@@ -197,11 +195,11 @@ export default function Profile() {
     return result;
   };
 
-  const saveCert = async (data, id) => {
+  const saveCert = async (data, id, options = {}) => {
     setSaving(true);
     const result = id ? await updateCertification(id, data) : await addCertification(data);
     setSaving(false);
-    if (!result.error) showToast('Certificación guardada.', 'success');
+    if (!result.error && !options.silent) showToast('Certificación guardada.', 'success');
     return result;
   };
 
@@ -250,7 +248,7 @@ export default function Profile() {
     shareContent({
       title: profile?.full_name || 'Perfil en TrabaGE',
       text: getShareDescription('profile'),
-      url: generateProfileUrl(user?.id),
+      url: generateProfileUrl(user?.id, profile?.username),
       showToast,
     });
   };
@@ -314,14 +312,6 @@ export default function Profile() {
           isOwn={canEdit}
           onSave={handleSaveAbout}
           saving={aboutSaving}
-        />
-
-        <ContactSection
-          contactEmail={profile?.contact_email}
-          contactWhatsapp={profile?.contact_whatsapp}
-          isOwn={canEdit}
-          onSave={handleSaveContact}
-          loading={contactSaving}
         />
 
         <PersonalSocialSection
@@ -421,6 +411,8 @@ export default function Profile() {
         />
 
         <DocumentsSection
+          profile={profile}
+          accountEmail={user?.email}
           cvName={profile?.cv_name}
           coverLetter={profile?.cover_letter}
           isOwn={canEdit}
@@ -429,6 +421,10 @@ export default function Profile() {
           coverSaving={coverLoading}
           onUploadCV={handleUploadCV}
           onSaveCoverLetter={handleSaveCoverLetter}
+          onRefetchProfile={async () => {
+            const result = await refetch();
+            return result.data ?? null;
+          }}
         />
 
       </CandidateProfileLayout>
@@ -447,6 +443,11 @@ export default function Profile() {
         onSave={saveEducation}
         loading={saving}
         userId={user?.id}
+        showInIntro={Boolean(
+          profile?.show_education_in_intro &&
+            editingEducation?.id &&
+            String(profile?.intro_education_id) === String(editingEducation.id),
+        )}
       />
       <CertificationModal
         isOpen={certOpen}
@@ -454,6 +455,7 @@ export default function Profile() {
         initial={editingCert}
         onSave={saveCert}
         loading={saving}
+        userId={user?.id}
       />
       <LanguageModal
         isOpen={languageOpen}
@@ -461,6 +463,7 @@ export default function Profile() {
         initial={editingLanguage}
         onSave={saveLanguage}
         loading={saving}
+        existingLanguages={profile?.languages ?? []}
       />
       <ProjectModal
         isOpen={projectOpen}

@@ -78,7 +78,7 @@ export const EditableHeroField = forwardRef(function EditableHeroField(
 
   if (!isOwn) {
     if (!value?.trim()) return null;
-    return <Tag className={displayClassName}>{value}</Tag>;
+    return <Tag className={`text-user-content min-w-0 flex-1 ${displayClassName}`}>{value}</Tag>;
   }
 
   if (editing) {
@@ -120,7 +120,7 @@ export const EditableHeroField = forwardRef(function EditableHeroField(
 
   return (
     <div className="group flex items-start gap-2">
-      <Tag className={`min-w-0 flex-1 ${displayClassName}`}>{value || placeholder}</Tag>
+      <Tag className={`text-user-content min-w-0 flex-1 ${displayClassName}`}>{value || placeholder}</Tag>
       {!hideEditButton && (
         <button
           type="button"
@@ -214,7 +214,7 @@ export function EditableHeroSelect({
 
   return (
     <div className={`group flex items-center gap-2 ${className}`}>
-      <p className="flex min-w-0 flex-1 items-center gap-1.5 text-caption text-app-muted">
+      <p className={`text-user-content flex min-w-0 flex-1 items-center gap-1.5 text-caption text-app-muted`}>
         {Icon && <AppIcon icon={Icon} size={ICON_SIZES.default} className="shrink-0" />}
         {display}
       </p>

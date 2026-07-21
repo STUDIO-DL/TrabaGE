@@ -103,6 +103,48 @@ export const notificationsService = {
   },
 
   /**
+   * Creates an in-app notification and sends push when the recipient allows both.
+   * Push is skipped when in-app delivery is blocked by preferences.
+   */
+  notifyUser: async ({
+    recipientId,
+    type,
+    title,
+    body = null,
+    metadata = {},
+    pushData = null,
+  }) => {
+    if (!recipientId) {
+      return { data: null, error: new Error('Destinatario requerido') };
+    }
+
+    const { data, error } = await notificationsService.create({
+      recipient_id: recipientId,
+      type,
+      title,
+      body,
+      metadata,
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    if (!data) {
+      return { data: null, error: null, skipped: true };
+    }
+
+    const pushPayload = pushData ?? {
+      type,
+      ...metadata,
+    };
+
+    await sendPushBatch([recipientId], title, body ?? '', pushPayload);
+
+    return { data, error: null };
+  },
+
+  /**
    * Notify all followers of a company/institution (in-app + OneSignal-ready push).
    */
   notifyFollowers: async ({
@@ -112,11 +154,19 @@ export const notificationsService = {
     message,
     link,
     type = 'company_update',
+    postId,
+    jobId,
+    actorId,
+    actorType,
   }) => {
     const metadata = {
       link,
       target_type: targetType,
       target_id: targetId,
+      ...(postId ? { post_id: postId } : {}),
+      ...(jobId ? { job_id: jobId } : {}),
+      ...(actorId ? { actor_id: actorId } : {}),
+      ...(actorType ? { actor_type: actorType } : targetType ? { actor_type: targetType } : {}),
     };
 
     const { data: recipientIds, error } = await supabase.rpc('notify_followers', {
@@ -155,37 +205,40 @@ export const notificationsService = {
   },
 
   /**
-   * Stub for future internal messaging module.
-   * Creates in-app notification + push when messaging ships.
+   * Sends OS push for a new internal message.
+   * In-app row is created by notify_new_message trigger; this only dispatches push.
    */
-  sendInternalMessagePush: async ({
-    recipientId,
-    senderName = 'TrabaGE',
-    preview = 'Tienes un nuevo mensaje.',
-    conversationId = null,
-  }) => {
-    if (!recipientId) return { data: null, error: new Error('Destinatario requerido') };
+  dispatchNewMessagePush: async ({ messageId, recipientId }) => {
+    if (!messageId || !recipientId) return;
 
-    const title = `Nuevo mensaje de ${senderName}`;
-    const body = preview;
-    const metadata = {
+    const { data: notification, error } = await supabase
+      .from('notifications')
+      .select('title, body, metadata')
+      .eq('recipient_id', recipientId)
+      .eq('type', 'new_message')
+      .eq('metadata->>message_id', String(messageId))
+      .maybeSingle();
+
+    if (error) {
+      reportError(error, { area: 'message_push_lookup', messageId, recipientId });
+      return;
+    }
+
+    if (!notification) return;
+
+    const metadata = notification.metadata ?? {};
+    const pushData = {
       type: 'new_message',
-      link: '/personal/notifications',
-      conversation_id: conversationId,
-      stub: true,
+      link: metadata.link ?? '',
+      conversation_id: metadata.conversation_id ?? '',
+      message_id: metadata.message_id ?? messageId,
     };
 
-    const { error } = await notificationsService.create({
-      recipient_id: recipientId,
-      type: 'new_message',
-      title,
-      body,
-      metadata,
-    });
-
-    if (error) return { data: null, error };
-
-    await sendPushBatch([recipientId], title, body, metadata);
-    return { data: { sent: true, stub: true }, error: null };
+    await sendPushBatch(
+      [recipientId],
+      notification.title,
+      notification.body ?? '',
+      pushData,
+    );
   },
 };

@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { GraduationCap } from '../../constants/icons';
 import { formatDateRange } from '../../utils/formatDate';
 import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
-const PREVIEW_COUNT = 2;
+const PREVIEW_COUNT = 1;
 
 function buildEducationMeta(item) {
   const dateRange = formatDateRange(
@@ -18,12 +19,18 @@ function buildEducationMeta(item) {
 }
 
 export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onDelete }) {
-  const preview = items.slice(0, PREVIEW_COUNT);
-  const footerLabel =
-    items.length > 0 ? `Ver toda la educación (${items.length})` : undefined;
+  const [expanded, setExpanded] = useState(false);
+  const hasMore = items.length > PREVIEW_COUNT;
+  const visibleItems = expanded ? items : items.slice(0, PREVIEW_COUNT);
+  const footerLabel = hasMore
+    ? expanded
+      ? 'Ver menos'
+      : `Ver toda la educación (${items.length})`
+    : undefined;
 
   return (
     <ProfileSectionCard
+      id="education"
       icon={PROFILE_SECTION_ICONS.education}
       iconTone="education"
       title="Educación"
@@ -32,8 +39,9 @@ export default function EducationSection({ items = [], isOwn, onAdd, onEdit, onD
       isEmpty={!items.length}
       emptyText={getProfileSectionEmptyCopy('education', isOwn)}
       footerLabel={footerLabel}
+      onFooterClick={hasMore ? () => setExpanded((value) => !value) : undefined}
     >
-      {preview.map((item) => (
+      {visibleItems.map((item) => (
         <ProfileEntryRow
           key={item.id}
           title={item.institution}

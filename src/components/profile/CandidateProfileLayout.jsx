@@ -23,7 +23,8 @@ export default function CandidateProfileLayout({
   reportTargetId,
   onSettings,
   onEditIntro,
-  onContact,
+  onMessage,
+  messageLoading = false,
   sidebar,
   children,
 }) {
@@ -54,7 +55,11 @@ export default function CandidateProfileLayout({
         coverSrc={coverSrc}
         onEditIntro={onEditIntro}
       />
-      <ProfileActionBar isOwn={isOwn} onContact={onContact} />
+      <ProfileActionBar
+        isOwn={isOwn}
+        onMessage={onMessage}
+        messageLoading={messageLoading}
+      />
       <div className="mx-auto max-w-5xl px-space-base py-space-lg">
         <div
           className={

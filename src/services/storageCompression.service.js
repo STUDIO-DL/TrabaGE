@@ -173,6 +173,8 @@ function resolveUploadStrategy(uploadType, file) {
       return isImageFile(file)
         ? { kind: 'image', preset: COMPRESSION_PRESETS.educationImage }
         : { kind: 'pdf', limitsKey: 'educationPdf' };
+    case UPLOAD_COMPRESSION_TYPES.CERTIFICATION_IMAGE:
+      return { kind: 'image', preset: COMPRESSION_PRESETS.certificationImage };
     default:
       return null;
   }

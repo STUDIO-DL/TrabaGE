@@ -10,11 +10,10 @@ import { useApplications } from '../../hooks/useApplications';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { useStartConversation } from '../../hooks/useStartConversation';
 import { applicationsService } from '../../services/applications.service';
 import { storageService } from '../../services/storage.service';
 import { resolveCvBucket } from '../../utils/storagePaths';
-import { profileService } from '../../services/profile.service';
-import useContactAction from '../../hooks/useContactAction';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import { EMPLOYER_APPLICATION_STATUSES } from '../../constants/applicationStatuses';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
@@ -25,11 +24,12 @@ export default function Applicants() {
   const { isPreviewMode } = useAuth();
   const { profile } = useProfile();
   const { showToast } = useNotificationContext();
-  const { handleContact: runContactAction, contactPickerModal } = useContactAction({ showToast });
+  const { startConversation, starting } = useStartConversation();
   const verified = isCompanyVerified(profile);
   const [updatingId, setUpdatingId] = useState(null);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [messagingId, setMessagingId] = useState(null);
 
   const filteredApplications = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -64,16 +64,15 @@ export default function Applicants() {
     else showToast('No se pudo descargar el CV', 'error');
   };
 
-  const handleContact = async (application) => {
+  const handleMessage = async (application) => {
     if (isPreviewMode) {
-      showToast('Modo vista previa: contacto no disponible', 'info');
+      showToast('Modo vista previa: mensajes no disponibles', 'info');
       return;
     }
 
-    await runContactAction(async () => {
-      const { data } = await profileService.getCandidateProfile(application.candidate_id);
-      return data;
-    });
+    setMessagingId(application.candidate_id);
+    await startConversation(application.candidate_id);
+    setMessagingId(null);
   };
 
   const handleStatusChange = async (applicationId, status) => {
@@ -144,14 +143,14 @@ export default function Applicants() {
               key={app.id}
               application={app}
               onDownloadCv={handleDownloadCv}
-              onContact={handleContact}
+              onMessage={handleMessage}
+              messageLoading={starting && messagingId === app.candidate_id}
               onStatusChange={handleStatusChange}
               statusUpdating={updatingId === app.id}
             />
           ))
         )}
       </div>
-      {contactPickerModal}
     </PageContainer>
   );
 }

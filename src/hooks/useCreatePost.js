@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { postsService } from '../services/posts.service';
+import { topicsService } from '../services/topics.service';
 import { notificationsService } from '../services/notifications.service';
 import { companyService } from '../services/company.service';
 import { FOLLOWS_TARGET } from '../services/follows.service';
@@ -14,6 +15,7 @@ import { getCompanyDisplayName } from '../utils/companyProfile';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import { TOAST } from '../utils/copyLabels';
+import { DEEP_LINK_PATHS } from '../utils/deepLinks';
 
 export function useCreatePost() {
   const { user, isPreviewMode, role } = useAuth();
@@ -21,16 +23,22 @@ export function useCreatePost() {
   const [loading, setLoading] = useState(false);
   const [uploadPhase, setUploadPhase] = useState(null);
 
-  const createPost = async ({ content, imageFile }) => {
+  const createPost = async ({ content, imageFile, topicIds = [] }) => {
     if (isPreviewMode) {
       showToast(GUEST_MODE_MESSAGE, 'info');
       return { ok: false };
     }
 
     const trimmedContent = content?.trim?.() ?? '';
+    const uniqueTopicIds = [...new Set((topicIds ?? []).filter(Boolean))];
 
     if (!trimmedContent && !imageFile) {
       showToast('Escribe algo o añade una imagen.', 'error');
+      return { ok: false };
+    }
+
+    if (uniqueTopicIds.length < 1 || uniqueTopicIds.length > 3) {
+      showToast('Selecciona entre 1 y 3 temas.', 'error');
       return { ok: false };
     }
 
@@ -56,7 +64,22 @@ export function useCreatePost() {
       return { ok: false };
     }
 
-    let savedPost = post;
+    const { data: topics, error: topicsError } = await topicsService.setPostTopics(
+      post.id,
+      uniqueTopicIds,
+    );
+
+    if (topicsError) {
+      await postsService.delete(post.id);
+      showToast(
+        getSupabaseErrorMessage(topicsError, 'No se pudieron asignar los temas. Inténtalo de nuevo.'),
+        'error',
+      );
+      setLoading(false);
+      return { ok: false };
+    }
+
+    let savedPost = { ...post, topics: topics ?? [] };
 
     if (imageFile && post?.id) {
       try {
@@ -77,13 +100,16 @@ export function useCreatePost() {
           );
           setUploadPhase(null);
           setLoading(false);
-          return { ok: true, post: savedPost };
+          // #region agent log
+          fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'A',location:'useCreatePost.js:imageUploadFail',message:'image fail returns ok:false partial',data:{postId:post?.id??null,ok:false},timestamp:Date.now()})}).catch(()=>{});
+          // #endregion
+          return { ok: false, partial: true, post: savedPost };
         }
       } catch (uploadError) {
         showToast(uploadError.message, 'error');
         setUploadPhase(null);
         setLoading(false);
-        return { ok: true, post: savedPost };
+        return { ok: false, partial: true, post: savedPost };
       }
 
       const path = postImagePath(user.id, post.id);
@@ -100,10 +126,13 @@ export function useCreatePost() {
           'error',
         );
         setLoading(false);
-        return { ok: true, post: savedPost };
+        return { ok: false, partial: true, post: savedPost };
       }
 
-      savedPost = updatedPost ?? { ...post, post_image_path: path };
+      savedPost = {
+        ...(updatedPost ?? { ...post, post_image_path: path }),
+        topics: savedPost.topics,
+      };
       setUploadPhase(null);
     }
 
@@ -125,7 +154,10 @@ export function useCreatePost() {
         type: 'new_post',
         title: companyName ? `Nueva publicación de ${companyName}` : 'Nueva publicación',
         message: preview || 'Nueva actualización',
-        link: `/companies/${user.id}`,
+        link: DEEP_LINK_PATHS.post(savedPost.id),
+        postId: savedPost.id,
+        actorId: user.id,
+        actorType: targetType,
       });
     }
 

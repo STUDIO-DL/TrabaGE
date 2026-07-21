@@ -9,10 +9,6 @@ import './styles/index.css';
 initSentry();
 initOneSignal();
 
-function dismissBootSplash() {
-  document.getElementById('boot-splash')?.remove();
-}
-
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AppErrorBoundary>
@@ -20,5 +16,3 @@ createRoot(document.getElementById('root')).render(
     </AppErrorBoundary>
   </StrictMode>,
 );
-
-requestAnimationFrame(dismissBootSplash);

@@ -30,7 +30,7 @@ export const helpCategories = [
       {
         question: '¿Qué información debo incluir en mi perfil para destacar?',
         answer:
-          'Un perfil completo aumenta significativamente tu visibilidad ante las empresas. Asegúrate de incluir:\n\n• Fotografía de perfil clara y profesional.\n• Titular profesional que describa tu rol o aspiración.\n• Resumen breve sobre ti y tu trayectoria.\n• Experiencia laboral detallada con fechas y logros.\n• Formación académica actualizada.\n• Habilidades técnicas y blandas relevantes.\n• Idiomas con nivel de competencia.\n• Proyectos destacados con descripción e imágenes.\n• Enlaces a redes profesionales (LinkedIn, portafolio, etc.).\n• WhatsApp o correo de contacto, si deseas facilitar el contacto directo.\n• CV en formato PDF adjunto.',
+          'Un perfil completo aumenta significativamente tu visibilidad ante las empresas. Asegúrate de incluir:\n\n• Fotografía de perfil clara y profesional.\n• Titular profesional que describa tu rol o aspiración.\n• Resumen breve sobre ti y tu trayectoria.\n• Experiencia laboral detallada con fechas y logros.\n• Formación académica actualizada.\n• Habilidades técnicas y blandas relevantes.\n• Idiomas con nivel de competencia.\n• Proyectos destacados con descripción e imágenes.\n• Enlaces a redes profesionales (LinkedIn, portafolio, etc.).\n• CV en formato PDF adjunto.\n\nLas empresas pueden contactarte a través de la mensajería interna de TrabaGE; no es necesario añadir datos de contacto externos en tu perfil.',
       },
       {
         question: '¿Cómo subo o actualizo mi CV?',
@@ -121,7 +121,7 @@ export const helpCategories = [
       {
         question: '¿Cómo registro mi empresa u organización en TrabaGE?',
         answer:
-          'Accede a "Registrarse" y elige el tipo de cuenta Business u Organización. Completa el formulario con los datos de tu entidad (nombre, sector, ubicación y contacto), acepta los Términos y la Política de Privacidad, y confirma tu correo. Una vez activa la cuenta, podrás completar el perfil, publicar ofertas y solicitar la verificación.',
+          'Accede a "Registrarse" y elige el tipo de cuenta Business u Organización. Completa el formulario con los datos de tu entidad (nombre, sector y ubicación), acepta los Términos y la Política de Privacidad, y confirma tu correo. Una vez activa la cuenta, podrás completar el perfil, publicar ofertas y solicitar la verificación. Los candidatos podrán contactarte mediante la mensajería interna de TrabaGE.',
       },
       {
         question: '¿Cómo publico una oferta de empleo?',

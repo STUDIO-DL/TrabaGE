@@ -42,6 +42,10 @@ function buildDedupKey(userId: string, notificationType: string, data: Record<st
 
   const suffix =
 
+    String(data.message_id ?? '') ||
+
+    String(data.conversation_id ?? '') ||
+
     String(data.job_id ?? '') ||
 
     String(data.application_id ?? '') ||
@@ -160,6 +164,52 @@ async function sendToRecipients(
 
   for (const userId of pushRecipients) {
 
+    if (notificationType === 'new_message' && stringData.conversation_id) {
+
+      const { data: isViewing, error: viewingError } = await admin.rpc('is_viewing_conversation', {
+
+        p_user_id: userId,
+
+        p_conversation_id: stringData.conversation_id,
+
+      });
+
+
+
+      if (!viewingError && isViewing === true) {
+
+        skipped += 1;
+
+        continue;
+
+      }
+
+    }
+
+
+
+    let iosBadgeType: 'Increase' | 'Set' | undefined;
+
+    let iosBadgeCount: number | undefined;
+
+
+
+    if (notificationType === 'new_message') {
+
+      const { data: unreadCount } = await admin.rpc('get_total_unread_messages_count', {
+
+        p_user_id: userId,
+
+      });
+
+      iosBadgeType = 'Set';
+
+      iosBadgeCount = Math.max(Number(unreadCount ?? 0), 1);
+
+    }
+
+
+
     if (!options.skipDedup) {
 
       const dedupKey = buildDedupKey(userId, notificationType, data);
@@ -201,6 +251,10 @@ async function sendToRecipients(
         externalIds: [userId],
 
         idempotencyKey: dedupKey,
+
+        iosBadgeType,
+
+        iosBadgeCount,
 
       }, appUrl);
 
@@ -971,6 +1025,14 @@ serve(async (req) => {
     if (data?.target_id) {
 
       notificationQuery = notificationQuery.eq('metadata->>target_id', String(data.target_id));
+
+    }
+
+
+
+    if (data?.message_id) {
+
+      notificationQuery = notificationQuery.eq('metadata->>message_id', String(data.message_id));
 
     }
 

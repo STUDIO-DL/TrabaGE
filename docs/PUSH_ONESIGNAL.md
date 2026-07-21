@@ -79,7 +79,7 @@ Permission is requested **only after login** via `PushPermissionPrompt` (not on 
 | Application status change | `application_viewed`, `application_contacted`, `application_accepted`, `application_rejected` | Empleos → Estado postulaciones |
 | Job recommendation | `job_recommendation` | Empleos → Ofertas |
 | Company/user verified | `verification_*`, `company_verified`, `user_verified` | Empresas → Verificación |
-| Internal messages (stub) | `new_message`, `conversation_update` | Mensajes |
+| Internal messages | `new_message`, `conversation_update` | Mensajes → Mensajes nuevos |
 | System/admin alerts | `system_update`, `admin_broadcast` | Sistema |
 | Marketing | `marketing`, `promotional` | Marketing (opt-in, default off) |
 
@@ -89,6 +89,19 @@ Preference UI lives in `NotificationSettingsScreen` → `NotificationPreferences
 ## 7. Deep linking
 
 Notifications include `data.link` (e.g. `/personal/jobs/uuid`). The edge function sets `web_url` for background clicks; foreground clicks use `OneSignal.Notifications` click listener in `onesignal.js`.
+
+### Internal messages
+
+When a user receives a new internal message:
+
+1. DB trigger `notify_new_message` creates an in-app row (unless the recipient is actively viewing that conversation).
+2. Sender client calls `dispatchNewMessagePush` → edge function `send_push` → OneSignal.
+3. Push payload uses `type: new_message`, `message_id`, `conversation_id`, and `link: /{role}/messages/{conversationId}`.
+4. Tapping the notification opens the conversation directly (not the inbox).
+
+**Presence:** while a user has a conversation open, `useMessages` heartbeats `conversation_active_views` every 30s. The trigger and `send_push` skip push when presence is active (within 45s), avoiding duplicate notifications while the chat is on screen.
+
+**Badge:** unread message count syncs to the PWA app icon via the Badging API (`syncAppBadge` in `useUnreadMessagesCount`). iOS pushes use `ios_badgeType: Set` with the current unread count from `get_total_unread_messages_count`.
 
 ## 8. Admin panel
 
@@ -142,7 +155,7 @@ Prerequisites:
 | 3 | App open | Run `npm run test-onesignal-push` | Toast/banner or system notification; tap opens `/personal/notifications` |
 | 4 | Background | Home button → run test script | System notification in tray; tap opens deep link |
 | 5 | Closed | Swipe away PWA → run test script | System notification in tray |
-| 6 | Opt-out | Disable **Estado de mis postulaciones** in settings → company changes application status | In-app notification only; no push |
+| 6 | Opt-out | Disable **Estado de mis postulaciones** in settings → company changes application status | No in-app or push notification |
 | 7 | Dedup | Trigger same event twice within 10 min | Second push skipped (`deduped: 1` in edge response) |
 | 8 | Admin broadcast | `/admin/notifications` → send to **Todos** | History row in `admin_push_broadcast_log`; push to opted-in users |
 | 9 | Logout | Sign out | `push_subscriptions.is_active=false` for device; `OneSignal.logout()` |

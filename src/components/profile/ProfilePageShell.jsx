@@ -25,7 +25,9 @@ export default function ProfilePageShell({
 }) {
   const navigate = useNavigate();
   const { getHomePath } = useAuth();
-  const showReportMenu = !isOwn && shareUrl && reportTargetId;
+  // Public profiles: always expose ⋯ with Compartir + Reportar when we have a
+  // share URL and/or a report target (ContentActionMenu falls back for either).
+  const showOverflowMenu = !isOwn && Boolean(shareUrl || reportTargetId);
 
   const handleBack = () => {
     const idx = window.history.state?.idx;
@@ -37,7 +39,7 @@ export default function ProfilePageShell({
   };
 
   return (
-    <div className="profile-page min-h-full bg-app-surface">
+    <div className="profile-page min-h-full min-w-0 max-w-full overflow-x-hidden bg-app-surface">
       {!hideHeader && (
       <header className={topBarOuterClass}>
         <div className={topBarInnerClass}>
@@ -63,7 +65,7 @@ export default function ProfilePageShell({
           )}
 
           <div className="flex shrink-0 items-center justify-end gap-space-xs">
-            {showReportMenu ? (
+            {showOverflowMenu ? (
               <ContentActionMenu
                 shareUrl={shareUrl}
                 shareTitle={shareTitle}

@@ -12,6 +12,7 @@ import {
   representativeVerificationDocPath,
   verificationDocPath,
   educationFilePath,
+  certificationImagePath,
 } from '../constants/storage';
 import { UPLOAD_COMPRESSION_TYPES } from '../constants/compressionPresets';
 import { UPLOAD_PHASES } from '../constants/uploadPhases';
@@ -349,5 +350,31 @@ export const storageService = {
       await cleanupLegacyPaths(STORAGE_BUCKETS.PROFILE_PROJECTS, path, [oldPath]);
     }
     return result;
+  },
+
+  deleteCertificationImage: async (userId, certificationId, oldPath) => {
+    const paths = [oldPath, certificationImagePath(userId, certificationId)].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage
+      .from(STORAGE_BUCKETS.CANDIDATE_CERTIFICATIONS)
+      .remove(unique);
+    return { error };
+  },
+
+  uploadCertificationImage: async (userId, certificationId, file, oldPath, options = {}) => {
+    if (oldPath) await removeIfExists(STORAGE_BUCKETS.CANDIDATE_CERTIFICATIONS, oldPath);
+    const path = certificationImagePath(userId, certificationId);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.CERTIFICATION_IMAGE,
+      options,
+    );
+    return uploadReplace(
+      STORAGE_BUCKETS.CANDIDATE_CERTIFICATIONS,
+      path,
+      preparedFile,
+      contentType || WEBP_CONTENT_TYPE,
+    );
   },
 };

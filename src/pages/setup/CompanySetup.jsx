@@ -65,7 +65,9 @@ export default function CompanySetup() {
         role === ROLES.ORGANIZATION ? ROLES.ORGANIZATION : ROLES.BUSINESS;
 
       if (getCompanyBootstrapMissing(data, resolvedRole).length === 0) {
-        navigate(ROLE_PROFILE[resolvedRole], { replace: true });
+        void refreshSetupStatus().finally(() => {
+          navigate(ROLE_PROFILE[resolvedRole], { replace: true });
+        });
         return;
       }
 
@@ -92,7 +94,7 @@ export default function CompanySetup() {
     return () => {
       mounted = false;
     };
-  }, [user, role, navigate]);
+  }, [user, role, navigate, refreshSetupStatus]);
 
   const orgLabels = getOrgLabels({ company_type: form.company_type });
   const isOrganizationAccount = role === ROLES.ORGANIZATION;
