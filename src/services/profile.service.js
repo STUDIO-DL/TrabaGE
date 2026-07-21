@@ -87,9 +87,8 @@ async function attachCandidateSections(profile) {
   }
 
   return {
-<<<<<<< HEAD
     data: {
-      ...profile,
+      ...withUsername,
       education: education.data ?? [],
       experience: experience.data ?? [],
       certifications: certifications.data ?? [],
@@ -100,17 +99,6 @@ async function attachCandidateSections(profile) {
       projects: projects.data ?? [],
     },
     error: null,
-=======
-    ...withUsername,
-    education: education.data ?? [],
-    experience: experience.data ?? [],
-    certifications: certifications.data ?? [],
-    skills: skills.data ?? [],
-    candidate_links: candidate_links.data ?? [],
-    services: services.data ?? [],
-    languages: languages.data ?? [],
-    projects: projects.data ?? [],
->>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
   };
 }
 

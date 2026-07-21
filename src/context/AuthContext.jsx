@@ -126,8 +126,8 @@ export function AuthProvider({ children }) {
   /** True while role/profile hydrate runs after session is known — prevents Register flash. */
   const [hydrating, setHydrating] = useState(false);
   const hydrateGenRef = useRef(0);
-<<<<<<< HEAD
   const authEffectGenRef = useRef(0);
+  const hydrateRetryRef = useRef(0);
   const userIdRef = useRef(initialCacheRef.current?.userId ?? null);
   const roleRef = useRef(initialCacheRef.current?.role ?? null);
 
@@ -138,9 +138,6 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     roleRef.current = role;
   }, [role]);
-=======
-  const hydrateRetryRef = useRef(0);
->>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
 
   const fetchRoleAndSetup = useCallback(async (userId, userRole) => {
     const normalized = normalizeRole(userRole) ?? userRole;

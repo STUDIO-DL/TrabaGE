@@ -227,66 +227,48 @@ export default function EditIntro() {
   const saveEducation = async (data, id, options = {}) => {
     setModalSaving(true);
     const result = id ? await updateEducation(id, data) : await addEducation(data);
-<<<<<<< HEAD
-    setModalSaving(false);
     if (result.error) {
+      setModalSaving(false);
       showToast(result.error.message || 'No se pudo guardar la educación.', 'error');
       return result;
     }
     if (!id && !result.data?.id) {
+      setModalSaving(false);
       const err = { message: 'No se pudo confirmar el guardado en el servidor.' };
       showToast(err.message, 'error');
       return { data: null, error: err };
     }
-    if (!id && result.data?.id) {
-      setForm((prev) => ({
-        ...prev,
-        intro_education_id: result.data.id,
-        show_education_in_intro: true,
-      }));
-    }
-    showToast('Educación guardada.', 'success');
-=======
-    if (!result.error) {
-      const educationId = id || result.data?.id;
 
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E',location:'EditIntro.jsx:saveEducation',message:'education save + intro sync path',data:{id:id||null,educationId:educationId||null,hasResultData:Boolean(result.data),showInIntro:options.showInIntro,willSync:typeof options.showInIntro==='boolean'&&Boolean(educationId)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-
-      if (typeof options.showInIntro === 'boolean' && educationId) {
-        const showInIntro = options.showInIntro;
-        const introResult = await syncEducationIntro(educationId, showInIntro);
-        // #region agent log
-        fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E',location:'EditIntro.jsx:syncEducationIntro',message:'syncEducationIntro result',data:{educationId,showInIntro,ok:!introResult.error,errorMessage:introResult.error?.message||null},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
-        if (introResult.error) {
-          setModalSaving(false);
-          showToast(introResult.error.message, 'error');
-          return introResult;
-        }
-        setForm((prev) => {
-          if (showInIntro) {
-            return {
-              ...prev,
-              intro_education_id: educationId,
-              show_education_in_intro: true,
-            };
-          }
-          if (String(prev.intro_education_id) === String(educationId)) {
-            return {
-              ...prev,
-              intro_education_id: '',
-              show_education_in_intro: false,
-            };
-          }
-          return prev;
-        });
+    const educationId = id || result.data?.id;
+    if (typeof options.showInIntro === 'boolean' && educationId) {
+      const showInIntro = options.showInIntro;
+      const introResult = await syncEducationIntro(educationId, showInIntro);
+      if (introResult.error) {
+        setModalSaving(false);
+        showToast(introResult.error.message, 'error');
+        return introResult;
       }
-      showToast('Educación guardada.', 'success');
+      setForm((prev) => {
+        if (showInIntro) {
+          return {
+            ...prev,
+            intro_education_id: educationId,
+            show_education_in_intro: true,
+          };
+        }
+        if (String(prev.intro_education_id) === String(educationId)) {
+          return {
+            ...prev,
+            intro_education_id: '',
+            show_education_in_intro: false,
+          };
+        }
+        return prev;
+      });
     }
+
     setModalSaving(false);
->>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
+    showToast('Educación guardada.', 'success');
     return result;
   };
 

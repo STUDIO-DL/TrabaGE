@@ -184,7 +184,6 @@ export default function EducationModal({
       return;
     }
 
-<<<<<<< HEAD
     const educationId = data?.id || initial?.id;
     if (!educationId) {
       setUploading(false);
@@ -215,9 +214,7 @@ export default function EducationModal({
       setUploadPhase(null);
     }
 
-=======
     clearDraft();
->>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
     onClose();
   };
 

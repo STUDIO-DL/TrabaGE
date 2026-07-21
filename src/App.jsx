@@ -265,7 +265,6 @@ function AppRoutes() {
                   <Route path="/organization">{EmployerAppRoutes()}</Route>
                 </Route>
 
-<<<<<<< HEAD
                 <Route element={<RoleRoute role={ROLES.ADMIN} />}>
                   <Route element={<AdminLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
@@ -275,29 +274,13 @@ function AppRoutes() {
                     <Route path="/admin/verifications" element={<AdminVerifications />} />
                     <Route path="/admin/jobs" element={<AdminJobs />} />
                     <Route path="/admin/posts" element={<AdminPosts />} />
+                    <Route path="/admin/topics" element={<AdminTopics />} />
                     <Route path="/admin/reports" element={<AdminReports />} />
                     <Route path="/admin/notifications" element={<AdminNotifications />} />
                     <Route path="/admin/profile" element={<AdminProfile />} />
                     <Route path="/admin/settings" element={<AdminSettings />} />
                     <Route path="/admin/help" element={<HelpCenter />} />
                   </Route>
-=======
-              <Route element={<RoleRoute role={ROLES.ADMIN} />}>
-                <Route element={<AdminLayout />}>
-                  <Route path="/admin" element={<AdminDashboard />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/companies" element={<AdminCompanies />} />
-                  <Route path="/admin/organizations" element={<AdminOrganizations />} />
-                  <Route path="/admin/verifications" element={<AdminVerifications />} />
-                  <Route path="/admin/jobs" element={<AdminJobs />} />
-                  <Route path="/admin/posts" element={<AdminPosts />} />
-                  <Route path="/admin/topics" element={<AdminTopics />} />
-                  <Route path="/admin/reports" element={<AdminReports />} />
-                  <Route path="/admin/notifications" element={<AdminNotifications />} />
-                  <Route path="/admin/profile" element={<AdminProfile />} />
-                  <Route path="/admin/settings" element={<AdminSettings />} />
-                  <Route path="/admin/help" element={<HelpCenter />} />
->>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
                 </Route>
               </Route>
 
@@ -324,8 +307,8 @@ function AppRoutes() {
               <Route path="/company/verification" element={<Navigate to="/business/verification" replace />} />
               <Route path="/company/help" element={<Navigate to="/business/help" replace />} />
 
-<<<<<<< HEAD
               {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
+              {/* /@:username does not match in RR6 — use /:atHandle and resolve only @* segments */}
               <Route path="/profile/:userId" element={<PublicProfile />} />
               <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
               <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
@@ -333,17 +316,6 @@ function AppRoutes() {
               <Route path="/personal/jobs/:id" element={<JobDetail />} />
               <Route path="/post/:postId" element={<PostDetail />} />
               <Route path="/feed/post/:postId" element={<PostDetail />} />
-=======
-            {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
-            {/* /@:username does not match in RR6 — use /:atHandle and resolve only @* segments */}
-            <Route path="/profile/:userId" element={<PublicProfile />} />
-            <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
-            <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
-            <Route path="/job/:id" element={<JobDetail />} />
-            <Route path="/personal/jobs/:id" element={<JobDetail />} />
-            <Route path="/post/:postId" element={<PostDetail />} />
-            <Route path="/feed/post/:postId" element={<PostDetail />} />
->>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
 
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfUse />} />
@@ -356,13 +328,9 @@ function AppRoutes() {
               <Route path="/legal/aviso-legal" element={<Navigate to="/terms#marcas-terceros-uso" replace />} />
               <Route path="/legal/help" element={<HelpCenter />} />
 
-<<<<<<< HEAD
+              <Route path="/:atHandle" element={<UsernameProfileRedirect />} />
               <Route path="*" element={<NotFound />} />
             </Route>
-=======
-            <Route path="/:atHandle" element={<UsernameProfileRedirect />} />
-            <Route path="*" element={<NotFound />} />
->>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
         </Routes>
       </Suspense>
     </>

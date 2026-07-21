@@ -32,27 +32,15 @@ function notifyForegroundSyncListeners() {
 }
 
 if (typeof document !== 'undefined') {
-<<<<<<< HEAD
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
-      // Defer push OS sync slightly so auth soft-resume wins the first paint.
-      window.setTimeout(() => notifyForegroundSyncListeners(), 0);
-    }
-  });
-
-  window.addEventListener('focus', () => {
-    window.setTimeout(() => notifyForegroundSyncListeners(), 0);
-  });
-=======
   const handleForegroundResume = () => {
     if (document.visibilityState !== 'visible') return;
     if (!shouldAllowForegroundRefresh()) return;
-    notifyForegroundSyncListeners();
+    // Defer so auth soft-resume wins the first paint.
+    window.setTimeout(() => notifyForegroundSyncListeners(), 0);
   };
 
   document.addEventListener('visibilitychange', handleForegroundResume);
   window.addEventListener('focus', handleForegroundResume);
->>>>>>> bef3757160945b42cbb1dcc1bea46ed6dae0aefc
 }
 
 export function subscribePushForegroundSync(listener) {
