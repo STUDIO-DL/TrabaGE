@@ -184,36 +184,6 @@ export default function EducationModal({
       return;
     }
 
-    const educationId = data?.id || initial?.id;
-    if (!educationId) {
-      setUploading(false);
-      setUploadPhase(null);
-      setSubmitError('No se pudo confirmar el guardado en el servidor. Inténtalo de nuevo.');
-      return;
-    }
-    if (educationId && (pendingFiles.length || removedPaths.length)) {
-      const { mediaFiles, error: mediaError } = await syncMediaFiles(educationId);
-      if (mediaError) {
-        setUploading(false);
-        setUploadPhase(null);
-        setSubmitError('No se pudieron subir los archivos. Inténtalo de nuevo.');
-        return;
-      }
-
-      const { error: patchError } = await onSave({ media_files: mediaFiles }, educationId, {
-        silent: true,
-      });
-      setUploading(false);
-      setUploadPhase(null);
-      if (patchError) {
-        setSubmitError(patchError.message);
-        return;
-      }
-    } else {
-      setUploading(false);
-      setUploadPhase(null);
-    }
-
     clearDraft();
     onClose();
   };
