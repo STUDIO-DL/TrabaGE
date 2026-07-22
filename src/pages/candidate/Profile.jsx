@@ -291,34 +291,13 @@ export default function Profile() {
         onShare={handleShare}
         onSettings={canEdit ? () => navigate('/personal/settings') : undefined}
         onEditIntro={canEdit ? () => navigate('/personal/profile/edit-intro') : undefined}
-        sidebar={
-          <>
-            <ProfileSidebar profile={profile} email={user?.email} />
-            <LanguagesSection
-              items={profile?.languages}
-              isOwn={canEdit}
-              onAdd={() => openLanguage()}
-              onEdit={openLanguage}
-              onDelete={async (id) => {
-                const { error } = await deleteLanguage(id);
-                showToast(error ? error.message : 'Idioma eliminado.', error ? 'error' : 'success');
-              }}
-            />
-          </>
-        }
+        sidebar={<ProfileSidebar profile={profile} email={user?.email} />}
       >
         <AboutSection
           about={profile?.about}
           isOwn={canEdit}
           onSave={handleSaveAbout}
           saving={aboutSaving}
-        />
-
-        <PersonalSocialSection
-          socialLinks={profile?.social_links}
-          isOwn={canEdit}
-          onSave={handleSaveSocial}
-          loading={socialSaving}
         />
 
         <EducationSection
@@ -359,19 +338,6 @@ export default function Profile() {
           }}
         />
 
-        <PortfolioLinksSection
-          items={profile?.candidate_links}
-          isOwn={canEdit}
-          onAdd={async (data) => {
-            const { error } = await addCandidateLink(data);
-            showToast(error ? error.message : 'Enlace añadido.', error ? 'error' : 'success');
-          }}
-          onDelete={async (id) => {
-            const { error } = await deleteCandidateLink(id);
-            showToast(error ? error.message : 'Enlace eliminado.', error ? 'error' : 'success');
-          }}
-        />
-
         <ServicesSection
           items={profile?.services}
           isOwn={canEdit}
@@ -382,6 +348,37 @@ export default function Profile() {
           onDelete={async (id) => {
             const { error } = await deleteService(id);
             showToast(error ? error.message : 'Servicio eliminado.', error ? 'error' : 'success');
+          }}
+        />
+
+        <LanguagesSection
+          items={profile?.languages}
+          isOwn={canEdit}
+          onAdd={() => openLanguage()}
+          onEdit={openLanguage}
+          onDelete={async (id) => {
+            const { error } = await deleteLanguage(id);
+            showToast(error ? error.message : 'Idioma eliminado.', error ? 'error' : 'success');
+          }}
+        />
+
+        <PersonalSocialSection
+          socialLinks={profile?.social_links}
+          isOwn={canEdit}
+          onSave={handleSaveSocial}
+          loading={socialSaving}
+        />
+
+        <PortfolioLinksSection
+          items={profile?.candidate_links}
+          isOwn={canEdit}
+          onAdd={async (data) => {
+            const { error } = await addCandidateLink(data);
+            showToast(error ? error.message : 'Enlace añadido.', error ? 'error' : 'success');
+          }}
+          onDelete={async (id) => {
+            const { error } = await deleteCandidateLink(id);
+            showToast(error ? error.message : 'Enlace eliminado.', error ? 'error' : 'success');
           }}
         />
 

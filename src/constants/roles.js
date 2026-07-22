@@ -1,4 +1,4 @@
-import { ORGANIZATION_COMPANY_TYPES } from './feedContentTypes';
+import { ORGANIZATION_COMPANY_TYPES } from './feedContentTypes.js';
 
 /**
  * Official account roles (user_roles.role).

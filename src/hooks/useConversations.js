@@ -68,6 +68,16 @@ export function useConversations() {
         { event: 'UPDATE', schema: 'public', table: 'conversation_participants' },
         () => fetchRef.current?.({ soft: true }),
       )
+      .on(
+        'postgres_changes',
+        { event: ['INSERT', 'UPDATE'], schema: 'public', table: 'candidate_profiles' },
+        () => fetchRef.current?.({ soft: true }),
+      )
+      .on(
+        'postgres_changes',
+        { event: ['INSERT', 'UPDATE'], schema: 'public', table: 'company_profiles' },
+        () => fetchRef.current?.({ soft: true }),
+      )
       .subscribe();
 
     return () => {

@@ -229,7 +229,12 @@ export default function ConversationView({ conversationId, role }) {
           variant={displayParticipant.avatarVariant ?? 'circular'}
           className="shrink-0"
         />
-        <span className="truncate text-subtitle font-semibold text-app-text">{displayParticipant.name}</span>
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-subtitle font-semibold text-app-text">{displayParticipant.name}</span>
+          {displayParticipant.subtitle ? (
+            <span className="truncate text-caption text-app-subtle">{displayParticipant.subtitle}</span>
+          ) : null}
+        </div>
       </Link>
     ) : (
       <div className="flex min-w-0 flex-1 items-center gap-space-sm">
@@ -242,7 +247,12 @@ export default function ConversationView({ conversationId, role }) {
           variant={displayParticipant.avatarVariant ?? 'circular'}
           className="shrink-0"
         />
-        <span className="truncate text-subtitle font-semibold text-app-text">{displayParticipant.name}</span>
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-subtitle font-semibold text-app-text">{displayParticipant.name}</span>
+          {displayParticipant.subtitle ? (
+            <span className="truncate text-caption text-app-subtle">{displayParticipant.subtitle}</span>
+          ) : null}
+        </div>
       </div>
     )
   ) : conversationsLoading ? (
@@ -282,12 +292,14 @@ export default function ConversationView({ conversationId, role }) {
             ) : null}
 
             <div className="flex flex-col gap-space-md">
-              {messages.map((message) => {
+              {messages.map((message, index) => {
                 const isOwn = message.sender_id === user?.id;
                 const isRead =
                   isOwn &&
                   otherLastReadAt &&
                   new Date(otherLastReadAt) >= new Date(message.created_at);
+                const previousMessage = messages[index - 1];
+                const showAvatar = !isOwn && (!previousMessage || previousMessage.sender_id !== message.sender_id);
 
                 return (
                   <MessageBubble
@@ -295,6 +307,8 @@ export default function ConversationView({ conversationId, role }) {
                     message={message}
                     isOwn={isOwn}
                     isRead={Boolean(isRead)}
+                    avatar={showAvatar ? displayParticipant : null}
+                    showAvatar={showAvatar}
                   />
                 );
               })}

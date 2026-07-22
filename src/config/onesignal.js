@@ -3,7 +3,7 @@ import { NOTIFICATION_PREFERENCE_FIELDS } from '../constants/notificationPrefere
 import { pushSubscriptionsService } from '../services/pushSubscriptions.service';
 import { readViteEnv } from './env';
 import { reportError } from '../utils/logger';
-import { getNotificationLink } from '../utils/notificationCategories';
+import { resolvePushNavigationTarget } from '../utils/pushNavigation';
 
 let initPromise = null;
 let initialized = false;
@@ -48,19 +48,6 @@ async function syncSubscriptionFromDevice(userId) {
   }
 }
 
-function resolvePushNavigationTarget(rawLink) {
-  if (!rawLink || typeof rawLink !== 'string') return null;
-
-  const trimmed = rawLink.trim();
-  if (!trimmed) return null;
-
-  if (/^https?:\/\//i.test(trimmed)) return trimmed;
-
-  const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-  const appOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-  return appOrigin ? `${appOrigin}${path}` : path;
-}
-
 function attachOneSignalListeners() {
   try {
     OneSignal.Notifications?.addEventListener?.('permissionChange', (granted) => {
@@ -69,25 +56,13 @@ function attachOneSignalListeners() {
     });
 
     OneSignal.Notifications?.addEventListener?.('click', (event) => {
-      const additionalData =
-        event?.notification?.additionalData ??
-        event?.notification?.data ??
-        event?.notification?.custom?.a ??
-        null;
-      const launchUrl =
-        event?.notification?.launchURL ??
-        event?.notification?.launchUrl ??
-        event?.notification?.url ??
-        null;
-      // Same resolver as in-app rows: post_id / /post/:id wins over a legacy
-      // company-profile link that may still be present in older payloads.
-      const resolvedPath = additionalData
-        ? getNotificationLink({ type: additionalData.type, metadata: additionalData })
-        : null;
-      const target =
-        resolvePushNavigationTarget(resolvedPath) ??
-        resolvePushNavigationTarget(additionalData?.link) ??
-        resolvePushNavigationTarget(launchUrl);
+      const notification = event?.notification;
+      const target = resolvePushNavigationTarget({
+        type: notification?.additionalData?.type ?? notification?.data?.type ?? null,
+        metadata: notification?.additionalData ?? notification?.data ?? {},
+        launchUrl: notification?.launchURL ?? notification?.launchUrl ?? notification?.url ?? null,
+      }, typeof window !== 'undefined' ? window.location.origin : '');
+
       if (target && typeof window !== 'undefined') {
         window.location.assign(target);
       }

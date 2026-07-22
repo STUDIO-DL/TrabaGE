@@ -49,6 +49,16 @@ function resolveParticipantRole(profile) {
   return ROLES.PERSONAL;
 }
 
+function buildParticipantSubtitle(profile, role) {
+  if (!profile) return '';
+
+  if (role === ROLES.PERSONAL) {
+    return String(profile.headline ?? '').trim();
+  }
+
+  return String(profile.sector ?? profile.company_type ?? '').trim();
+}
+
 function mapParticipantSummary(profile, userId) {
   if (!profile) {
     return {
@@ -56,7 +66,9 @@ function mapParticipantSummary(profile, userId) {
       name: 'Usuario',
       avatarSrc: null,
       avatarType: 'personal',
+      avatarVariant: 'circular',
       role: ROLES.PERSONAL,
+      subtitle: '',
     };
   }
 
@@ -70,6 +82,7 @@ function mapParticipantSummary(profile, userId) {
     avatarType: isEmployer ? 'company' : 'personal',
     avatarVariant: isEmployer ? 'rounded' : 'circular',
     role,
+    subtitle: buildParticipantSubtitle(profile, role),
     profile,
   };
 }
@@ -268,11 +281,11 @@ export const messagesService = {
     const [candidateResult, companyResult] = await Promise.all([
       supabase
         .from('candidate_profiles_public')
-        .select('user_id, full_name, avatar_path, headline')
+        .select('user_id, full_name, avatar_path, headline, sector')
         .in('user_id', uniqueIds),
       supabase
         .from('company_profiles_public')
-        .select('user_id, company_name, logo_path, company_type')
+        .select('user_id, company_name, logo_path, company_type, sector')
         .in('user_id', uniqueIds),
     ]);
 

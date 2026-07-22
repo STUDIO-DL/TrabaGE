@@ -1,8 +1,21 @@
+import AppAvatar from '../common/AppAvatar';
 import { formatRelativeTime } from '../../utils/formatDate';
 
-export default function MessageBubble({ message, isOwn, isRead }) {
+export default function MessageBubble({ message, isOwn, isRead, avatar, showAvatar = false }) {
   return (
-    <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex items-end ${isOwn ? 'justify-end' : 'justify-start'}`}>
+      {!isOwn && showAvatar && avatar ? (
+        <div className="mr-space-sm shrink-0">
+          <AppAvatar
+            type={avatar.avatarType}
+            src={avatar.avatarSrc}
+            name={avatar.name}
+            alt={avatar.name}
+            size="sm"
+            variant={avatar.avatarVariant ?? 'circular'}
+          />
+        </div>
+      ) : null}
       <div
         className={[
           'max-w-[75%] break-words rounded-radius-lg px-space-md py-space-sm',

@@ -11,8 +11,8 @@
 // Any type that fits neither bucket (e.g. verification/account notifications)
 // still appears under "Todas" but is excluded from the specific chips.
 
-import { DEEP_LINK_PATHS } from './deepLinks';
-import { ROLES, isEmployerRole, normalizeRole, rolePath } from '../constants/roles';
+import { DEEP_LINK_PATHS } from './deepLinks.js';
+import { ROLES, isEmployerRole, normalizeRole, rolePath } from '../constants/roles.js';
 
 export const NOTIFICATION_CATEGORY = {
   ALL: 'all',
