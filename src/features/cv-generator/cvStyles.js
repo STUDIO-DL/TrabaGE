@@ -186,8 +186,8 @@ export function registerCvFonts() {
   Font.register({
     family: 'Inter',
     fonts: [
-      { src: '/fonts/Inter-Regular.woff', fontWeight: 400 },
-      { src: '/fonts/Inter-SemiBold.woff', fontWeight: 600 },
+      { src: '/fonts/Inter-Regular.woff2', fontWeight: 400 },
+      { src: '/fonts/Inter-SemiBold.woff2', fontWeight: 600 },
     ],
   });
 
