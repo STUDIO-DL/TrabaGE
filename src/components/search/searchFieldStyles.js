@@ -5,7 +5,7 @@ export const SEARCH_FIELD_SHELL =
 export const SEARCH_FIELD_ICON = 'pointer-events-none shrink-0 text-app-subtle';
 
 export const SEARCH_FIELD_INPUT =
-  'min-h-0 min-w-0 flex-1 border-0 bg-transparent py-0 text-app-text outline-none placeholder:text-app-muted';
+  'min-h-0 min-w-0 flex-1 border-0 bg-transparent py-0 text-base text-app-text outline-none placeholder:text-app-muted';
 
 export const SEARCH_FIELD_PLACEHOLDER =
   'min-w-0 flex-1 truncate text-left text-app-muted';

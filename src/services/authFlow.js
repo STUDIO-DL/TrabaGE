@@ -21,8 +21,15 @@ async function ensureAccountIsActive(role) {
  * Central post-auth pipeline used by login, OAuth callback, and email verification:
  * resolve role → bootstrap profile → compute home/setup redirect.
  * Does not queue welcome email or navigate; callers own those steps.
+ *
+ * @param {{ preferProfile?: boolean, fastLogin?: boolean }} options
+ *   fastLogin — password login: skip bootstrap (hydrateUser does it) so login
+ *               only waits on role + active check + redirect lookup.
  */
-export async function completePostAuthFlow(user, { preferProfile = true } = {}) {
+export async function completePostAuthFlow(
+  user,
+  { preferProfile = true, fastLogin = false } = {},
+) {
   if (!user?.id) {
     return { error: { message: 'No se pudo identificar el usuario autenticado' } };
   }
@@ -41,15 +48,21 @@ export async function completePostAuthFlow(user, { preferProfile = true } = {}) 
   const role =
     accountTypeResult?.role ?? resolveSignupRoleFromUser(user) ?? null;
 
-  const inactiveError = await ensureAccountIsActive(role);
+  // Active check + redirect lookup are independent once role is known.
+  const [inactiveError, redirectTo] = await Promise.all([
+    ensureAccountIsActive(role),
+    role
+      ? resolvePostAuthRedirect(user.id, role, { preferProfile })
+      : Promise.resolve(null),
+  ]);
+
   if (inactiveError) {
     return { error: inactiveError };
   }
 
-  if (role && role !== ROLES.ADMIN) {
+  if (role && role !== ROLES.ADMIN && !fastLogin) {
     await bootstrapProfile({ user, role });
   }
 
-  const redirectTo = await resolvePostAuthRedirect(user.id, role, { preferProfile });
   return { role, redirectTo, error: null };
 }

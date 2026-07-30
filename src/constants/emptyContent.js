@@ -24,8 +24,13 @@ export const EMPTY_CONTENT_SECONDARY = {
 export const FETCH_ERROR_TITLE = 'No pudimos cargar esta información.';
 export const FETCH_ERROR_DESCRIPTION = 'Revisa tu conexión y prueba de nuevo.';
 
+/** Network / fetch failure for Descubrir personas */
+export const DISCOVER_PEOPLE_NETWORK_TITLE = 'Sin conexión';
+export const DISCOVER_PEOPLE_NETWORK_DESCRIPTION =
+  'Revisa tu conexión y vuelve a intentarlo.';
+
 /** Descubrir personas — only when no other recommendable users exist. */
 export const DISCOVER_PEOPLE_EMPTY_TITLE =
-  'Aún no hay suficientes personas para mostrarte recomendaciones.';
+  'No hay más profesionales para descubrir por ahora.';
 export const DISCOVER_PEOPLE_EMPTY_DESCRIPTION =
-  'Cuando más profesionales se unan a TrabaGE, empezaremos a recomendarte perfiles relevantes.';
+  'Cuando haya más perfiles disponibles en TrabaGE, te mostraremos recomendaciones aquí.';

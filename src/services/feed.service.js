@@ -11,7 +11,6 @@ import {
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';
 import { companyService } from './company.service';
 import { jobsService } from './jobs.service';
-import { applicationsService } from './applications.service';
 import { followsService, FOLLOWS_TARGET } from './follows.service';
 import { profileService } from './profile.service';
 import { topicsService } from './topics.service';
@@ -246,27 +245,32 @@ async function buildFeedContext(userId, role) {
   }
 
   if (role === ROLES.PERSONAL) {
-    const [profileResult, followsCompanies, followsInstitutions, savedJobsResult, applicationsResult] =
+    // Slim context for ranking: base profile + follow IDs + light activity signals.
+    // Avoid full profile sections + full saved-job/application payloads.
+    const [profileResult, followsCompanies, followsInstitutions, savedIdsResult, applicationsResult] =
       await Promise.all([
-        profileService.getCandidateFullProfile(userId),
+        profileService.getCandidateProfile(userId),
         followsService.getFollowing(userId, FOLLOWS_TARGET.BUSINESS),
         followsService.getFollowing(userId, FOLLOWS_TARGET.ORGANIZATION),
-        jobsService.getSavedJobs(userId),
-        applicationsService.getCandidateApplications(userId),
+        jobsService.getSavedJobIds(userId),
+        supabase
+          .from('applications')
+          .select('jobs(title, sector, company_profiles(sector))')
+          .eq('candidate_id', userId)
+          .order('applied_at', { ascending: false })
+          .limit(20),
       ]);
 
     const prefs = profileResult.data?.job_preferences;
+    const savedCount = (savedIdsResult.data ?? []).length;
     const recentActivityKeywords = [
-      ...(savedJobsResult.data ?? []).flatMap((row) => [
-        row.jobs?.title,
-        row.jobs?.sector,
-        row.jobs?.company_profiles?.sector,
-      ]),
       ...(applicationsResult.data ?? []).flatMap((row) => [
         row.jobs?.title,
         row.jobs?.sector,
         row.jobs?.company_profiles?.sector,
       ]),
+      // Soft signal when user has saved jobs (titles loaded elsewhere if needed).
+      ...(savedCount > 0 ? ['empleo', 'trabajo'] : []),
     ]
       .filter(Boolean)
       .flatMap((value) => String(value).toLowerCase().split(/\s+/))
@@ -291,7 +295,7 @@ async function buildFeedContext(userId, role) {
 
   const [companyResult, jobsResult] = await Promise.all([
     companyService.getCompanyProfile(userId),
-    jobsService.getCompanyJobs(userId),
+    jobsService.getCompanyJobs(userId, { limit: 40 }),
   ]);
 
   const companyType = companyResult.data?.company_type;

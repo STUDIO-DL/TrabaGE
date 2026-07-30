@@ -8,8 +8,8 @@ import { Users } from '../../constants/icons';
 import {
   DISCOVER_PEOPLE_EMPTY_DESCRIPTION,
   DISCOVER_PEOPLE_EMPTY_TITLE,
-  FETCH_ERROR_DESCRIPTION,
-  FETCH_ERROR_TITLE,
+  DISCOVER_PEOPLE_NETWORK_DESCRIPTION,
+  DISCOVER_PEOPLE_NETWORK_TITLE,
 } from '../../constants/emptyContent';
 
 function PeopleListSkeleton({ count = 6 }) {
@@ -33,8 +33,8 @@ export default function DiscoverPeoplePage() {
         <EmptyState
           variant="text"
           icon={Users}
-          title={FETCH_ERROR_TITLE}
-          description={FETCH_ERROR_DESCRIPTION}
+          title={DISCOVER_PEOPLE_NETWORK_TITLE}
+          description={DISCOVER_PEOPLE_NETWORK_DESCRIPTION}
           actionLabel="Reintentar"
           onAction={reload}
         />

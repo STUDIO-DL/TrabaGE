@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageContainer from '../layout/PageContainer';
 import TopBar from '../layout/TopBar';
@@ -12,7 +12,6 @@ import MessageDaySeparator from './MessageDaySeparator';
 import ConversationMessageSearchPanel from './ConversationMessageSearchPanel';
 import KeyboardAwareFooter from '../layout/KeyboardAwareFooter';
 import { useMessages } from '../../hooks/useMessages';
-import { useConversations } from '../../hooks/useConversations';
 import { useConversationMessageSearch } from '../../hooks/useConversationMessageSearch';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -54,10 +53,8 @@ export default function ConversationView({ conversationId, role, embedded = fals
   const highlightTimerRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const {
-    conversations,
-    loading: conversationsLoading,
-  } = useConversations();
+  const [displayParticipant, setDisplayParticipant] = useState(null);
+  const [participantLoading, setParticipantLoading] = useState(true);
   const {
     messages,
     otherLastReadAt,
@@ -82,25 +79,31 @@ export default function ConversationView({ conversationId, role, embedded = fals
     loadMore: loadMoreSearch,
   } = useConversationMessageSearch(conversationId, searchOpen ? searchQuery : '');
 
-  const otherParticipant = useMemo(() => {
-    const match = conversations.find((item) => item.id === conversationId);
-    return match?.otherParticipant ?? null;
-  }, [conversationId, conversations]);
-  const [fallbackParticipant, setFallbackParticipant] = useState(null);
-
   useEffect(() => {
-    if (otherParticipant || !conversationId || !user?.id) return undefined;
+    if (!conversationId || !user?.id) {
+      setDisplayParticipant(null);
+      setParticipantLoading(false);
+      return undefined;
+    }
 
     let cancelled = false;
+    setParticipantLoading(true);
 
     const loadParticipant = async () => {
       const { data: participants } = await messagesService.getConversationParticipants(conversationId);
       const otherUserId = (participants ?? []).find((row) => row.user_id !== user.id)?.user_id;
-      if (!otherUserId || cancelled) return;
+      if (!otherUserId || cancelled) {
+        if (!cancelled) {
+          setDisplayParticipant(null);
+          setParticipantLoading(false);
+        }
+        return;
+      }
 
       const { data } = await messagesService.getParticipantSummaries([otherUserId]);
       if (!cancelled) {
-        setFallbackParticipant(data?.[0] ?? null);
+        setDisplayParticipant(data?.[0] ?? null);
+        setParticipantLoading(false);
       }
     };
 
@@ -109,9 +112,7 @@ export default function ConversationView({ conversationId, role, embedded = fals
     return () => {
       cancelled = true;
     };
-  }, [conversationId, otherParticipant, user?.id]);
-
-  const displayParticipant = otherParticipant ?? fallbackParticipant;
+  }, [conversationId, user?.id]);
 
   const profilePath = displayParticipant?.userId
     ? isEmployerRole(displayParticipant.role)
@@ -387,7 +388,7 @@ export default function ConversationView({ conversationId, role, embedded = fals
         </div>
       </div>
     )
-  ) : conversationsLoading ? (
+  ) : participantLoading ? (
     <Skeleton className="h-5 w-32" />
   ) : (
     <span className="truncate text-subtitle font-semibold text-app-text">Conversación</span>

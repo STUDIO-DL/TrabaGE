@@ -79,7 +79,7 @@ export default function SkillTagsField({
             onSelect={addSkill}
             suggestions={suggestions}
             placeholder="Escribe una habilidad"
-            inputClassName="h-input-md min-h-touch rounded-radius-md border border-app-border bg-app-card px-space-md text-body-small text-app-text outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+            inputClassName="h-input-md min-h-touch rounded-radius-md border border-app-border bg-app-card px-space-md text-base text-app-text outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
             listClassName="rounded-radius-md border border-app-border bg-app-card shadow-elevation-2"
           />
           <Button

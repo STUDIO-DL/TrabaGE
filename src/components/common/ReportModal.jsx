@@ -100,7 +100,7 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId }) {
             value={reasonDetails}
             onChange={(e) => setReasonDetails(e.target.value)}
             placeholder="Describe lo ocurrido con el mayor detalle posible..."
-            className="w-full resize-none rounded-xl border border-app-border px-3 py-2.5 text-sm text-app-text placeholder:text-app-subtle focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            className="w-full resize-none rounded-xl border border-app-border px-3 py-2.5 text-base text-app-text placeholder:text-app-subtle focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
           />
         </div>
 

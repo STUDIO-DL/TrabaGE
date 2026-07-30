@@ -62,6 +62,11 @@ function isOAuthCancelled(message) {
   return message.includes('access_denied') || message.includes('user cancelled');
 }
 
+export function isOAuthCancelledError(errorOrMessage) {
+  const message = String(errorOrMessage?.message ?? errorOrMessage ?? '').toLowerCase();
+  return isOAuthCancelled(message);
+}
+
 function isAuthHookError(message, code) {
   return (
     code === 'unexpected_failure' ||
@@ -123,6 +128,16 @@ export function mapAuthError(error) {
   if (message.includes('invalid login credentials') || code === 'invalid_credentials') {
     return getErrorMessage('invalidCredentials');
   }
+  if (code === 'same_password' || message.includes('same password') || message.includes('should be different')) {
+    return getErrorMessage('passwordMustDiffer');
+  }
+  if (
+    code === 'reauthentication_needed' ||
+    code === 'reauthentication_not_valid' ||
+    message.includes('reauthentication')
+  ) {
+    return getErrorMessage('reauthenticationNeeded');
+  }
   if (isEmailNotConfirmedError(message, code)) {
     return getErrorMessage('emailNotConfirmed');
   }
@@ -159,17 +174,39 @@ export function mapAuthError(error) {
   if (isOAuthCancelled(message)) {
     return getErrorMessage('oauthCancelled');
   }
-  if (message.includes('oauth') && !message.includes('provider')) {
+  // PKCE code already consumed by detectSessionInUrl — treat as OAuth retry hint.
+  if (
+    message.includes('code verifier') ||
+    message.includes('both auth code and code verifier') ||
+    message.includes('invalid flow state') ||
+    (message.includes('oauth') && !message.includes('provider'))
+  ) {
     return getErrorMessage('oauthFailed');
   }
   if (message.includes('user banned') || message.includes('banned')) {
     return getErrorMessage('userBanned');
   }
-  if (message.includes('session missing') || message.includes('auth session missing')) {
+  if (
+    message.includes('desactivada') ||
+    message.includes('account is deactivated') ||
+    message.includes('account has been deactivated')
+  ) {
+    return error?.message || getErrorMessage('userBanned');
+  }
+  if (
+    message.includes('session missing') ||
+    message.includes('auth session missing') ||
+    code === 'session_not_found' ||
+    code === 'session_expired'
+  ) {
     return getErrorMessage('sessionExpired');
   }
   if (message.includes('smtp') || isAuthHookError(message, code)) {
     return getErrorMessage('smtpError');
+  }
+  if (message.includes('tipo de correo auth no soportado')) {
+    // Auth Send Email Hook rejected an unsupported action type (e.g. password notification).
+    return getErrorMessage('passwordSaveFailed');
   }
   if (message.includes('database error saving new user')) {
     return getErrorMessage('registerFailed');

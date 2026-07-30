@@ -2,7 +2,7 @@ import { useAnalyticsFilters } from './AnalyticsFiltersContext';
 import { ANALYTICS_PERIODS } from './analyticsPeriods';
 
 const selectClass =
-  'h-10 w-full rounded-radius-md border border-app-border bg-app-card px-space-sm text-body-small text-app-text outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
+  'h-10 w-full rounded-radius-md border border-app-border bg-app-card px-space-sm text-base text-app-text outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
 
 const labelClass = 'space-y-space-xs text-caption font-medium text-app-muted';
 

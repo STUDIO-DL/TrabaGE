@@ -40,6 +40,11 @@ import {
 } from '../utils/appLifecycle';
 import { getOwnCandidateProfileKey, getOwnCompanyProfileKey } from '../constants/profileQueryKeys';
 import {
+  clearAccountDeleted,
+  isAccountDeleted,
+  markAccountDeleted,
+} from '../utils/accountDeletion';
+import {
   hasCandidateSections,
   mergeCandidateProfileRow,
 } from '../utils/candidateProfileSections';
@@ -130,6 +135,8 @@ export function AuthProvider({ children }) {
   const hydrateRetryRef = useRef(0);
   const userIdRef = useRef(initialCacheRef.current?.userId ?? null);
   const roleRef = useRef(initialCacheRef.current?.role ?? null);
+  /** While password login resolves role, don't lock UI on SIGNED_IN hydrate. */
+  const loginInFlightRef = useRef(false);
 
   useEffect(() => {
     userIdRef.current = user?.id ?? null;
@@ -174,6 +181,17 @@ export function AuthProvider({ children }) {
   const hydrateUser = useCallback(async (currentSession) => {
     const gen = ++hydrateGenRef.current;
     const currentUser = currentSession?.user ?? null;
+
+    if (isAccountDeleted()) {
+      setSession(null);
+      setUser(null);
+      setRole(null);
+      setSetupComplete(false);
+      clearAuthResumeCache();
+      clearSentryUser();
+      if (gen === hydrateGenRef.current) setHydrating(false);
+      return;
+    }
 
     if (!currentUser) {
       // File picker / transient races may emit a null session — keep in-memory auth.
@@ -238,7 +256,11 @@ export function AuthProvider({ children }) {
     }
 
     if (!softResume) {
-      setHydrating(true);
+      // Password login already owns navigation; SIGNED_IN hydrate must not
+      // flip AuthLoadingScreen while completePostAuthFlow is still running.
+      if (!loginInFlightRef.current) {
+        setHydrating(true);
+      }
     }
     setSession(currentSession);
     setUser(currentUser);
@@ -310,20 +332,45 @@ export function AuthProvider({ children }) {
 
       if (gen !== hydrateGenRef.current) return;
 
-      if (candidateResult?.data?.user_id) {
-        await seedOwnCandidateProfileCache(currentUser.id, candidateResult.data);
-      }
+      // Seed company cache immediately (single row). Candidate full profile
+      // (multi-section) runs after unlock so it never blocks first paint.
       if (companyResult?.data?.user_id) {
         queryClient.setQueryData(getOwnCompanyProfileKey(currentUser.id), companyResult.data);
+      }
+      if (candidateResult?.data?.user_id) {
+        const key = getOwnCandidateProfileKey(currentUser.id);
+        const existing = queryClient.getQueryData(key);
+        if (hasCandidateSections(candidateResult.data)) {
+          queryClient.setQueryData(key, candidateResult.data);
+        } else if (hasCandidateSections(existing)) {
+          queryClient.setQueryData(
+            key,
+            mergeCandidateProfileRow(existing, candidateResult.data),
+          );
+        } else {
+          queryClient.setQueryData(key, candidateResult.data);
+        }
       }
 
       setRole(userRole);
       if (userRole) {
+        userIdRef.current = currentUser.id;
+        roleRef.current = userRole;
         writeAuthResumeCache({
           userId: currentUser.id,
           role: userRole,
           setupComplete: userRole === ROLES.ADMIN,
         });
+      }
+
+      // Unlock protected routes as soon as identity+role are known.
+      // Bootstrap / full profile can finish without blocking the UI.
+      if (gen === hydrateGenRef.current) {
+        setHydrating(false);
+      }
+
+      if (candidateResult?.data?.user_id) {
+        void seedOwnCandidateProfileCache(currentUser.id, candidateResult.data);
       }
 
       void notificationPreferencesService.getOrCreate(currentUser.id);
@@ -393,6 +440,7 @@ export function AuthProvider({ children }) {
           normalizeRole(userRole, { companyType: companyAfterBootstrap?.company_type }) ?? userRole;
         const complete = isProfileSetupComplete(resolvedRole, companyAfterBootstrap);
         setRole(resolvedRole);
+        roleRef.current = resolvedRole;
         setSetupComplete(complete);
         writeAuthResumeCache({
           userId: currentUser.id,
@@ -445,6 +493,16 @@ export function AuthProvider({ children }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, newSession) => {
       if (!mounted) return;
+
+      if (isAccountDeleted()) {
+        setSession(null);
+        setUser(null);
+        setRole(null);
+        setSetupComplete(false);
+        setHydrating(false);
+        setLoading(false);
+        return;
+      }
 
       const nextUserId = newSession?.user?.id ?? null;
       const sameUser = Boolean(nextUserId && nextUserId === userIdRef.current);
@@ -556,31 +614,72 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = useCallback(async (email, password) => {
+    clearAccountDeleted();
     clearPreviewMode();
     setIsPreviewMode(false);
+    loginInFlightRef.current = true;
 
-    const { data, error } = await authService.login(email.trim().toLowerCase(), password);
-    if (error) return { data, error, redirectTo: null };
+    try {
+      const { data, error } = await authService.login(email.trim().toLowerCase(), password);
+      if (error) return { data, error, redirectTo: null };
 
-    const { data: sessionData } = await authService.getSession();
-    const session = sessionData?.session ?? data?.session;
-    if (!session) {
-      return { data, error: { message: 'No se pudo iniciar sesión' }, redirectTo: null };
+      // Prefer session from signIn — avoids an extra getSession round-trip.
+      let session = data?.session ?? null;
+      if (!session) {
+        const { data: sessionData } = await authService.getSession();
+        session = sessionData?.session ?? null;
+      }
+      if (!session) {
+        return { data, error: { message: 'No se pudo iniciar sesión' }, redirectTo: null };
+      }
+
+      userIdRef.current = session.user.id;
+
+      const flow = await completePostAuthFlow(session.user, {
+        preferProfile: false,
+        fastLogin: true,
+      });
+      if (flow.error) return { data, error: flow.error, redirectTo: null };
+
+      const role = normalizeRole(flow.role) ?? flow.role ?? null;
+      const redirectTo =
+        role === ROLES.ADMIN
+          ? ROLE_HOME[ROLES.ADMIN]
+          : flow.needsAccountTypeSelection && !role
+            ? '/register'
+            : flow.redirectTo;
+
+      // Seed auth state immediately so navigation is not blocked by full profile hydrate.
+      setSession(session);
+      setUser(session.user);
+      if (role) {
+        userIdRef.current = session.user.id;
+        roleRef.current = role;
+        setRole(role);
+        const setupCompleteGuess =
+          role === ROLES.ADMIN ||
+          (typeof redirectTo === 'string' && !redirectTo.startsWith('/setup/'));
+        setSetupComplete(setupCompleteGuess);
+        writeAuthResumeCache({
+          userId: session.user.id,
+          role,
+          setupComplete: setupCompleteGuess,
+        });
+      }
+      setHydrating(false);
+      setLoading(false);
+
+      // Soft-resume hydrate (role already set) — runs without locking the UI.
+      void hydrateUser(session);
+
+      return { data, error: null, redirectTo };
+    } finally {
+      loginInFlightRef.current = false;
     }
-
-    const flow = await completePostAuthFlow(session.user, { preferProfile: false });
-    if (flow.error) return { data, error: flow.error, redirectTo: null };
-
-    await hydrateUser(session);
-
-    if (flow.needsAccountTypeSelection) {
-      return { data, error: null, redirectTo: '/register' };
-    }
-
-    return { data, error: null, redirectTo: flow.redirectTo };
   }, [hydrateUser]);
 
   const register = useCallback(async (email, password, userRole, metadata = {}) => {
+    clearAccountDeleted();
     clearPreviewMode();
     setIsPreviewMode(false);
 
@@ -613,6 +712,54 @@ export function AuthProvider({ children }) {
     return { data, error: null, redirectTo };
   }, [hydrateUser]);
 
+  const clearAuthAfterOAuthRejection = useCallback(async () => {
+    hydrateGenRef.current += 1;
+    hydrateRetryRef.current = 0;
+    queryClient.clear();
+    clearAuthResumeCache();
+    clearSentryUser();
+    clearPreviewMode();
+    setIsPreviewMode(false);
+
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // Orphan OAuth session may already be invalid server-side.
+    }
+
+    setSession(null);
+    setUser(null);
+    setRole(null);
+    setSetupComplete(false);
+    setHydrating(false);
+    setLoading(false);
+  }, []);
+
+  const finalizeAccountDeletion = useCallback(async () => {
+    markAccountDeleted();
+    hydrateGenRef.current += 1;
+    hydrateRetryRef.current = 0;
+
+    queryClient.clear();
+    clearAuthResumeCache();
+    clearSentryUser();
+    clearPreviewMode();
+    setIsPreviewMode(false);
+
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      // User row is already gone — local sign-out is enough.
+    }
+
+    setSession(null);
+    setUser(null);
+    setRole(null);
+    setSetupComplete(false);
+    setHydrating(false);
+    setLoading(false);
+  }, []);
+
   const logout = useCallback(async () => {
     if (isPreviewMode || getPreviewMode()) {
       clearPreviewMode();
@@ -626,7 +773,19 @@ export function AuthProvider({ children }) {
       return;
     }
 
-    // Deactivate push while the session is still valid (RPC needs auth.uid()).
+    // Clear UI immediately so logout feels instant. Push cleanup still uses the
+    // live Supabase session until signOut completes.
+    queryClient.clear();
+    clearAuthResumeCache();
+    clearSentryUser();
+    setSession(null);
+    setUser(null);
+    setRole(null);
+    setSetupComplete(false);
+    setHydrating(false);
+    setLoading(false);
+
+    // Deactivate push while the auth session still exists in the client.
     if (isOneSignalConfigured()) {
       try {
         await clearOneSignalUserId();
@@ -635,13 +794,11 @@ export function AuthProvider({ children }) {
       }
     }
 
-    await authService.logout();
-    queryClient.clear();
-    clearAuthResumeCache();
-    setSession(null);
-    setUser(null);
-    setRole(null);
-    setSetupComplete(false);
+    try {
+      await authService.logout();
+    } catch {
+      // Local state is already cleared; ignore secondary cleanup failures.
+    }
   }, [isPreviewMode]);
 
   const refreshSetupStatus = useCallback(async () => {
@@ -654,12 +811,55 @@ export function AuthProvider({ children }) {
   }, [user, role, fetchRoleAndSetup, isPreviewMode]);
 
   const refreshAuthState = useCallback(async () => {
-    if (isPreviewMode || getPreviewMode()) return;
+    if (isPreviewMode || getPreviewMode() || isAccountDeleted()) return;
     const { data } = await authService.getSession();
     if (data?.session) {
       await hydrateUser(data.session);
     }
   }, [hydrateUser, isPreviewMode]);
+
+  /**
+   * Seed auth after OAuth/callback without blocking on full profile hydrate.
+   * Same unlock pattern as password login.
+   */
+  const acceptSession = useCallback(
+    (session, { role: knownRole = null, redirectTo = null } = {}) => {
+      if (!session?.user?.id || isAccountDeleted()) return;
+
+      clearAccountDeleted();
+      clearPreviewMode();
+      setIsPreviewMode(false);
+      loginInFlightRef.current = true;
+
+      try {
+        const role = normalizeRole(knownRole) ?? knownRole ?? null;
+        userIdRef.current = session.user.id;
+        setSession(session);
+        setUser(session.user);
+
+        if (role) {
+          roleRef.current = role;
+          setRole(role);
+          const setupCompleteGuess =
+            role === ROLES.ADMIN ||
+            (typeof redirectTo === 'string' && !redirectTo.startsWith('/setup/'));
+          setSetupComplete(setupCompleteGuess);
+          writeAuthResumeCache({
+            userId: session.user.id,
+            role,
+            setupComplete: setupCompleteGuess,
+          });
+        }
+
+        setHydrating(false);
+        setLoading(false);
+        void hydrateUser(session);
+      } finally {
+        loginInFlightRef.current = false;
+      }
+    },
+    [hydrateUser],
+  );
 
   const resendVerificationEmail = useCallback(async (email) => {
     return authService.resendVerificationEmail(email);
@@ -693,15 +893,19 @@ export function AuthProvider({ children }) {
       isPreviewMode,
       emailVerified,
       isAuthenticated:
-        (Boolean(session?.user) && emailVerified) || isPreviewActive(isPreviewMode),
+        (!isAccountDeleted() && Boolean(session?.user) && emailVerified) ||
+        isPreviewActive(isPreviewMode),
       login,
       register,
       logout,
+      finalizeAccountDeletion,
+      clearAuthAfterOAuthRejection,
       enterPreviewMode,
       enterPreviewModeAsRole,
       setPreviewRole,
       refreshSetupStatus,
       refreshAuthState,
+      acceptSession,
       resendVerificationEmail,
       getHomePath,
       setSetupComplete,
@@ -718,11 +922,14 @@ export function AuthProvider({ children }) {
       login,
       register,
       logout,
+      finalizeAccountDeletion,
+      clearAuthAfterOAuthRejection,
       enterPreviewMode,
       enterPreviewModeAsRole,
       setPreviewRole,
       refreshSetupStatus,
       refreshAuthState,
+      acceptSession,
       resendVerificationEmail,
       getHomePath,
     ],

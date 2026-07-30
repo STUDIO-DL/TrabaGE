@@ -40,7 +40,7 @@ import { getErrorMessage } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
 const fieldClassName =
-  'h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base text-body-small text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
+  'h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base text-base text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
 
 const AUTH_ALERT_ERROR =
   'rounded-radius-md border border-error-200 bg-error-50 px-space-md py-space-sm text-body-small text-error-700 whitespace-pre-wrap break-words';
@@ -180,12 +180,13 @@ export default function Register() {
   const {
     register,
     user,
+    session,
     isAuthenticated,
     isPreviewMode,
     role,
     getHomePath,
     loading: authLoading,
-    refreshAuthState,
+    acceptSession,
   } = useAuth();
   const fromOAuth = location.state?.fromOAuth === true;
   const oauthCompletion = fromOAuth && isAuthenticated && Boolean(user?.id);
@@ -197,7 +198,12 @@ export default function Register() {
   );
   // Type-specific values (name, sector, institution type) keyed by field key so
   // the three account types share a single, config-driven code path.
-  const [typeValues, setTypeValues] = useState({});
+  const [typeValues, setTypeValues] = useState(() => {
+    const initial = {};
+    const fullName = String(location.state?.fullName || '').trim();
+    if (fullName) initial.fullName = fullName;
+    return initial;
+  });
   // Common fields — preserved across account-type switches.
   const [email, setEmail] = useState(() => location.state?.email || '');
   const [password, setPassword] = useState('');
@@ -216,7 +222,15 @@ export default function Register() {
     if (location.state?.accountKind && isValidAccountKind(location.state.accountKind)) {
       setAccountKind(location.state.accountKind);
     }
-  }, [location.state?.accountKind]);
+    const fullName = String(location.state?.fullName || '').trim();
+    if (fullName) {
+      setTypeValues((prev) => ({ ...prev, fullName }));
+    }
+    const prefillEmail = String(location.state?.email || '').trim();
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+    }
+  }, [location.state?.accountKind, location.state?.fullName, location.state?.email]);
 
   const setTypeValue = (key, value) => {
     setTypeValues((prev) => ({ ...prev, [key]: value }));
@@ -279,7 +293,7 @@ export default function Register() {
 
     authService.rememberPendingAccountType(accountKind);
 
-    const { error: flowError, needsAccountTypeSelection, redirectTo } =
+    const { error: flowError, needsAccountTypeSelection, redirectTo, role: flowRole } =
       await completePostAuthFlow(user);
 
     if (flowError) {
@@ -294,8 +308,10 @@ export default function Register() {
       return;
     }
 
-    await queueWelcomeEmailOnRegistrationComplete();
-    await refreshAuthState();
+    void queueWelcomeEmailOnRegistrationComplete();
+    if (session?.user?.id) {
+      acceptSession(session, { role: flowRole, redirectTo });
+    }
     navigate(redirectTo || '/', { replace: true });
     setLoading(false);
   };

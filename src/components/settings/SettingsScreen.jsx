@@ -36,6 +36,7 @@ import { getDisplayName } from '../../utils/displayIdentity';
 import { authService } from '../../services/auth.service';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { clearAccountDeleted, markAccountDeleted } from '../../utils/accountDeletion';
 import UsernameEditModal from './UsernameEditModal';
 
 const SETTINGS_AVATAR_SIZE_CLASS = 'h-[7.5rem] w-[7.5rem]'; // matches AppAvatar size="2xl"
@@ -157,7 +158,7 @@ function AccountSummaryCard({ email, profile, loading, isCompany, accountType, u
 }
 
 export default function SettingsScreen({ accountType }) {
-  const { user, logout, role, isPreviewMode } = useAuth();
+  const { user, finalizeAccountDeletion, logout, role, isPreviewMode } = useAuth();
   const { profile, loading: profileLoading, refetch } = useProfile();
   const { showToast } = useNotificationContext();
   const navigate = useNavigate();
@@ -210,18 +211,24 @@ export default function SettingsScreen({ accountType }) {
     }
 
     setDeleteLoading(true);
-    const { error } = await authService.deleteAccount();
-    setDeleteLoading(false);
+    markAccountDeleted();
+    try {
+      const { error } = await authService.deleteAccount();
+      if (error) {
+        clearAccountDeleted();
+        showToast(getSupabaseErrorMessage(error, 'No se pudo eliminar la cuenta.'), 'error');
+        return;
+      }
 
-    if (error) {
-      showToast(getSupabaseErrorMessage(error, 'No se pudo eliminar la cuenta.'), 'error');
-      return;
+      setDeleteOpen(false);
+      await finalizeAccountDeletion();
+      navigate('/login', { replace: true, state: { accountDeleted: true } });
+    } catch {
+      clearAccountDeleted();
+      showToast('No se pudo eliminar la cuenta. Inténtalo de nuevo.', 'error');
+    } finally {
+      setDeleteLoading(false);
     }
-
-    showToast('Cuenta eliminada.', 'success');
-    setDeleteOpen(false);
-    await logout();
-    navigate('/login', { replace: true });
   };
 
   return (

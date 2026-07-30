@@ -45,7 +45,7 @@ export default defineConfig({
           'robots.txt',
           'sitemap.xml',
           'favicon.ico',
-          'assets/**/*.{js,css,png,svg,ico}',
+          'assets/*.css',
           'icons/*.png',
         ],
         globIgnores: ['**/OneSignalSDKWorker.js', '**/OneSignalSDKUpdaterWorker.js'],
@@ -56,6 +56,16 @@ export default defineConfig({
             options: {
               cacheName: 'trabage-icons',
               expiration: { maxEntries: 40, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+          {
+            // Hashed route chunks: cache on demand instead of precaching every lazy route.
+            urlPattern: ({ request, url }) =>
+              request.destination === 'script' && url.pathname.startsWith('/assets/'),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'trabage-js-assets',
+              expiration: { maxEntries: 64, maxAgeSeconds: 60 * 60 * 24 * 7 },
             },
           },
         ],

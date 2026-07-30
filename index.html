@@ -2,8 +2,21 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+    <!--
+      Viewport: responsive + PWA safe-areas.
+      Accidental zoom is handled via 16px form controls + touch-action +
+      maximum-scale only on touch/standalone (desktop keeps full zoom for a11y).
+    -->
+    <meta
+      id="trabage-viewport"
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+    />
     <meta name="theme-color" content="#2563EB" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
     <meta
       name="description"
       content="TrabaGE — Donde las oportunidades te encuentran. Plataforma de empleo y networking profesional para Guinea Ecuatorial. Diseñada y desarrollada por ZARREL TECH (zarrel.org)."
@@ -49,6 +62,22 @@
           document.documentElement.style.colorScheme = theme;
           const meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', theme === 'dark' ? '#0F172A' : '#2563EB');
+
+          // App-like scale on touch / installed PWA. Desktop keeps pinch-zoom.
+          const standalone =
+            window.matchMedia('(display-mode: standalone)').matches ||
+            window.navigator.standalone === true;
+          const coarseTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+          if (standalone || coarseTouch) {
+            const viewport = document.getElementById('trabage-viewport');
+            if (viewport) {
+              viewport.setAttribute(
+                'content',
+                'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
+              );
+            }
+            document.documentElement.dataset.appShell = '1';
+          }
         } catch {
           document.documentElement.dataset.theme = 'light';
         }

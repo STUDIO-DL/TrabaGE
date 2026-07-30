@@ -121,7 +121,7 @@ export default function AutocompleteInput({
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
         className={[
-          'w-full rounded-xl border bg-white px-4 py-2.5 text-sm outline-none transition-colors',
+          'w-full rounded-xl border bg-white px-4 py-2.5 text-base outline-none transition-colors',
           'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
           'border-gray-200',
           inputClassName,

@@ -30,7 +30,7 @@ export default function MessageSearchField({
         autoFocus={autoFocus}
         autoComplete="off"
         enterKeyHint="search"
-        className="h-10 w-full rounded-radius-md border border-app-border bg-app-card py-2 pl-9 pr-9 text-body-small text-app-text outline-none placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+        className="h-10 w-full rounded-radius-md border border-app-border bg-app-card py-2 pl-9 pr-9 text-base text-app-text outline-none placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
       />
       {value && onClear ? (
         <button

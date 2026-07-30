@@ -285,7 +285,7 @@ export default function AdminEmployerList({ accountRole, title, description }) {
               setStatusFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-base text-app-text"
           >
             <option value="all">Todos</option>
             <option value="active">Activos</option>
@@ -300,7 +300,7 @@ export default function AdminEmployerList({ accountRole, title, description }) {
               setVerifiedFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-base text-app-text"
           >
             <option value="all">Todas</option>
             <option value="verified">Verificadas</option>

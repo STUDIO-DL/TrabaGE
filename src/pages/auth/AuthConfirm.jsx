@@ -23,7 +23,7 @@ function readPendingVerificationEmail() {
 
 export default function AuthConfirm() {
   const navigate = useNavigate();
-  const { refreshAuthState } = useAuth();
+  const { acceptSession, refreshAuthState } = useAuth();
   const [status, setStatus] = useState('loading');
   const [error, setError] = useState('');
   const [pendingEmail, setPendingEmail] = useState(readPendingVerificationEmail);
@@ -38,7 +38,7 @@ export default function AuthConfirm() {
       setStatus('success');
       redirectTimer = window.setTimeout(() => {
         navigate(redirectTo || '/', { replace: true });
-      }, wasAlreadyVerified ? 600 : 1200);
+      }, wasAlreadyVerified ? 250 : 400);
     };
 
     const confirm = async () => {
@@ -62,10 +62,10 @@ export default function AuthConfirm() {
         return;
       }
 
-      await refreshAuthState();
-
       const user = data?.user ?? data?.session?.user;
-      const { error: flowError, needsAccountTypeSelection, redirectTo } =
+      const session = data?.session ?? null;
+
+      const { error: flowError, needsAccountTypeSelection, redirectTo, role } =
         await completePostAuthFlow(user, { preferProfile: true });
 
       if (cancelled) return;
@@ -82,10 +82,15 @@ export default function AuthConfirm() {
       }
 
       if (!wasAlreadyVerified) {
-        await queueWelcomeEmailOnRegistrationComplete();
+        void queueWelcomeEmailOnRegistrationComplete();
       }
 
-      await refreshAuthState();
+      if (session?.user?.id) {
+        acceptSession(session, { role, redirectTo });
+      } else {
+        void refreshAuthState();
+      }
+
       await finishSuccess(redirectTo, wasAlreadyVerified);
     };
 
@@ -95,7 +100,7 @@ export default function AuthConfirm() {
       cancelled = true;
       if (redirectTimer) window.clearTimeout(redirectTimer);
     };
-  }, [navigate, refreshAuthState]);
+  }, [acceptSession, navigate, refreshAuthState]);
 
   const isExpired = isExpiredVerificationUserMessage(error);
   const resendEmail = pendingEmail;

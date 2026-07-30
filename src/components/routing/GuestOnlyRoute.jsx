@@ -36,10 +36,11 @@ export default function GuestOnlyRoute() {
     const home = getHomePath();
     if (home) return <Navigate to={home} replace />;
 
-    // Session without role yet — keep loading; only after timeout finish setup.
+    // Session without role yet — keep loading. After timeout, return to login
+    // (never force /register: admins and existing users must not land on signup).
     if (!role) {
       if (!roleWaitExpired) return <AuthLoadingScreen />;
-      return <Navigate to="/register" replace state={{ resumeAccountSetup: true }} />;
+      return <Navigate to="/login" replace state={{ roleResolveFailed: true }} />;
     }
   }
 

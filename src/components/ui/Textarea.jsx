@@ -13,7 +13,7 @@ export default function Textarea({ label, error, hint, className = '', id, rows 
         id={inputId}
         rows={rows}
         className={[
-          'min-h-[2.5rem] w-full resize-y rounded-radius-md border bg-app-card px-space-md py-space-sm text-body-small text-app-text outline-none',
+          'min-h-[2.5rem] w-full resize-y rounded-radius-md border bg-app-card px-space-md py-space-sm text-base text-app-text outline-none',
           'transition-colors duration-fast ease-out placeholder:text-app-subtle placeholder:opacity-80',
           'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
           'disabled:cursor-not-allowed disabled:bg-app-disabled disabled:text-app-text-disabled',

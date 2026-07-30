@@ -5,6 +5,7 @@ import { companyService } from '../services/company.service';
 import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewApplicantProfile, getPreviewProfile, PREVIEW_USER } from '../constants/preview';
 import { getProfileQueryKey } from '../constants/profileQueryKeys';
+import { isAccountDeleted } from '../utils/accountDeletion';
 
 async function fetchProfileForKey(targetId, { role, userId, currentUserId }) {
   const isCandidate = userId ? true : !isEmployerRole(role);
@@ -42,7 +43,7 @@ export function useProfile(userId) {
 
   const query = useQuery({
     queryKey: queryKey ?? ['profile', 'disabled'],
-    enabled: Boolean(queryKey) && Boolean(targetId) && !isPreviewMode,
+    enabled: Boolean(queryKey) && Boolean(targetId) && !isPreviewMode && !isAccountDeleted(),
     // Always re-read full profile (with education/experience/…) on mount so a
     // base-only cache entry from auth hydrate cannot hide persisted sections.
     refetchOnMount: 'always',

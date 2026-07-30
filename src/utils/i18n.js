@@ -28,7 +28,10 @@ const MESSAGES = {
       googleLoginNoAccount:
         'No existe ninguna cuenta asociada a este correo electrónico.\n\nSi todavía no tienes una cuenta en TrabaGE, pulsa Crear cuenta para registrarte.',
       authIncomplete: 'No se pudo completar la autenticación. Inténtalo de nuevo.',
-      passwordSaveFailed: 'No se pudo guardar la contraseña.',
+      passwordSaveFailed: 'No hemos podido actualizar tu contraseña. Inténtalo de nuevo.',
+      passwordUpdated: 'Tu contraseña se ha actualizado correctamente.',
+      reauthenticationNeeded:
+        'Por seguridad, vuelve a iniciar sesión e intenta cambiar la contraseña de nuevo.',
       registerFailed: 'No se pudo completar el registro. Inténtalo de nuevo.',
       selectAccountType: 'Selecciona un tipo de cuenta.',
       enterEmail: 'Introduce tu correo electrónico.',
@@ -70,12 +73,15 @@ const MESSAGES = {
       userBanned: 'This account is not available. Contact support if you believe this is a mistake.',
       sessionExpired: 'Your session has expired. Please sign in again.',
       smtpError: 'Could not send the email at this time. Please try again later.',
-      unexpected: 'An unexpected error occurred. Please try again later.',
-      googleLoginNoAccountTitle: 'We could not find an account',
+      unexpected: 'We could not complete this action. Please try again.',
+      googleLoginNoAccountTitle: 'No encontramos una cuenta',
       googleLoginNoAccount:
-        'There is no account linked to this email address.\n\nIf you do not have a TrabaGE account yet, tap Create account to register.',
+        'No existe ninguna cuenta asociada a este correo electrónico.\n\nSi todavía no tienes una cuenta en TrabaGE, pulsa Crear cuenta para registrarte.',
       authIncomplete: 'Could not complete authentication. Please try again.',
-      passwordSaveFailed: 'Could not save the password.',
+      passwordSaveFailed: 'We could not update your password. Please try again.',
+      passwordUpdated: 'Your password has been updated successfully.',
+      reauthenticationNeeded:
+        'For security, please sign in again and then try changing your password.',
       registerFailed: 'Could not complete registration. Please try again.',
       selectAccountType: 'Select an account type.',
       enterEmail: 'Enter your email address.',

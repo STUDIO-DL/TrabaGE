@@ -57,7 +57,7 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             rows={5}
-            className="w-full resize-y rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-700 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+            className="w-full resize-y rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-700 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
             placeholder="Cuéntanos sobre ti…"
           />
           <div className="flex gap-2">

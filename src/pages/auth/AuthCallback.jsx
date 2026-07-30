@@ -3,23 +3,24 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../config/supabase';
 import { AUTH_CONFIRM_PATH } from '../../constants/authUrls';
 import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
+import GoogleAccountMissingDialog from '../../components/auth/GoogleAccountMissingDialog';
 import { clearPreviewMode } from '../../constants/preview';
 import {
   authService,
   consumeOAuthIntent,
   discardUnregisteredOAuthSession,
-  getGoogleLoginNoAccountMessage,
-  isRegisteredTrabaGEAccount,
+  isLikelyUnregisteredGoogleLogin,
   OAUTH_INTENTS,
 } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
 import { queueWelcomeEmailOnRegistrationComplete } from '../../services/welcomeEmail.service';
-import { mapAuthError, isExpiredVerificationUserMessage } from '../../utils/errors';
+import { mapAuthError, isExpiredVerificationUserMessage, isOAuthCancelledError } from '../../utils/errors';
 import { getErrorMessage } from '../../utils/i18n';
+import { extractGoogleProfile } from '../../utils/googleProfile';
 import { useAuth } from '../../hooks/useAuth';
 
-const MAX_ATTEMPTS = 30;
-const RETRY_MS = 300;
+const MAX_ATTEMPTS = 8;
+const RETRY_MS = 120;
 
 function isEmailVerificationFlow(queryParams, hashParams) {
   const type = queryParams.get('type') || hashParams.get('type');
@@ -36,11 +37,27 @@ function isExpiredLinkError(message) {
   );
 }
 
+async function rejectUnregisteredGoogleLogin(session, clearAuthAfterOAuthRejection) {
+  const googleProfile = extractGoogleProfile(session.user);
+  const googleEmail = googleProfile.email || String(session.user?.email || '').trim() || null;
+
+  void (async () => {
+    await discardUnregisteredOAuthSession(session.user);
+    await clearAuthAfterOAuthRejection();
+  })();
+
+  return {
+    email: googleEmail,
+    fullName: googleProfile.full_name,
+  };
+}
+
 export default function AuthCallback() {
   const navigate = useNavigate();
-  const { refreshAuthState, logout } = useAuth();
+  const { refreshAuthState, acceptSession, clearAuthAfterOAuthRejection } = useAuth();
   const [error, setError] = useState('');
   const [errorEmail, setErrorEmail] = useState('');
+  const [googleMissing, setGoogleMissing] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +76,6 @@ export default function AuthCallback() {
       const tokenHash = queryParams.get('token_hash') || hashParams.get('token_hash');
       const authCode = queryParams.get('code');
 
-      // Email verification links must use /auth/confirm (single handler).
       if (emailVerification && (tokenHash || authCode) && !oauthError) {
         navigate(`${AUTH_CONFIRM_PATH}${window.location.search}${window.location.hash}`, {
           replace: true,
@@ -69,6 +85,10 @@ export default function AuthCallback() {
 
       if (oauthError) {
         const decoded = decodeURIComponent(oauthError.replace(/\+/g, ' '));
+        if (isOAuthCancelledError(decoded)) {
+          navigate('/login', { replace: true });
+          return;
+        }
         if (isExpiredLinkError(decoded)) {
           setError(getErrorMessage('expiredVerificationLink'));
         } else {
@@ -77,11 +97,16 @@ export default function AuthCallback() {
         return;
       }
 
-      // PKCE: exchange code explicitly if detectSessionInUrl has not finished yet.
       if (authCode) {
+        // detectSessionInUrl may already have exchanged this PKCE code.
+        // A second exchange fails with a generic error — only abort if no session.
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(authCode);
-        if (exchangeError) {
-          // Already exchanged by detectSessionInUrl, or invalid — poll session next.
+        if (exchangeError && !isOAuthCancelledError(exchangeError)) {
+          const { data: existing } = await authService.getSession();
+          if (!existing?.session) {
+            setError(mapAuthError(exchangeError));
+            return;
+          }
         }
       }
 
@@ -89,77 +114,79 @@ export default function AuthCallback() {
         if (!session?.user?.id || cancelled || resolved) return false;
         resolved = true;
 
-        if (isPasswordRecovery || event === 'PASSWORD_RECOVERY') {
-          await refreshAuthState();
-          if (cancelled) return true;
-          navigate('/auth/set-password', { replace: true, state: { passwordRecovery: true } });
-          return true;
-        }
-
-        const oauthIntent = consumeOAuthIntent();
-
-        if (oauthIntent === OAUTH_INTENTS.LOGIN) {
-          const registered = await isRegisteredTrabaGEAccount(session.user);
-          if (!registered) {
-            const googleEmail = String(session.user?.email || '').trim() || null;
-            await discardUnregisteredOAuthSession(session.user);
-            await logout();
+        try {
+          if (isPasswordRecovery || event === 'PASSWORD_RECOVERY') {
+            await refreshAuthState();
             if (cancelled) return true;
-            navigate('/login', {
-              replace: true,
-              state: {
-                googleAccountMissing: true,
-                googleAccountMissingMessage: getGoogleLoginNoAccountMessage(),
-                googleAccountMissingEmail: googleEmail,
-              },
-            });
+            navigate('/auth/set-password', { replace: true, state: { passwordRecovery: true } });
             return true;
           }
-        }
 
-        const {
-          error: flowError,
-          needsAccountTypeSelection,
-          redirectTo,
-        } = await completePostAuthFlow(session.user);
+          const oauthIntent = consumeOAuthIntent();
+          const isGoogleLogin = oauthIntent === OAUTH_INTENTS.LOGIN;
+          const isGoogleSignup = oauthIntent === OAUTH_INTENTS.SIGNUP;
 
-        if (flowError) {
-          setError(mapAuthError(flowError));
-          if (emailVerification && session.user.email) {
-            setErrorEmail(session.user.email);
+          // Reject brand-new Google LOGIN orphans immediately (no DB round-trip).
+          if (isGoogleLogin && isLikelyUnregisteredGoogleLogin(session.user)) {
+            const missing = await rejectUnregisteredGoogleLogin(
+              session,
+              clearAuthAfterOAuthRejection,
+            );
+            if (cancelled) return true;
+            setGoogleMissing(missing);
+            return true;
           }
-          return true;
-        }
 
-        if (needsAccountTypeSelection) {
+          const {
+            error: flowError,
+            needsAccountTypeSelection,
+            role: flowRole,
+            redirectTo,
+          } = await completePostAuthFlow(session.user, {
+            preferProfile: isGoogleSignup,
+            // Returning Google LOGIN: skip bootstrap; hydrate finishes in background.
+            fastLogin: isGoogleLogin,
+          });
+
+          if (flowError) {
+            setError(mapAuthError(flowError));
+            if (emailVerification && session.user.email) {
+              setErrorEmail(session.user.email);
+            }
+            return true;
+          }
+
+          if (needsAccountTypeSelection) {
+            if (cancelled) return true;
+            if (isGoogleLogin) {
+              const missing = await rejectUnregisteredGoogleLogin(
+                session,
+                clearAuthAfterOAuthRejection,
+              );
+              if (cancelled) return true;
+              setGoogleMissing(missing);
+              return true;
+            }
+            navigate('/register', { replace: true, state: { fromOAuth: true } });
+            return true;
+          }
+
+          // Welcome email ONLY after Google SIGNUP — never block navigation.
+          if (isGoogleSignup) {
+            void queueWelcomeEmailOnRegistrationComplete();
+          }
+
+          // Seed auth + navigate immediately; full hydrate runs in background.
+          acceptSession(session, { role: flowRole, redirectTo });
+
           if (cancelled) return true;
-          if (oauthIntent === OAUTH_INTENTS.LOGIN) {
-            const googleEmail = String(session.user?.email || '').trim() || null;
-            await discardUnregisteredOAuthSession(session.user);
-            await logout();
-            navigate('/login', {
-              replace: true,
-              state: {
-                googleAccountMissing: true,
-                googleAccountMissingMessage: getGoogleLoginNoAccountMessage(),
-                googleAccountMissingEmail: googleEmail,
-              },
-            });
-            return true;
-          }
-          navigate('/register', { replace: true, state: { fromOAuth: true } });
+          navigate(redirectTo || '/', { replace: true });
+          return true;
+        } catch (err) {
+          if (cancelled) return true;
+          setError(mapAuthError(err));
           return true;
         }
-
-        if (oauthIntent === OAUTH_INTENTS.SIGNUP) {
-          await queueWelcomeEmailOnRegistrationComplete();
-        }
-
-        await refreshAuthState();
-
-        if (cancelled) return true;
-        navigate(redirectTo || '/', { replace: true });
-        return true;
       };
 
       const {
@@ -212,7 +239,29 @@ export default function AuthCallback() {
     return () => {
       cancelled = true;
     };
-  }, [navigate, refreshAuthState, logout]);
+  }, [navigate, refreshAuthState, acceptSession, clearAuthAfterOAuthRejection]);
+
+  if (googleMissing) {
+    return (
+      <div className="relative min-h-dvh w-full bg-gradient-to-b from-primary-50 via-app-card to-primary-50">
+        <GoogleAccountMissingDialog
+          isOpen
+          onClose={() => navigate('/login', { replace: true })}
+          onCreateAccount={() =>
+            navigate('/register', {
+              replace: true,
+              state: {
+                email: googleMissing.email || undefined,
+                fullName: googleMissing.fullName || undefined,
+                // Do not force account type — user must choose Profesional/Empresa/Organización.
+                fromGoogleLoginMissing: true,
+              },
+            })
+          }
+        />
+      </div>
+    );
+  }
 
   if (error) {
     const isExpired = isExpiredVerificationUserMessage(error);

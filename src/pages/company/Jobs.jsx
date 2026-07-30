@@ -101,7 +101,7 @@ export default function CompanyJobs() {
     runJobAction(job, () => jobsService.updateJobStatus(job.id, status)).then(async (result) => {
       if (result?.error) return;
       if (status === 'active' && job.status !== 'active') {
-        await jobsService.notifyJobPublished(result.data);
+        void jobsService.notifyJobPublished(result.data);
       }
       showToast(message, 'success');
     });

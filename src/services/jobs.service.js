@@ -43,7 +43,9 @@ export const jobsService = {
   getActiveJobs: async (filters = {}) => {
     let query = supabase
       .from('jobs')
-      .select('*, company_profiles!inner(company_name, logo_path, verified_status, is_verified, verification_status, sector, country)')
+      .select(
+        'id, title, role, description, city, country, job_type, work_mode, salary, salary_negotiable, status, created_at, company_id, application_deadline, company_profiles!inner(company_name, logo_path, verified_status, is_verified, verification_status, sector, country)',
+      )
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
@@ -52,6 +54,12 @@ export const jobsService = {
     if (filters.workMode) query = query.eq('work_mode', filters.workMode);
     if (filters.sector) query = query.eq('company_profiles.sector', filters.sector);
     if (filters.dateFrom) query = query.gte('created_at', filters.dateFrom);
+
+    if (filters.limit != null) {
+      const limit = Math.min(Math.max(Number(filters.limit) || 40, 1), 100);
+      const offset = Math.max(Number(filters.offset) || 0, 0);
+      query = query.range(offset, offset + limit - 1);
+    }
 
     const result = await query;
     if (!filters.salaryMin) return result;
@@ -90,13 +98,22 @@ export const jobsService = {
     return { ...result, error: mapJobError(result.error) };
   },
 
-  getCompanyJobs: async (companyId) => {
-    const result = await supabase
+  getCompanyJobs: async (companyId, options = {}) => {
+    let query = supabase
       .from('jobs')
-      .select('*, applications_count:applications(count)')
+      .select(
+        'id, title, role, description, city, country, job_type, work_mode, salary, salary_negotiable, status, created_at, company_id, application_deadline, applications_count:applications(count)',
+      )
       .eq('company_id', companyId)
       .order('created_at', { ascending: false });
 
+    if (options.limit != null) {
+      const safeLimit = Math.min(Math.max(Number(options.limit) || 50, 1), 100);
+      const safeOffset = Math.max(Number(options.offset) || 0, 0);
+      query = query.range(safeOffset, safeOffset + safeLimit - 1);
+    }
+
+    const result = await query;
     return { ...result, data: normalizeJobRows(result.data) };
   },
 

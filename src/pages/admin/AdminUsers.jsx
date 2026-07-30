@@ -252,7 +252,7 @@ export default function AdminUsers() {
               setRoleFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-base text-app-text"
           >
             <option value="all">Todos</option>
             <option value="personal">Personal</option>
@@ -268,7 +268,7 @@ export default function AdminUsers() {
               setStatusFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-base text-app-text"
           >
             <option value="all">Todos</option>
             <option value="active">Activos</option>

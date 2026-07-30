@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 
 import Button from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
+import PasswordInput from '../../components/ui/PasswordInput';
 import MobileScreenLayout from '../../components/layout/MobileScreenLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
-import { mapAuthError } from '../../utils/errors';
+import { formatAuthErrorDetail, mapAuthError } from '../../utils/errors';
 import { getErrorMessage, t } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 import { isSafeInternalPath } from '../../utils/safeNavigation';
+import { reportError } from '../../utils/logger';
 
 export default function SetPassword() {
   const navigate = useNavigate();
@@ -20,7 +21,9 @@ export default function SetPassword() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const submitLockRef = useRef(false);
 
   const rawRedirect = location.state?.redirectTo || getHomePath() || '/';
   const redirectTo = isSafeInternalPath(rawRedirect) ? rawRedirect : getHomePath() || '/';
@@ -32,8 +35,9 @@ export default function SetPassword() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitLockRef.current || loading) return;
 
-    if (requiresCurrentPassword && !currentPassword.trim()) {
+    if (requiresCurrentPassword && !currentPassword) {
       setError(getErrorMessage('enterCurrentPassword'));
       return;
     }
@@ -44,7 +48,7 @@ export default function SetPassword() {
       return;
     }
 
-    if (currentPassword && currentPassword === newPassword) {
+    if (requiresCurrentPassword && currentPassword === newPassword) {
       setError(getErrorMessage('passwordMustDiffer'));
       return;
     }
@@ -59,19 +63,34 @@ export default function SetPassword() {
       return;
     }
 
+    submitLockRef.current = true;
     setLoading(true);
     setError('');
+    setSuccess('');
 
-    const { error: passwordError } = requiresCurrentPassword
-      ? await authService.changePasswordWithCurrent(user.email, currentPassword, newPassword)
-      : await authService.setPassword(newPassword);
-    if (passwordError) {
-      setError(mapAuthError(passwordError) || getErrorMessage('passwordSaveFailed'));
+    try {
+      const { error: passwordError } = requiresCurrentPassword
+        ? await authService.changePasswordWithCurrent(user.email, currentPassword, newPassword)
+        : await authService.setPassword(newPassword);
+
+      if (passwordError) {
+        reportError(passwordError, {
+          area: 'set_password',
+          detail: formatAuthErrorDetail(passwordError),
+          recovery: !requiresCurrentPassword,
+        });
+        setError(mapAuthError(passwordError) || getErrorMessage('passwordSaveFailed'));
+        return;
+      }
+
+      setSuccess(getErrorMessage('passwordUpdated'));
+      window.setTimeout(() => {
+        navigate(redirectTo, { replace: true });
+      }, 900);
+    } finally {
       setLoading(false);
-      return;
+      submitLockRef.current = false;
     }
-
-    navigate(redirectTo, { replace: true });
   };
 
   return (
@@ -92,15 +111,25 @@ export default function SetPassword() {
       contentClassName="px-md pb-sm"
       footer={
         <div className="space-y-sm">
-          {error ? <p className="text-small text-red-600">{error}</p> : null}
+          {error ? (
+            <p role="alert" className="text-small text-red-600">
+              {error}
+            </p>
+          ) : null}
+          {success ? (
+            <p role="status" className="text-small text-green-700">
+              {success}
+            </p>
+          ) : null}
           <Button
             type="submit"
             form="set-password-form"
             fullWidth
             loading={loading}
+            disabled={loading || Boolean(success)}
             className="btn-primary-mobile !rounded-btn-primary !py-0"
           >
-            Guardar contraseña
+            {loading ? 'Guardando...' : 'Guardar contraseña'}
           </Button>
         </div>
       }
@@ -108,29 +137,27 @@ export default function SetPassword() {
     >
       <form id="set-password-form" onSubmit={handleSubmit} className="mt-sm space-y-sm">
         {requiresCurrentPassword ? (
-          <Input
+          <PasswordInput
+            id="current-password"
             label="Contraseña actual"
-            type="password"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
             autoComplete="current-password"
             required
           />
         ) : null}
-        <Input
+        <PasswordInput
+          id="new-password"
           label="Contraseña nueva"
-          type="password"
           value={newPassword}
           onChange={(event) => setNewPassword(event.target.value)}
           autoComplete="new-password"
           required
         />
-        <p className="text-caption text-app-muted">
-          {t('auth.passwordHint')}
-        </p>
-        <Input
+        <p className="text-caption text-app-muted">{t('auth.passwordHint')}</p>
+        <PasswordInput
+          id="confirm-new-password"
           label="Confirmar contraseña nueva"
-          type="password"
           value={confirmNewPassword}
           onChange={(event) => setConfirmNewPassword(event.target.value)}
           autoComplete="new-password"

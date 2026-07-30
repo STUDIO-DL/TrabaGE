@@ -17,7 +17,12 @@ import {
   ROLES,
 } from '../constants/roles';
 import { getErrorMessage } from '../utils/i18n';
+import {
+  GOOGLE_NO_ACCOUNT_MESSAGE,
+  GOOGLE_NO_ACCOUNT_TITLE,
+} from '../constants/googleAuth';
 import { reportError } from '../utils/logger';
+import { clearOneSignalUserId, isOneSignalConfigured } from '../config/onesignal';
 import {
   clearSignupInflight,
   isPendingSignupEmail,
@@ -248,11 +253,11 @@ export const OAUTH_INTENTS = {
 };
 
 export function getGoogleLoginNoAccountMessage() {
-  return getErrorMessage('googleLoginNoAccount');
+  return GOOGLE_NO_ACCOUNT_MESSAGE;
 }
 
 export function getGoogleLoginNoAccountTitle() {
-  return getErrorMessage('googleLoginNoAccountTitle');
+  return GOOGLE_NO_ACCOUNT_TITLE;
 }
 
 export function getEmailNotVerifiedMessage() {
@@ -576,6 +581,9 @@ async function getExistingProfileRole(userId) {
       .maybeSingle(),
   ]);
 
+  if (candidateProfile.error) throw candidateProfile.error;
+  if (companyProfile.error) throw companyProfile.error;
+
   if (companyProfile.data?.user_id) {
     return isOrganizationCompanyType(companyProfile.data.company_type)
       ? ROLES.ORGANIZATION
@@ -605,7 +613,18 @@ export function isBrandNewAuthUser(user) {
 
   if (Number.isNaN(lastSignInAt)) return false;
 
+  // created_at ≈ last_sign_in_at → first session for this auth user.
   return Math.abs(lastSignInAt - createdAt) < FIRST_SIGNIN_WINDOW_MS;
+}
+
+/** Sync gate for Google LOGIN orphans — no network. */
+export function isLikelyUnregisteredGoogleLogin(user) {
+  return (
+    Boolean(user?.id) &&
+    isBrandNewAuthUser(user) &&
+    isGoogleOnlyIdentity(user) &&
+    !hasSignupMetadata(user)
+  );
 }
 
 /**
@@ -613,38 +632,40 @@ export function isBrandNewAuthUser(user) {
  * has signup metadata, confirmed email from a non-Google-only identity, or is
  * a returning auth user with a role. Pure Google OAuth always sets
  * email_confirmed_at — that alone is NOT a TrabaGE account (LOGIN without signup).
+ *
+ * @param {object} [options]
+ * @param {boolean} [options.loginIntent] — skip DB when clearly a fresh Google LOGIN orphan.
  */
-export async function isRegisteredTrabaGEAccount(user) {
+export async function isRegisteredTrabaGEAccount(user, options = {}) {
   if (!user?.id) return false;
 
-  const profileRole = await getExistingProfileRole(user.id);
+  const { loginIntent = false } = options;
+
+  if (loginIntent && isLikelyUnregisteredGoogleLogin(user)) {
+    return false;
+  }
+
+  // Role + profiles in parallel (was sequential: profiles then role).
+  const [profileRole, roleResult] = await Promise.all([
+    getExistingProfileRole(user.id),
+    supabase.from('user_roles').select('role').eq('user_id', user.id).maybeSingle(),
+  ]);
+
   if (profileRole) return true;
 
-  // Prior signup form metadata ⇒ real account, even inside the first-minute window.
   if (hasSignupMetadata(user)) return true;
 
-  // Email confirmation from password/email signup (or linked non-Google identity).
-  // Google-only OAuth confirms email automatically — ignore that alone.
   if (user.email_confirmed_at && !isGoogleOnlyIdentity(user)) return true;
 
   const identities = user.identities || [];
   if (identities.length > 1) return true;
 
-  const { data: roleRow, error } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', user.id)
-    .maybeSingle();
+  if (roleResult.error) throw roleResult.error;
 
-  // A read failure must not discard a real OAuth session as "unregistered".
-  if (error) return true;
-
-  const role = normalizeStoredRole(roleRow?.role);
+  const role = normalizeStoredRole(roleResult.data?.role);
   if (role === ROLES.ADMIN) return true;
   if (!role) return false;
 
-  // Accidental Google LOGIN creates a user + default role via trigger. Only
-  // reject when it is clearly a fresh Google-only identity.
   if (isBrandNewAuthUser(user) && isGoogleOnlyIdentity(user)) return false;
 
   return true;
@@ -1067,11 +1088,40 @@ export const authService = {
       return { data: null, error: roleError };
     }
 
-    const profileRole = await getExistingProfileRole(userId);
     const storedRole = normalizeStoredRole(existingRole?.role);
 
-    if (storedRole === ROLES.ADMIN) {
-      return { data: existingRole, error: null };
+    // Admins never go through account-type selection or set_initial_user_role.
+    if (storedRole === ROLES.ADMIN || authoritativeRole === ROLES.ADMIN) {
+      if (storedRole === ROLES.ADMIN) {
+        return { data: { ...existingRole, role: ROLES.ADMIN }, error: null };
+      }
+      return {
+        data: null,
+        error: {
+          message:
+            'Esta cuenta de administrador no tiene el rol asignado en la base de datos. Contacta con soporte.',
+        },
+      };
+    }
+
+    // Returning login: role already stored and no pending type change — skip profile probes.
+    if (storedRole && !authoritativeRole) {
+      return { data: { ...existingRole, role: storedRole }, error: null };
+    }
+
+    if (storedRole && authoritativeRole && storedRole === authoritativeRole) {
+      return { data: { ...existingRole, role: storedRole }, error: null };
+    }
+
+    let profileRole = null;
+    try {
+      profileRole = await getExistingProfileRole(userId);
+    } catch (profileError) {
+      // Profile lookup must not force "create account" when a role already exists.
+      if (storedRole) {
+        return { data: { ...existingRole, role: storedRole }, error: null };
+      }
+      return { data: null, error: profileError };
     }
 
     // Registration form metadata wins over a stale/default DB role (e.g. personal).
@@ -1171,6 +1221,14 @@ export const authService = {
   logout: () => supabase.auth.signOut(),
 
   deleteAccount: async () => {
+    if (isOneSignalConfigured()) {
+      try {
+        await clearOneSignalUserId();
+      } catch {
+        // Continue — account deletion must not fail on push cleanup.
+      }
+    }
+
     const result = await supabase.rpc('delete_own_account', { p_send_goodbye: true });
     if (!result.error) {
       const payload =
@@ -1185,13 +1243,8 @@ export const authService = {
           : result.data;
       const goodbyeToken = payload?.goodbye_token;
       if (goodbyeToken) {
-        // Await briefly so the request starts before the UI signs out.
-        // Never fail deleteAccount on email errors (notify swallows them).
-        // Server-side pg_net/webhook may already be sending in parallel.
-        await Promise.race([
-          notifyAccountGoodbyeBestEffort(goodbyeToken),
-          new Promise((resolve) => setTimeout(resolve, 10000)),
-        ]);
+        // Best-effort backup; server pg_net may already be sending. Never block UI.
+        void notifyAccountGoodbyeBestEffort(goodbyeToken);
       }
     }
     return result;
@@ -1203,26 +1256,68 @@ export const authService = {
     }),
 
   setPassword: async (password) => {
-    const result = await supabase.auth.updateUser({ password: normalizePassword(password) });
+    const result = await supabase.auth.updateUser({ password: String(password ?? '') });
     if (!result.error) {
       void notifyPasswordChangedBestEffort();
     }
     return result;
   },
 
-  changePasswordWithCurrent: async (email, currentPassword, newPassword) => {
-    const loginResult = await supabase.auth.signInWithPassword({
-      email: normalizeEmail(email),
-      password: normalizePassword(currentPassword),
+  /**
+   * Authenticated password change with verification of the current password.
+   * Uses Auth `current_password` (supported by supabase-js ≥2.102) so we do not
+   * rely on a full sign-in round-trip that can race with session listeners.
+   */
+  changePasswordWithCurrent: async (_email, currentPassword, newPassword) => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    const current = String(currentPassword ?? '');
+    const next = String(newPassword ?? '');
+
+    if (!current) {
+      return { data: null, error: { message: 'Enter your current password.', code: 'validation_failed' } };
+    }
+
+    const result = await supabase.auth.updateUser({
+      password: next,
+      current_password: current,
     });
 
-    if (loginResult.error) return loginResult;
-
-    const result = await supabase.auth.updateUser({ password: normalizePassword(newPassword) });
     if (!result.error) {
       void notifyPasswordChangedBestEffort();
+      return result;
     }
-    return result;
+
+    // Fallback for projects/API versions that still reject current_password:
+    // re-authenticate then update.
+    const code = String(result.error?.code || '').toLowerCase();
+    const message = String(result.error?.message || '').toLowerCase();
+    const currentPasswordUnsupported =
+      code === 'validation_failed' &&
+      (message.includes('current_password') || message.includes('unexpected'));
+
+    if (!currentPasswordUnsupported) {
+      return result;
+    }
+
+    const email = String(_email || '').trim().toLowerCase();
+    if (!email) {
+      return result;
+    }
+
+    const loginResult = await supabase.auth.signInWithPassword({
+      email,
+      password: current,
+    });
+    if (loginResult.error) return loginResult;
+
+    const retry = await supabase.auth.updateUser({ password: next });
+    if (!retry.error) {
+      void notifyPasswordChangedBestEffort();
+    }
+    return retry;
   },
 
   getSession: () => {

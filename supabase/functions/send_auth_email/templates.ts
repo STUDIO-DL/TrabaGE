@@ -201,37 +201,51 @@ export function buildRecoveryEmail(recoveryUrl: string): AuthEmailContent {
 }
 
 export function buildPasswordChangedEmail(): AuthEmailContent {
-  const subject = 'Tu contraseña se ha cambiado correctamente';
+  const subject = 'Tu contraseña de TrabaGE ha sido actualizada';
   const supportEmail = 'support@trabage.org';
+  const appUrl = 'https://trabage.org';
 
   const text = [
     'Hola,',
     '',
-    'Te confirmamos que la contraseña de tu cuenta en TrabaGE se ha cambiado correctamente.',
+    'Te confirmamos que la contraseña de tu cuenta de TrabaGE se ha actualizado correctamente.',
     '',
-    'Si has realizado este cambio, no necesitas hacer nada más.',
+    'Te recomendamos mantener tu contraseña segura y no compartirla con nadie. TrabaGE nunca te pedirá que compartas tu contraseña por correo, mensaje o cualquier otro medio.',
     '',
-    'Si no has sido tú quien ha cambiado la contraseña, te recomendamos proteger tu cuenta y ponerte en contacto con el equipo de soporte de TrabaGE lo antes posible.',
+    'Si tú realizaste este cambio, no necesitas hacer nada más.',
+    '',
+    'Si no reconoces este cambio, te recomendamos proteger tu cuenta inmediatamente y ponerte en contacto con el equipo de soporte de TrabaGE.',
     '',
     'Un saludo,',
     '',
     'Equipo TrabaGE',
+    '',
+    'TrabaGE',
+    BRAND_SLOGAN,
+    '',
     supportEmail,
+    appUrl,
   ].join('\n');
 
   const bodyHtml = [
     buildParagraph('Hola,'),
     buildParagraph(
-      'Te confirmamos que la contraseña de tu cuenta en TrabaGE se ha cambiado correctamente.',
+      'Te confirmamos que la contraseña de tu cuenta de TrabaGE se ha actualizado correctamente.',
     ),
-    buildParagraph('Si has realizado este cambio, no necesitas hacer nada más.'),
     buildParagraph(
-      'Si no has sido tú quien ha cambiado la contraseña, te recomendamos proteger tu cuenta y ponerte en contacto con el equipo de soporte de TrabaGE lo antes posible.',
+      'Te recomendamos mantener tu contraseña segura y no compartirla con nadie. TrabaGE nunca te pedirá que compartas tu contraseña por correo, mensaje o cualquier otro medio.',
+    ),
+    buildParagraph('Si tú realizaste este cambio, no necesitas hacer nada más.'),
+    buildParagraph(
+      'Si no reconoces este cambio, te recomendamos proteger tu cuenta inmediatamente y ponerte en contacto con el equipo de soporte de TrabaGE.',
     ),
     buildDivider(),
     buildParagraph('Un saludo,', { marginBottom: '4px' }),
     buildParagraph('Equipo TrabaGE', { marginBottom: '8px' }),
+    buildParagraph('TrabaGE', { marginBottom: '4px' }),
+    buildParagraph(BRAND_SLOGAN, { marginBottom: '8px' }),
     `<p style="margin:0;font-size:16px;line-height:1.65;color:${TEXT_MUTED};"><a href="mailto:${supportEmail}" style="color:${BRAND_BLUE};text-decoration:underline;">${escapeHtml(supportEmail)}</a></p>`,
+    `<p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:${TEXT_MUTED};"><a href="${appUrl}" style="color:${BRAND_BLUE};text-decoration:underline;">${appUrl.replace(/^https?:\/\//, '')}</a></p>`,
   ].join('');
 
   return {

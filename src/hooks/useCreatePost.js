@@ -148,7 +148,7 @@ export function useCreatePost() {
         ? FOLLOWS_TARGET.ORGANIZATION
         : FOLLOWS_TARGET.BUSINESS;
 
-      await notificationsService.notifyFollowers({
+      void notificationsService.notifyFollowers({
         targetType,
         targetId: user.id,
         type: 'new_post',

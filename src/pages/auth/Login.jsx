@@ -4,9 +4,9 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import AppIcon from '../../components/common/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Modal from '../../components/ui/Modal';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
+import GoogleAccountMissingDialog from '../../components/auth/GoogleAccountMissingDialog';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
 import { LegalFooterLinks } from '../../components/legal/LegalLinks';
 import {
@@ -22,8 +22,6 @@ import useEmailVerificationResend from '../../hooks/useEmailVerificationResend';
 import {
   authService,
   getEmailNotVerifiedMessage,
-  getGoogleLoginNoAccountMessage,
-  getGoogleLoginNoAccountTitle,
   isEmailNotVerifiedError,
 } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
@@ -113,35 +111,6 @@ function LoginDecorations() {
   );
 }
 
-function GoogleAccountMissingDialog({ isOpen, onClose, onCreateAccount }) {
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={getGoogleLoginNoAccountTitle()}
-      size="sm"
-    >
-      <p className="whitespace-pre-line text-body-small leading-relaxed text-app-muted">
-        {getGoogleLoginNoAccountMessage()}
-      </p>
-      <div className="mt-space-lg flex flex-col gap-space-sm sm:flex-row-reverse">
-        <Button fullWidth size="md" className="!rounded-radius-md" onClick={onCreateAccount}>
-          Crear cuenta
-        </Button>
-        <Button
-          variant="secondary"
-          fullWidth
-          size="md"
-          className="!rounded-radius-md"
-          onClick={onClose}
-        >
-          Volver
-        </Button>
-      </div>
-    </Modal>
-  );
-}
-
 function EmailVerificationPanel({ email, onBack }) {
   const { resend, remaining, sending, message, error, canResend } =
     useEmailVerificationResend(email);
@@ -196,6 +165,7 @@ function LoginScreen({
   onSubmit,
   onExplore,
   onGoogleLogin,
+  googleLoading,
   googleAccountMissing,
   onDismissGoogleMissing,
   onCreateAccountFromGoogleMissing,
@@ -272,7 +242,7 @@ function LoginScreen({
                         placeholder="Ingresa tu contraseña"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base py-space-sm pr-12 text-body-small text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                        className="h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base py-space-sm pr-12 text-base text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                       />
                       <button
                         type="button"
@@ -318,6 +288,7 @@ function LoginScreen({
                   <GoogleAuthButton
                     onClick={onGoogleLogin}
                     label="Iniciar sesión con Google"
+                    loading={googleLoading}
                   />
 
                   <button
@@ -371,7 +342,11 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() =>
+    location.state?.roleResolveFailed
+      ? 'No se pudo cargar tu cuenta. Intenta iniciar sesión de nuevo.'
+      : '',
+  );
   const [loading, setLoading] = useState(false);
   const [googleAccountMissing, setGoogleAccountMissing] = useState(
     () => location.state?.googleAccountMissing === true,
@@ -379,6 +354,10 @@ export default function Login() {
   const [googleAccountMissingEmail, setGoogleAccountMissingEmail] = useState(
     () => String(location.state?.googleAccountMissingEmail || '').trim(),
   );
+  const [googleAccountMissingFullName, setGoogleAccountMissingFullName] = useState(
+    () => String(location.state?.googleAccountMissingFullName || '').trim(),
+  );
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [emailVerificationRequired, setEmailVerificationRequired] = useState(
     () => location.state?.emailVerificationRequired === true,
   );
@@ -390,6 +369,9 @@ export default function Login() {
     if (location.state?.googleAccountMissing) {
       setGoogleAccountMissing(true);
       setGoogleAccountMissingEmail(String(location.state.googleAccountMissingEmail || '').trim());
+      setGoogleAccountMissingFullName(
+        String(location.state.googleAccountMissingFullName || '').trim(),
+      );
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);
@@ -405,31 +387,42 @@ export default function Login() {
     setEmailVerificationRequired(false);
     clearPreviewMode();
 
-    const { error: loginError, redirectTo } = await login(loginEmail, loginPassword);
-    if (loginError) {
-      if (isEmailNotVerifiedError(loginError)) {
-        setEmail(loginEmail.trim().toLowerCase());
-        setEmailVerificationRequired(true);
-        setLoading(false);
+    try {
+      const { error: loginError, redirectTo } = await login(loginEmail, loginPassword);
+      if (loginError) {
+        if (isEmailNotVerifiedError(loginError)) {
+          setEmail(loginEmail.trim().toLowerCase());
+          setEmailVerificationRequired(true);
+          return false;
+        }
+        setError(mapAuthError(loginError));
         return false;
       }
-      setError(mapAuthError(loginError));
-      setLoading(false);
-      return false;
-    }
 
-    navigate(resolveLoginRedirectPath(location, redirectTo || '/'), { replace: true });
-    setLoading(false);
-    return true;
+      navigate(resolveLoginRedirectPath(location, redirectTo || '/'), { replace: true });
+      return true;
+    } catch {
+      setError('No se pudo iniciar sesión. Inténtalo de nuevo.');
+      return false;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = async () => {
     setError('');
     clearPreviewMode();
+    setGoogleLoading(true);
 
-    const { error: googleError } = await authService.loginWithGoogle();
-    if (googleError) {
-      setError(mapAuthError(googleError));
+    try {
+      const { error: googleError } = await authService.loginWithGoogle();
+      if (googleError) {
+        setError(mapAuthError(googleError));
+        setGoogleLoading(false);
+      }
+    } catch {
+      setError(mapAuthError({ message: 'network error' }));
+      setGoogleLoading(false);
     }
   };
 
@@ -441,14 +434,20 @@ export default function Login() {
   const handleDismissGoogleMissing = () => {
     setGoogleAccountMissing(false);
     setGoogleAccountMissingEmail('');
+    setGoogleAccountMissingFullName('');
   };
 
   const handleCreateAccountFromGoogleMissing = () => {
     const prefillEmail = googleAccountMissingEmail || email;
+    const prefillFullName = googleAccountMissingFullName;
     setGoogleAccountMissing(false);
     navigate('/register', {
       replace: false,
-      state: prefillEmail ? { email: prefillEmail } : undefined,
+      state: {
+        email: prefillEmail || undefined,
+        fullName: prefillFullName || undefined,
+        fromGoogleLoginMissing: true,
+      },
     });
   };
 
@@ -457,7 +456,7 @@ export default function Login() {
     setPassword('');
   };
 
-  if (authLoading) {
+  if (authLoading && !googleAccountMissing) {
     return <AuthLoadingScreen />;
   }
 
@@ -472,12 +471,12 @@ export default function Login() {
   }
 
   // Authenticated users with a resolved role go straight home.
-  if (isAuthenticated && !isPreviewMode && role) {
+  if (isAuthenticated && !isPreviewMode && role && !googleAccountMissing) {
     return <Navigate to={getHomePath() || '/'} replace />;
   }
 
   // Session present but role still hydrating — never flash Register mid-login.
-  if (isAuthenticated && !isPreviewMode && !role) {
+  if (isAuthenticated && !isPreviewMode && !role && !googleAccountMissing) {
     return <AuthLoadingScreen />;
   }
 
@@ -494,6 +493,7 @@ export default function Login() {
       onSubmit={handleSubmit}
       onExplore={handleExplore}
       onGoogleLogin={handleGoogleLogin}
+      googleLoading={googleLoading}
       googleAccountMissing={googleAccountMissing}
       onDismissGoogleMissing={handleDismissGoogleMissing}
       onCreateAccountFromGoogleMissing={handleCreateAccountFromGoogleMissing}

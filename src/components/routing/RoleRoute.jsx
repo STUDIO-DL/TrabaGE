@@ -41,11 +41,12 @@ export default function RoleRoute({ role: requiredRole, roles: requiredRoles }) 
   }
 
   // Keep a quiet loader while role hydrates — never flash /register mid-login.
+  // Admins and existing accounts must not be sent to signup if role is slow/missing.
   if (!previewActive && isAuthenticated && !effectiveRole) {
     if (!roleWaitExpired) {
       return <AuthLoadingScreen />;
     }
-    return <Navigate to="/register" replace state={{ resumeAccountSetup: true }} />;
+    return <Navigate to="/login" replace state={{ roleResolveFailed: true }} />;
   }
 
   if (!allowedRoles.includes(effectiveRole)) {
