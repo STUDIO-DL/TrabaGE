@@ -86,10 +86,16 @@
     text-size-adjust: 100%;
     scroll-behavior: smooth;
     background: rgb(var(--app-bg));
-    overflow-x: hidden;
+    /*
+     * Use clip (not hidden) on the document: overflow-x:hidden on html/body
+     * makes Chrome treat them as scroll containers and kills native
+     * pull-to-refresh / vertical overscroll on Android.
+     */
+    overflow-x: clip;
     max-width: 100%;
     width: 100%;
     overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
     transition: background-color var(--motion-normal) var(--ease-standard),
       color var(--motion-normal) var(--ease-standard);
   }
@@ -99,10 +105,11 @@
     background: rgb(var(--app-bg));
     color: rgb(var(--app-text));
     min-height: 100dvh;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
     width: 100%;
     overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
     /* Double-tap zoom off; pinch still available where viewport allows it */
     touch-action: manipulation;
     transition: background-color var(--motion-normal) var(--ease-standard),
@@ -111,7 +118,7 @@
 
   #root {
     min-height: 100dvh;
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
     width: 100%;
     overscroll-behavior-x: none;
@@ -146,14 +153,16 @@
     line-height: 1.45;
   }
 
-  /* Touch / installed-app shell: less “web page”, more native app */
+  /*
+   * Touch / installed-app shell.
+   * Do NOT set overscroll-behavior-y: none here — that blocks Android Chrome
+   * pull-to-refresh while iOS Safari often still rubber-bands (asymmetric UX).
+   * Horizontal lock stays on html/body via overscroll-behavior-x: none.
+   * Nested hosts (chat, modals, forms) keep overscroll-contain locally.
+   */
   @media (hover: none) and (pointer: coarse) {
     html {
       scroll-behavior: auto;
-    }
-
-    body {
-      overscroll-behavior-y: none;
     }
 
     /* Avoid accidental selection on chrome; keep content copyable */
@@ -175,10 +184,6 @@
       -webkit-user-select: text;
       user-select: text;
     }
-  }
-
-  html[data-app-shell='1'] body {
-    overscroll-behavior-y: none;
   }
 
   ::selection {

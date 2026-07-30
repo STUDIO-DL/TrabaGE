@@ -438,6 +438,7 @@ export default function ConversationView({ conversationId, role, embedded = fals
           <div
             ref={scrollRef}
             className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-space-base py-space-md"
+            data-no-pull-refresh
             style={embedded ? undefined : { paddingBottom: composeInset }}
           >
             <div ref={topSentinelRef} className="h-px w-full" aria-hidden="true" />

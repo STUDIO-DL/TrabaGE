@@ -19,6 +19,7 @@ import NotificationSetupGuide from './components/common/NotificationSetupGuide';
 import PwaUpdatePrompt from './components/common/PwaUpdatePrompt';
 import { ToastContainer } from './components/ui/Toast';
 import OfflineScreen from './components/common/OfflineScreen';
+import DocumentPullToRefresh from './components/layout/DocumentPullToRefresh';
 import MaintenanceGate from './components/routing/MaintenanceGate';
 import { MaintenanceProvider } from './context/MaintenanceContext';
 import { useNotificationContext } from './context/NotificationContext';
@@ -359,6 +360,7 @@ export default function App() {
                 <MaintenanceProvider>
                   <OfflineScreen />
                   <AppToasts />
+                  <DocumentPullToRefresh />
                   <SessionManager />
                   <MaintenanceGate>
                     <AppRoutes />

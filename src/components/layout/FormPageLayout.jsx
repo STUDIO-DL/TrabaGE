@@ -34,6 +34,7 @@ export default function FormPageLayout({
       ) : null}
 
       <main
+        data-no-pull-refresh
         className={['min-h-0 flex-1 overflow-y-auto overscroll-contain', contentClassName]
           .filter(Boolean)
           .join(' ')}
