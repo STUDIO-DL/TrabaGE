@@ -18,8 +18,8 @@ function NavItem({ to, label, icon, end, onNavigate }) {
         [
           'flex items-center gap-space-sm rounded-radius-md px-space-sm py-2 text-body-small font-medium transition-colors duration-fast',
           isActive
-            ? 'bg-primary-50 text-primary-700'
-            : 'text-app-muted hover:bg-primary-50/50 hover:text-app-text',
+            ? 'bg-primary-600 text-white shadow-sm'
+            : 'text-slate-300 hover:bg-slate-800 hover:text-white',
         ].join(' ')
       }
     >
@@ -28,7 +28,7 @@ function NavItem({ to, label, icon, end, onNavigate }) {
           <AppIcon
             icon={icon}
             size={ICON_SIZES.sm}
-            className={isActive ? 'text-primary-600' : 'text-app-subtle'}
+            className={isActive ? 'text-white' : 'text-slate-400'}
           />
           {label}
         </>
@@ -53,13 +53,13 @@ export default function AdminSidebar({ onNavigate, className = '' }) {
   return (
     <aside
       className={[
-        'flex w-[240px] shrink-0 flex-col border-r border-app-border bg-app-card text-app-text',
+        'flex w-[240px] shrink-0 flex-col bg-slate-900 text-white',
         className,
       ].join(' ')}
     >
-      <div className="border-b border-app-divider px-space-md py-space-md">
-        <TrabaGEWordmark size="md" />
-        <p className="mt-space-xs text-caption text-app-subtle">Administración</p>
+      <div className="border-b border-slate-800 px-space-md py-space-md">
+        <TrabaGEWordmark size="md" className="[&>span:first-child]:text-white" />
+        <p className="mt-space-xs text-caption text-slate-400">Administración</p>
       </div>
 
       <nav className="flex-1 space-y-0.5 overflow-y-auto px-space-sm py-space-sm">
@@ -68,21 +68,25 @@ export default function AdminSidebar({ onNavigate, className = '' }) {
         ))}
       </nav>
 
-      <div className="border-t border-app-divider px-space-sm py-space-sm">
+      <div className="border-t border-slate-800 px-space-sm py-space-sm">
         <button
           type="button"
           onClick={() => setLogoutOpen(true)}
-          className="flex w-full items-center gap-space-sm rounded-radius-md px-space-sm py-2 text-body-small font-medium text-app-muted transition-colors hover:bg-app-surface hover:text-app-text"
+          className="flex w-full items-center gap-space-sm rounded-radius-md px-space-sm py-2 text-body-small font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white"
         >
           <AppIcon
             icon={ADMIN_LOGOUT_ITEM.icon}
             size={ICON_SIZES.sm}
-            className="text-app-subtle"
+            className="text-slate-400"
           />
           {ADMIN_LOGOUT_ITEM.label}
         </button>
         <div className="mt-space-sm flex justify-center px-space-sm pb-space-xs">
-          <ZarrelCredit variant="powered" />
+          <ZarrelCredit
+            variant="powered"
+            className="text-slate-500"
+            linkClassName="text-slate-400 decoration-slate-600 hover:text-slate-300 hover:decoration-slate-500"
+          />
         </div>
       </div>
 
