@@ -191,7 +191,7 @@ export default function AdminPosts() {
         key: 'content',
         label: 'Contenido',
         render: (row) => (
-          <span className="block max-w-xs truncate text-gray-700">
+          <span className="block max-w-xs truncate text-app-text">
             {row.content || 'Sin texto'}
           </span>
         ),
@@ -261,7 +261,7 @@ export default function AdminPosts() {
       {
         key: 'title',
         label: 'Título',
-        render: (row) => <span className="font-medium text-gray-900">{row.title}</span>,
+        render: (row) => <span className="font-medium text-app-text">{row.title}</span>,
       },
       {
         key: 'category',
@@ -336,8 +336,8 @@ export default function AdminPosts() {
       </div>
 
       {activeTab === 'news' && (
-        <div className="space-y-3 rounded-2xl border border-gray-200 bg-white p-4">
-          <h3 className="text-sm font-semibold text-gray-900">Nueva noticia manual</h3>
+        <div className="space-y-3 rounded-radius-lg border border-app-border bg-app-card p-4">
+          <h3 className="text-sm font-semibold text-app-text">Nueva noticia manual</h3>
           <Input
             label="Título"
             value={newsForm.title}

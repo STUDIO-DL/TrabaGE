@@ -6,16 +6,25 @@ import { isChunkLoadError, recoverFromChunkError } from '../../utils/chunkRecove
 function RouteErrorFallback({ onRetry }) {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-space-md bg-app-bg p-space-lg text-center">
-      <p className="max-w-sm text-body text-app-text">
-        No se puede cargar esta sección. Puedes reintentar.
+      <h1 className="text-title font-semibold text-app-text">Algo salió mal</h1>
+      <p className="max-w-sm text-body text-app-muted">
+        Estamos trabajando para solucionarlo.
       </p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="rounded-radius-md bg-primary-600 px-space-lg py-space-sm text-label font-medium text-white transition hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
-      >
-        Reintentar
-      </button>
+      <div className="mt-space-sm flex flex-wrap items-center justify-center gap-space-sm">
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-radius-md bg-primary-600 px-space-lg py-space-sm text-label font-medium text-white transition hover:bg-primary-700"
+        >
+          Reintentar
+        </button>
+        <a
+          href="/"
+          className="rounded-radius-md border border-app-border bg-app-card px-space-lg py-space-sm text-label font-medium text-app-text transition hover:bg-app-surface"
+        >
+          Volver al inicio
+        </a>
+      </div>
     </div>
   );
 }
@@ -33,12 +42,10 @@ export default class RouteErrorBoundary extends Component {
   componentDidCatch(error, info) {
     reportError(error, { area: 'route_error_boundary', componentStack: info?.componentStack });
 
-    // Stale deploy / PWA shell: one automatic hard reload.
     if (isChunkLoadError(error) && recoverFromChunkError(error)) {
       return;
     }
 
-    // One soft auto-retry for transient network glitches during navigation.
     if (!this.state.autoRetried) {
       window.setTimeout(() => {
         this.setState({ hasError: false, autoRetried: true, error: null });
@@ -63,7 +70,6 @@ export default class RouteErrorBoundary extends Component {
     }
 
     if (this.state.hasError) {
-      // Quiet wait during the single auto-retry / chunk-reload window.
       return (
         <div
           className="flex min-h-dvh items-center justify-center bg-app-bg"

@@ -75,9 +75,28 @@ export async function sendOneSignalNotification(
     data.link?.trim() ||
     payload.link?.trim() ||
     '';
-  const absoluteUrl = rawLink
-    ? (rawLink.startsWith('http') ? rawLink : `${appUrl.replace(/\/$/, '')}${rawLink.startsWith('/') ? rawLink : `/${rawLink}`}`)
-    : undefined;
+
+  let absoluteUrl: string | undefined;
+  if (rawLink) {
+    const base = appUrl.replace(/\/$/, '');
+    if (/^https?:\/\//i.test(rawLink)) {
+      try {
+        const parsed = new URL(rawLink);
+        const allowed = new URL(base);
+        // Only same-origin absolute links — blocks open redirects in push taps.
+        absoluteUrl = parsed.origin === allowed.origin
+          ? `${parsed.pathname}${parsed.search}${parsed.hash}`
+          : undefined;
+        if (absoluteUrl && !absoluteUrl.startsWith('http')) {
+          absoluteUrl = `${base}${absoluteUrl.startsWith('/') ? absoluteUrl : `/${absoluteUrl}`}`;
+        }
+      } catch {
+        absoluteUrl = undefined;
+      }
+    } else {
+      absoluteUrl = `${base}${rawLink.startsWith('/') ? rawLink : `/${rawLink}`}`;
+    }
+  }
 
   const requestBody: Record<string, unknown> = {
     app_id: appId,

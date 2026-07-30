@@ -13,7 +13,12 @@ export default function DiscoverHub() {
           {sections.map((section, index) => (
             <li
               key={section.id}
-              className="card-enter"
+              className={[
+                'card-enter',
+                section.featured ? 'col-span-2' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
               style={{ animationDelay: `${Math.min(index, 8) * 30}ms` }}
             >
               <DiscoverCard section={section} />

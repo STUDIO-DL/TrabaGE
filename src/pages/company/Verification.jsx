@@ -225,7 +225,7 @@ export default function Verification() {
     } catch (uploadError) {
       setSubmitting(false);
       setSubmitPhase(null);
-      showToast(uploadError.message || getSupabaseErrorMessage(uploadError), 'error');
+      showToast(getSupabaseErrorMessage(uploadError), 'error');
       return;
     }
 

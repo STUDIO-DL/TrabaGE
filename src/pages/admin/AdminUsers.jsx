@@ -230,7 +230,7 @@ export default function AdminUsers() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-gray-500">
+      <p className="text-sm text-app-muted">
         Gestiona cuentas de candidatos y empleadores. La desactivación preserva los datos.
       </p>
 
@@ -244,7 +244,7 @@ export default function AdminUsers() {
           }}
           placeholder="Email, nombre, ciudad..."
         />
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-app-text">
           Tipo
           <select
             value={roleFilter}
@@ -252,7 +252,7 @@ export default function AdminUsers() {
               setRoleFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
           >
             <option value="all">Todos</option>
             <option value="personal">Personal</option>
@@ -260,7 +260,7 @@ export default function AdminUsers() {
             <option value="organization">Organización</option>
           </select>
         </label>
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-app-text">
           Estado
           <select
             value={statusFilter}
@@ -268,7 +268,7 @@ export default function AdminUsers() {
               setStatusFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
           >
             <option value="all">Todos</option>
             <option value="active">Activos</option>

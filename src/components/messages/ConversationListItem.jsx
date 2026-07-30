@@ -19,7 +19,7 @@ export default function ConversationListItem({ conversation, role, currentUserId
   return (
     <Link
       to={href}
-      className="flex items-center gap-space-md border-b border-app-border px-space-base py-space-md transition-colors duration-fast hover:bg-app-surface"
+      className="flex items-center gap-space-md border-b border-app-divider px-space-base py-space-md transition-colors duration-fast ease-out hover:bg-app-surface/80 active:bg-app-surface"
     >
       <AppAvatar
         type={participant.avatarType}

@@ -1,7 +1,9 @@
 import AppIcon from '../common/AppIcon';
-import { MessageSquare, Share2, ICON_SIZES } from '../../constants/icons';
+import { Share2, ICON_SIZES } from '../../constants/icons';
+import MessagesChatIcon from '../messages/MessagesChatIcon';
 import Button from '../ui/Button';
 import FollowButton from '../follow/FollowButton';
+import { profileActionBarInnerClass } from './profileLayoutClasses';
 
 export default function ProfileActionBar({
   isOwn = false,
@@ -18,15 +20,15 @@ export default function ProfileActionBar({
   if (isOwn) return null;
 
   return (
-    <div className="border-b border-app-border bg-app-card px-space-base py-space-base">
-      <div className="mx-auto flex max-w-5xl flex-col gap-space-sm sm:flex-row sm:items-stretch">
+    <div className="border-b border-app-border bg-app-card px-space-base py-space-base lg:px-space-xl">
+      <div className={profileActionBarInnerClass}>
         {showFollow && (
           <FollowButton
             isFollowing={isFollowing}
             loading={followLoading}
             canFollow={canFollow}
             onToggle={onToggleFollow}
-            className="sm:flex-1"
+            className="sm:flex-1 lg:flex-none lg:min-w-[9rem]"
           />
         )}
         {onMessage && (
@@ -34,11 +36,11 @@ export default function ProfileActionBar({
             type="button"
             onClick={onMessage}
             variant="primary"
-            className="sm:flex-1"
+            className="sm:flex-1 lg:flex-none lg:min-w-[9rem]"
             fullWidth
             loading={messageLoading}
           >
-            <AppIcon icon={MessageSquare} size={ICON_SIZES.md} className="text-current" />
+            <AppIcon icon={MessagesChatIcon} size={ICON_SIZES.md} className="text-current" />
             {messageLabel}
           </Button>
         )}
@@ -47,7 +49,7 @@ export default function ProfileActionBar({
             type="button"
             onClick={onShare}
             variant="secondary"
-            className="sm:flex-1"
+            className="sm:flex-1 lg:flex-none lg:min-w-[9rem]"
             fullWidth
           >
             <AppIcon icon={Share2} size={ICON_SIZES.md} className="text-current" />

@@ -46,7 +46,7 @@ function SectionCard({ title, children }) {
       <h2 className="px-space-xs text-label font-semibold uppercase tracking-[0.16em] text-app-subtle">
         {title}
       </h2>
-      <div className="overflow-hidden rounded-radius-xl border border-app-border bg-app-card shadow-elevation-2">
+      <div className="overflow-hidden rounded-radius-lg border border-app-border bg-app-card">
         {children}
       </div>
     </section>

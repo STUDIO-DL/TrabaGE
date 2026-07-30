@@ -1,12 +1,23 @@
+import { getUserErrorMessage, isFriendlyUserMessage, looksTechnical } from '../../utils/userFacingError';
+
+const DEFAULT_MESSAGE =
+  'No pudimos cargar esta información. Revisa tu conexión y prueba de nuevo.';
+
 /**
  * Inline error banner with optional retry — matches Feed error UX.
+ * Always sanitizes the message before rendering.
  */
 export default function FetchErrorBanner({
-  message = 'No se pudo cargar. Inténtalo de nuevo.',
+  message = DEFAULT_MESSAGE,
   onRetry,
   retryLabel = 'Reintentar',
   className = '',
 }) {
+  const safeMessage =
+    typeof message === 'string' && isFriendlyUserMessage(message) && !looksTechnical(message)
+      ? message
+      : getUserErrorMessage(message, { action: 'load', fallback: DEFAULT_MESSAGE });
+
   return (
     <div
       className={[
@@ -15,7 +26,7 @@ export default function FetchErrorBanner({
       ].join(' ')}
       role="alert"
     >
-      <p>{message}</p>
+      <p>{safeMessage}</p>
       {onRetry ? (
         <button
           type="button"

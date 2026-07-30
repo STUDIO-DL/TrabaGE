@@ -1,15 +1,21 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import AppIcon from './AppIcon';
-import { AlertTriangle, Copy, MoreHorizontal, Share2, ICON_SIZES } from '../../constants/icons';
+import {
+  AlertTriangle,
+  Copy,
+  MoreHorizontal,
+  Pencil,
+  Share2,
+  Trash2,
+  ICON_SIZES,
+} from '../../constants/icons';
 
 const TRIGGER_VARIANTS = {
-  /** Ghost icon control — top bars, cards, job detail actions */
   icon:
-    'inline-flex h-btn-md min-h-touch min-w-touch items-center justify-center rounded-radius-sm text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface hover:text-app-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
-  /** Outlined control — profile action rows next to Seguir / Mensaje */
+    'inline-flex h-btn-md min-h-touch min-w-touch items-center justify-center rounded-radius-sm text-app-muted transition-colors duration-fast ease-out hover:bg-app-surface hover:text-app-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg',
   button:
-    'inline-flex h-btn-md min-h-touch min-w-touch items-center justify-center rounded-radius-md bg-app-card text-app-muted ring-1 ring-inset ring-app-border transition-colors duration-fast ease-out hover:bg-app-surface hover:text-app-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
+    'inline-flex h-btn-md min-h-touch min-w-touch items-center justify-center rounded-radius-md bg-app-card text-app-muted ring-1 ring-inset ring-app-border transition-colors duration-fast ease-out hover:bg-app-surface hover:text-app-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-app-bg',
 };
 
 const MENU_ITEM_CLASS =
@@ -22,6 +28,8 @@ export default function ActionMenu({
   onShare,
   onCopy,
   onReport,
+  onEdit,
+  onDelete,
   align = 'right',
   variant = 'icon',
   className = '',
@@ -32,7 +40,7 @@ export default function ActionMenu({
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState(null);
 
-  const hasItems = Boolean(onShare || onCopy || onReport);
+  const hasItems = Boolean(onShare || onCopy || onReport || onEdit || onDelete);
   const triggerClass = TRIGGER_VARIANTS[variant] || TRIGGER_VARIANTS.icon;
 
   const updatePosition = () => {
@@ -70,8 +78,8 @@ export default function ActionMenu({
       window.removeEventListener('resize', handleReposition);
       window.removeEventListener('scroll', handleReposition, true);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- align is stable for a given mount
-  }, [open, align, onShare, onCopy, onReport]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, align, onShare, onCopy, onReport, onEdit, onDelete]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -132,37 +140,39 @@ export default function ActionMenu({
                 visibility: coords ? 'visible' : 'hidden',
               }}
             >
+              {onEdit ? (
+                <button type="button" role="menuitem" onClick={() => run(onEdit)} className={MENU_ITEM_CLASS}>
+                  <AppIcon icon={Pencil} size={ICON_SIZES.sm} className="text-app-subtle" />
+                  Editar
+                </button>
+              ) : null}
               {onShare ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => run(onShare)}
-                  className={MENU_ITEM_CLASS}
-                >
+                <button type="button" role="menuitem" onClick={() => run(onShare)} className={MENU_ITEM_CLASS}>
                   <AppIcon icon={Share2} size={ICON_SIZES.sm} className="text-app-subtle" />
                   Compartir
                 </button>
               ) : null}
               {onCopy ? (
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => run(onCopy)}
-                  className={MENU_ITEM_CLASS}
-                >
+                <button type="button" role="menuitem" onClick={() => run(onCopy)} className={MENU_ITEM_CLASS}>
                   <AppIcon icon={Copy} size={ICON_SIZES.sm} className="text-app-subtle" />
                   Copiar enlace
                 </button>
               ) : null}
               {onReport ? (
+                <button type="button" role="menuitem" onClick={() => run(onReport)} className={MENU_ITEM_CLASS}>
+                  <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-warning-600" />
+                  Reportar
+                </button>
+              ) : null}
+              {onDelete ? (
                 <button
                   type="button"
                   role="menuitem"
-                  onClick={() => run(onReport)}
-                  className={MENU_ITEM_CLASS}
+                  onClick={() => run(onDelete)}
+                  className={`${MENU_ITEM_CLASS} text-error-600`}
                 >
-                  <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-amber-600" />
-                  Reportar
+                  <AppIcon icon={Trash2} size={ICON_SIZES.sm} className="text-error-600" />
+                  Eliminar
                 </button>
               ) : null}
             </div>,

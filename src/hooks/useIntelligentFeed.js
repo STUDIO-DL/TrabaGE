@@ -2,12 +2,12 @@ import { isEmployerAuthor } from '../constants/authorTypes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { feedService } from '../services/feed.service';
 import { useAuth } from './useAuth';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 import { FEED_CONTENT_TYPES, FEED_PAGE_SIZE, isHomeFeedPostItem } from '../constants/feedContentTypes';
 import { getPreviewPosts } from '../constants/preview';
 import { rankAndInterleaveFeed, dedupeFeedItems } from '../utils/feedRanking';
 
 const MAX_AUTO_RETRIES = 2;
-const RETRY_DELAY_MS = 700;
 
 export function useIntelligentFeed({ authorId } = {}) {
   const { user, isPreviewMode, role } = useAuth();
@@ -33,9 +33,11 @@ export function useIntelligentFeed({ authorId } = {}) {
   }, [user?.id, role, authorId]);
 
   const scheduleRetry = useCallback(() => {
+    const attempt = retryCountRef.current;
+    const delay = Math.min(400 * 2 ** attempt, 4000);
     window.setTimeout(() => {
       void fetchFeedRef.current?.({ append: false });
-    }, RETRY_DELAY_MS);
+    }, delay);
   }, []);
 
   const fetchFeed = useCallback(
@@ -58,7 +60,7 @@ export function useIntelligentFeed({ authorId } = {}) {
             return;
           }
           if (!append) setItems([]);
-          setError(fetchError.message);
+          setError(getUserErrorMessage(fetchError, ERROR_ACTION.discover));
           setLoading(false);
           setLoadingMore(false);
           return;
@@ -127,7 +129,7 @@ export function useIntelligentFeed({ authorId } = {}) {
           return;
         }
         if (!append) setItems([]);
-        setError(fetchError.message);
+        setError(getUserErrorMessage(fetchError, ERROR_ACTION.discover));
         setLoading(false);
         setLoadingMore(false);
         return;

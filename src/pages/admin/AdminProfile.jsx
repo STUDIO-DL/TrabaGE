@@ -9,9 +9,9 @@ import { useNotificationContext } from '../../context/NotificationContext';
 
 function ProfileField({ label, value }) {
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white px-4 py-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
-      <p className="mt-1 text-sm font-medium text-gray-900">{value || '—'}</p>
+    <div className="surface-inset px-space-md py-space-sm">
+      <p className="text-caption font-medium uppercase tracking-wide text-app-subtle">{label}</p>
+      <p className="mt-space-xs text-body-small font-medium text-app-text">{value || '—'}</p>
     </div>
   );
 }
@@ -45,30 +45,35 @@ export default function AdminProfile() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <p className="text-sm text-gray-500">
+    <div className="mx-auto max-w-3xl space-y-space-lg">
+      <p className="text-body-small text-app-muted">
         Perfil interno de administración. Solo visible para otros administradores.
       </p>
 
       <AdminSectionCard title="Mi perfil admin">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-space-sm sm:grid-cols-2">
           <ProfileField label="Nombre" value={displayName} />
           <ProfileField label="Rol" value={ROLE_LABELS[ROLES.ADMIN]} />
         </div>
       </AdminSectionCard>
 
       <AdminSectionCard title="Equipo de administración">
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-app-divider">
           {admins.length === 0 ? (
-            <li className="py-4 text-sm text-gray-500">No hay administradores registrados.</li>
+            <li className="py-space-md text-body-small text-app-muted">
+              No hay administradores registrados.
+            </li>
           ) : (
             admins.map((admin) => (
-              <li key={admin.user_id} className="flex items-center justify-between py-3 text-sm">
+              <li
+                key={admin.user_id}
+                className="flex items-center justify-between py-space-sm text-body-small"
+              >
                 <div>
-                  <p className="font-medium text-gray-900">{admin.full_name}</p>
-                  <p className="text-gray-500">{admin.email}</p>
+                  <p className="font-medium text-app-text">{admin.full_name}</p>
+                  <p className="text-app-muted">{admin.email}</p>
                 </div>
-                <span className="rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700">
+                <span className="rounded-radius-sm bg-primary-50 px-space-sm py-0.5 text-caption font-medium text-primary-700">
                   {ROLE_LABELS[ROLES.ADMIN]}
                 </span>
               </li>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { jobsService } from '../services/jobs.service';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 
 export function useJobs(filters = {}) {
   const [jobs, setJobs] = useState([]);
@@ -14,7 +15,7 @@ export function useJobs(filters = {}) {
     setError(null);
     const { data, error: fetchError } = await jobsService.getActiveJobs(filters);
     if (fetchError) {
-      setError(fetchError?.message ?? null);
+      setError(fetchError ? getUserErrorMessage(fetchError, ERROR_ACTION.load_jobs) : null);
       if (!hasExisting) setJobs([]);
       setLoading(false);
       return;
@@ -43,7 +44,7 @@ export function useJob(jobId, { viewerId = null } = {}) {
       const visible =
         data && (data.status === 'active' || (viewerId && data.company_id === viewerId));
       setJob(visible ? data : null);
-      setError(fetchError?.message ?? null);
+      setError(fetchError ? getUserErrorMessage(fetchError, ERROR_ACTION.load_jobs) : null);
       setLoading(false);
     });
   }, [jobId, viewerId]);

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { LEGAL_DATE, LEGAL_VERSION } from '../../constants/legalRoutes';
 import { LegalArticle, LegalTableOfContents } from './LegalContent';
 import LegalBrandFooter from './LegalBrandFooter';
+import TrabaGEWordmark from '../branding/TrabaGEWordmark';
 
 export default function LegalDocumentLayout({
   pageTitle,
@@ -18,45 +19,44 @@ export default function LegalDocumentLayout({
   }, []);
 
   return (
-    <div className="min-h-dvh bg-white dark:bg-slate-950">
-      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3 sm:px-6">
+    <div className="min-h-dvh bg-app-bg">
+      <header className="sticky top-0 z-40 border-b border-app-border bg-app-elevated/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-3xl items-center gap-space-sm px-space-md py-space-sm sm:px-space-lg">
           <Link
             to="/login"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-radius-md text-app-muted transition-colors hover:bg-app-surface hover:text-app-text"
             aria-label="Volver"
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">{intro.title}</p>
-            <p className="truncate text-xs text-slate-500 dark:text-slate-400">TrabaGE · v{LEGAL_VERSION}</p>
+            <p className="truncate text-body-small font-semibold text-app-text">{intro.title}</p>
+            <p className="flex items-center gap-1 truncate text-caption text-app-subtle">
+              <TrabaGEWordmark size="xs" />
+              <span>· v{LEGAL_VERSION}</span>
+            </p>
           </div>
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mb-6 border-b border-slate-100 pb-5 dark:border-slate-800">
+      <div className="mx-auto max-w-3xl px-space-md py-space-lg sm:px-space-lg sm:py-space-xl">
+        <div className="mb-space-lg border-b border-app-divider pb-space-md">
           {intro.part ? (
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400">
+            <p className="text-caption font-semibold uppercase tracking-wider text-primary-600">
               {intro.part}
             </p>
           ) : null}
-          <h1 className="text-title font-bold tracking-tight text-slate-900 dark:text-slate-50">
-            {pageTitle}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+          <h1 className="text-title font-semibold tracking-tight text-app-text">{pageTitle}</h1>
+          <p className="mt-space-sm max-w-2xl text-body-small leading-relaxed text-app-muted">
             {intro.subtitle}
           </p>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-space-sm flex flex-wrap gap-x-space-md gap-y-1 text-caption text-app-subtle">
             <span>Versión {LEGAL_VERSION}</span>
             <span aria-hidden>·</span>
             <span>{LEGAL_DATE}</span>
-            <span aria-hidden>·</span>
-            <span>Web App · PWA · Móvil</span>
           </div>
           {relatedLink ? (
-            <p className="mt-3 text-xs text-slate-600 dark:text-slate-300">
+            <p className="mt-space-sm text-caption text-app-muted">
               Consulta también:{' '}
               <Link
                 to={relatedLink.to}
@@ -68,7 +68,7 @@ export default function LegalDocumentLayout({
           ) : null}
         </div>
 
-        <div className="mb-6">
+        <div className="mb-space-lg">
           <LegalTableOfContents articles={articles} finalArticles={finalArticles} />
         </div>
 
@@ -80,8 +80,8 @@ export default function LegalDocumentLayout({
           {finalArticles.length > 0 ? (
             <>
               {finalPartTitle ? (
-                <div className="border-b border-slate-100 py-5 dark:border-slate-800">
-                  <h2 className="text-base font-bold text-slate-900 dark:text-slate-50">{finalPartTitle}</h2>
+                <div className="border-b border-app-divider py-space-md">
+                  <h2 className="text-body font-semibold text-app-text">{finalPartTitle}</h2>
                 </div>
               ) : null}
               {finalArticles.map((article) => (

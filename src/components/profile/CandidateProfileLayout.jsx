@@ -2,6 +2,12 @@ import ProfilePageShell from './ProfilePageShell';
 import CandidateProfileHeader from './CandidateProfileHeader';
 import ProfileActionBar from './ProfileActionBar';
 import ProfileSidebar from './ProfileSidebar';
+import {
+  profileBodyShellClass,
+  profileDesktopAsideClass,
+  profileDesktopGridClass,
+  profileDesktopMainClass,
+} from './profileLayoutClasses';
 
 export default function CandidateProfileLayout({
   title,
@@ -60,17 +66,17 @@ export default function CandidateProfileLayout({
         onMessage={onMessage}
         messageLoading={messageLoading}
       />
-      <div className="mx-auto max-w-5xl px-space-base py-space-lg">
-        <div
-          className={
-            sidebarContent
-              ? 'grid gap-space-lg lg:grid-cols-[minmax(0,1fr)_280px]'
-              : 'mx-auto max-w-3xl'
-          }
-        >
-          <main className="space-y-space-base">{children}</main>
-          {sidebarContent ? <div className="space-y-space-base lg:order-none">{sidebarContent}</div> : null}
-        </div>
+      <div className={profileBodyShellClass}>
+        {sidebarContent ? (
+          <div className={profileDesktopGridClass}>
+            <main className={profileDesktopMainClass}>{children}</main>
+            <aside className={profileDesktopAsideClass}>{sidebarContent}</aside>
+          </div>
+        ) : (
+          <main className={`${profileDesktopMainClass} mx-auto max-w-3xl lg:max-w-none`}>
+            {children}
+          </main>
+        )}
       </div>
     </ProfilePageShell>
   );

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { buildCvData, sanitizeCvFilename } from '../buildCvData';
 import { fetchAvatarDataUri } from '../fetchAvatarDataUri';
 import { generateCvPdf } from '../generateCvPdf';
+import { getUserErrorMessage, ERROR_ACTION } from '../../../utils/userFacingError';
 
 export function useCvGenerator({ profile, accountEmail, onUploadCV, refetchProfile }) {
   const [status, setStatus] = useState('idle');
@@ -55,7 +56,7 @@ export function useCvGenerator({ profile, accountEmail, onUploadCV, refetchProfi
       setStatus('ready');
     } catch (generateError) {
       setStatus('error');
-      setError(generateError?.message || 'No se pudo generar el CV. Inténtalo de nuevo.');
+      setError(getUserErrorMessage(generateError, ERROR_ACTION.generate_cv));
     }
   }, [accountEmail, profile, refetchProfile, revokePreview]);
 
@@ -73,20 +74,27 @@ export function useCvGenerator({ profile, accountEmail, onUploadCV, refetchProfi
 
   const saveAsOfficialCv = useCallback(async () => {
     if (!blob || !onUploadCV) {
-      const err = { message: 'No hay CV generado.' };
-      setError(err.message);
-      return { error: err };
+      const message = 'No hay un CV generado todavía.';
+      setError(message);
+      return { error: { message } };
     }
 
     setUploading(true);
     setError(null);
-    const file = new File([blob], filename, { type: 'application/pdf' });
-    const result = await onUploadCV(file);
-    setUploading(false);
-    if (result?.error) {
-      setError(result.error.message || 'No se pudo guardar el CV.');
+    try {
+      const file = new File([blob], filename, { type: 'application/pdf' });
+      const result = await onUploadCV(file);
+      if (result?.error) {
+        setError(getUserErrorMessage(result.error, ERROR_ACTION.upload_cv));
+      }
+      return result;
+    } catch (uploadError) {
+      const message = getUserErrorMessage(uploadError, ERROR_ACTION.upload_cv);
+      setError(message);
+      return { error: { message } };
+    } finally {
+      setUploading(false);
     }
-    return result;
   }, [blob, filename, onUploadCV]);
 
   useEffect(() => () => revokePreview(), [revokePreview]);

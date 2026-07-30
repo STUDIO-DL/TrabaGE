@@ -1,19 +1,22 @@
 import { ZARREL_NAME, ZARREL_URL } from '../../constants/zarrel';
 import { LEGAL_DATE, LEGAL_SUPPORT_EMAIL, LEGAL_VERSION } from '../../constants/legalRoutes';
 import ZarrelCredit from '../branding/ZarrelCredit';
+import TrabaGEWordmark from '../branding/TrabaGEWordmark';
 import { LegalFooterLinks } from './LegalLinks';
 
 /**
- * Elegant legal page footer: © TrabaGE + ZARREL attribution + support.
+ * Elegant legal page footer: © TrabaGE wordmark + ZARREL TECH attribution + support.
  */
 export default function LegalBrandFooter() {
   return (
     <footer className="mt-10 border-t border-slate-100 pt-8 dark:border-slate-800">
       <div className="text-center">
-        <p className="text-xs font-medium tracking-tight text-slate-800 dark:text-slate-200">
-          © TrabaGE.
+        <p className="inline-flex items-baseline gap-1 text-xs font-medium tracking-tight text-app-text">
+          <span aria-hidden>©</span>
+          <TrabaGEWordmark size="xs" />
+          <span aria-hidden>.</span>
         </p>
-        <p className="mt-2 text-[12px] leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-caption leading-relaxed text-app-muted">
           Diseñado y desarrollado por{' '}
           <a
             href={ZARREL_URL}
@@ -30,12 +33,12 @@ export default function LegalBrandFooter() {
             href={ZARREL_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] text-slate-400 underline decoration-slate-200 underline-offset-2 transition hover:text-slate-600 dark:text-slate-500 dark:decoration-slate-700 dark:hover:text-slate-300"
+            className="text-caption text-app-subtle underline decoration-app-border underline-offset-2 transition hover:text-app-muted "
           >
             {ZARREL_URL.replace(/^https?:\/\//, '')}
           </a>
         </p>
-        <p className="mt-4 text-[11px] text-slate-400 dark:text-slate-500">
+        <p className="mt-4 text-caption text-app-subtle ">
           <a
             href={`mailto:${LEGAL_SUPPORT_EMAIL}`}
             className="transition hover:text-primary-600"

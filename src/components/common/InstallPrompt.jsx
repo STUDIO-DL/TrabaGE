@@ -1,19 +1,46 @@
 import { useState } from 'react';
 import AppIcon from './AppIcon';
 import Button from '../ui/Button';
+import TrabaGEWordmark from '../branding/TrabaGEWordmark';
 import { Download, X, ICON_SIZES } from '../../constants/icons';
 import { isPwaInstalled, useInstallPrompt } from '../../hooks/useInstallPrompt';
 
 const DISMISS_KEY = 'trabage_install_prompt_dismissed';
+const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
 
+function wasDismissedRecently() {
+  try {
+    const raw = localStorage.getItem(DISMISS_KEY);
+    if (!raw) return false;
+    if (raw === 'true') return true;
+    const dismissedAt = Number(raw);
+    if (!Number.isFinite(dismissedAt)) return false;
+    return Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
+  } catch {
+    return false;
+  }
+}
+
+function markDismissed() {
+  try {
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+  } catch {
+    // Ignore storage failures.
+  }
+}
+
+/**
+ * Chromium / Android install chip via beforeinstallprompt.
+ * iOS Safari has no install event — guidance lives in push/onboarding prompts.
+ */
 export default function InstallPrompt() {
   const { canInstall, install } = useInstallPrompt();
-  const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY) === 'true');
+  const [dismissed, setDismissed] = useState(() => wasDismissedRecently());
 
   if (isPwaInstalled() || !canInstall || dismissed) return null;
 
   const dismiss = () => {
-    localStorage.setItem(DISMISS_KEY, 'true');
+    markDismissed();
     setDismissed(true);
   };
 
@@ -28,7 +55,10 @@ export default function InstallPrompt() {
           <AppIcon icon={Download} size={ICON_SIZES.sm} className="text-primary-600" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-caption font-semibold text-app-text">Instalar TrabaGE</p>
+          <p className="flex flex-wrap items-baseline gap-1 text-caption font-semibold text-app-text">
+            <span>Instalar</span>
+            <TrabaGEWordmark size="xs" />
+          </p>
           <p className="text-caption text-app-subtle">Acceso rápido desde tu pantalla de inicio</p>
         </div>
         <Button type="button" size="sm" className="!rounded-lg !px-3 !py-1.5 text-caption" onClick={install}>

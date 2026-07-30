@@ -1,4 +1,4 @@
-import ProfileSectionCard from './ProfileSectionCard';
+import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 
 /** Read-only languages block for public profiles and main content area. */
@@ -13,14 +13,16 @@ export default function LanguagesReadOnlySection({ items = [] }) {
       isOwn={false}
       isEmpty={false}
     >
-      <ul className="space-y-2">
+      <div>
         {items.map((item) => (
-          <li key={item.id} className="flex items-baseline justify-between gap-2 border-b border-gray-50 pb-2 last:border-0 last:pb-0">
-            <span className="text-sm font-medium text-gray-900">{item.language}</span>
-            {item.level ? <span className="text-xs text-gray-500">{item.level}</span> : null}
-          </li>
+          <ProfileEntryRow
+            key={item.id}
+            title={item.language}
+            subtitle={item.level || undefined}
+            isOwn={false}
+          />
         ))}
-      </ul>
+      </div>
     </ProfileSectionCard>
   );
 }

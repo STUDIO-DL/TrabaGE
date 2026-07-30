@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getUserErrorMessage, ERROR_ACTION } from '../../../utils/userFacingError';
 import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Button from '../../ui/Button';
@@ -136,7 +137,7 @@ export default function CertificationModal({
     if (saveError) {
       setUploading(false);
       setUploadPhase(null);
-      setError(saveError.message);
+      setError(getUserErrorMessage(saveError, ERROR_ACTION.save_certification));
       return;
     }
 
@@ -159,7 +160,7 @@ export default function CertificationModal({
           { onProgress: ({ phase }) => setUploadPhase(phase) },
         );
         if (uploadError) {
-          setError(uploadError.message || 'No se pudo subir el certificado.');
+          setError(getUserErrorMessage(uploadError, ERROR_ACTION.upload_certificate));
           setUploading(false);
           setUploadPhase(null);
           return;
@@ -172,7 +173,7 @@ export default function CertificationModal({
           { silent: true },
         );
         if (patchError) {
-          setError(patchError.message);
+          setError(getUserErrorMessage(patchError, ERROR_ACTION.save_certification));
           setUploading(false);
           setUploadPhase(null);
           return;
@@ -189,14 +190,14 @@ export default function CertificationModal({
           { silent: true },
         );
         if (patchError) {
-          setError(patchError.message);
+          setError(getUserErrorMessage(patchError, ERROR_ACTION.save_certification));
           setUploading(false);
           setUploadPhase(null);
           return;
         }
       }
     } catch (uploadErr) {
-      setError(uploadErr.message || 'No se pudo subir el certificado.');
+      setError(getUserErrorMessage(uploadErr, ERROR_ACTION.upload_certificate));
       setUploading(false);
       setUploadPhase(null);
       return;

@@ -67,6 +67,7 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
 
       const { data, error: saveError } = await notificationPreferencesService.update(userId, patch);
       if (saveError) {
+        reportError(saveError, { area: 'notification_preferences_save', userId, key });
         setPreferences(previous);
         setError(saveError);
         setSavingKey(null);

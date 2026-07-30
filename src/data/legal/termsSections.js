@@ -75,6 +75,10 @@ export const TERMS_ARTICLES = [
           'Tratar los datos recibidos en postulaciones como responsables independientes de ese tratamiento.',
         ],
       },
+      {
+        type: 'p',
+        text: 'Las cuentas de empresas y organizaciones deberán contar con un perfil básico completo, incluyendo una imagen o logotipo y la información esencial de la organización. TrabaGE se reserva el derecho de suspender o eliminar las cuentas que, transcurridos cinco (5) días naturales desde su creación, permanezcan incompletas.',
+      },
     ],
   },
   {
@@ -344,7 +348,7 @@ export const TERMS_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: 'TrabaGE fue diseñado y desarrollado por [ZARREL](https://zarrel.org), empresa de software, diseño digital y soluciones tecnológicas. ZARREL es el responsable tecnológico de la plataforma.',
+        text: 'TrabaGE fue diseñado y desarrollado por [ZARREL TECH](https://zarrel.org), empresa de software, diseño digital y soluciones tecnológicas. ZARREL TECH es el responsable tecnológico de la plataforma.',
       },
       {
         type: 'p',

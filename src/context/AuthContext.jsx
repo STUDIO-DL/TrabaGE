@@ -626,6 +626,15 @@ export function AuthProvider({ children }) {
       return;
     }
 
+    // Deactivate push while the session is still valid (RPC needs auth.uid()).
+    if (isOneSignalConfigured()) {
+      try {
+        await clearOneSignalUserId();
+      } catch {
+        // Logout must continue even if push cleanup fails.
+      }
+    }
+
     await authService.logout();
     queryClient.clear();
     clearAuthResumeCache();

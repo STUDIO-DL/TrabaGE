@@ -9,7 +9,13 @@ import { FormPageSkeleton } from '../../components/common/Skeleton';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import { ProfileEntryRow } from '../../components/profile/ProfileSectionCard';
-import { CITIES } from '../../constants/cities';
+import {
+  CITIES,
+  CITY_OTHER_LABEL,
+  CITY_OTHER_VALUE,
+  getCitySelectValue,
+  isListedCity,
+} from '../../constants/cities';
 import { COUNTRIES, DEFAULT_COUNTRY } from '../../constants/countries';
 import { SECTORS } from '../../constants/sectors';
 import { GraduationCap } from '../../constants/icons';
@@ -65,7 +71,7 @@ const emptyForm = {
 export default function EditIntro() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { showToast } = useNotificationContext();
+  const { showToast, showErrorToast } = useNotificationContext();
   const {
     profile,
     loading,
@@ -84,6 +90,7 @@ export default function EditIntro() {
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [modalSaving, setModalSaving] = useState(false);
+  const [forceOtherCity, setForceOtherCity] = useState(false);
 
   const initialForm = useMemo(() => {
     if (!user) return emptyForm;
@@ -153,6 +160,24 @@ export default function EditIntro() {
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
+  const citySelectValue = getCitySelectValue(form.city, forceOtherCity);
+  const showCustomCity = citySelectValue === CITY_OTHER_VALUE;
+
+  const handleCitySelectChange = (event) => {
+    const value = event.target.value;
+    if (value === CITY_OTHER_VALUE) {
+      setForceOtherCity(true);
+      setForm((prev) => ({
+        ...prev,
+        city: isListedCity(prev.city) ? '' : prev.city,
+      }));
+      setErrors((prev) => ({ ...prev, city: undefined }));
+      return;
+    }
+    setForceOtherCity(false);
+    setField('city')(event);
+  };
+
   const openExperience = (item = null) => {
     setEditingExperience(item);
     setExperienceOpen(true);
@@ -202,7 +227,7 @@ export default function EditIntro() {
     // #endregion
 
     if (error) {
-      showToast(error.message, 'error');
+      showErrorToast(error, 'save_profile');
       return;
     }
 
@@ -229,12 +254,12 @@ export default function EditIntro() {
     const result = id ? await updateEducation(id, data) : await addEducation(data);
     if (result.error) {
       setModalSaving(false);
-      showToast(result.error.message || 'No se pudo guardar la educación.', 'error');
+      showErrorToast(result.error, 'save_education');
       return result;
     }
     if (!id && !result.data?.id) {
       setModalSaving(false);
-      const err = { message: 'No se pudo confirmar el guardado en el servidor.' };
+      const err = { message: 'No hemos podido confirmar el guardado. Inténtalo de nuevo.' };
       showToast(err.message, 'error');
       return { data: null, error: err };
     }
@@ -245,7 +270,7 @@ export default function EditIntro() {
       const introResult = await syncEducationIntro(educationId, showInIntro);
       if (introResult.error) {
         setModalSaving(false);
-        showToast(introResult.error.message, 'error');
+        showErrorToast(introResult.error, 'save_education');
         return introResult;
       }
       setForm((prev) => {
@@ -439,16 +464,29 @@ export default function EditIntro() {
             />
             <Select
               label="Ciudad"
-              name="city"
-              value={form.city}
-              onChange={setField('city')}
-              error={errors.city}
-              required
+              name="city-select"
+              value={citySelectValue}
+              onChange={handleCitySelectChange}
+              error={showCustomCity ? undefined : errors.city}
+              required={!showCustomCity}
               options={[
                 { value: '', label: 'Seleccionar ciudad' },
                 ...CITIES.map((city) => ({ value: city, label: city })),
+                { value: CITY_OTHER_VALUE, label: CITY_OTHER_LABEL },
               ]}
             />
+            {showCustomCity ? (
+              <Input
+                label="Escribe tu ciudad"
+                name="city"
+                id="city"
+                value={form.city}
+                onChange={setField('city')}
+                error={errors.city}
+                required
+                placeholder="Ciudad fuera de Guinea Ecuatorial"
+              />
+            ) : null}
           </EditIntroSection>
         </form>
       </FormPageLayout>

@@ -5,21 +5,23 @@ import { Menu, X, ICON_SIZES } from '../../constants/icons';
 import AdminSidebar from './AdminSidebar';
 
 const PAGE_TITLES = {
-  '/admin': 'Dashboard',
+  '/admin': 'Resumen',
+  '/admin/analytics': 'Analítica',
   '/admin/users': 'Usuarios',
   '/admin/companies': 'Empresas',
   '/admin/organizations': 'Organizaciones',
   '/admin/verifications': 'Verificaciones',
-  '/admin/jobs': 'Ofertas de trabajo',
+  '/admin/jobs': 'Ofertas',
   '/admin/posts': 'Publicaciones',
   '/admin/topics': 'Temas',
   '/admin/reports': 'Reportes',
   '/admin/notifications': 'Notificaciones',
-  '/admin/profile': 'Perfil admin',
+  '/admin/profile': 'Perfil',
   '/admin/settings': 'Configuración',
 };
 
 function getPageTitle(pathname) {
+  if (pathname.startsWith('/admin/analytics')) return PAGE_TITLES['/admin/analytics'];
   return PAGE_TITLES[pathname] ?? 'Administración';
 }
 
@@ -31,44 +33,42 @@ export default function AdminLayout() {
   const closeDrawer = () => setDrawerOpen(false);
 
   return (
-    <div className="min-h-dvh bg-[#F8FAFC]">
-      <div className="flex min-h-dvh w-full">
+    <div className="min-h-dvh min-w-0 max-w-full overflow-x-hidden bg-app-surface">
+      <div className="flex min-h-dvh w-full min-w-0">
         <AdminSidebar className="hidden lg:flex" />
 
-        {drawerOpen && (
+        {drawerOpen ? (
           <div className="fixed inset-0 z-50 lg:hidden">
             <button
               type="button"
-              className="absolute inset-0 bg-black/50"
+              className="absolute inset-0 bg-app-text/40 transition-opacity duration-fast"
               aria-label="Cerrar menú"
               onClick={closeDrawer}
             />
             <AdminSidebar
-              className="relative z-10 h-full shadow-xl"
+              className="relative z-10 h-full border-r border-app-border bg-app-card"
               onNavigate={closeDrawer}
             />
           </div>
-        )}
+        ) : null}
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-4 lg:px-8">
+        <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+          <header className="sticky top-0 z-20 flex items-center gap-space-md border-b border-app-border bg-app-elevated/95 px-space-md py-space-md backdrop-blur md:px-space-lg lg:px-space-xl">
             <button
               type="button"
-              className="rounded-xl p-2 text-gray-600 hover:bg-gray-100 lg:hidden"
+              className="rounded-radius-md p-space-sm text-app-muted transition-colors hover:bg-app-surface hover:text-app-text lg:hidden"
               aria-label={drawerOpen ? 'Cerrar menú' : 'Abrir menú'}
               onClick={() => setDrawerOpen((open) => !open)}
             >
               <AppIcon icon={drawerOpen ? X : Menu} size={ICON_SIZES.default} />
             </button>
-            <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-primary-600">
-                Admin
-              </p>
-              <h1 className="text-xl font-bold text-gray-900">{title}</h1>
+            <div className="min-w-0">
+              <p className="text-caption font-medium text-primary-600">Admin</p>
+              <h1 className="truncate text-title font-semibold tracking-tight text-app-text">{title}</h1>
             </div>
           </header>
 
-          <main className="flex-1 px-4 py-6 lg:px-8 lg:py-8">
+          <main className="motion-page min-w-0 flex-1 px-space-md py-space-lg md:px-space-lg lg:px-space-xl lg:py-space-xl">
             <Outlet />
           </main>
         </div>

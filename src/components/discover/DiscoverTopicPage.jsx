@@ -17,6 +17,7 @@ export default function DiscoverTopicPage({ sectionId }) {
       onRetry={reload}
       isEmpty={!loading && !error && posts.length === 0}
       emptyIcon={emptyIcon}
+      sectionKey={sectionId}
     >
       {posts.map((post) => (
         <PostCard

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 import { isNativeFilePickActive } from '../utils/appLifecycle';
 import { clearChunkReloadGuard } from '../utils/chunkRecovery';
+import { reportError } from '../utils/logger';
 
 /** Minimum time in background before checking for updates again. */
 export const PWA_BACKGROUND_MIN_MS = 30 * 60 * 1000;
@@ -76,7 +77,7 @@ export function usePwaUpdate() {
         registrationRef.current = registration ?? null;
       },
       onRegisterError(error) {
-        console.warn('[PWA] Service worker registration failed:', error);
+        reportError(error, { area: 'pwa_sw_register' });
       },
     });
 

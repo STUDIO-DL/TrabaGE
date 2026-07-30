@@ -5,11 +5,7 @@ import { AvatarType } from '../../constants/avatarDefaults';
 import { getCandidateCoverUrl } from '../../constants/images';
 import { ROLES } from '../../constants/roles';
 import {
-  Briefcase,
-  Building2,
   Camera,
-  GraduationCap,
-  MapPin,
   Pencil,
   Trash2,
   ICON_SIZES,
@@ -35,6 +31,7 @@ import {
 } from '../../utils/profileIntro';
 import { getDisplayName } from '../../utils/displayIdentity';
 import { useAuth } from '../../hooks/useAuth';
+import { profileHeaderAlignClass } from './profileLayoutClasses';
 
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 
@@ -86,7 +83,14 @@ export default function CandidateProfileHeader({
     <section className="overflow-hidden border-b border-app-border bg-app-card">
       <div className={`relative ${profileCoverHeightClass} overflow-hidden`}>
         {coverSrc ? (
-          <img src={coverSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <img
+            src={coverSrc}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
         ) : (
           <div className={profileBannerGradientClass} aria-hidden />
         )}
@@ -130,7 +134,8 @@ export default function CandidateProfileHeader({
         ) : null}
       </div>
 
-      <div className={profileHeaderContentClass}>
+      <div className={`${profileHeaderContentClass} lg:px-space-xl`}>
+        <div className={profileHeaderAlignClass}>
         <div className={profileHeaderBodyClass}>
           <div className={`relative shrink-0 self-start ${profilePersonalAvatarOverlapClass}`}>
             <div className={profilePersonalAvatarFrameClass}>
@@ -208,42 +213,38 @@ export default function CandidateProfileHeader({
             {headline ? <p className={profileHeadlineClass}>{headline}</p> : null}
 
             {currentPosition ? (
-              <p className="mt-space-xs flex items-start gap-1.5 break-words text-caption text-app-muted">
-                <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
-                <span>{currentPosition}</span>
+              <p className="mt-space-xs break-words text-caption text-app-muted">
+                {currentPosition}
               </p>
             ) : null}
 
             {sector ? (
-              <p className="mt-space-xs flex items-start gap-1.5 break-words text-caption text-app-muted">
-                <AppIcon icon={Building2} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
-                <span>{sector}</span>
+              <p className="mt-space-xs break-words text-caption text-app-muted">
+                {sector}
               </p>
             ) : null}
 
             {educationLine ? (
-              <p className="mt-space-xs flex items-start gap-1.5 break-words text-caption text-app-muted">
-                <AppIcon icon={GraduationCap} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
-                <span>{educationLine}</span>
+              <p className="mt-space-xs break-words text-caption text-app-muted">
+                {educationLine}
               </p>
             ) : null}
 
             {locationText ? (
-              <p className="text-user-content mt-space-sm flex items-start gap-1.5 text-caption text-app-muted">
-                <AppIcon icon={MapPin} size={ICON_SIZES.default} className="mt-0.5 shrink-0" />
-                <span>{locationText}</span>
+              <p className="text-user-content mt-space-sm break-words text-caption text-app-muted">
+                {locationText}
               </p>
             ) : null}
 
             {showYearsBadge && formatYearsLabel(profile?.years_experience) ? (
               <ul className="mt-space-sm flex flex-wrap gap-space-sm">
-                <li className="inline-flex items-center gap-1.5 rounded-radius-full border border-app-border bg-app-surface px-3 py-1.5 text-caption text-app-muted">
-                  <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0" />
+                <li className="inline-flex items-center rounded-radius-full border border-app-border bg-app-surface px-3 py-1.5 text-caption text-app-muted">
                   {formatYearsLabel(profile?.years_experience)}
                 </li>
               </ul>
             ) : null}
           </div>
+        </div>
         </div>
       </div>
     </section>

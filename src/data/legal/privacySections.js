@@ -276,11 +276,11 @@ export const PRIVACY_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: 'TrabaGE fue diseñado y desarrollado por [ZARREL](https://zarrel.org), empresa especializada en software, diseño digital y soluciones tecnológicas. ZARREL es el responsable tecnológico de la plataforma.',
+        text: 'TrabaGE fue diseñado y desarrollado por [ZARREL TECH](https://zarrel.org), empresa especializada en software, diseño digital y soluciones tecnológicas. ZARREL TECH es el responsable tecnológico de la plataforma.',
       },
       {
         type: 'p',
-        text: 'Más información sobre ZARREL: https://zarrel.org',
+        text: 'Más información sobre ZARREL TECH: https://zarrel.org',
       },
     ],
   },

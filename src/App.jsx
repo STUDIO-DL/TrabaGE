@@ -15,8 +15,12 @@ import { RouteSectionLayout } from './components/routing/RouteErrorBoundary';
 import GuestBar from './components/common/GuestBar';
 import InstallPrompt from './components/common/InstallPrompt';
 import PushPermissionPrompt from './components/common/PushPermissionPrompt';
+import NotificationSetupGuide from './components/common/NotificationSetupGuide';
 import PwaUpdatePrompt from './components/common/PwaUpdatePrompt';
 import { ToastContainer } from './components/ui/Toast';
+import OfflineScreen from './components/common/OfflineScreen';
+import MaintenanceGate from './components/routing/MaintenanceGate';
+import { MaintenanceProvider } from './context/MaintenanceContext';
 import { useNotificationContext } from './context/NotificationContext';
 import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
 import SplashScreen from './pages/SplashScreen';
@@ -61,6 +65,7 @@ const DiscoverCourses = lazy(() => import('./pages/discover/Courses'));
 const DiscoverEntrepreneurs = lazy(() => import('./pages/discover/Entrepreneurs'));
 const DiscoverVolunteering = lazy(() => import('./pages/discover/Volunteering'));
 const DiscoverInternational = lazy(() => import('./pages/discover/International'));
+const DiscoverPeople = lazy(() => import('./pages/discover/People'));
 const DemoCompanyEntry = lazy(() => import('./pages/demo/DemoCompanyEntry'));
 const HelpCenter = lazy(() => import('./pages/HelpCenter'));
 const PrivacyPolicy = lazy(() => import('./pages/shared/PrivacyPolicy'));
@@ -72,6 +77,7 @@ const NotFound = lazy(() => import('./pages/shared/NotFound'));
 
 const CompanyFeed = lazy(() => import('./pages/company/Feed'));
 const Dashboard = lazy(() => import('./pages/company/Dashboard'));
+const CompanyAnalytics = lazy(() => import('./pages/company/CompanyAnalytics'));
 const CompanyPublish = lazy(() => import('./pages/company/Publish'));
 const CompanyJobs = lazy(() => import('./pages/company/Jobs'));
 const PublishJob = lazy(() => import('./pages/company/PublishJob'));
@@ -98,6 +104,7 @@ const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
 const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 
 function AppToasts() {
   const { toasts, dismissToast } = useNotificationContext();
@@ -141,6 +148,7 @@ function DiscoverAppRoutes({ basePath = '' } = {}) {
   const path = (segment) => (basePath ? `${basePath}/${segment}` : segment);
   return (
     <>
+      <Route path={path('discover/people')} element={<DiscoverPeople />} />
       <Route path={path('discover/hiring')} element={<DiscoverHiring />} />
       <Route path={path('discover/scholarships')} element={<DiscoverScholarships />} />
       <Route path={path('discover/internships')} element={<DiscoverInternships />} />
@@ -160,6 +168,7 @@ function EmployerAppRoutes() {
     <>
       <Route path="feed" element={<CompanyFeed />} />
       <Route path="dashboard" element={<Dashboard />} />
+      <Route path="analytics" element={<CompanyAnalytics />} />
       <Route path="publish" element={<CompanyPublish />} />
       <Route path="jobs" element={<CompanyJobs />} />
       <Route path="jobs/create" element={<PublishJob />} />
@@ -213,6 +222,7 @@ function AppRoutes() {
       <PwaUpdatePrompt />
       <InstallPrompt />
       <PushPermissionPrompt />
+      <NotificationSetupGuide />
       <Suspense fallback={<AuthLoadingScreen />}>
         <Routes>
             <Route element={<RouteSectionLayout />}>
@@ -268,6 +278,7 @@ function AppRoutes() {
                 <Route element={<RoleRoute role={ROLES.ADMIN} />}>
                   <Route element={<AdminLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/analytics/*" element={<AdminAnalytics />} />
                     <Route path="/admin/users" element={<AdminUsers />} />
                     <Route path="/admin/companies" element={<AdminCompanies />} />
                     <Route path="/admin/organizations" element={<AdminOrganizations />} />
@@ -345,9 +356,14 @@ export default function App() {
           <ThemeProvider>
             <KeyboardProvider>
               <NotificationProvider>
-                <AppToasts />
-                <SessionManager />
-                <AppRoutes />
+                <MaintenanceProvider>
+                  <OfflineScreen />
+                  <AppToasts />
+                  <SessionManager />
+                  <MaintenanceGate>
+                    <AppRoutes />
+                  </MaintenanceGate>
+                </MaintenanceProvider>
               </NotificationProvider>
             </KeyboardProvider>
           </ThemeProvider>

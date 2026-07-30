@@ -9,7 +9,7 @@ import { notifyGuestBlocked } from '../utils/guestMode';
 export function useStartConversation() {
   const navigate = useNavigate();
   const { user, role, isPreviewMode } = useAuth();
-  const { showToast } = useNotificationContext();
+  const { showToast, showErrorToast } = useNotificationContext();
   const [starting, setStarting] = useState(false);
 
   const startConversation = useCallback(
@@ -32,14 +32,14 @@ export function useStartConversation() {
       setStarting(false);
 
       if (error) {
-        showToast(error.message ?? 'No se pudo abrir la conversación.', 'error');
+        showErrorToast(error, 'open_conversation');
         return { error };
       }
 
       navigate(rolePath(role, `/messages/${conversationId}`));
       return { data: conversationId, error: null };
     },
-    [isPreviewMode, navigate, role, showToast, user],
+    [isPreviewMode, navigate, role, showErrorToast, showToast, user],
   );
 
   return { startConversation, starting };

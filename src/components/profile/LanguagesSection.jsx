@@ -1,6 +1,4 @@
-import ProfileSectionCard from './ProfileSectionCard';
-import AppIcon from '../common/AppIcon';
-import { ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
+import ProfileSectionCard, { ProfileEntryRow } from './ProfileSectionCard';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 
@@ -18,34 +16,18 @@ export default function LanguagesSection({ items = [], isOwn, onAdd, onEdit, onD
       isEmpty={!items.length}
       emptyText={getProfileSectionEmptyCopy('languages', isOwn)}
     >
-      <ul className="space-y-3">
+      <div>
         {items.map((item) => (
-          <li key={item.id} className="flex items-start justify-between gap-2 border-b border-gray-50 pb-3 last:border-0 last:pb-0">
-            <div>
-              <p className="text-sm font-medium text-gray-900">{item.language}</p>
-              <p className="text-xs text-gray-500">{item.level || 'Nivel no especificado'}</p>
-            </div>
-            <div className="flex shrink-0 gap-2">
-              <button
-                type="button"
-                onClick={() => onEdit?.(item)}
-                className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700"
-              >
-                <AppIcon icon={Pencil} size={ICON_SIZES.sm} />
-                Editar
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete?.(item.id)}
-                className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
-              >
-                <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
-                Eliminar
-              </button>
-            </div>
-          </li>
+          <ProfileEntryRow
+            key={item.id}
+            title={item.language}
+            subtitle={item.level || 'Nivel no especificado'}
+            isOwn={isOwn}
+            onEdit={() => onEdit?.(item)}
+            onDelete={() => onDelete?.(item.id)}
+          />
         ))}
-      </ul>
+      </div>
     </ProfileSectionCard>
   );
 }

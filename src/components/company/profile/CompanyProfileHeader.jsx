@@ -151,7 +151,14 @@ export default function CompanyProfileHeader({
       {/* Cover / banner */}
       <div className={`relative ${profileCompanyCoverHeightClass} overflow-hidden`}>
         {coverSrc ? (
-          <img src={coverSrc} alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <img
+            src={coverSrc}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
         ) : (
           <div className={profileBannerGradientClass} aria-hidden />
         )}

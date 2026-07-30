@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import { useForegroundResumeRefresh } from './useForegroundResumeRefresh';
 import { supabase } from '../config/supabase';
 import { messagesService } from '../services/messages.service';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 
 export function useConversations() {
   const { user, isPreviewMode } = useAuth();
@@ -35,7 +36,7 @@ export function useConversations() {
     // #endregion
 
     if (fetchError) {
-      setError(fetchError?.message ?? null);
+      setError(fetchError ? getUserErrorMessage(fetchError, ERROR_ACTION.load_messages) : null);
       // Keep previous list on soft/realtime refresh failures.
       if (!hasExisting) setConversations([]);
       setLoading(false);

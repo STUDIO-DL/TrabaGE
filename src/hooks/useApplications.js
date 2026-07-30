@@ -4,6 +4,7 @@ import { applicationsService } from '../services/applications.service';
 import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewApplications } from '../constants/preview';
 import { supabase } from '../config/supabase';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 
 export function useApplications() {
   const { user, role, isPreviewMode } = useAuth();
@@ -29,7 +30,7 @@ export function useApplications() {
         : await applicationsService.getCandidateApplications(user.id);
 
     setApplications(data ?? []);
-    setError(fetchError?.message ?? null);
+    setError(fetchError ? getUserErrorMessage(fetchError, ERROR_ACTION.load) : null);
     setLoading(false);
   }, [user?.id, role, isPreviewMode]);
 

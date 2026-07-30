@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
@@ -44,7 +45,7 @@ export default function UsernameEditModal({
     setSaving(false);
 
     if (saveError) {
-      setError(saveError.message);
+      setError(getUserErrorMessage(saveError, ERROR_ACTION.settings));
       return;
     }
 

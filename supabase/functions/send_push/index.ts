@@ -6,34 +6,44 @@ import { isOneSignalConfigured, sendOneSignalNotification } from '../_shared/one
 
 
 
-const corsHeaders = {
+/** Production + local Vite origins. Extra origins via TRABAGE_ALLOWED_ORIGIN (comma-separated). */
+const DEFAULT_ALLOWED_ORIGINS = [
+  'https://trabage.org',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+];
 
-  'Access-Control-Allow-Origin': Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ?? 'https://trabage.org',
+function resolveAllowedOrigins(): string[] {
+  const fromEnv = (Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ?? '')
+    .split(',')
+    .map((value) => value.trim().replace(/\/$/, ''))
+    .filter(Boolean);
+  return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...fromEnv])];
+}
 
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+function buildCorsHeaders(requestOrigin: string | null): Record<string, string> {
+  const allowed = resolveAllowedOrigins();
+  const origin = (requestOrigin ?? '').replace(/\/$/, '');
+  const reflected = origin && allowed.includes(origin) ? origin : allowed[0];
+  return {
+    'Access-Control-Allow-Origin': reflected,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Vary': 'Origin',
+  };
+}
 
-  'Vary': 'Origin',
-
-};
-
-
+/** Set at the start of each request so jsonResponse reflects the caller Origin. */
+let activeCorsHeaders = buildCorsHeaders(null);
 
 const DEDUP_WINDOW_MS = 10 * 60 * 1000;
 
 const PUSH_BATCH_SIZE = 2000;
 
-
-
 function jsonResponse(body: Record<string, unknown>, status = 200) {
-
   return new Response(JSON.stringify(body), {
-
     status,
-
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-
+    headers: { ...activeCorsHeaders, 'Content-Type': 'application/json' },
   });
-
 }
 
 
@@ -222,6 +232,8 @@ async function sendToRecipients(
 
         .eq('dedup_key', dedupKey)
 
+        .eq('status', 'sent')
+
         .gte('created_at', new Date(Date.now() - DEDUP_WINDOW_MS).toISOString())
 
         .maybeSingle();
@@ -238,6 +250,30 @@ async function sendToRecipients(
 
 
 
+      // Failed rows must not reuse OneSignal external_id idempotency (would block retries).
+
+      const { data: priorFailed } = await admin
+
+        .from('push_send_log')
+
+        .select('id')
+
+        .eq('dedup_key', dedupKey)
+
+        .eq('status', 'failed')
+
+        .maybeSingle();
+
+
+
+      const onesignalIdempotencyKey = priorFailed
+
+        ? `${dedupKey}:retry:${Date.now()}`
+
+        : dedupKey;
+
+
+
       const result = await sendOneSignalNotification({
 
         title,
@@ -250,7 +286,7 @@ async function sendToRecipients(
 
         externalIds: [userId],
 
-        idempotencyKey: dedupKey,
+        idempotencyKey: onesignalIdempotencyKey,
 
         iosBadgeType,
 
@@ -816,20 +852,145 @@ async function processScheduledNotifications(
 
 
 
-serve(async (req) => {
+/** Server-side backup: push for new_message rows that never got a successful send. */
 
-  if (req.method === 'OPTIONS') {
+async function processPendingMessagePushes(
 
-    return new Response('ok', { headers: corsHeaders });
+  admin: ReturnType<typeof createClient>,
+
+  appUrl: string,
+
+) {
+
+  const { data: pending, error } = await admin.rpc('claim_pending_message_pushes', {
+
+    p_limit: 40,
+
+    p_lookback_minutes: 10,
+
+  });
+
+
+
+  if (error) {
+
+    return {
+
+      error: 'No se pudieron reclamar pushes de mensajes pendientes',
+
+      details: error.message,
+
+    };
 
   }
 
 
 
+  let sent = 0;
+
+  let failed = 0;
+
+  let deduped = 0;
+
+  let skipped = 0;
+
+
+
+  for (const row of pending ?? []) {
+
+    const messageId = String(row.message_id ?? '');
+
+    if (!messageId || !row.recipient_id) continue;
+
+
+
+    const data: Record<string, unknown> = {
+
+      type: 'new_message',
+
+      message_id: messageId,
+
+      conversation_id: row.conversation_id ?? undefined,
+
+      link: row.link ?? undefined,
+
+      notification_id: row.notification_id ?? undefined,
+
+    };
+
+
+
+    const result = await sendToRecipients(
+
+      admin,
+
+      [String(row.recipient_id)],
+
+      String(row.title ?? 'Nuevo mensaje'),
+
+      String(row.body ?? ''),
+
+      data,
+
+      appUrl,
+
+      { notificationType: 'new_message' },
+
+    );
+
+
+
+    if (result.error) {
+
+      failed += 1;
+
+      continue;
+
+    }
+
+
+
+    sent += result.sent ?? 0;
+
+    failed += result.failed ?? 0;
+
+    deduped += result.deduped ?? 0;
+
+    skipped += result.skipped ?? 0;
+
+  }
+
+
+
+  return {
+
+    ok: true,
+
+    pending: Array.isArray(pending) ? pending.length : 0,
+
+    sent,
+
+    failed,
+
+    deduped,
+
+    skipped,
+
+  };
+
+}
+
+
+
+serve(async (req) => {
+  activeCorsHeaders = buildCorsHeaders(req.headers.get('Origin'));
+
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: activeCorsHeaders });
+  }
+
   if (req.method !== 'POST') {
-
     return jsonResponse({ error: 'Method not allowed' }, 405);
-
   }
 
 
@@ -896,7 +1057,7 @@ serve(async (req) => {
 
 
 
-  if (payloadBody.process_scheduled === true) {
+  if (payloadBody.process_scheduled === true || payloadBody.process_message_pushes === true) {
 
     if (!isServiceRole && !(await isAdminUser(admin, (await userClient.auth.getUser()).data.user?.id ?? ''))) {
 
@@ -904,7 +1065,47 @@ serve(async (req) => {
 
     }
 
-    return processScheduledNotifications(admin, appUrl);
+
+
+    const response: Record<string, unknown> = { ok: true };
+
+
+
+    if (payloadBody.process_scheduled === true) {
+
+      const scheduledResult = await processScheduledNotifications(admin, appUrl);
+
+      const scheduledBody = await scheduledResult.json();
+
+      response.scheduled = scheduledBody;
+
+      if (!scheduledResult.ok) {
+
+        return jsonResponse({ error: scheduledBody.error ?? 'Error procesando programados', ...response }, scheduledResult.status);
+
+      }
+
+    }
+
+
+
+    if (payloadBody.process_message_pushes === true) {
+
+      const messageResult = await processPendingMessagePushes(admin, appUrl);
+
+      response.message_pushes = messageResult;
+
+      if (messageResult.error) {
+
+        return jsonResponse({ error: messageResult.error, ...response }, 500);
+
+      }
+
+    }
+
+
+
+    return jsonResponse(response);
 
   }
 

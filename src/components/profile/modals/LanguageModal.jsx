@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { getUserErrorMessage, ERROR_ACTION } from '../../../utils/userFacingError';
 import Modal from '../../ui/Modal';
 import Select from '../../ui/Select';
 import Button from '../../ui/Button';
@@ -55,7 +56,7 @@ export default function LanguageModal({ isOpen, onClose, initial, onSave, loadin
     }
     const { error: saveError } = await onSave(form, initial?.id);
     if (saveError) {
-      setError(saveError.message);
+      setError(getUserErrorMessage(saveError, ERROR_ACTION.save_language));
       return;
     }
     onClose();

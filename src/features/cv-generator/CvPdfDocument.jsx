@@ -2,9 +2,13 @@ import { Document, Page, View, Text, Image } from '@react-pdf/renderer';
 import { cvStyles } from './cvStyles';
 
 function Section({ title, children }) {
+  // Allow section content to paginate. wrap={false} + minPresenceAhead on large
+  // blocks can hang @react-pdf when content exceeds one A4 page.
   return (
-    <View style={cvStyles.section} wrap={false} minPresenceAhead={40}>
-      <Text style={cvStyles.sectionTitle}>{title}</Text>
+    <View style={cvStyles.section} minPresenceAhead={24}>
+      <Text style={cvStyles.sectionTitle} wrap={false}>
+        {title}
+      </Text>
       {children}
     </View>
   );
@@ -16,11 +20,22 @@ function ContactLine({ data }) {
 
   return (
     <View style={cvStyles.contactRow}>
-      {items.map((item) => (
-        <Text key={item} style={cvStyles.contactItem}>
-          {item}
-        </Text>
-      ))}
+      {items.flatMap((item, index) => {
+        const nodes = [];
+        if (index > 0) {
+          nodes.push(
+            <Text key={`sep-${index}`} style={cvStyles.contactSep}>
+              ·
+            </Text>,
+          );
+        }
+        nodes.push(
+          <Text key={item} style={cvStyles.contactItem}>
+            {item}
+          </Text>,
+        );
+        return nodes;
+      })}
     </View>
   );
 }
@@ -31,8 +46,8 @@ function ExperienceSection({ items }) {
   return (
     <Section title="Experiencia profesional">
       {items.map((item, index) => (
-        <View key={`exp-${index}`} style={cvStyles.entryBlock} wrap={false}>
-          <View style={cvStyles.entryHeader}>
+        <View key={`exp-${index}`} style={cvStyles.entryBlock} minPresenceAhead={28}>
+          <View style={cvStyles.entryHeader} wrap={false}>
             <Text style={cvStyles.entryTitle}>{item.position || item.company}</Text>
             {item.dateRange ? <Text style={cvStyles.entryDate}>{item.dateRange}</Text> : null}
           </View>
@@ -54,8 +69,8 @@ function EducationSection({ items }) {
   return (
     <Section title="Formación académica">
       {items.map((item, index) => (
-        <View key={`edu-${index}`} style={cvStyles.entryBlock} wrap={false}>
-          <View style={cvStyles.entryHeader}>
+        <View key={`edu-${index}`} style={cvStyles.entryBlock} minPresenceAhead={28}>
+          <View style={cvStyles.entryHeader} wrap={false}>
             <Text style={cvStyles.entryTitle}>{item.program || item.institution}</Text>
             {item.dateRange ? <Text style={cvStyles.entryDate}>{item.dateRange}</Text> : null}
           </View>
@@ -126,8 +141,14 @@ export default function CvPdfDocument({ data }) {
             <Image src={data.avatarDataUri} style={cvStyles.avatar} />
           ) : null}
           <View style={cvStyles.headerContent}>
-            <Text style={cvStyles.name}>{data.fullName}</Text>
-            {data.headline ? <Text style={cvStyles.headline}>{data.headline}</Text> : null}
+            <View style={cvStyles.nameBlock}>
+              <Text style={cvStyles.name}>{data.fullName}</Text>
+            </View>
+            {data.headline ? (
+              <View style={cvStyles.headlineBlock}>
+                <Text style={cvStyles.headline}>{data.headline}</Text>
+              </View>
+            ) : null}
             <ContactLine data={data} />
           </View>
         </View>
@@ -147,7 +168,9 @@ export default function CvPdfDocument({ data }) {
         <CertificationsSection items={data.certifications} />
 
         <Text style={cvStyles.footer} fixed>
-          Generado con TrabaGE
+          Generado con{' '}
+          <Text style={cvStyles.brandTraba}>Traba</Text>
+          <Text style={cvStyles.brandGE}>GE</Text>
         </Text>
       </Page>
     </Document>

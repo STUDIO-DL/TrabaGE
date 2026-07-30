@@ -53,7 +53,6 @@ export default function MessagesButton({ className = '', size = ICON_SIZES.md })
       />
       <MessagesChatIcon
         size={size}
-        strokeWidth={1.85}
         className="relative z-[1] transition-transform duration-fast ease-out group-active:scale-95"
       />
       {badge.type === 'dot' ? (

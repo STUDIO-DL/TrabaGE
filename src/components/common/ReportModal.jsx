@@ -59,19 +59,19 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId }) {
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Reportar contenido">
       <form onSubmit={handleSubmit} className="space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-app-muted">
           Cuéntanos qué ocurre. Revisaremos tu reporte lo antes posible.
         </p>
 
         <fieldset className="space-y-2">
-          <legend className="mb-2 text-sm font-medium text-gray-900">Motivo del reporte</legend>
+          <legend className="mb-2 text-sm font-medium text-app-text">Motivo del reporte</legend>
           {REPORT_REASONS.map((reason) => (
             <label
               key={reason.code}
               className={`flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
                 reasonCode === reason.code
                   ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-200 hover:border-gray-300'
+                  : 'border-app-border hover:border-app-border'
               }`}
             >
               <input
@@ -82,15 +82,15 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId }) {
                 onChange={() => setReasonCode(reason.code)}
                 className="mt-0.5 text-primary-600"
               />
-              <span className="text-sm text-gray-800">{reason.label}</span>
+              <span className="text-sm text-app-text">{reason.label}</span>
             </label>
           ))}
         </fieldset>
 
         <div>
-          <label htmlFor="report-details" className="mb-1.5 block text-sm font-medium text-gray-900">
+          <label htmlFor="report-details" className="mb-1.5 block text-sm font-medium text-app-text">
             Detalles adicionales{' '}
-            <span className="font-normal text-gray-500">
+            <span className="font-normal text-app-muted">
               {reportReasonRequiresDetails(reasonCode) ? '(obligatorio)' : '(opcional)'}
             </span>
           </label>
@@ -100,7 +100,7 @@ export default function ReportModal({ isOpen, onClose, targetType, targetId }) {
             value={reasonDetails}
             onChange={(e) => setReasonDetails(e.target.value)}
             placeholder="Describe lo ocurrido con el mayor detalle posible..."
-            className="w-full resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder:text-gray-400 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+            className="w-full resize-none rounded-xl border border-app-border px-3 py-2.5 text-sm text-app-text placeholder:text-app-subtle focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
           />
         </div>
 

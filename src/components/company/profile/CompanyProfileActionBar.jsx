@@ -1,5 +1,6 @@
 import AppIcon from '../../common/AppIcon';
-import { MessageSquare, ICON_SIZES } from '../../../constants/icons';
+import { ICON_SIZES } from '../../../constants/icons';
+import MessagesChatIcon from '../../messages/MessagesChatIcon';
 import Button from '../../ui/Button';
 import FollowButton from '../../follow/FollowButton';
 import ContentActionMenu from '../../common/ContentActionMenu';
@@ -39,7 +40,7 @@ export default function CompanyProfileActionBar({
             className={profileActionPrimaryClass}
             loading={messageLoading}
           >
-            <AppIcon icon={MessageSquare} size={ICON_SIZES.sm} className="text-current" />
+            <AppIcon icon={MessagesChatIcon} size={ICON_SIZES.sm} className="text-current" />
             Mensaje
           </Button>
         ) : null}

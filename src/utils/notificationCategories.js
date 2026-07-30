@@ -13,6 +13,7 @@
 
 import { DEEP_LINK_PATHS } from './deepLinks.js';
 import { ROLES, isEmployerRole, normalizeRole, rolePath } from '../constants/roles.js';
+import { sanitizeAppNavigationTarget } from './safeNavigation.js';
 
 export const NOTIFICATION_CATEGORY = {
   ALL: 'all',
@@ -127,12 +128,12 @@ export function getNotificationLink(notification, role = ROLES.PERSONAL) {
 
     // Prefer a non-company link if present; never fall back to /companies/:id.
     if (metadata.link && !isCompanyProfileLink(metadata.link)) {
-      return metadata.link;
+      return sanitizeAppNavigationTarget(metadata.link);
     }
     return null;
   }
 
-  if (metadata.link) return metadata.link;
+  if (metadata.link) return sanitizeAppNavigationTarget(metadata.link);
 
   if (notification?.type === 'new_message' && metadata.conversation_id) {
     return rolePath(resolvedRole, `/messages/${metadata.conversation_id}`);

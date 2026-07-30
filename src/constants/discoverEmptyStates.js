@@ -11,6 +11,7 @@ import {
 
 /** Section-specific icons for discover empty states (copy is shared via EmptyPublicationsState). */
 export const DISCOVER_SECTION_ICONS = {
+  people: Users,
   hiring: Briefcase,
   scholarships: GraduationCap,
   internships: Briefcase,

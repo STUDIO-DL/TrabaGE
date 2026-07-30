@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from './useAuth';
 import { followsService } from '../services/follows.service';
+import { notificationsService } from '../services/notifications.service';
 
 export function useFollow({ targetType, targetId, enabled = true }) {
   const { user, isAuthenticated } = useAuth();
@@ -50,6 +51,23 @@ export function useFollow({ targetType, targetId, enabled = true }) {
       setFollowerCount((count) => Math.max(0, count + (wasFollowing ? 1 : -1)));
       setActionLoading(false);
       return { ok: false, error };
+    }
+
+    // In-app row is created by DB trigger; dispatch push for the followed account.
+    if (!wasFollowing) {
+      const link =
+        targetType === 'organization' ? '/organization/profile' : '/business/profile';
+      void notificationsService.sendPush({
+        recipientIds: [targetId],
+        title: 'Nuevo seguidor',
+        body: 'Alguien empezó a seguir tu cuenta en TrabaGE.',
+        data: {
+          type: 'new_follower',
+          follower_id: user.id,
+          target_type: targetType,
+          link,
+        },
+      });
     }
 
     setActionLoading(false);

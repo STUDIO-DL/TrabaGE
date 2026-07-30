@@ -1,14 +1,10 @@
 import AppIcon from '../../common/AppIcon';
 import {
-  Briefcase,
-  Calendar,
   ExternalLink,
-  Globe,
-  MapPin,
-  Users,
   ICON_SIZES,
 } from '../../../constants/icons';
 import { getCompanyLocationText, getCompanySectorText } from '../../../utils/companyProfile';
+import { companyAnalyticsService } from '../../../features/company-analytics/companyAnalytics.service';
 
 function normalizeWebsiteHref(url) {
   if (!url) return null;
@@ -26,12 +22,11 @@ function formatWebsiteDisplay(url) {
   }
 }
 
-function InfoRow({ icon, label, value, href, external = false }) {
+function InfoRow({ label, value, href, external = false, onClick }) {
   if (!value) return null;
 
   const content = (
-    <div className="flex min-h-touch items-start gap-space-sm py-space-xs">
-      <AppIcon icon={icon} size={ICON_SIZES.md} className="mt-0.5 shrink-0 text-app-text" />
+    <div className="flex min-h-touch items-start gap-space-sm py-space-sm">
       <div className="min-w-0 flex-1">
         <p className="text-caption text-app-subtle">{label}</p>
         <p
@@ -54,6 +49,7 @@ function InfoRow({ icon, label, value, href, external = false }) {
         href={href}
         target={href.startsWith('http') ? '_blank' : undefined}
         rel="noopener noreferrer"
+        onClick={onClick}
         className="block rounded-radius-sm transition-opacity duration-fast hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
       >
         {content}
@@ -64,7 +60,7 @@ function InfoRow({ icon, label, value, href, external = false }) {
   return content;
 }
 
-export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
+export default function CompanyInfoRows({ profile, variant = 'minimal', companyId = null, trackClicks = false }) {
   const location = getCompanyLocationText(profile);
   const sector = getCompanySectorText(profile);
   const website = profile?.website?.trim();
@@ -75,7 +71,6 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
   const rows = [
     {
       key: 'website',
-      icon: Globe,
       label: 'Sitio web',
       value: formatWebsiteDisplay(website),
       href: websiteHref,
@@ -84,28 +79,24 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
     },
     {
       key: 'location',
-      icon: MapPin,
       label: 'Ubicación',
       value: address || location || null,
       show: Boolean(address) || (!excludeHeaderMeta && Boolean(location)),
     },
     {
       key: 'founded',
-      icon: Calendar,
       label: 'Fundada',
       value: profile?.founded_year ? String(profile.founded_year) : null,
       show: Boolean(profile?.founded_year),
     },
     {
       key: 'size',
-      icon: Users,
       label: 'Tamaño',
       value: profile?.company_size?.trim() || null,
       show: Boolean(profile?.company_size?.trim()) && !excludeHeaderMeta,
     },
     {
       key: 'sector',
-      icon: Briefcase,
       label: 'Sector',
       value: sector || null,
       show: Boolean(sector) && !excludeHeaderMeta,
@@ -116,16 +107,21 @@ export default function CompanyInfoRows({ profile, variant = 'minimal' }) {
 
   if ((variant === 'minimal' || variant === 'inicio') && visibleRows.length === 0) return null;
 
+  const handleWebsiteClick = () => {
+    if (!trackClicks || !companyId) return;
+    void companyAnalyticsService.trackWebsiteClick(companyId, { source: 'company_info_rows' });
+  };
+
   return (
     <div className="divide-y divide-app-border">
       {visibleRows.map((row) => (
         <InfoRow
           key={row.key}
-          icon={row.icon}
           label={row.label}
           value={row.value}
           href={row.href}
           external={row.external}
+          onClick={row.key === 'website' ? handleWebsiteClick : undefined}
         />
       ))}
     </div>

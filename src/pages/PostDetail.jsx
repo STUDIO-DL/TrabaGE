@@ -13,6 +13,7 @@ import { resolvePostAuthorName } from '../utils/displayIdentity';
 import { ROLES } from '../constants/roles';
 import { useAuth } from '../hooks/useAuth';
 import { usePostMutations } from '../hooks/usePostMutations';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 
 async function enrichPost(post) {
   if (!post) return post;
@@ -68,7 +69,7 @@ export default function PostDetail() {
     postsService.getById(postId).then(async ({ data, error: fetchError }) => {
       if (fetchError) {
         setPost(null);
-        setError(fetchError.message ?? 'No se pudo cargar la publicación.');
+        setError(getUserErrorMessage(fetchError, ERROR_ACTION.load_post));
         setLoading(false);
         return;
       }

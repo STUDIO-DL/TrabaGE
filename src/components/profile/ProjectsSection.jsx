@@ -28,7 +28,7 @@ function ProjectsSection({ items = [], isOwn, onAdd, onEdit, onDelete }) {
       )}
 
       {sortedItems.length > 0 && (
-        <div className="grid gap-space-md">
+        <div className="grid gap-space-md lg:grid-cols-2">
           {sortedItems.map((project) => (
             <ProjectCard
               key={project.id}

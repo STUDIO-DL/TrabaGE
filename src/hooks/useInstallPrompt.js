@@ -11,14 +11,26 @@ function isStandaloneDisplayMode() {
   );
 }
 
+function readInstalledFlag() {
+  try {
+    return localStorage.getItem(INSTALLED_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
 export function isPwaInstalled() {
   if (typeof window === 'undefined') return false;
   if (isStandaloneDisplayMode()) return true;
-  return localStorage.getItem(INSTALLED_KEY) === 'true';
+  return readInstalledFlag();
 }
 
 export function markPwaInstalled() {
-  localStorage.setItem(INSTALLED_KEY, 'true');
+  try {
+    localStorage.setItem(INSTALLED_KEY, 'true');
+  } catch {
+    // Private mode / storage quota — ignore.
+  }
 }
 
 export function useInstallPrompt() {
@@ -45,12 +57,16 @@ export function useInstallPrompt() {
 
   const install = async () => {
     if (!prompt) return;
-    await prompt.prompt();
-    const { outcome } = await prompt.userChoice;
-    setPrompt(null);
-    if (outcome === 'accepted') {
-      markPwaInstalled();
-      setInstalled(true);
+    try {
+      await prompt.prompt();
+      const { outcome } = await prompt.userChoice;
+      setPrompt(null);
+      if (outcome === 'accepted') {
+        markPwaInstalled();
+        setInstalled(true);
+      }
+    } catch {
+      setPrompt(null);
     }
   };
 

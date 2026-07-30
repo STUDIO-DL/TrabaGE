@@ -265,7 +265,7 @@ export default function AdminEmployerList({ accountRole, title, description }) {
 
   return (
     <div className="space-y-4">
-      {description && <p className="text-sm text-gray-500">{description}</p>}
+      {description && <p className="text-sm text-app-muted">{description}</p>}
 
       <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
         <Input
@@ -277,7 +277,7 @@ export default function AdminEmployerList({ accountRole, title, description }) {
           }}
           placeholder="Nombre, ciudad, sector..."
         />
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-app-text">
           Estado
           <select
             value={statusFilter}
@@ -285,14 +285,14 @@ export default function AdminEmployerList({ accountRole, title, description }) {
               setStatusFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
           >
             <option value="all">Todos</option>
             <option value="active">Activos</option>
             <option value="inactive">Inactivos</option>
           </select>
         </label>
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-app-text">
           Verificación
           <select
             value={verifiedFilter}
@@ -300,7 +300,7 @@ export default function AdminEmployerList({ accountRole, title, description }) {
               setVerifiedFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
           >
             <option value="all">Todas</option>
             <option value="verified">Verificadas</option>

@@ -13,6 +13,22 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://trabage.org/explore</loc>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://trabage.org/about</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://trabage.org/app-info</loc>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://trabage.org/help</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>https://trabage.org/privacy</loc>
     <priority>0.5</priority>
   </url>

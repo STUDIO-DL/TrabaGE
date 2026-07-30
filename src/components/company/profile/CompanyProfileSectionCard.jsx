@@ -1,40 +1,37 @@
-import AppIcon from '../../common/AppIcon';
-import { ICON_COLORS, ICON_SIZES } from '../../../constants/icons';
-import { SECTION_ICON_TONES } from '../../profile/ProfileIcons';
 import { sectionTitleClass } from './companyProfileStyles';
+import { profileSectionCardClass } from '../../profile/profileLayoutClasses';
 
+/**
+ * Company/organization profile section shell.
+ * Same visual language as candidate ProfileSectionCard (independent cards).
+ */
 export default function CompanyProfileSectionCard({
   title,
-  icon,
-  iconTone = 'about',
+  icon: _icon,
+  iconTone: _iconTone,
   action,
   children,
   className = '',
   id,
 }) {
-  const toneClass = SECTION_ICON_TONES[iconTone] ?? SECTION_ICON_TONES.about;
+  const scrollClass = id ? ' scroll-mt-24' : '';
 
   return (
-    <section id={id} className={`surface-card p-space-base sm:p-space-md ${className}`.trim()}>
+    <section
+      id={id}
+      className={`${profileSectionCardClass}${scrollClass} ${className}`.trim()}
+    >
       {(title || action) && (
         <header className="mb-space-md flex items-center justify-between gap-space-sm">
-          <div className="flex min-w-0 items-center gap-space-sm">
-            {icon ? (
-              <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-radius-md sm:h-9 sm:w-9 ${toneClass}`}
-                aria-hidden
-              >
-                <AppIcon icon={icon} size={ICON_SIZES.default} className={ICON_COLORS.default} />
-              </span>
-            ) : null}
-            {title ? (
-              typeof title === 'string' ? (
-                <h3 className={`${sectionTitleClass} min-w-0 truncate`}>{title}</h3>
-              ) : (
-                title
-              )
-            ) : null}
-          </div>
+          {title ? (
+            typeof title === 'string' ? (
+              <h3 className={`${sectionTitleClass} min-w-0 flex-1 truncate`}>{title}</h3>
+            ) : (
+              <div className="min-w-0 flex-1">{title}</div>
+            )
+          ) : (
+            <div className="min-w-0 flex-1" />
+          )}
           {action ? <div className="shrink-0">{action}</div> : null}
         </header>
       )}

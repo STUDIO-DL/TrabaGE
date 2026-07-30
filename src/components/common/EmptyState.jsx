@@ -1,10 +1,12 @@
 import Button from '../ui/Button';
-import AppIcon from './AppIcon';
-import { ICON_SIZES, ICON_STROKE } from '../../constants/icons';
 
+/**
+ * Typography-first empty state. Illustrations optional and restrained.
+ * Answers: what is empty, why it matters, what to do next.
+ */
 export default function EmptyState({
   image,
-  icon,
+  icon: _icon,
   title,
   description,
   actionLabel,
@@ -13,61 +15,34 @@ export default function EmptyState({
   variant = 'default',
 }) {
   const alt = imageAlt ?? title;
-  const isSoft = variant === 'soft';
+  const showImage = Boolean(image) && variant !== 'text';
 
   return (
     <div
-      className={[
-        'mx-auto flex w-full max-w-[400px] flex-col items-center px-space-base py-space-2xl text-center sm:py-space-3xl',
-        isSoft ? '' : 'bg-app-card',
-      ].join(' ')}
+      className="mx-auto flex w-full max-w-sm flex-col items-center px-space-base py-space-2xl text-center sm:py-space-3xl"
       role="status"
     >
-      {isSoft && icon ? (
-        <span
-          className="mb-space-lg flex h-16 w-16 items-center justify-center rounded-radius-circular bg-app-primary-soft/70 ring-1 ring-inset ring-app-border/40 dark:bg-app-primary-soft/25"
-          aria-hidden="true"
-        >
-          <AppIcon
-            icon={icon}
-            size={ICON_SIZES.lg}
-            className="text-app-subtle dark:text-app-muted"
-            strokeWidth={ICON_STROKE.thin}
-          />
-        </span>
-      ) : image ? (
-        isSoft ? (
-          <span className="mb-space-xl flex items-center justify-center rounded-radius-lg bg-app-primary-soft/50 p-space-lg ring-1 ring-inset ring-app-border/30 dark:bg-app-primary-soft/20">
-            <img
-              src={image}
-              alt={alt}
-              className="max-w-[140px] object-contain opacity-80 saturate-[0.65] contrast-[0.95] mix-blend-multiply dark:mix-blend-normal dark:opacity-70"
-              loading="lazy"
-              decoding="async"
-            />
-          </span>
-        ) : (
-          <img
-            src={image}
-            alt={alt}
-            className="mb-space-xl w-full max-w-[260px] object-contain"
-            loading="lazy"
-            decoding="async"
-          />
-        )
+      {showImage ? (
+        <img
+          src={image}
+          alt={alt}
+          className="mb-space-lg max-h-24 w-auto max-w-[7.5rem] object-contain opacity-70"
+          loading="lazy"
+          decoding="async"
+        />
       ) : null}
 
-      <h2 className="text-subtitle font-semibold text-app-text sm:text-title">{title}</h2>
+      <h2 className="text-title font-semibold tracking-tight text-app-text">{title}</h2>
 
-      {description && (
-        <p className="mt-space-md text-body-small leading-relaxed text-app-muted">{description}</p>
-      )}
+      {description ? (
+        <p className="mt-space-sm text-body-small leading-relaxed text-app-muted">{description}</p>
+      ) : null}
 
-      {actionLabel && onAction && (
-        <Button type="button" className="mt-space-xl min-w-[140px]" onClick={onAction}>
+      {actionLabel && onAction ? (
+        <Button type="button" className="mt-space-lg" onClick={onAction}>
           {actionLabel}
         </Button>
-      )}
+      ) : null}
     </div>
   );
 }

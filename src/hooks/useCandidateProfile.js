@@ -13,24 +13,11 @@ import { getOwnCandidateProfileKey, getProfileQueryKey } from '../constants/prof
 import { withSetupComplete } from '../utils/profilePersistence';
 import { mergeCandidateProfileRow } from '../utils/candidateProfileSections';
 
-function friendlyProfileError(error) {
+import { asUserFacingError, ERROR_ACTION } from '../utils/userFacingError';
+
+function friendlyProfileError(error, action = ERROR_ACTION.save_profile) {
   if (!error) return null;
-  const message = error.message?.toLowerCase?.() || '';
-
-  if (message.includes('violates row-level security')) {
-    return { ...error, message: 'No tienes permisos para modificar este dato.' };
-  }
-  if (message.includes('duplicate key')) {
-    return { ...error, message: 'Ese dato ya existe en tu perfil.' };
-  }
-  if (message.includes('storage') || message.includes('bucket')) {
-    return { ...error, message: 'No se pudo subir el archivo. Inténtalo de nuevo.' };
-  }
-  if (error.code === 'WRITE_NO_ROW') {
-    return error;
-  }
-
-  return { ...error, message: error.message || 'No se pudo guardar el cambio. Inténtalo de nuevo.' };
+  return asUserFacingError(error, { action });
 }
 
 function mergeBaseProfileRow(current, row) {

@@ -457,6 +457,13 @@ export const adminService = {
     return { data: data ?? [], error };
   },
 
+  getPushDeliveryStats: async (hours = 24) => {
+    const { data, error } = await supabase.rpc('admin_get_push_delivery_stats', {
+      p_hours: hours,
+    });
+    return { data: data ?? null, error };
+  },
+
   sendAdminPushBroadcast: async ({
     title,
     body,
@@ -485,7 +492,10 @@ export const adminService = {
 
   processScheduledPushNotifications: async () => {
     const { data, error } = await supabase.functions.invoke('send_push', {
-      body: { process_scheduled: true },
+      body: {
+        process_scheduled: true,
+        process_message_pushes: true,
+      },
     });
     if (error) return { data: null, error };
     if (data?.error) return { data: null, error: new Error(String(data.error)) };

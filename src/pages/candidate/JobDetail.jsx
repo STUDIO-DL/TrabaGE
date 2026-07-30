@@ -4,20 +4,20 @@ import FormPageLayout from '../../components/layout/FormPageLayout';
 import ApplicationsCounter from '../../components/jobs/ApplicationsCounter';
 import CompanyNameWithBadge from '../../components/company/CompanyNameWithBadge';
 import ContentActionMenu from '../../components/common/ContentActionMenu';
-import Card from '../../components/ui/Card';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import Button from '../../components/ui/Button';
 import AppIcon from '../../components/common/AppIcon';
 import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { JobDetailSkeleton } from '../../components/common/Skeleton';
 import TimeAgo from '../../components/common/TimeAgo';
-import { Bookmark, Clock, FileText, ICON_SIZES } from '../../constants/icons';
+import { Bookmark, Clock, ICON_SIZES } from '../../constants/icons';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
 import { useJob } from '../../hooks/useJobs';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { analyticsService } from '../../services/analytics.service';
+import { companyAnalyticsService } from '../../features/company-analytics/companyAnalytics.service';
 import { applicationsService } from '../../services/applications.service';
 import { jobsService } from '../../services/jobs.service';
 import { formatSalary } from '../../utils/formatSalary';
@@ -118,8 +118,14 @@ export default function JobDetail() {
   const company = job?.company_profiles;
 
   useEffect(() => {
-    if (!user?.id || !id || loading || !job) return;
-    analyticsService.trackJobViewed(user.id, id, { source: 'job_detail' });
+    if (!id || loading || !job) return;
+    if (user?.id) {
+      analyticsService.trackJobViewed(user.id, id, { source: 'job_detail' });
+    }
+    const companyId = job.company_id || job.company_profiles?.user_id;
+    if (companyId && user?.id !== companyId) {
+      void companyAnalyticsService.trackJobView(companyId, id, { source: 'job_detail' });
+    }
   }, [user?.id, id, loading, job]);
 
   useEffect(() => {
@@ -205,35 +211,35 @@ export default function JobDetail() {
         />
       }
       footer={
-        <div className="flex gap-space-sm">
+        <div className="flex items-center gap-space-sm">
           <Button
             fullWidth
             className="btn-primary-mobile !inline-flex !rounded-btn-primary !py-0"
             onClick={handleApply}
             disabled={canUseCandidateActions && hasActiveApplication}
           >
-            <AppIcon icon={FileText} size={ICON_SIZES.default} className="text-white" />
             {canUseCandidateActions && hasActiveApplication ? 'Ya aplicaste' : 'Aplicar'}
           </Button>
           {canUseCandidateActions && (
             <Button
               type="button"
-              variant="secondary"
-              fullWidth
-              className="btn-secondary-mobile !inline-flex !rounded-btn-secondary !py-0"
+              variant="ghost"
+              className="shrink-0 !inline-flex !px-space-md"
               onClick={handleSaveToggle}
               loading={actionLoadingId === id}
+              aria-label={isSaved(id) ? 'Quitar de guardados' : 'Guardar empleo'}
             >
               <AppIcon icon={Bookmark} size={ICON_SIZES.default} />
-              {isSaved(id) ? 'Guardado' : 'Guardar'}
             </Button>
           )}
         </div>
       }
     >
       <div className="space-y-space-lg p-space-base pb-space-xl">
-        <header className="space-y-space-xs">
-          <h1 className="text-body font-semibold text-app-text">{job.title}</h1>
+        <header className="space-y-space-sm">
+          <h1 className="text-user-content text-title font-semibold tracking-tight text-app-text">
+            {job.title}
+          </h1>
           <CompanyNameWithBadge
             company={company}
             userId={job.company_id}
@@ -244,11 +250,9 @@ export default function JobDetail() {
         </header>
 
         {!isCompanyVerified(company) && (
-          <Card padding="md" className="border-warning-200 bg-warning-50">
-            <p className="text-body-small text-warning-800">
-              Esta empresa aún no ha completado el proceso de verificación.
-            </p>
-          </Card>
+          <p className="text-body-small text-warning-800">
+            Esta empresa aún no ha completado el proceso de verificación.
+          </p>
         )}
 
         <section className="space-y-space-sm">

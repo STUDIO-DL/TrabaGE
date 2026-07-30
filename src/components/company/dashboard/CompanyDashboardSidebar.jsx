@@ -1,13 +1,12 @@
 import { Link, NavLink } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
+import TrabaGEWordmark from '../../branding/TrabaGEWordmark';
 import VerifiedBadge from '../VerifiedBadge';
 import {
   Bell,
   Briefcase,
   Building2,
-  ChevronRight,
-  FileText,
-  Headphones,
+  ChartColumn,
   LayoutDashboard,
   Newspaper,
   Settings,
@@ -23,7 +22,8 @@ import { ROLES, rolePath } from '../../../constants/roles';
 
 const NAV_ITEM_DEFS = [
   { suffix: '/dashboard', label: 'Resumen', icon: LayoutDashboard, end: true },
-  { suffix: '/jobs', label: 'Ofertas de trabajo', icon: Briefcase },
+  { suffix: '/analytics', label: 'Analíticas', icon: ChartColumn },
+  { suffix: '/jobs', label: 'Ofertas', icon: Briefcase },
   { suffix: '/applicants', label: 'Candidatos', icon: Users },
   { suffix: '/feed', label: 'Publicaciones', icon: Newspaper },
   { suffix: '/notifications', label: 'Notificaciones', icon: Bell },
@@ -50,44 +50,37 @@ export default function CompanyDashboardSidebar({ profile }) {
   }));
 
   return (
-    <aside className="hidden w-[260px] shrink-0 flex-col border-r border-gray-200 bg-white lg:flex">
-      <div className="px-5 py-5">
-        <Link to={rolePath(base, '/dashboard')} className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-600">
-            <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="text-white" />
-          </span>
-          <span className="text-xl font-bold tracking-tight text-primary-600">TrabaGE</span>
+    <aside className="hidden w-[240px] shrink-0 flex-col border-r border-app-border bg-app-card lg:flex">
+      <div className="px-space-md py-space-md">
+        <Link to={rolePath(base, '/dashboard')} className="inline-flex">
+          <TrabaGEWordmark size="md" />
         </Link>
       </div>
 
-      <div className="px-4 pb-4">
-        <div className="rounded-2xl border border-primary-100 bg-primary-50/50 p-3">
-          <div className="flex items-center gap-3">
-            <AppAvatar
-              type={avatarType}
-              src={profile?.logo_path}
-              name={companyLabel}
-              alt={companyLabel}
-              size="md"
-              variant="rounded"
-              className="h-11 w-11 ring-2 ring-white"
-            />
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-gray-900">{companyLabel}</p>
-              {verified ? (
-                <div className="mt-1 flex items-center gap-1">
-                  <span className="text-xs text-gray-500">{orgLabels.verified}</span>
-                  <VerifiedBadge size="sm" showTooltip={false} />
-                </div>
-              ) : (
-                <p className="mt-0.5 text-xs text-gray-500">{orgLabels.profile}</p>
-              )}
+      <div className="border-b border-app-divider px-space-md pb-space-md">
+        <div className="flex items-center gap-space-sm">
+          <AppAvatar
+            type={avatarType}
+            src={profile?.logo_path}
+            name={companyLabel}
+            alt={companyLabel}
+            size="sm"
+            variant="rounded"
+            className="h-9 w-9"
+          />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-space-xs">
+              <p className="truncate text-body-small font-semibold text-app-text">{companyLabel}</p>
+              {verified ? <VerifiedBadge size="sm" showTooltip={false} /> : null}
             </div>
+            {!verified ? (
+              <p className="mt-0.5 truncate text-caption text-app-subtle">{orgLabels.profile}</p>
+            ) : null}
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3">
+      <nav className="flex-1 space-y-0.5 px-space-sm py-space-sm">
         {navItems.map(({ to, label, icon, end }) => (
           <NavLink
             key={label}
@@ -95,10 +88,10 @@ export default function CompanyDashboardSidebar({ profile }) {
             end={end}
             className={({ isActive }) =>
               [
-                'flex items-center gap-3 rounded-xl py-2.5 pl-3 pr-3 text-sm font-medium transition',
+                'flex items-center gap-space-sm rounded-radius-md px-space-sm py-2 text-body-small font-medium transition-colors duration-fast',
                 isActive
-                  ? 'border-l-[3px] border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-l-[3px] border-transparent text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                  ? 'bg-primary-50 text-primary-700'
+                  : 'text-app-muted hover:bg-primary-50/50 hover:text-app-text',
               ].join(' ')
             }
           >
@@ -106,8 +99,8 @@ export default function CompanyDashboardSidebar({ profile }) {
               <>
                 <AppIcon
                   icon={icon}
-                  size={ICON_SIZES.default}
-                  className={isActive ? 'text-primary-600' : 'text-gray-400'}
+                  size={ICON_SIZES.sm}
+                  className={isActive ? 'text-primary-600' : 'text-app-subtle'}
                 />
                 {label}
               </>
@@ -116,24 +109,13 @@ export default function CompanyDashboardSidebar({ profile }) {
         ))}
       </nav>
 
-      <div className="mt-auto border-t border-gray-100 p-4">
-        <div className="rounded-2xl border border-gray-200 bg-gray-50/80 p-4">
-          <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white">
-              <AppIcon icon={Headphones} size={ICON_SIZES.default} className="text-primary-600" />
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">¿Necesitas ayuda?</p>
-              <Link
-                to={rolePath(base, '/help')}
-                className="mt-1 inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
-              >
-                Contactar soporte
-                <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
-              </Link>
-            </div>
-          </div>
-        </div>
+      <div className="border-t border-app-divider px-space-md py-space-md">
+        <Link
+          to={rolePath(base, '/help')}
+          className="text-caption font-medium text-primary-600 transition-colors hover:text-primary-700"
+        >
+          Ayuda
+        </Link>
       </div>
     </aside>
   );

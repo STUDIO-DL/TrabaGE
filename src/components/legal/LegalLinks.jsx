@@ -15,14 +15,14 @@ export function LegalInlineLink({ to, children }) {
 export function LegalFooterLinks({ className = '' }) {
   return (
     <nav
-      className={`flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm ${className}`}
+      className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-sm ${className}`}
       aria-label="Enlaces legales"
     >
-      <LegalInlineLink to={LEGAL_ROUTES.terms}>Términos y Condiciones</LegalInlineLink>
+      <LegalInlineLink to={LEGAL_ROUTES.terms}>Términos</LegalInlineLink>
       <span className="text-slate-300" aria-hidden>
         ·
       </span>
-      <LegalInlineLink to={LEGAL_ROUTES.privacy}>Política de Privacidad</LegalInlineLink>
+      <LegalInlineLink to={LEGAL_ROUTES.privacy}>Privacidad</LegalInlineLink>
     </nav>
   );
 }

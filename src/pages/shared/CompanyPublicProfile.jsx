@@ -7,6 +7,7 @@ import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import PageContainer from '../../components/layout/PageContainer';
 import { companyService } from '../../services/company.service';
 import { jobsService } from '../../services/jobs.service';
+import { companyAnalyticsService } from '../../features/company-analytics/companyAnalytics.service';
 import { getPreviewMediaUrls, getPreviewProfile, PREVIEW_USER } from '../../constants/preview';
 import { isEmployerRole, ROLES } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
@@ -16,6 +17,7 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { useFollow } from '../../hooks/useFollow';
 import { FOLLOWS_TARGET } from '../../services/follows.service';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
 import { getOrgLabels, isOrganizationProfile } from '../../utils/orgLabels';
 
 export default function CompanyPublicProfile() {
@@ -77,7 +79,7 @@ export default function CompanyPublicProfile() {
         setProfile(null);
         setJobs([]);
         setNotFound(false);
-        setFetchError(profileResult.error.message ?? 'No se pudo cargar el perfil.');
+        setFetchError(getUserErrorMessage(profileResult.error, ERROR_ACTION.load));
       } else if (!profileResult.data) {
         setProfile(null);
         setJobs([]);
@@ -93,6 +95,11 @@ export default function CompanyPublicProfile() {
     });
   }, [companyId, isPreviewMode]);
 
+  useEffect(() => {
+    if (!companyId || isPreviewMode || !profile || user?.id === companyId) return;
+    void companyAnalyticsService.trackProfileView(companyId, { source: 'public_profile' });
+  }, [companyId, isPreviewMode, profile, user?.id]);
+
   const retryFetch = () => {
     if (!companyId || isPreviewMode) return;
     setLoading(true);
@@ -106,7 +113,7 @@ export default function CompanyPublicProfile() {
       if (profileResult.error) {
         setProfile(null);
         setJobs([]);
-        setFetchError(profileResult.error.message ?? 'No se pudo cargar el perfil.');
+        setFetchError(getUserErrorMessage(profileResult.error, ERROR_ACTION.load));
       } else if (!profileResult.data) {
         setProfile(null);
         setJobs([]);

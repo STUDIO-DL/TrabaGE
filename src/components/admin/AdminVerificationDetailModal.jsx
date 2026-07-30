@@ -17,9 +17,9 @@ function documentTypeLabel(value, options) {
 
 function DetailRow({ label, value }) {
   return (
-    <div className="flex flex-col gap-0.5 border-b border-gray-50 py-2 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-      <span className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</span>
-      <span className="text-sm text-gray-800 sm:max-w-[60%] sm:text-right">{value || '—'}</span>
+    <div className="flex flex-col gap-0.5 border-b border-app-divider py-2 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <span className="text-xs font-medium uppercase tracking-wide text-app-subtle">{label}</span>
+      <span className="text-sm text-app-text sm:max-w-[60%] sm:text-right">{value || '—'}</span>
     </div>
   );
 }
@@ -68,19 +68,19 @@ export default function AdminVerificationDetailModal({
             className="h-14 w-14"
           />
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold text-gray-900">
+            <p className="truncate text-base font-semibold text-app-text">
               {company.company_name ?? 'Empresa'}
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <AdminStatusBadge status={request.status} />
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-app-muted">
                 Solicitud: {formatDate(request.created_at ?? request.submitted_at)}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-100 bg-gray-50/60 px-4 py-2">
+        <div className="rounded-radius-lg border border-app-divider bg-app-surface/60 px-4 py-2">
           <DetailRow label="Estado de verificación" value={company.verification_status} />
           <DetailRow
             label="Documento empresa"
@@ -121,7 +121,7 @@ export default function AdminVerificationDetailModal({
         </div>
 
         {request.status === 'pending' && (
-          <div className="space-y-3 border-t border-gray-100 pt-4">
+          <div className="space-y-3 border-t border-app-divider pt-4">
             {!showRejectForm ? (
               <div className="flex flex-wrap gap-2">
                 <Button loading={reviewing} onClick={() => onApprove(request.id)}>

@@ -1,6 +1,5 @@
 import { memo } from 'react';
 import UserProfileLink from '../common/UserProfileLink';
-import Card from '../ui/Card';
 import ContentActionMenu from '../common/ContentActionMenu';
 import VerifiedBadge from '../company/VerifiedBadge';
 import ExpandableText from '../common/ExpandableText';
@@ -31,7 +30,7 @@ function PostCard({
   const hasText = Boolean(post.content?.trim());
 
   return (
-    <Card className="mb-space-md min-w-0 max-w-full overflow-hidden" elevation={1}>
+    <article className="surface-flat min-w-0 max-w-full border-b border-app-divider py-space-base last:border-b-0 sm:py-space-lg">
       <div className="mb-space-md flex items-start gap-space-md">
         <UserProfileLink
           userId={authorId}
@@ -55,48 +54,28 @@ function PostCard({
               <VerifiedBadge size="sm" />
             )}
           </div>
-          {authorHeadline && (
+          {authorHeadline ? (
             <p className="text-user-content text-body-small text-app-muted">{authorHeadline}</p>
-          )}
+          ) : null}
           <TimeAgo date={post.created_at} className="mt-space-xs text-caption text-app-subtle" />
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-space-xs">
-          <ContentActionMenu
-            shareUrl={generatePostUrl(post.id)}
-            shareTitle={`${authorName} en TrabaGE`}
-            shareText={(post.content || '').slice(0, 120) || 'Mira esta publicación en TrabaGE.'}
-            targetType={REPORT_TARGET_TYPES.POST}
-            targetId={post.id}
-          />
-          {canManage && (
-            <div className="flex gap-space-sm text-caption">
-              <button
-                type="button"
-                onClick={() => onEdit?.(post)}
-                aria-label="Editar publicación"
-                className="font-medium text-primary-600 transition-colors duration-fast hover:text-primary-700"
-              >
-                Editar
-              </button>
-              <button
-                type="button"
-                onClick={() => onDelete?.(post)}
-                aria-label="Eliminar publicación"
-                className="font-medium text-error-600 transition-colors duration-fast hover:text-error-700"
-              >
-                Eliminar
-              </button>
-            </div>
-          )}
-        </div>
+        <ContentActionMenu
+          shareUrl={generatePostUrl(post.id)}
+          shareTitle={`${authorName} en TrabaGE`}
+          shareText={(post.content || '').slice(0, 120) || 'Mira esta publicación en TrabaGE.'}
+          targetType={REPORT_TARGET_TYPES.POST}
+          targetId={post.id}
+          onEdit={canManage ? () => onEdit?.(post) : undefined}
+          onDelete={canManage ? () => onDelete?.(post) : undefined}
+        />
       </div>
 
-      {hasText && <ExpandableText text={post.content} defaultExpanded={defaultTextExpanded} />}
+      {hasText ? <ExpandableText text={post.content} defaultExpanded={defaultTextExpanded} /> : null}
 
       <PostImage src={postImageSrc} />
 
       <TopicChips topics={post.topics} />
-    </Card>
+    </article>
   );
 }
 

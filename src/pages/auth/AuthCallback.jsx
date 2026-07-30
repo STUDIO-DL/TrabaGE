@@ -101,6 +101,7 @@ export default function AuthCallback() {
         if (oauthIntent === OAUTH_INTENTS.LOGIN) {
           const registered = await isRegisteredTrabaGEAccount(session.user);
           if (!registered) {
+            const googleEmail = String(session.user?.email || '').trim() || null;
             await discardUnregisteredOAuthSession(session.user);
             await logout();
             if (cancelled) return true;
@@ -109,6 +110,7 @@ export default function AuthCallback() {
               state: {
                 googleAccountMissing: true,
                 googleAccountMissingMessage: getGoogleLoginNoAccountMessage(),
+                googleAccountMissingEmail: googleEmail,
               },
             });
             return true;
@@ -132,6 +134,7 @@ export default function AuthCallback() {
         if (needsAccountTypeSelection) {
           if (cancelled) return true;
           if (oauthIntent === OAUTH_INTENTS.LOGIN) {
+            const googleEmail = String(session.user?.email || '').trim() || null;
             await discardUnregisteredOAuthSession(session.user);
             await logout();
             navigate('/login', {
@@ -139,6 +142,7 @@ export default function AuthCallback() {
               state: {
                 googleAccountMissing: true,
                 googleAccountMissingMessage: getGoogleLoginNoAccountMessage(),
+                googleAccountMissingEmail: googleEmail,
               },
             });
             return true;

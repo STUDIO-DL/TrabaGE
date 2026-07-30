@@ -2,6 +2,7 @@ import {
   Bell,
   Briefcase,
   Building2,
+  ChartColumn,
   Flag,
   Landmark,
   LayoutDashboard,
@@ -16,6 +17,7 @@ import {
 
 export const ADMIN_NAV_ITEMS = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/admin/analytics', label: 'Analítica e Inteligencia', icon: ChartColumn },
   { to: '/admin/users', label: 'Usuarios', icon: Users },
   { to: '/admin/companies', label: 'Empresas', icon: Building2 },
   { to: '/admin/organizations', label: 'Organizaciones', icon: Landmark },

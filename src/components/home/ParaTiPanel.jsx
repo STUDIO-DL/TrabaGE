@@ -3,17 +3,18 @@ import FeedItemRenderer from '../feed/FeedItemRenderer';
 import EmptyState from '../common/EmptyState';
 import { PostListSkeleton } from '../common/Skeleton';
 import Button from '../ui/Button';
-import { Newspaper } from '../../constants/icons';
 import { useIntelligentFeed } from '../../hooks/useIntelligentFeed';
 import { useAuth } from '../../hooks/useAuth';
 import { usePostMutations } from '../../hooks/usePostMutations';
 import { FEED_CONTENT_TYPES, isHomeFeedPostItem } from '../../constants/feedContentTypes';
-import { useNavigate } from 'react-router-dom';
-import { rolePath } from '../../constants/roles';
+import {
+  EMPTY_CONTENT_TITLE,
+  FETCH_ERROR_DESCRIPTION,
+  FETCH_ERROR_TITLE,
+} from '../../constants/emptyContent';
 
 export default function ParaTiPanel({ emptyDescription }) {
-  const navigate = useNavigate();
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   const { items, loading, loadingMore, hasMore, error, refetch, loadMore } = useIntelligentFeed();
   const { handleEdit, handleDelete } = usePostMutations({ onSuccess: refetch });
   const feedItems = items.filter(isHomeFeedPostItem);
@@ -29,7 +30,6 @@ export default function ParaTiPanel({ emptyDescription }) {
   }, [loadMore]);
 
   const showSkeleton = loading || (Boolean(error) && items.length === 0);
-  const profilePath = role ? rolePath(role, '/profile') : '/personal/profile';
 
   return (
     <div className="space-y-space-sm p-space-base">
@@ -38,7 +38,7 @@ export default function ParaTiPanel({ emptyDescription }) {
           className="mb-space-md rounded-radius-lg border border-error-100 bg-error-50 px-space-base py-space-md text-body-small text-error-800"
           role="alert"
         >
-          <p>No se pudo actualizar el contenido. Puedes reintentar.</p>
+          <p>{FETCH_ERROR_TITLE}</p>
           <button
             type="button"
             onClick={refetch}
@@ -54,24 +54,17 @@ export default function ParaTiPanel({ emptyDescription }) {
         <PostListSkeleton count={3} />
       ) : error && items.length === 0 ? (
         <EmptyState
-          variant="soft"
-          icon={Newspaper}
-          title="No pudimos cargar tu inicio"
-          description="Comprueba tu conexión e inténtalo de nuevo."
+          variant="text"
+          title={FETCH_ERROR_TITLE}
+          description={FETCH_ERROR_DESCRIPTION}
           actionLabel="Reintentar"
           onAction={refetch}
         />
       ) : feedItems.length === 0 ? (
         <EmptyState
-          variant="soft"
-          icon={Newspaper}
-          title="Aún no hay publicaciones para ti"
-          description={
-            emptyDescription ??
-            'Completa tu perfil para ver contenido de tu sector, habilidades e intereses.'
-          }
-          actionLabel="Completar perfil"
-          onAction={() => navigate(profilePath)}
+          variant="text"
+          title={EMPTY_CONTENT_TITLE}
+          description={emptyDescription || undefined}
         />
       ) : (
         feedItems.map((item, index) => {

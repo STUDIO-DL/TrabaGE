@@ -14,8 +14,8 @@ export default function JobsFilterPanel({ filters = {}, onChange, open = false }
   const sectorOptions = [{ value: '', label: 'Todos los sectores' }, ...SECTORS.map((s) => ({ value: s, label: s }))];
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+    <div className="border-b border-app-divider pb-space-md pt-space-sm">
+      <div className="grid grid-cols-1 gap-space-sm sm:grid-cols-2">
         <Select
           label="Ciudad"
           value={filters.city || ''}

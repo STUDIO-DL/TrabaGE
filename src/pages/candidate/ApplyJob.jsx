@@ -13,6 +13,7 @@ import { analyticsService } from '../../services/analytics.service';
 import { cvPath } from '../../constants/storage';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
 import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { authService } from '../../services/auth.service';
 import { ROLES, normalizeRole, rolePath } from '../../constants/roles';
@@ -208,7 +209,7 @@ export default function ApplyJob() {
 
       setSubmitted(true);
     } catch (submitError) {
-      setError(submitError.message || 'No se pudo enviar la solicitud.');
+      setError(getUserErrorMessage(submitError, ERROR_ACTION.apply_job));
     } finally {
       setLoading(false);
     }

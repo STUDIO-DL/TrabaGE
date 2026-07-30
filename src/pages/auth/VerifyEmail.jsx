@@ -42,7 +42,7 @@ export default function VerifyEmail() {
     <main className="keyboard-scroll-host min-h-dvh overflow-y-auto bg-app-bg px-5 py-10 text-app-text">
       <div className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-md flex-col justify-center">
         <div className="flex justify-center">
-          <TrabaGEWordmark className="h-10 w-auto" />
+          <TrabaGEWordmark size="hero" />
         </div>
 
         <section className="mt-space-lg rounded-radius-xl border border-app-border bg-app-card p-space-base text-center shadow-elevation-3 sm:p-space-lg">

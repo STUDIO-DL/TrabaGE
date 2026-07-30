@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import EmptyState from '../../components/common/EmptyState';
 import { JobListSkeleton } from '../../components/common/Skeleton';
-import { NoJobs } from '../../assets/empty-states';
 import JobCard from '../../components/jobs/JobCard';
 import { useSavedJobs } from '../../hooks/useSavedJobs';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -30,10 +29,10 @@ export default function SavedJobs() {
           <JobListSkeleton count={3} />
         ) : savedJobs.length === 0 ? (
           <EmptyState
-            image={NoJobs}
-            title="No tienes empleos guardados"
-            description="Guarda ofertas para revisarlas y aplicar más tarde."
-            actionLabel="Ver empleos"
+            variant="text"
+            title="No tienes ofertas guardadas todavía"
+            description="Guarda una oferta para volver a encontrarla fácilmente."
+            actionLabel="Explorar empleos"
             onAction={() => navigate('/personal/jobs')}
           />
         ) : (

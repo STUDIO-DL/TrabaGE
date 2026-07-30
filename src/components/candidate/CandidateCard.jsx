@@ -1,6 +1,9 @@
 import UserProfileLink from '../common/UserProfileLink';
 import { getUserProfilePath } from '../../utils/profileRoutes';
 
+const cardClass =
+  'surface-card flex items-center gap-space-md p-space-md transition-colors duration-fast hover:border-app-muted/50';
+
 export default function CandidateCard({
   candidate,
   subtitle,
@@ -28,11 +31,11 @@ export default function CandidateCard({
       userId={candidate.user_id}
       name={candidate.full_name}
       layout="name"
-      nameClassName="truncate font-semibold text-gray-900 hover:text-primary-700 transition-colors"
+      nameClassName="truncate font-semibold text-app-text transition-colors hover:text-primary-700"
       stopPropagation={Boolean(onClick)}
     />
   ) : (
-    <p className="truncate font-semibold text-gray-900">{candidate.full_name}</p>
+    <p className="truncate font-semibold text-app-text">{candidate.full_name}</p>
   );
 
   const details = (
@@ -40,22 +43,20 @@ export default function CandidateCard({
       {avatarLink}
       <div className="min-w-0 flex-1 text-left">
         {nameLink}
-        {subtitle && <p className="truncate text-sm text-gray-500">{subtitle}</p>}
-        {meta && <p className="mt-0.5 truncate text-xs text-gray-400">{meta}</p>}
+        {subtitle ? <p className="truncate text-body-small text-app-muted">{subtitle}</p> : null}
+        {meta ? <p className="mt-space-xs truncate text-caption text-app-subtle">{meta}</p> : null}
       </div>
     </>
   );
 
   if (onClick) {
     return (
-      <div
-        className={`flex w-full items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition-colors hover:bg-gray-50 ${className}`}
-      >
+      <div className={`${cardClass} w-full text-left ${className}`.trim()}>
         {details}
         <button
           type="button"
           onClick={onClick}
-          className="ml-auto shrink-0 text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="ml-auto shrink-0 text-body-small font-medium text-primary-600 hover:text-primary-700"
         >
           Ver
         </button>
@@ -63,19 +64,5 @@ export default function CandidateCard({
     );
   }
 
-  if (profilePath) {
-    return (
-      <div
-        className={`flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-colors hover:bg-gray-50 ${className}`}
-      >
-        {details}
-      </div>
-    );
-  }
-
-  return (
-    <div className={`flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 shadow-sm ${className}`}>
-      {details}
-    </div>
-  );
+  return <div className={`${cardClass} ${className}`.trim()}>{details}</div>;
 }

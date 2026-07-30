@@ -14,6 +14,7 @@ import ServicesSection from '../../components/profile/ServicesSection';
 import LanguagesSection from '../../components/profile/LanguagesSection';
 import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
 import DocumentsSection from '../../components/profile/DocumentsSection';
+import ProfileMoreSection from '../../components/profile/ProfileMoreSection';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import ProjectModal from '../../components/profile/modals/ProjectModal';
@@ -291,13 +292,27 @@ export default function Profile() {
         onShare={handleShare}
         onSettings={canEdit ? () => navigate('/personal/settings') : undefined}
         onEditIntro={canEdit ? () => navigate('/personal/profile/edit-intro') : undefined}
-        sidebar={<ProfileSidebar profile={profile} email={user?.email} />}
+        sidebar={<ProfileSidebar profile={profile} email={user?.email} isOwn={canEdit} />}
       >
         <AboutSection
           about={profile?.about}
           isOwn={canEdit}
           onSave={handleSaveAbout}
           saving={aboutSaving}
+        />
+
+        <ExperienceSection
+          items={profile?.experience}
+          isOwn={canEdit}
+          onAdd={() => openExperience()}
+          onEdit={openExperience}
+          onDelete={async (id) => {
+            const { error } = await deleteExperience(id);
+            showToast(
+              error ? error.message : 'Experiencia eliminada.',
+              error ? 'error' : 'success',
+            );
+          }}
         />
 
         <EducationSection
@@ -308,6 +323,30 @@ export default function Profile() {
           onDelete={async (id) => {
             const { error } = await deleteEducation(id);
             showToast(error ? error.message : 'Educación eliminada.', error ? 'error' : 'success');
+          }}
+        />
+
+        <SkillsSection
+          items={profile?.skills}
+          isOwn={canEdit}
+          onAdd={async (name) => {
+            const { error } = await addSkill(name);
+            showToast(error ? error.message : 'Habilidad añadida.', error ? 'error' : 'success');
+          }}
+          onDelete={async (id) => {
+            const { error } = await deleteSkill(id);
+            showToast(error ? error.message : 'Habilidad eliminada.', error ? 'error' : 'success');
+          }}
+        />
+
+        <ProjectsSection
+          items={profile?.projects}
+          isOwn={canEdit}
+          onAdd={() => openProject()}
+          onEdit={openProject}
+          onDelete={async (project) => {
+            const { error } = await deleteProject(project);
+            showToast(error ? error.message : 'Proyecto eliminado.', error ? 'error' : 'success');
           }}
         />
 
@@ -325,16 +364,14 @@ export default function Profile() {
           }}
         />
 
-        <SkillsSection
-          items={profile?.skills}
+        <LanguagesSection
+          items={profile?.languages}
           isOwn={canEdit}
-          onAdd={async (name) => {
-            const { error } = await addSkill(name);
-            showToast(error ? error.message : 'Habilidad añadida.', error ? 'error' : 'success');
-          }}
+          onAdd={() => openLanguage()}
+          onEdit={openLanguage}
           onDelete={async (id) => {
-            const { error } = await deleteSkill(id);
-            showToast(error ? error.message : 'Habilidad eliminada.', error ? 'error' : 'success');
+            const { error } = await deleteLanguage(id);
+            showToast(error ? error.message : 'Idioma eliminado.', error ? 'error' : 'success');
           }}
         />
 
@@ -351,78 +388,44 @@ export default function Profile() {
           }}
         />
 
-        <LanguagesSection
-          items={profile?.languages}
-          isOwn={canEdit}
-          onAdd={() => openLanguage()}
-          onEdit={openLanguage}
-          onDelete={async (id) => {
-            const { error } = await deleteLanguage(id);
-            showToast(error ? error.message : 'Idioma eliminado.', error ? 'error' : 'success');
-          }}
-        />
+        <ProfileMoreSection>
+          <PortfolioLinksSection
+            items={profile?.candidate_links}
+            isOwn={canEdit}
+            onAdd={async (data) => {
+              const { error } = await addCandidateLink(data);
+              showToast(error ? error.message : 'Enlace añadido.', error ? 'error' : 'success');
+            }}
+            onDelete={async (id) => {
+              const { error } = await deleteCandidateLink(id);
+              showToast(error ? error.message : 'Enlace eliminado.', error ? 'error' : 'success');
+            }}
+          />
 
-        <PersonalSocialSection
-          socialLinks={profile?.social_links}
-          isOwn={canEdit}
-          onSave={handleSaveSocial}
-          loading={socialSaving}
-        />
+          <PersonalSocialSection
+            socialLinks={profile?.social_links}
+            isOwn={canEdit}
+            onSave={handleSaveSocial}
+            loading={socialSaving}
+          />
 
-        <PortfolioLinksSection
-          items={profile?.candidate_links}
-          isOwn={canEdit}
-          onAdd={async (data) => {
-            const { error } = await addCandidateLink(data);
-            showToast(error ? error.message : 'Enlace añadido.', error ? 'error' : 'success');
-          }}
-          onDelete={async (id) => {
-            const { error } = await deleteCandidateLink(id);
-            showToast(error ? error.message : 'Enlace eliminado.', error ? 'error' : 'success');
-          }}
-        />
-
-        <ProjectsSection
-          items={profile?.projects}
-          isOwn={canEdit}
-          onAdd={() => openProject()}
-          onEdit={openProject}
-          onDelete={async (project) => {
-            const { error } = await deleteProject(project);
-            showToast(error ? error.message : 'Proyecto eliminado.', error ? 'error' : 'success');
-          }}
-        />
-
-        <ExperienceSection
-          items={profile?.experience}
-          isOwn={canEdit}
-          onAdd={() => openExperience()}
-          onEdit={openExperience}
-          onDelete={async (id) => {
-            const { error } = await deleteExperience(id);
-            showToast(
-              error ? error.message : 'Experiencia eliminada.',
-              error ? 'error' : 'success',
-            );
-          }}
-        />
-
-        <DocumentsSection
-          profile={profile}
-          accountEmail={user?.email}
-          cvName={profile?.cv_name}
-          coverLetter={profile?.cover_letter}
-          isOwn={canEdit}
-          cvLoading={cvLoading}
-          cvPhase={cvPhase}
-          coverSaving={coverLoading}
-          onUploadCV={handleUploadCV}
-          onSaveCoverLetter={handleSaveCoverLetter}
-          onRefetchProfile={async () => {
-            const result = await refetch();
-            return result.data ?? null;
-          }}
-        />
+          <DocumentsSection
+            profile={profile}
+            accountEmail={user?.email}
+            cvName={profile?.cv_name}
+            coverLetter={profile?.cover_letter}
+            isOwn={canEdit}
+            cvLoading={cvLoading}
+            cvPhase={cvPhase}
+            coverSaving={coverLoading}
+            onUploadCV={handleUploadCV}
+            onSaveCoverLetter={handleSaveCoverLetter}
+            onRefetchProfile={async () => {
+              const result = await refetch();
+              return result.data ?? null;
+            }}
+          />
+        </ProfileMoreSection>
 
       </CandidateProfileLayout>
 

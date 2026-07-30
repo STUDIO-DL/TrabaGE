@@ -1,8 +1,5 @@
-import MessagesInboxView from '../../components/messages/MessagesInboxView';
-import { useAuth } from '../../hooks/useAuth';
-import { ROLES } from '../../constants/roles';
+import MessagesWorkspace from '../../components/messages/MessagesWorkspace';
 
 export default function MessagesInbox() {
-  const { role } = useAuth();
-  return <MessagesInboxView role={role ?? ROLES.PERSONAL} />;
+  return <MessagesWorkspace />;
 }

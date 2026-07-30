@@ -3,17 +3,23 @@ import { Link } from 'react-router-dom';
 import PageContainer from '../layout/PageContainer';
 import TopBar from '../layout/TopBar';
 import AppAvatar from '../common/AppAvatar';
+import AppIcon from '../common/AppIcon';
 import FetchErrorBanner from '../common/FetchErrorBanner';
 import Skeleton from '../common/Skeleton';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
+import MessageDaySeparator from './MessageDaySeparator';
+import ConversationMessageSearchPanel from './ConversationMessageSearchPanel';
 import KeyboardAwareFooter from '../layout/KeyboardAwareFooter';
 import { useMessages } from '../../hooks/useMessages';
 import { useConversations } from '../../hooks/useConversations';
+import { useConversationMessageSearch } from '../../hooks/useConversationMessageSearch';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { isEmployerRole } from '../../constants/roles';
+import { Search, ICON_SIZES } from '../../constants/icons';
 import { messagesService, MESSAGE_WAIT_FOR_REPLY } from '../../services/messages.service';
+import { getMessageDayKey } from '../../utils/formatDate';
 
 const BOTTOM_THRESHOLD = 50;
 const COMPOSE_INSET_FALLBACK = 72;
@@ -34,15 +40,20 @@ function ConversationSkeleton() {
   );
 }
 
-export default function ConversationView({ conversationId, role }) {
+export default function ConversationView({ conversationId, role, embedded = false }) {
   const { user } = useAuth();
-  const { showToast } = useNotificationContext();
+  const { showToast, showErrorToast } = useNotificationContext();
   const scrollRef = useRef(null);
   const composeRef = useRef(null);
   const bottomAnchorRef = useRef(null);
   const topSentinelRef = useRef(null);
   const isAtBottomRef = useRef(true);
   const [composeInset, setComposeInset] = useState(COMPOSE_INSET_FALLBACK);
+  const [replyTarget, setReplyTarget] = useState(null);
+  const [highlightedMessageId, setHighlightedMessageId] = useState(null);
+  const highlightTimerRef = useRef(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const {
     conversations,
     loading: conversationsLoading,
@@ -59,8 +70,17 @@ export default function ConversationView({ conversationId, role }) {
     blockedReason,
     sendMessage,
     loadMore,
+    ensureMessageLoaded,
     refetch,
   } = useMessages(conversationId);
+  const {
+    results: searchResults,
+    loading: searchLoading,
+    loadingMore: searchLoadingMore,
+    error: searchError,
+    hasMore: searchHasMore,
+    loadMore: loadMoreSearch,
+  } = useConversationMessageSearch(conversationId, searchOpen ? searchQuery : '');
 
   const otherParticipant = useMemo(() => {
     const match = conversations.find((item) => item.id === conversationId);
@@ -124,7 +144,25 @@ export default function ConversationView({ conversationId, role }) {
     const observer = new ResizeObserver(measure);
     observer.observe(node);
     return () => observer.disconnect();
-  }, [loading, blockedReason, canSend, error]);
+  }, [loading, blockedReason, canSend, error, replyTarget]);
+
+  useEffect(() => {
+    setReplyTarget(null);
+    setHighlightedMessageId(null);
+    setSearchOpen(false);
+    setSearchQuery('');
+    if (highlightTimerRef.current) {
+      window.clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = null;
+    }
+  }, [conversationId]);
+
+  useEffect(
+    () => () => {
+      if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -203,12 +241,106 @@ export default function ConversationView({ conversationId, role }) {
     return () => observer.disconnect();
   }, [loadMore]);
 
-  const handleSend = async (content) => {
+  const resolveReplyAuthorName = useCallback(
+    (senderId) => {
+      if (!senderId) return 'Mensaje';
+      if (senderId === user?.id) return 'Tú';
+      if (senderId === displayParticipant?.userId) return displayParticipant.name || 'Mensaje';
+      return 'Mensaje';
+    },
+    [displayParticipant?.name, displayParticipant?.userId, user?.id],
+  );
+
+  const handleReply = useCallback(
+    (message) => {
+      if (!message?.id || message.optimistic) return;
+      setReplyTarget({
+        id: message.id,
+        content: message.content,
+        sender_id: message.sender_id,
+        created_at: message.created_at,
+        authorName: resolveReplyAuthorName(message.sender_id),
+      });
+    },
+    [resolveReplyAuthorName],
+  );
+
+  const handleCancelReply = useCallback(() => {
+    setReplyTarget(null);
+  }, []);
+
+  const handleOpenReply = useCallback(
+    (replyToId) => {
+      if (!replyToId || !scrollRef.current) return;
+
+      const target = scrollRef.current.querySelector(`[data-message-id="${replyToId}"]`);
+      if (!target) {
+        showToast('Ese mensaje no está cargado todavía. Desplázate hacia arriba para verlo.', 'info');
+        return;
+      }
+
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHighlightedMessageId(replyToId);
+      if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+      highlightTimerRef.current = window.setTimeout(() => {
+        setHighlightedMessageId(null);
+        highlightTimerRef.current = null;
+      }, 1600);
+    },
+    [showToast],
+  );
+
+  const highlightMessageInView = useCallback((messageId) => {
+    const target = scrollRef.current?.querySelector(`[data-message-id="${messageId}"]`);
+    if (!target) return false;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightedMessageId(messageId);
+    if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = window.setTimeout(() => {
+      setHighlightedMessageId(null);
+      highlightTimerRef.current = null;
+    }, 1800);
+    return true;
+  }, []);
+
+  const handleSelectSearchResult = useCallback(
+    async (item) => {
+      if (!item?.id) return;
+
+      setSearchOpen(false);
+
+      const status = await ensureMessageLoaded(item.id);
+      if (status === 'missing') {
+        showToast('Este mensaje ya no está disponible.', 'info');
+        return;
+      }
+      if (status === 'error') {
+        showToast('No hemos podido abrir ese mensaje.', 'error');
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (!highlightMessageInView(item.id)) {
+            showToast('Este mensaje ya no está disponible.', 'info');
+          }
+        });
+      });
+    },
+    [ensureMessageLoaded, highlightMessageInView, showToast],
+  );
+
+  const handleCloseSearch = useCallback(() => {
+    setSearchOpen(false);
+  }, []);
+
+  const handleSend = async (content, options = {}) => {
     isAtBottomRef.current = true;
-    const result = await sendMessage(content);
+    const result = await sendMessage(content, options);
     if (result.error) {
-      showToast(result.error.message ?? 'No se pudo enviar el mensaje.', 'error');
+      showErrorToast(result.error, 'send_message');
     } else {
+      setReplyTarget(null);
       requestAnimationFrame(() => {
         scrollToBottom('auto');
         requestAnimationFrame(() => scrollToBottom('auto'));
@@ -261,14 +393,38 @@ export default function ConversationView({ conversationId, role }) {
     <span className="truncate text-subtitle font-semibold text-app-text">Conversación</span>
   );
 
-  return (
-    <PageContainer
-      topBar={<TopBar backButton center={headerCenter} />}
-      bottomNav={false}
-      className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden"
-      contentClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+  const searchAction = (
+    <button
+      type="button"
+      onClick={() => setSearchOpen((open) => !open)}
+      className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-sm text-app-muted transition-colors hover:bg-app-surface hover:text-primary-600"
+      aria-label="Buscar en esta conversación"
+      aria-pressed={searchOpen}
     >
+      <AppIcon icon={Search} size={ICON_SIZES.md} />
+    </button>
+  );
+
+  const thread = (
       <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        {searchOpen ? (
+          <ConversationMessageSearchPanel
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            onClose={handleCloseSearch}
+            results={searchResults}
+            loading={searchLoading}
+            loadingMore={searchLoadingMore}
+            error={searchError}
+            hasMore={searchHasMore}
+            onLoadMore={loadMoreSearch}
+            onSelect={handleSelectSearchResult}
+            currentUserId={user?.id}
+            otherName={displayParticipant?.name}
+            messagesEmpty={!loading && messages.length === 0}
+          />
+        ) : null}
+
         {error ? (
           <div className="shrink-0 p-space-base">
             <FetchErrorBanner message={error} onRetry={refetch} />
@@ -281,7 +437,7 @@ export default function ConversationView({ conversationId, role }) {
           <div
             ref={scrollRef}
             className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-space-base py-space-md"
-            style={{ paddingBottom: composeInset }}
+            style={embedded ? undefined : { paddingBottom: composeInset }}
           >
             <div ref={topSentinelRef} className="h-px w-full" aria-hidden="true" />
             {loadingMore ? (
@@ -289,6 +445,12 @@ export default function ConversationView({ conversationId, role }) {
             ) : null}
             {!loadingMore && hasMore ? (
               <p className="mb-space-md text-center text-caption text-app-subtle">Desplázate para ver anteriores</p>
+            ) : null}
+
+            {!messages.length ? (
+              <p className="py-space-xl text-center text-body-small text-app-muted">
+                Todavía no hay mensajes.
+              </p>
             ) : null}
 
             <div className="flex flex-col gap-space-md">
@@ -300,16 +462,28 @@ export default function ConversationView({ conversationId, role }) {
                   new Date(otherLastReadAt) >= new Date(message.created_at);
                 const previousMessage = messages[index - 1];
                 const showAvatar = !isOwn && (!previousMessage || previousMessage.sender_id !== message.sender_id);
+                const replyAuthorName = resolveReplyAuthorName(message.reply_to?.sender_id);
+                const dayKey = getMessageDayKey(message.created_at);
+                const previousDayKey = previousMessage
+                  ? getMessageDayKey(previousMessage.created_at)
+                  : null;
+                const showDaySeparator = Boolean(dayKey) && dayKey !== previousDayKey;
 
                 return (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    isOwn={isOwn}
-                    isRead={Boolean(isRead)}
-                    avatar={showAvatar ? displayParticipant : null}
-                    showAvatar={showAvatar}
-                  />
+                  <div key={message.id} className="flex flex-col gap-space-md">
+                    {showDaySeparator ? <MessageDaySeparator date={message.created_at} /> : null}
+                    <MessageBubble
+                      message={message}
+                      isOwn={isOwn}
+                      isRead={Boolean(isRead)}
+                      avatar={showAvatar ? displayParticipant : null}
+                      showAvatar={showAvatar}
+                      replyAuthorName={replyAuthorName}
+                      highlighted={highlightedMessageId === message.id}
+                      onReply={handleReply}
+                      onOpenReply={handleOpenReply}
+                    />
+                  </div>
                 );
               })}
             </div>
@@ -317,17 +491,41 @@ export default function ConversationView({ conversationId, role }) {
           </div>
         ) : null}
 
-        <KeyboardAwareFooter fixed as="div">
+        <KeyboardAwareFooter fixed={!embedded} as="div">
           <div ref={composeRef}>
             <MessageComposer
               onSend={handleSend}
               sending={sending}
               disabled={loading || Boolean(error) || !canSend}
               blockedReason={!canSend ? (blockedReason ?? MESSAGE_WAIT_FOR_REPLY) : null}
+              replyTarget={replyTarget}
+              onCancelReply={handleCancelReply}
             />
           </div>
         </KeyboardAwareFooter>
       </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-card">
+        <header className="flex shrink-0 items-center gap-space-sm border-b border-app-divider px-space-md py-space-sm">
+          {headerCenter}
+          <div className="ml-auto shrink-0">{searchAction}</div>
+        </header>
+        {thread}
+      </div>
+    );
+  }
+
+  return (
+    <PageContainer
+      topBar={<TopBar backButton center={headerCenter} actions={searchAction} />}
+      bottomNav={false}
+      className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden"
+      contentClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+    >
+      {thread}
     </PageContainer>
   );
 }

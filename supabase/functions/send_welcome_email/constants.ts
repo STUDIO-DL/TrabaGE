@@ -18,7 +18,7 @@ export const BORDER = '#e2e8f0';
 export const BRAND_SLOGAN = 'Donde las oportunidades te encuentran.';
 
 export const ZARREL_URL = 'https://zarrel.org';
-export const ZARREL_NAME = 'ZARREL';
+export const ZARREL_NAME = 'ZARREL TECH';
 
 export const DEFAULT_APP_URL = 'https://trabage.org';
 

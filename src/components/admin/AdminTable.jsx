@@ -5,7 +5,7 @@ import { ChevronDown, ChevronUp, ChevronsUpDown, ICON_SIZES } from '../../consta
 
 function SortIndicator({ active, direction }) {
   if (!active) {
-    return <AppIcon icon={ChevronsUpDown} size={ICON_SIZES.sm} className="text-gray-300" />;
+    return <AppIcon icon={ChevronsUpDown} size={ICON_SIZES.sm} className="text-app-subtle" />;
   }
   return (
     <AppIcon
@@ -36,7 +36,7 @@ export default function AdminTable({
 
   if (!rows?.length) {
     return (
-      <div className="rounded-2xl border border-gray-100 bg-white p-10 text-center text-sm text-gray-500 shadow-sm">
+      <div className="surface-card p-space-xl text-center text-body-small text-app-muted">
         {emptyMessage}
       </div>
     );
@@ -47,10 +47,10 @@ export default function AdminTable({
   const to = Math.min(page * pageSize, totalRows);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+    <div className="surface-card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-100">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-app-divider">
+          <thead className="bg-app-surface/60">
             <tr>
               {columns.map((column) => {
                 const sortable = column.sortable && column.sortKey && onSort;
@@ -59,13 +59,13 @@ export default function AdminTable({
                 return (
                   <th
                     key={column.key}
-                    className="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500"
+                    className="whitespace-nowrap px-space-md py-space-sm text-left text-caption font-semibold uppercase tracking-wide text-app-subtle"
                   >
                     {sortable ? (
                       <button
                         type="button"
                         onClick={() => onSort(column.sortKey)}
-                        className="inline-flex items-center gap-1 hover:text-gray-700"
+                        className="inline-flex items-center gap-space-xs transition-colors hover:text-app-text"
                       >
                         {column.label}
                         <SortIndicator active={active} direction={sortDir} />
@@ -78,14 +78,14 @@ export default function AdminTable({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-app-divider">
             {rows.map((row) => (
-              <tr key={row.id} className="hover:bg-gray-50/80">
+              <tr key={row.id} className="transition-colors duration-fast hover:bg-app-surface/50">
                 {columns.map((column) => (
                   <td
                     key={column.key}
                     className={[
-                      'px-4 py-3 text-sm text-gray-700',
+                      'px-space-md py-space-sm text-body-small text-app-text',
                       column.wrap ? '' : 'whitespace-nowrap',
                     ].join(' ')}
                   >
@@ -98,12 +98,12 @@ export default function AdminTable({
         </table>
       </div>
 
-      {showPagination && (
-        <div className="flex flex-col gap-3 border-t border-gray-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-gray-500">
+      {showPagination ? (
+        <div className="flex flex-col gap-space-sm border-t border-app-divider px-space-md py-space-sm sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-caption text-app-muted">
             Mostrando {from}–{to} de {totalRows}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-space-sm">
             <Button
               size="sm"
               variant="secondary"
@@ -112,7 +112,7 @@ export default function AdminTable({
             >
               Anterior
             </Button>
-            <span className="text-xs text-gray-500">
+            <span className="text-caption text-app-muted">
               Página {page} de {totalPages}
             </span>
             <Button
@@ -125,7 +125,7 @@ export default function AdminTable({
             </Button>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

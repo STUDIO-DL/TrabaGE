@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { postsService } from '../services/posts.service';
 import { supabase } from '../config/supabase';
 import { useAuth } from './useAuth';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 import { ROLES, isEmployerRole, rolePath } from '../constants/roles';
 import { getPreviewPosts } from '../constants/preview';
 import { resolveAuthorAvatar } from '../constants/avatarDefaults';
@@ -233,7 +234,7 @@ export function usePosts(authorId, { enabled = true } = {}) {
 
     if (fetchError) {
       if (!append) setPosts([]);
-      setError(fetchError.message);
+      setError(getUserErrorMessage(fetchError, ERROR_ACTION.load_feed));
       setLoading(false);
       setLoadingMore(false);
       return;

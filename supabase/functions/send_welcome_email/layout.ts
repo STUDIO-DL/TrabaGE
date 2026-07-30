@@ -53,9 +53,11 @@ export function buildCtaButtonHtml(label: string, href: string) {
 
 function buildHeaderHtml() {
   return `<tr>
-    <td style="background:${BRAND_BLUE};padding:28px 32px;">
-      <p style="margin:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:-0.02em;">TrabaGE</p>
-      <p style="margin:8px 0 0;font-size:14px;color:rgba(255,255,255,0.88);">${escapeHtml(BRAND_SLOGAN)}</p>
+    <td style="background:#ffffff;padding:28px 32px;border-bottom:1px solid ${BORDER};">
+      <p style="margin:0;font-size:22px;font-weight:700;letter-spacing:-0.03em;line-height:1.2;">
+        <span style="color:${TEXT_PRIMARY};">Traba</span><span style="color:${BRAND_BLUE};">GE</span>
+      </p>
+      <p style="margin:8px 0 0;font-size:14px;color:${TEXT_MUTED};">${escapeHtml(BRAND_SLOGAN)}</p>
     </td>
   </tr>`;
 }
@@ -63,10 +65,12 @@ function buildHeaderHtml() {
 function buildFooterHtml() {
   return `<tr>
     <td style="padding:24px 32px;background:#f8fafc;border-top:1px solid ${BORDER};">
-      <p style="margin:0 0 4px;font-size:12px;line-height:1.5;color:${TEXT_MUTED};text-align:center;">&copy; TrabaGE</p>
+      <p style="margin:0 0 4px;font-size:12px;line-height:1.5;color:${TEXT_MUTED};text-align:center;">
+        &copy; <span style="color:${TEXT_PRIMARY};font-weight:600;">Traba</span><span style="color:${BRAND_BLUE};font-weight:600;">GE</span>
+      </p>
       <p style="margin:0 0 8px;font-size:12px;line-height:1.5;color:${TEXT_MUTED};text-align:center;">Todos los derechos reservados.</p>
       <p style="margin:0;font-size:11px;line-height:1.5;color:${TEXT_MUTED};text-align:center;">
-        Developed by
+        Desarrollado por
         <a href="${ZARREL_URL}" target="_blank" rel="noopener noreferrer" style="color:${TEXT_MUTED};text-decoration:underline;">${ZARREL_NAME}</a>
       </p>
     </td>
@@ -144,7 +148,7 @@ export function buildWelcomeEmailText(content: WelcomeEmailContent) {
     '---',
     '© TrabaGE',
     'Todos los derechos reservados.',
-    `Developed by ${ZARREL_NAME} — ${ZARREL_URL}`,
+    `Desarrollado por ${ZARREL_NAME} — ${ZARREL_URL}`,
   ];
 
   return lines.join('\n');

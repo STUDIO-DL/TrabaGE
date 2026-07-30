@@ -170,7 +170,7 @@ export default function NotificationsView({ role = 'candidate' }) {
                   'min-h-touch',
                   isActive
                     ? 'bg-primary-600 text-white shadow-elevation-1'
-                    : 'bg-app-disabled text-app-muted hover:bg-app-surface',
+                    : 'bg-primary-50/50 text-primary-800/70 hover:bg-primary-50 hover:text-primary-800',
                 ].join(' ')}
               >
                 {filter.label}
@@ -193,8 +193,7 @@ export default function NotificationsView({ role = 'candidate' }) {
           <NotificationListSkeleton count={6} />
         ) : filtered.length === 0 && !error ? (
           <EmptyState
-            variant="soft"
-            icon={Bell}
+            variant="text"
             title={emptyCopy.title}
             description={emptyCopy.description}
           />

@@ -112,6 +112,32 @@ La función debe estar desplegada con **`--no-verify-jwt`** (Auth no envía JWT 
    - `Authorization`: `Bearer <SUPABASE_SERVICE_ROLE_KEY>`
 5. Guardar.
 
+### 2.5b Account goodbye email (eliminación de cuenta)
+
+El RPC `delete_own_account` encola una fila en `account_goodbye_email_outbox` **antes** de borrar `auth.users` (personal, business, organization). El envío es best-effort y **nunca** bloquea la eliminación.
+
+**Opción A — Vault + pg_net (recomendado, migration 114):**
+
+En [Vault](https://supabase.com/dashboard/project/jqzbpdojwzopwuaapqgl/settings/vault) crear:
+
+| Secret name | Valor |
+|-------------|--------|
+| `account_goodbye_email_url` | `https://jqzbpdojwzopwuaapqgl.supabase.co/functions/v1/send_account_goodbye_email` |
+| `account_goodbye_email_anon_key` | `<SUPABASE_ANON_KEY>` |
+
+Tras `supabase db push` (migración 114), un trigger `AFTER INSERT` dispara `net.http_post` automáticamente.
+
+**Opción B — Database Webhook (alternativa/complemento):**
+
+1. Hook **INSERT** en `public.account_goodbye_email_outbox`
+2. **URL:** `https://jqzbpdojwzopwuaapqgl.supabase.co/functions/v1/send_account_goodbye_email`
+3. Headers:
+   - `x-account-goodbye-webhook-secret`: mismo valor que secret `ACCOUNT_GOODBYE_WEBHOOK_SECRET` (opcional)
+   - `Authorization`: `Bearer <SUPABASE_ANON_KEY>` o service role
+4. La función debe estar desplegada con **`verify_jwt = false`**.
+
+**Fallback cliente:** tras el RPC, el frontend invoca la función con el `goodbye_token` usando la anon key (sin JWT del usuario ya borrado).
+
 ### 2.6 Cron — `process_matching_recalc`
 
 Opciones:

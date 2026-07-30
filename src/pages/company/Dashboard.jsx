@@ -1,194 +1,183 @@
-import { Link } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
-import AppIcon from '../../components/common/AppIcon';
+import { useMemo, useState } from 'react';
 import Button from '../../components/ui/Button';
-import { JobListSkeleton } from '../../components/common/Skeleton';
 import CompanyDashboardShell from '../../components/company/dashboard/CompanyDashboardShell';
+import DashboardHero from '../../components/company/dashboard/DashboardHero';
+import DashboardVerificationBanner from '../../components/company/dashboard/DashboardVerificationBanner';
 import DashboardStatCard from '../../components/company/dashboard/DashboardStatCard';
+import DashboardJobsList from '../../components/company/dashboard/DashboardJobsList';
 import DashboardRecentCandidates from '../../components/company/dashboard/DashboardRecentCandidates';
 import DashboardQuickAccess from '../../components/company/dashboard/DashboardQuickAccess';
-import CompanyVerificationStatus from '../../components/company/profile/CompanyVerificationStatus';
-import AppAvatar from '../../components/common/AppAvatar';
-import { avatarTypeFromRole } from '../../constants/avatarDefaults';
+import DashboardActivityFeed from '../../components/company/dashboard/DashboardActivityFeed';
+import DashboardAnalyticsChart from '../../components/company/dashboard/DashboardAnalyticsChart';
+import DashboardPageSkeleton from '../../components/company/dashboard/DashboardPageSkeleton';
 import {
-  Bell,
-  Briefcase,
-  ChevronDown,
+  Eye,
   FileText,
-  Plus,
+  Heart,
   Users,
-  ICON_SIZES,
 } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
 import { ROLES, rolePath } from '../../constants/roles';
 import { useProfile } from '../../hooks/useProfile';
-import { useApplications } from '../../hooks/useApplications';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useNotificationContext } from '../../context/NotificationContext';
+import { useCompanyDashboardSummary } from '../../features/company-dashboard/useCompanyDashboardSummary';
 import { jobsService } from '../../services/jobs.service';
 import { getOrgLabels } from '../../utils/orgLabels';
-
-function mapCandidateForDashboard(application) {
-  const profile = application.candidate_profiles;
-  return {
-    id: application.id,
-    user_id: application.candidate_id,
-    full_name: profile?.full_name || application.full_name || 'Candidato',
-    avatar_path: profile?.avatar_path,
-    job_title: application.jobs?.title || '',
-    applied_at: application.applied_at,
-  };
-}
+import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
 
 export default function Dashboard() {
   const { user, isPreviewMode, role } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
-  const { applications } = useApplications();
   const { unreadCount } = useNotifications();
-  const [jobs, setJobs] = useState([]);
+  const { showToast } = useNotificationContext();
   const base = role || ROLES.BUSINESS;
+  const orgLabels = getOrgLabels(profile);
+  const [closingId, setClosingId] = useState(null);
 
-  useEffect(() => {
-    if (!user?.id || isPreviewMode) {
-      setJobs([]);
+  const { data, loading, error, reload } = useCompanyDashboardSummary({
+    userId: user?.id,
+    role,
+    isPreviewMode,
+    profile,
+  });
+
+  const companyProfile = useMemo(
+    () => ({
+      ...profile,
+      ...(data?.company || {}),
+      company_name: profile?.company_name || data?.company?.company_name,
+      logo_path: profile?.logo_path || data?.company?.logo_path,
+      sector: profile?.sector || data?.company?.sector,
+      city: profile?.city || data?.company?.city,
+      is_verified: profile?.is_verified ?? data?.company?.is_verified,
+      verification_status: profile?.verification_status ?? data?.company?.verification_status,
+    }),
+    [profile, data?.company],
+  );
+
+  const stats = data?.stats ?? {};
+  const jobs = data?.jobs ?? [];
+  const applicants = data?.applicants ?? [];
+  const activity = data?.activity ?? [];
+  const chart = data?.chart_30d ?? [];
+  const notifBadge = Math.max(
+    Number(unreadCount || 0),
+    Number(stats.unread_notifications || 0),
+  );
+
+  const handleCloseJob = async (job) => {
+    if (isPreviewMode) {
+      showToast('Modo vista previa: acción no disponible', 'info');
       return;
     }
+    if (!job?.id) return;
+    setClosingId(job.id);
+    const { error: closeError } = await jobsService.updateJobStatus(job.id, 'closed');
+    setClosingId(null);
+    if (closeError) {
+      showToast(getUserErrorMessage(closeError, ERROR_ACTION.save), 'error');
+      return;
+    }
+    showToast('Oferta cerrada', 'success');
+    reload();
+  };
 
-    jobsService.getCompanyJobs(user.id).then(({ data }) => setJobs(data ?? []));
-  }, [user?.id, isPreviewMode]);
-
-  const avatarType = avatarTypeFromRole(base, { profile });
-
-  const stats = useMemo(
-    () => ({
-      activeJobs: jobs.filter((job) => job.status === 'active').length,
-      applications: applications.length,
-      pendingReviews: applications.filter((app) => app.status === 'pending').length,
-    }),
-    [applications, jobs],
-  );
-
-  const recentCandidates = useMemo(
-    () =>
-      applications
-        .slice(0, 5)
-        .map(mapCandidateForDashboard)
-        .filter((candidate) => candidate.user_id),
-    [applications],
-  );
-
-  const orgLabels = getOrgLabels(profile);
-
-  if (profileLoading) {
+  if (profileLoading || (loading && !data && !error)) {
     return (
-      <div className="min-h-dvh bg-app-surface p-space-base" aria-busy="true" aria-label="Cargando panel">
-        <JobListSkeleton count={4} />
-      </div>
+      <CompanyDashboardShell profile={profile}>
+        <div className="px-4 py-6 lg:px-8 lg:py-8">
+          <DashboardPageSkeleton />
+        </div>
+      </CompanyDashboardShell>
+    );
+  }
+
+  if (error && !data) {
+    return (
+      <CompanyDashboardShell profile={profile}>
+        <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-12 text-center">
+          <p className="text-base font-semibold text-app-text">
+            No hemos podido cargar esta información.
+          </p>
+          <p className="mt-2 max-w-sm text-sm text-app-muted">
+            Revisa tu conexión e inténtalo de nuevo.
+          </p>
+          <Button type="button" variant="secondary" className="mt-5" onClick={reload}>
+            Reintentar
+          </Button>
+        </div>
+      </CompanyDashboardShell>
     );
   }
 
   return (
-    <CompanyDashboardShell profile={profile}>
-      <div className="px-4 py-6 lg:px-8 lg:py-8">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-sm text-gray-500">{orgLabels.welcome}</p>
-          </div>
+    <CompanyDashboardShell profile={companyProfile}>
+      <div className="space-y-5 px-4 py-6 lg:px-8 lg:py-8">
+        <DashboardHero
+          profile={companyProfile}
+          stats={stats}
+          unreadCount={notifBadge}
+          createLabel={orgLabels.createOffer || 'Crear oferta'}
+        />
 
-          <div className="flex items-center gap-3">
-            <Link
-              to={rolePath(base, '/notifications')}
-              className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-gray-200 bg-white text-gray-600 shadow-sm"
-              aria-label="Notificaciones"
-            >
-              <AppIcon icon={Bell} size={ICON_SIZES.default} />
-              {unreadCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Link>
+        <DashboardVerificationBanner profile={companyProfile} />
 
-            <Link
-              to={rolePath(base, '/profile')}
-              className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-2 py-1.5 shadow-sm"
-              aria-label={orgLabels.profile}
-            >
-              <AppAvatar
-                type={avatarType}
-                src={profile?.logo_path}
-                name={profile?.company_name}
-                alt={profile?.company_name}
-                size="sm"
-                variant="rounded"
-                className="h-8 w-8"
-              />
-              <AppIcon icon={ChevronDown} size={ICON_SIZES.sm} className="text-gray-400" />
-            </Link>
-
-            <Link to={rolePath(base, '/jobs/create')} className="hidden sm:block">
-              <Button className="inline-flex items-center gap-2 rounded-xl px-4">
-                <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
-                {orgLabels.createOffer}
-              </Button>
-            </Link>
-          </div>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-space-sm lg:grid-cols-4 lg:gap-space-md">
           <DashboardStatCard
-            icon={Briefcase}
-            tone="blue"
-            value={stats.activeJobs}
-            label="Ofertas activas"
-            linkLabel="Ver ofertas"
-            to={rolePath(base, '/jobs')}
+            icon={FileText}
+            value={stats.applications_total}
+            label="Candidaturas"
+            deltaPct={stats.applications_delta_pct}
+            linkLabel="Ver"
+            to={rolePath(base, '/applicants')}
+          />
+          <DashboardStatCard
+            icon={Eye}
+            value={stats.views_total}
+            label="Visualizaciones"
+            deltaPct={stats.views_delta_pct}
+            linkLabel="Analíticas"
+            to={rolePath(base, '/analytics')}
           />
           <DashboardStatCard
             icon={Users}
-            tone="green"
-            value={stats.applications}
-            label="Postulaciones recibidas"
-            linkLabel="Ver postulaciones"
-            to={rolePath(base, '/applicants')}
+            value={stats.followers_total}
+            label="Seguidores"
+            deltaPct={stats.followers_delta_pct}
           />
           <DashboardStatCard
-            icon={FileText}
-            tone="purple"
-            value={stats.pendingReviews}
-            label="Revisiones pendientes"
-            linkLabel="Revisar"
-            to={rolePath(base, '/applicants')}
+            icon={Heart}
+            value={stats.interactions_total}
+            label="Interacciones"
+            deltaPct={stats.interactions_delta_pct}
+            linkLabel="Feed"
+            to={rolePath(base, '/feed')}
           />
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-gray-500">Estado de verificación</p>
-            <div className="mt-4">
-              <CompanyVerificationStatus company={profile} profile />
-            </div>
-            <Link
-              to={rolePath(base, '/verification')}
-              className="mt-4 inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
-            >
-              Gestionar verificación
-            </Link>
-          </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-5">
+        <DashboardQuickAccess />
+
+        <div className="grid gap-5 xl:grid-cols-5">
           <div className="xl:col-span-3">
-            <DashboardRecentCandidates candidates={recentCandidates} />
+            <DashboardJobsList
+              jobs={jobs}
+              onCloseJob={handleCloseJob}
+              closingId={closingId}
+            />
           </div>
           <div className="xl:col-span-2">
-            <DashboardQuickAccess />
+            <DashboardActivityFeed items={activity} />
           </div>
         </div>
 
-        <div className="mt-4 sm:hidden">
-          <Link to={rolePath(base, '/jobs/create')}>
-            <Button fullWidth className="inline-flex items-center justify-center gap-2 rounded-xl">
-              <AppIcon icon={Plus} size={ICON_SIZES.sm} className="text-white" />
-              Crear oferta
-            </Button>
-          </Link>
+        <div className="grid gap-5 xl:grid-cols-5">
+          <div className="xl:col-span-3">
+            <DashboardRecentCandidates candidates={applicants} />
+          </div>
+          <div className="xl:col-span-2">
+            <DashboardAnalyticsChart data={chart} />
+          </div>
         </div>
       </div>
     </CompanyDashboardShell>

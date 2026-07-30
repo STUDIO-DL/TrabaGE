@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import EmptyState from '../../components/common/EmptyState';
 import { JobListSkeleton } from '../../components/common/Skeleton';
-import { NoJobs } from '../../assets/empty-states';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
@@ -109,7 +108,7 @@ export default function CompanyJobs() {
   };
 
   return (
-    <PageContainer backButton bottomNav={false}>
+    <PageContainer backButton bottomNav={false} desktopShell width="wide">
       <div className="space-y-4 p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
@@ -133,7 +132,7 @@ export default function CompanyJobs() {
           <JobListSkeleton count={3} />
         ) : visibleJobs.length === 0 ? (
           <EmptyState
-            image={NoJobs}
+            variant="text"
             title={jobs.length === 0 ? 'Publica tu primera oferta' : 'Nada con este filtro'}
             description={
               jobs.length === 0
@@ -148,9 +147,9 @@ export default function CompanyJobs() {
             <Card key={job.id} className="space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="font-semibold text-gray-900">{job.title}</h2>
-                  <p className="mt-1 text-sm text-gray-500">{jobSubtitle(job)}</p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <h2 className="font-semibold text-app-text">{job.title}</h2>
+                  <p className="mt-1 text-sm text-app-muted">{jobSubtitle(job)}</p>
+                  <p className="mt-1 text-xs text-app-subtle">
                     {job.applications_count ?? 0} postulaciones
                   </p>
                 </div>

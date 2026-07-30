@@ -1,16 +1,16 @@
 import { INSTITUTION_TYPE_LABELS } from '../data/institutions';
+import {
+  catalogSearchHaystack,
+  formatCatalogDisplayName,
+  normalizeCatalogSearchText,
+  searchCatalog,
+} from './catalogSearch';
 
-/**
- * Accent-insensitive, case-insensitive normalization for institution search.
- * QA: partial search, multi-word, case, accents — all handled via this helper.
- */
-export function normalizeInstitutionSearchText(text = '') {
-  return String(text)
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .toLowerCase()
-    .trim();
-}
+export {
+  formatCatalogDisplayName,
+  normalizeCatalogSearchText,
+  normalizeCatalogSearchText as normalizeInstitutionSearchText,
+};
 
 /**
  * Build a searchable haystack for an institution record.
@@ -18,19 +18,14 @@ export function normalizeInstitutionSearchText(text = '') {
  */
 export function institutionSearchHaystack(institution) {
   const typeLabel = INSTITUTION_TYPE_LABELS[institution.type] || '';
-  return normalizeInstitutionSearchText(
-    [institution.name, institution.city, institution.country, typeLabel].join(' '),
-  );
+  return catalogSearchHaystack({ ...institution, typeLabel });
 }
 
 /**
  * Local institution search — no network, memo-friendly pure function.
  *
- * Supports:
- * - partial match (substring)
- * - multi-word AND (each token must appear somewhere in haystack)
- * - case insensitive
- * - accent insensitive (NFD)
+ * Matches official name, short_name, acronym, aliases, provider, city, country, type.
+ * Ignores case, accents, acronym dots, and extra whitespace.
  *
  * @param {string} query
  * @param {import('../data/institutions').Institution[]} institutions
@@ -38,17 +33,8 @@ export function institutionSearchHaystack(institution) {
  * @returns {import('../data/institutions').Institution[]}
  */
 export function searchInstitutions(query, institutions, { limit = 8 } = {}) {
-  if (!institutions?.length) return [];
-
-  const normalizedQuery = normalizeInstitutionSearchText(query);
-  if (!normalizedQuery) return [];
-
-  const tokens = normalizedQuery.split(/\s+/).filter(Boolean);
-
-  return institutions
-    .filter((institution) => {
-      const haystack = institutionSearchHaystack(institution);
-      return tokens.every((token) => haystack.includes(token));
-    })
-    .slice(0, limit);
+  return searchCatalog(query, institutions, {
+    limit,
+    haystackExtra: (institution) => [INSTITUTION_TYPE_LABELS[institution.type] || ''],
+  });
 }

@@ -1,4 +1,3 @@
-import { Building2, Share2, PROFILE_SECTION_ICONS } from '../../../constants/icons';
 import CompanyAboutSection from './CompanyAboutSection';
 import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
 import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
@@ -10,6 +9,7 @@ export default function CompanyAboutTabSection({
   readOnly = false,
   onEditAbout,
   onEditDetails,
+  companyId = null,
 }) {
   const showInfoCard = hasVisibleCompanyInfoRows(profile, 'full');
   const showSocialCard = hasCompanySocialLinks(profile) || !readOnly;
@@ -18,8 +18,6 @@ export default function CompanyAboutTabSection({
     <div className={`${profileContentShellClass} ${profileSectionStackClass}`}>
       <CompanyProfileSectionCard
         title="Acerca de"
-        icon={PROFILE_SECTION_ICONS.about}
-        iconTone="about"
         action={
           !readOnly && onEditAbout ? (
             <button type="button" onClick={onEditAbout} className={sectionLinkClass}>
@@ -41,8 +39,6 @@ export default function CompanyAboutTabSection({
       {showInfoCard ? (
         <CompanyProfileSectionCard
           title="Información"
-          icon={Building2}
-          iconTone="about"
           action={
             !readOnly && onEditDetails ? (
               <button type="button" onClick={onEditDetails} className={sectionLinkClass}>
@@ -51,12 +47,17 @@ export default function CompanyAboutTabSection({
             ) : null
           }
         >
-          <CompanyInfoRows profile={profile} variant="full" />
+          <CompanyInfoRows
+            profile={profile}
+            variant="full"
+            companyId={companyId}
+            trackClicks={readOnly}
+          />
         </CompanyProfileSectionCard>
       ) : null}
 
       {showSocialCard ? (
-        <CompanyProfileSectionCard title="Redes sociales" icon={Share2} iconTone="social">
+        <CompanyProfileSectionCard title="Redes sociales">
           <CompanySocialCard
             profile={profile}
             readOnly={readOnly}

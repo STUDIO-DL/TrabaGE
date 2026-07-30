@@ -25,13 +25,32 @@ export function onPushPermissionChange(listener) {
   return () => permissionChangeListeners.delete(listener);
 }
 
-async function persistPushSubscription(userId) {
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function readOneSignalSubscriptionId() {
+  return (
+    OneSignal.User?.PushSubscription?.id ??
+    OneSignal.User?.pushSubscription?.id ??
+    null
+  );
+}
+
+/**
+ * Persist device → user link. Retries briefly: OneSignal often assigns the
+ * subscription id a moment after permission / login completes.
+ */
+async function persistPushSubscription(userId, { attempts = 5, delayMs = 400 } = {}) {
   if (!userId || !initialized) return;
 
   try {
-    const subscriptionId =
-      OneSignal.User?.PushSubscription?.id ??
-      OneSignal.User?.pushSubscription?.id;
+    let subscriptionId = readOneSignalSubscriptionId();
+
+    for (let i = 0; !subscriptionId && i < attempts - 1; i += 1) {
+      await sleep(delayMs * (i + 1));
+      subscriptionId = readOneSignalSubscriptionId();
+    }
 
     if (!subscriptionId) return;
 
@@ -88,11 +107,14 @@ export const initOneSignal = async () => {
 
   initPromise = (async () => {
     try {
+      // Production: one SW (/sw.js) hosts Workbox + OneSignal (via workbox.importScripts).
+      // Dev: VitePWA is disabled, so use the standalone OneSignal worker shells.
+      const useMergedServiceWorker = import.meta.env.PROD;
       await OneSignal.init({
         appId,
         safari_web_id: readViteEnv(import.meta.env.VITE_ONESIGNAL_SAFARI_WEB_ID) || undefined,
-        serviceWorkerPath: '/OneSignalSDKWorker.js',
-        serviceWorkerUpdaterPath: '/OneSignalSDKUpdaterWorker.js',
+        serviceWorkerPath: useMergedServiceWorker ? '/sw.js' : '/OneSignalSDKWorker.js',
+        serviceWorkerUpdaterPath: useMergedServiceWorker ? undefined : '/OneSignalSDKUpdaterWorker.js',
         serviceWorkerParam: { scope: '/' },
         notifyButton: { enable: false },
         autoResubscribe: true,

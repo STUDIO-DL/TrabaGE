@@ -19,7 +19,7 @@ import { DEEP_LINK_PATHS } from '../utils/deepLinks';
 
 export function useCreatePost() {
   const { user, isPreviewMode, role } = useAuth();
-  const { showToast } = useNotificationContext();
+  const { showToast, showErrorToast } = useNotificationContext();
   const [loading, setLoading] = useState(false);
   const [uploadPhase, setUploadPhase] = useState(null);
 
@@ -106,7 +106,7 @@ export function useCreatePost() {
           return { ok: false, partial: true, post: savedPost };
         }
       } catch (uploadError) {
-        showToast(uploadError.message, 'error');
+        showErrorToast(uploadError, 'upload_image');
         setUploadPhase(null);
         setLoading(false);
         return { ok: false, partial: true, post: savedPost };

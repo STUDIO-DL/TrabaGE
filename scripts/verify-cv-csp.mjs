@@ -23,9 +23,9 @@ for (const [name, ok] of checks) {
 }
 
 console.log(
-  'fonts',
-  fs.existsSync('public/fonts/Inter-Regular.woff2') &&
-    fs.existsSync('public/fonts/Inter-SemiBold.woff2')
+  'fonts-woff',
+  fs.existsSync('public/fonts/Inter-Regular.woff') &&
+    fs.existsSync('public/fonts/Inter-SemiBold.woff')
     ? 'OK'
     : 'MISSING',
 );

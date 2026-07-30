@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import Card from '../ui/Card';
 import Button from '../ui/Button';
 import UserProfileLink from '../common/UserProfileLink';
 import CompanyNameWithBadge from '../company/CompanyNameWithBadge';
@@ -51,20 +50,20 @@ function isOrganizationSubtype(subtype) {
   );
 }
 
+const shellClass =
+  'surface-flat border-b border-app-divider py-space-base last:border-b-0 sm:py-space-lg';
+
 export default function FeedRecommendationCard({ item }) {
   const { subtype } = item.payload ?? {};
 
-  // Personal suggestions: profile link only — follow-people is NOT enabled.
   if (isPersonalSubtype(subtype)) {
     const profile = item.payload.profile ?? item.payload.candidate_profile;
     if (!profile) return null;
 
     return (
-      <Card className="mb-3">
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-primary-600">
-          Persona recomendada
-        </p>
-        <div className="flex items-start justify-between gap-3">
+      <article className={shellClass}>
+        <p className="mb-space-sm text-caption font-medium text-app-subtle">Persona recomendada</p>
+        <div className="flex items-start gap-space-md">
           <UserProfileLink
             userId={profile.user_id}
             userType={AUTHOR_TYPES.PERSONAL}
@@ -82,17 +81,21 @@ export default function FeedRecommendationCard({ item }) {
               path={`/profile/${profile.user_id}`}
               layout="name"
             />
-            {profile.headline && <p className="text-sm text-gray-500">{profile.headline}</p>}
-            {profile.city && <p className="mt-1 text-xs text-gray-400">{profile.city}</p>}
+            {profile.headline ? (
+              <p className="text-body-small text-app-muted">{profile.headline}</p>
+            ) : null}
+            {profile.city ? (
+              <p className="mt-space-xs text-caption text-app-subtle">{profile.city}</p>
+            ) : null}
           </div>
           <Link
             to={`/profile/${profile.user_id}`}
-            className="shrink-0 text-sm font-medium text-primary-600 hover:text-primary-700"
+            className="shrink-0 text-body-small font-medium text-primary-600 hover:text-primary-700"
           >
-            Ver perfil
+            Ver
           </Link>
         </div>
-      </Card>
+      </article>
     );
   }
 
@@ -101,11 +104,9 @@ export default function FeedRecommendationCard({ item }) {
     if (!company) return null;
 
     return (
-      <Card className="mb-3">
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-primary-600">
-          Business recomendado
-        </p>
-        <div className="flex items-start justify-between gap-3">
+      <article className={shellClass}>
+        <p className="mb-space-sm text-caption font-medium text-app-subtle">Empresa recomendada</p>
+        <div className="flex items-start gap-space-md">
           <UserProfileLink
             userId={company.user_id}
             userType={AUTHOR_TYPES.BUSINESS}
@@ -117,8 +118,8 @@ export default function FeedRecommendationCard({ item }) {
           />
           <div className="min-w-0 flex-1">
             <CompanyNameWithBadge company={company} userId={company.user_id} />
-            <p className="text-sm text-gray-500">
-              {[company.sector, company.city].filter(Boolean).join(' • ')}
+            <p className="text-body-small text-app-muted">
+              {[company.sector, company.city].filter(Boolean).join(' · ')}
             </p>
           </div>
           <FollowSuggestionButton
@@ -126,7 +127,7 @@ export default function FeedRecommendationCard({ item }) {
             targetId={company.user_id}
           />
         </div>
-      </Card>
+      </article>
     );
   }
 
@@ -135,11 +136,11 @@ export default function FeedRecommendationCard({ item }) {
     if (!institution) return null;
 
     return (
-      <Card className="mb-3">
-        <p className="mb-3 text-xs font-medium uppercase tracking-wide text-primary-600">
+      <article className={shellClass}>
+        <p className="mb-space-sm text-caption font-medium text-app-subtle">
           Organización recomendada
         </p>
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-space-md">
           <UserProfileLink
             userId={institution.user_id}
             userType={AUTHOR_TYPES.ORGANIZATION}
@@ -157,8 +158,8 @@ export default function FeedRecommendationCard({ item }) {
               path={`/companies/${institution.user_id}`}
               layout="name"
             />
-            <p className="text-sm text-gray-500">
-              {[institution.company_type, institution.city].filter(Boolean).join(' • ')}
+            <p className="text-body-small text-app-muted">
+              {[institution.company_type, institution.city].filter(Boolean).join(' · ')}
             </p>
           </div>
           <FollowSuggestionButton
@@ -166,7 +167,7 @@ export default function FeedRecommendationCard({ item }) {
             targetId={institution.user_id}
           />
         </div>
-      </Card>
+      </article>
     );
   }
 

@@ -1,4 +1,4 @@
-import { isSupabaseConfigured, supabase } from '../config/supabase';
+import { isSupabaseConfigured, supabase, supabaseAnonKey, supabaseUrl } from '../config/supabase';
 import {
   getEmailConfirmRedirectUrl,
   getOAuthCallbackRedirectUrl,
@@ -17,6 +17,7 @@ import {
   ROLES,
 } from '../constants/roles';
 import { getErrorMessage } from '../utils/i18n';
+import { reportError } from '../utils/logger';
 import {
   clearSignupInflight,
   isPendingSignupEmail,
@@ -250,6 +251,10 @@ export function getGoogleLoginNoAccountMessage() {
   return getErrorMessage('googleLoginNoAccount');
 }
 
+export function getGoogleLoginNoAccountTitle() {
+  return getErrorMessage('googleLoginNoAccountTitle');
+}
+
 export function getEmailNotVerifiedMessage() {
   return getErrorMessage('emailNotConfirmed');
 }
@@ -283,6 +288,71 @@ function normalizeEmail(email) {
 
 function normalizePassword(password) {
   return password.trim();
+}
+
+/**
+ * Best-effort password-changed confirmation email.
+ * Never throws to the caller; never blocks or reverts the password update.
+ */
+async function notifyPasswordChangedBestEffort() {
+  try {
+    const { data, error } = await supabase.functions.invoke('notify_password_changed', {
+      body: {},
+    });
+    if (error || data?.ok === false) {
+      reportError(error ?? new Error('password_changed_email_failed'), {
+        area: 'password_changed_email',
+        response: data ?? null,
+      });
+    }
+  } catch (error) {
+    reportError(error, { area: 'password_changed_email' });
+  }
+}
+
+/**
+ * Best-effort farewell email after successful account deletion.
+ * Uses a one-time outbox token (no user JWT — auth user already deleted).
+ * Calls the Edge Function with the anon key so a dead session JWT cannot interfere.
+ */
+async function notifyAccountGoodbyeBestEffort(goodbyeToken) {
+  const token = String(goodbyeToken || '').trim();
+  if (!token || !isSupabaseConfigured || !supabaseUrl || !supabaseAnonKey) return;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/send_account_goodbye_email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: supabaseAnonKey,
+        Authorization: `Bearer ${supabaseAnonKey}`,
+      },
+      body: JSON.stringify({ token }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    let data = null;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok || data?.ok === false) {
+      reportError(new Error('account_goodbye_email_failed'), {
+        area: 'account_goodbye_email',
+        status: response.status,
+        response: data ?? null,
+      });
+    }
+  } catch (error) {
+    reportError(error, { area: 'account_goodbye_email' });
+  }
 }
 
 function configError() {
@@ -476,11 +546,13 @@ function isGoogleOnlyIdentity(user) {
 
 function hasSignupMetadata(user) {
   const meta = user?.user_metadata || {};
+  // Only treat registration-form fields as signup evidence.
+  // Google OAuth often sets full_name / name / avatar_url — those must NOT
+  // count as an existing TrabaGE account (would skip orphan cleanup on LOGIN).
   return Boolean(
     meta.role ||
       meta.account_kind ||
       meta.account_type ||
-      meta.full_name ||
       meta.company_name ||
       meta.city,
   );
@@ -593,7 +665,8 @@ export async function discardUnregisteredOAuthSession(user = null) {
 
   if (canHardDelete) {
     try {
-      await supabase.rpc('delete_own_account');
+      // Orphan Google login cleanup — never send farewell email.
+      await supabase.rpc('delete_own_account', { p_send_goodbye: false });
     } catch {
       // Fall through to signOut even if cleanup RPC fails.
     }
@@ -1097,15 +1170,45 @@ export const authService = {
 
   logout: () => supabase.auth.signOut(),
 
-  deleteAccount: () => supabase.rpc('delete_own_account'),
+  deleteAccount: async () => {
+    const result = await supabase.rpc('delete_own_account', { p_send_goodbye: true });
+    if (!result.error) {
+      const payload =
+        typeof result.data === 'string'
+          ? (() => {
+              try {
+                return JSON.parse(result.data);
+              } catch {
+                return null;
+              }
+            })()
+          : result.data;
+      const goodbyeToken = payload?.goodbye_token;
+      if (goodbyeToken) {
+        // Await briefly so the request starts before the UI signs out.
+        // Never fail deleteAccount on email errors (notify swallows them).
+        // Server-side pg_net/webhook may already be sending in parallel.
+        await Promise.race([
+          notifyAccountGoodbyeBestEffort(goodbyeToken),
+          new Promise((resolve) => setTimeout(resolve, 10000)),
+        ]);
+      }
+    }
+    return result;
+  },
 
   resetPassword: (email) =>
     supabase.auth.resetPasswordForEmail(normalizeEmail(email), {
       redirectTo: getOAuthCallbackRedirectUrl(),
     }),
 
-  setPassword: (password) =>
-    supabase.auth.updateUser({ password: normalizePassword(password) }),
+  setPassword: async (password) => {
+    const result = await supabase.auth.updateUser({ password: normalizePassword(password) });
+    if (!result.error) {
+      void notifyPasswordChangedBestEffort();
+    }
+    return result;
+  },
 
   changePasswordWithCurrent: async (email, currentPassword, newPassword) => {
     const loginResult = await supabase.auth.signInWithPassword({
@@ -1115,7 +1218,11 @@ export const authService = {
 
     if (loginResult.error) return loginResult;
 
-    return supabase.auth.updateUser({ password: normalizePassword(newPassword) });
+    const result = await supabase.auth.updateUser({ password: normalizePassword(newPassword) });
+    if (!result.error) {
+      void notifyPasswordChangedBestEffort();
+    }
+    return result;
   },
 
   getSession: () => {

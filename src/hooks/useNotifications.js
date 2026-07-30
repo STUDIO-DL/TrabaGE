@@ -6,6 +6,7 @@ import {
   notificationsService,
   NOTIFICATIONS_PAGE_SIZE,
 } from '../services/notifications.service';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 
 export function useNotifications() {
   const { user, isPreviewMode } = useAuth();
@@ -53,7 +54,7 @@ export function useNotifications() {
     setUnreadCount(countResult.count ?? 0);
     setHasMore(page.length === NOTIFICATIONS_PAGE_SIZE);
     cursorRef.current = cursorFromPage(page);
-    setError(listResult.error?.message ?? null);
+    setError(listResult.error ? getUserErrorMessage(listResult.error, ERROR_ACTION.load_notifications) : null);
     setLoading(false);
   }, [user?.id, isPreviewMode]);
 
@@ -78,7 +79,7 @@ export function useNotifications() {
       if (page.length) cursorRef.current = cursorFromPage(page);
       setHasMore(page.length === NOTIFICATIONS_PAGE_SIZE);
     } else {
-      setError(pageError.message ?? 'No se pudieron cargar más notificaciones.');
+      setError(getUserErrorMessage(pageError, ERROR_ACTION.load_notifications));
     }
 
     loadingMoreRef.current = false;

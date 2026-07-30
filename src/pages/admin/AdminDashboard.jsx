@@ -41,68 +41,54 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <AdminStatCard
-          icon={Users}
-          tone="blue"
-          value={stats?.registeredUsers ?? 0}
-          label="Usuarios registrados"
-        />
+    <div className="space-y-space-lg">
+      <div className="grid gap-space-sm sm:grid-cols-2 xl:grid-cols-4">
+        <AdminStatCard icon={Users} value={stats?.registeredUsers ?? 0} label="Usuarios" />
         <AdminStatCard
           icon={Building2}
-          tone="green"
           value={stats?.registeredCompanies ?? 0}
-          label="Empresas (Business)"
+          label="Empresas"
         />
         <AdminStatCard
           icon={Landmark}
-          tone="purple"
           value={stats?.registeredOrganizations ?? 0}
           label="Organizaciones"
         />
         <AdminStatCard
           icon={ShieldCheck}
-          tone="blue"
           value={stats?.verifiedCompanies ?? 0}
-          label="Cuentas verificadas"
+          label="Verificadas"
         />
         <AdminStatCard
           icon={ShieldCheck}
-          tone="amber"
           value={stats?.pendingVerifications ?? 0}
-          label="Verificaciones pendientes"
+          label="Pendientes"
         />
         <AdminStatCard
           icon={Newspaper}
-          tone="slate"
           value={stats?.publications ?? 0}
           label="Publicaciones"
         />
-        <AdminStatCard
-          icon={Briefcase}
-          tone="purple"
-          value={stats?.activeJobs ?? 0}
-          label="Ofertas activas"
-        />
+        <AdminStatCard icon={Briefcase} value={stats?.activeJobs ?? 0} label="Ofertas activas" />
       </div>
 
-      <AdminSectionCard title="Acciones rápidas">
-        <AdminQuickActions />
-      </AdminSectionCard>
+      <AdminQuickActions />
 
       <AdminSectionCard title="Verificaciones recientes">
-        <ul className="space-y-3">
+        <ul className="divide-y divide-app-divider">
           {recentVerifications.length === 0 ? (
-            <li className="text-sm text-gray-500">Sin solicitudes recientes.</li>
+            <li className="py-space-sm text-body-small text-app-muted">Sin solicitudes recientes.</li>
           ) : (
             recentVerifications.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-3 text-sm">
-                <div>
-                  <p className="font-medium text-gray-900">
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-space-md py-space-sm text-body-small"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-app-text">
                     {item.company_profiles?.company_name ?? 'Empresa'}
                   </p>
-                  <p className="text-gray-500">{formatDate(item.created_at)}</p>
+                  <p className="text-caption text-app-subtle">{formatDate(item.created_at)}</p>
                 </div>
                 <AdminStatusBadge status={item.status} />
               </li>

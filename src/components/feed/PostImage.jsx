@@ -1,7 +1,9 @@
-import { memo } from 'react';
+import { memo, useState } from 'react';
 
 function PostImage({ src, alt = 'Imagen de la publicación', className = '' }) {
-  if (!src) return null;
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) return null;
 
   return (
     <img
@@ -9,6 +11,7 @@ function PostImage({ src, alt = 'Imagen de la publicación', className = '' }) {
       alt={alt}
       loading="lazy"
       decoding="async"
+      onError={() => setFailed(true)}
       className={`mt-space-md w-full rounded-radius-md object-cover ${className}`.trim()}
     />
   );

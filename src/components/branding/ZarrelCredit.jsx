@@ -6,11 +6,11 @@ import { ZARREL_NAME, ZARREL_URL } from '../../constants/zarrel';
  * Do not use in feed, posts, profiles, or job offers.
  */
 export default function ZarrelCredit({
-  variant = 'developed',
+  variant: _variant = 'developed',
   className = '',
   linkClassName = '',
 }) {
-  const prefix = variant === 'powered' ? 'Powered by' : 'Developed by';
+  const prefix = 'Desarrollado por';
 
   return (
     <p

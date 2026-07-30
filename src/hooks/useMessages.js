@@ -3,6 +3,7 @@ import { useAuth } from './useAuth';
 import { useForegroundResumeRefresh } from './useForegroundResumeRefresh';
 import { supabase } from '../config/supabase';
 import { messagesService, MESSAGES_PAGE_SIZE } from '../services/messages.service';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 
 function sortMessagesAscending(messages) {
   return [...messages].sort(
@@ -26,7 +27,9 @@ export function useMessages(conversationId) {
   const markedReadRef = useRef(false);
   const activeConversationRef = useRef(conversationId);
   const sendingLockRef = useRef(false);
+  const messagesRef = useRef([]);
   activeConversationRef.current = conversationId;
+  messagesRef.current = messages;
 
   const cursorFromPage = (page) => {
     if (!page.length) return null;
@@ -54,10 +57,6 @@ export function useMessages(conversationId) {
     const requestedId = conversationId;
     const { data, error: stateError } = await messagesService.getConversationSendState(conversationId);
     if (activeConversationRef.current !== requestedId) return;
-
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'F',location:'useMessages.js:syncSendState',message:'send state applied',data:{requestedId,canSend:data?.canSend??null,hadError:Boolean(stateError)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     if (stateError) {
       setCanSend(false);
@@ -93,17 +92,13 @@ export function useMessages(conversationId) {
       syncSendState(),
     ]);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'C',location:'useMessages.js:fetchMessages',message:'fetch completed',data:{requestedId,activeId:activeConversationRef.current,stale:activeConversationRef.current!==requestedId,rowCount:(page??[]).length,pageError:Boolean(pageError)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     if (activeConversationRef.current !== requestedId) return;
 
     const rows = page ?? [];
     setMessages(sortMessagesAscending(rows));
     setHasMore(rows.length === MESSAGES_PAGE_SIZE);
     cursorRef.current = cursorFromPage(rows);
-    setError(pageError?.message ?? null);
+    setError(pageError ? getUserErrorMessage(pageError, ERROR_ACTION.load_messages) : null);
     setLoading(false);
   }, [conversationId, isPreviewMode, syncParticipants, syncSendState]);
 
@@ -135,12 +130,66 @@ export function useMessages(conversationId) {
       if (page.length) cursorRef.current = cursorFromPage(page);
       setHasMore(page.length === MESSAGES_PAGE_SIZE);
     } else {
-      setError(pageError.message ?? 'No se pudieron cargar más mensajes.');
+      setError(getUserErrorMessage(pageError, ERROR_ACTION.load_messages));
     }
 
     loadingMoreRef.current = false;
     setLoadingMore(false);
   }, [conversationId, hasMore, isPreviewMode, loading]);
+
+  /**
+   * Ensure a message is in the local window (for jump-to-search).
+   * @returns {'ok'|'missing'|'error'}
+   */
+  const ensureMessageLoaded = useCallback(
+    async (messageId) => {
+      if (!conversationId || !messageId || isPreviewMode) return 'error';
+
+      const already = messagesRef.current.some((item) => item.id === messageId);
+      if (already) return 'ok';
+
+      const requestedId = conversationId;
+      const { data, error: windowError, found } = await messagesService.getMessagesAround(
+        conversationId,
+        messageId,
+        { before: MESSAGES_PAGE_SIZE, after: 12 },
+      );
+
+      if (activeConversationRef.current !== requestedId) return 'error';
+
+      if (windowError) {
+        setError(getUserErrorMessage(windowError, ERROR_ACTION.load_messages));
+        return 'error';
+      }
+
+      if (!found || !data.length) return 'missing';
+
+      setMessages((prev) => {
+        const seen = new Set(prev.map((item) => item.id));
+        const merged = [...prev];
+        for (const row of data) {
+          if (!seen.has(row.id)) {
+            seen.add(row.id);
+            merged.push(row);
+          }
+        }
+        return sortMessagesAscending(merged);
+      });
+
+      // Allow loading still-older history from the oldest loaded row
+      const ascending = sortMessagesAscending(data);
+      if (ascending.length) {
+        cursorRef.current = {
+          createdAt: ascending[0].created_at,
+          id: ascending[0].id,
+        };
+        setHasMore(true);
+      }
+
+      return 'ok';
+    },
+    [conversationId, isPreviewMode],
+  );
 
   const markRead = useCallback(async () => {
     if (!conversationId || isPreviewMode) return;
@@ -151,7 +200,7 @@ export function useMessages(conversationId) {
   }, [conversationId, isPreviewMode]);
 
   const sendMessage = useCallback(
-    async (content) => {
+    async (content, { replyToMessageId = null, replyTo = null } = {}) => {
       if (!conversationId || !user?.id || isPreviewMode) {
         return { error: { message: 'No se pudo enviar el mensaje.' } };
       }
@@ -163,10 +212,6 @@ export function useMessages(conversationId) {
       const trimmed = String(content ?? '').trim();
       if (!trimmed) return { error: { message: 'El mensaje no puede estar vacío.' } };
 
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'C',location:'useMessages.js:sendMessage:start',message:'send start',data:{conversationId,sendingLock:sendingLockRef.current},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-
       const optimisticId = `optimistic-${Date.now()}`;
       const optimisticMessage = {
         id: optimisticId,
@@ -175,6 +220,8 @@ export function useMessages(conversationId) {
         content: trimmed,
         created_at: new Date().toISOString(),
         optimistic: true,
+        reply_to_message_id: replyToMessageId || null,
+        reply_to: replyTo || null,
       };
 
       const sendConversationId = conversationId;
@@ -182,11 +229,9 @@ export function useMessages(conversationId) {
       setSending(true);
       setMessages((prev) => sortMessagesAscending([...prev, optimisticMessage]));
 
-      const { data, error: sendError } = await messagesService.sendMessage(conversationId, trimmed);
-
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'C',location:'useMessages.js:sendMessage:done',message:'send completed',data:{sendConversationId,activeId:activeConversationRef.current,stale:activeConversationRef.current!==sendConversationId,hasError:Boolean(sendError),serverMsgId:data?.id??null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
+      const { data, error: sendError } = await messagesService.sendMessage(conversationId, trimmed, {
+        replyToMessageId,
+      });
 
       if (activeConversationRef.current !== sendConversationId) {
         sendingLockRef.current = false;
@@ -203,10 +248,14 @@ export function useMessages(conversationId) {
 
       setMessages((prev) => {
         const withoutOptimistic = prev.filter((item) => item.id !== optimisticId);
-        if (withoutOptimistic.some((item) => item.id === data.id)) {
+        const serverRow =
+          data?.reply_to || !replyTo
+            ? data
+            : { ...data, reply_to: data?.reply_to ?? replyTo };
+        if (withoutOptimistic.some((item) => item.id === serverRow.id)) {
           return sortMessagesAscending(withoutOptimistic);
         }
-        return sortMessagesAscending([...withoutOptimistic, data]);
+        return sortMessagesAscending([...withoutOptimistic, serverRow]);
       });
       await syncSendState();
       sendingLockRef.current = false;
@@ -321,6 +370,7 @@ export function useMessages(conversationId) {
     blockedReason,
     sendMessage,
     loadMore,
+    ensureMessageLoaded,
     refetch: fetchMessages,
   };
 }

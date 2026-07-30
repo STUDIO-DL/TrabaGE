@@ -6,7 +6,7 @@ export const topBarOuterClass =
   'sticky top-0 z-30 border-b border-app-border bg-app-card/95 pt-safe backdrop-blur';
 
 export const topBarInnerClass =
-  'mx-auto flex h-topbar max-w-lg items-center gap-space-sm px-space-base';
+  'mx-auto flex h-topbar w-full max-w-lg items-center gap-space-sm px-space-base md:max-w-2xl lg:max-w-5xl';
 
 export function TopBarShell({ children, className = '' }) {
   return (

@@ -6,12 +6,14 @@ import { Bell, X, ICON_SIZES } from '../../constants/icons';
 import { NOTIFICATION_PERMISSION_STATUS } from '../../constants/notificationPreferences';
 import { initOneSignal, isOneSignalConfigured } from '../../config/onesignal';
 import { useAuth } from '../../hooks/useAuth';
+import { isPwaInstalled } from '../../hooks/useInstallPrompt';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import {
   isOsPushPermissionDenied,
   usePushPermissionActions,
 } from '../../hooks/usePushPermission';
 import { ROLES } from '../../constants/roles';
+import { iosNeedsHomeScreenForPush } from '../../utils/deviceHints';
 
 const DISMISS_KEY = 'trabage_push_prompt_dismissed_at';
 const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
@@ -48,6 +50,7 @@ export default function PushPermissionPrompt() {
   const { requestPermission, getPermissionStatus } = usePushPermissionActions();
   const [visible, setVisible] = useState(false);
   const [activating, setActivating] = useState(false);
+  const needsIosInstallHint = iosNeedsHomeScreenForPush();
 
   useEffect(() => {
     if (visible) {
@@ -119,9 +122,8 @@ export default function PushPermissionPrompt() {
         return;
       }
 
-      if (getPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.DENIED) {
-        dismiss();
-      }
+      // Soft cancel or hard deny: cool down so we do not re-prompt aggressively.
+      dismiss();
     } finally {
       setActivating(false);
     }
@@ -133,7 +135,7 @@ export default function PushPermissionPrompt() {
     <div
       className="pointer-events-none fixed left-0 right-0 top-0 z-[80] flex justify-center px-4 pt-[max(1rem,env(safe-area-inset-top,0px))]"
       role="region"
-      aria-label="Activar notificaciones push"
+      aria-label="Activar notificaciones"
     >
       <div className="pointer-events-auto flex max-w-md items-start gap-3 rounded-2xl border border-primary-100 bg-white/95 p-4 shadow-[0_18px_46px_rgba(37,99,235,0.16)] backdrop-blur-sm">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)]">
@@ -142,8 +144,14 @@ export default function PushPermissionPrompt() {
         <div className="min-w-0 flex-1">
           <p className="text-[14px] font-semibold text-slate-950">Activa las notificaciones</p>
           <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
-            Recibe avisos en la bandeja de TrabaGE y como notificaciones del sistema sobre ofertas, postulaciones y novedades de cuentas que sigues.
+            Recibe avisos sobre mensajes, ofertas de empleo y novedades importantes.
           </p>
+          {needsIosInstallHint && !isPwaInstalled() ? (
+            <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
+              En iPhone, para recibir avisos con la app cerrada, añade TrabaGE a tu pantalla de
+              inicio desde el menú Compartir de Safari.
+            </p>
+          ) : null}
           <div className="mt-3 flex flex-wrap gap-2">
             <Button
               type="button"

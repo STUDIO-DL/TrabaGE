@@ -34,7 +34,9 @@ export default function CompanyProfileTabs({ activeTab, onTabChange, hasServices
               aria-selected={isActive}
               onClick={() => onTabChange(tab.id)}
               className={`${profileTabButtonClass} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
-                isActive ? 'font-semibold text-primary-700' : 'text-app-muted hover:text-app-text'
+                isActive
+                  ? 'bg-primary-50/70 font-semibold text-primary-700'
+                  : 'text-app-muted hover:bg-primary-50/40 hover:text-app-text'
               }`}
               aria-current={isActive ? 'page' : undefined}
             >

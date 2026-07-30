@@ -34,7 +34,12 @@ export default function AppAvatar({
   const [imageError, setImageError] = useState(false);
   const defaultSrc = getDefaultAvatarSrc(type);
 
-  const resolved = useMemo(() => resolveAvatarImageSrc(type, src), [type, src]);
+  const resolved = useMemo(() => {
+    // Accept string paths/URLs, or { src } objects from resolveAvatarImageSrc / getDisplayAvatar
+    const imagePath =
+      src && typeof src === 'object' && typeof src.src === 'string' ? src.src : src;
+    return resolveAvatarImageSrc(type, imagePath);
+  }, [type, src]);
   const displaySrc = imageError ? defaultSrc : resolved.src;
   const isDefault = imageError || resolved.isDefault;
 

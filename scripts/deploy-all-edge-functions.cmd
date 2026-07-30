@@ -11,7 +11,13 @@ if errorlevel 1 exit /b 1
 call scripts\supabase.cmd functions deploy send_welcome_email
 if errorlevel 1 exit /b 1
 
-call scripts\supabase.cmd functions deploy send_push
+call scripts\deploy-notify-password-changed-api.cmd
+if errorlevel 1 exit /b 1
+
+call scripts\deploy-send-account-goodbye-email-api.cmd
+if errorlevel 1 exit /b 1
+
+call scripts\deploy-send-push-api.cmd
 if errorlevel 1 exit /b 1
 
 call scripts\supabase.cmd functions deploy match_job_recommendations

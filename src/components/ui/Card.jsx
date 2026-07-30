@@ -5,34 +5,27 @@ const paddingMap = {
   lg: 'p-space-base',
 };
 
-const elevationMap = {
-  none: '',
-  1: 'shadow-elevation-1',
-  2: 'shadow-elevation-2',
-  3: 'shadow-elevation-3',
-  4: 'shadow-elevation-4',
-};
-
+/**
+ * Product surface. Default: border-only card (no stacked shadow).
+ * elevation prop kept for API compat but ignored for levels ≤1 — overlays use Modal.
+ */
 export default function Card({
   children,
   padding = 'md',
-  shadow = true,
-  elevation = shadow ? 1 : 'none',
+  shadow = false,
+  elevation = 'none',
   interactive = false,
   className = '',
   as: Component = 'div',
   ...props
 }) {
-  const elevationClass = elevationMap[elevation] ?? (shadow ? elevationMap[1] : '');
-
   return (
     <Component
       className={[
         'surface-card',
         paddingMap[padding] ?? paddingMap.md,
-        elevation !== 'none' && elevationClass ? elevationClass : '',
         interactive
-          ? 'transition-colors duration-fast ease-out hover:border-app-muted/40'
+          ? 'surface-press hover:border-app-muted/50'
           : '',
         className,
       ]

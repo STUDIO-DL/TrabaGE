@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
-import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
+import TrabaGEWordmark from '../../components/branding/TrabaGEWordmark';
 import { LEGAL_DATE, LEGAL_ROUTES, LEGAL_VERSION } from '../../constants/legalRoutes';
 import { APP_VERSION, ZARREL_URL } from '../../constants/zarrel';
 import { SUPPORT_EMAIL } from '../../constants/support';
 import { usePageTitle } from '../../hooks/usePageTitle';
 
 const INFO_ROWS = [
-  { label: 'Aplicación', value: 'TrabaGE' },
+  { label: 'Aplicación', brand: true },
   { label: 'Versión de la app', value: APP_VERSION },
   { label: 'Documentos legales', value: `v${LEGAL_VERSION} · ${LEGAL_DATE}` },
   { label: 'Plataformas', value: 'Web App · PWA · Móvil' },
@@ -37,7 +37,7 @@ export default function AppInfo() {
 
       <div className="mx-auto max-w-lg px-5 py-8">
         <div className="flex justify-center">
-          <TrabaGEWordmark className="h-8 w-auto" />
+          <TrabaGEWordmark size="lg" />
         </div>
 
         <ul className="mt-8 divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 dark:divide-slate-800 dark:border-slate-800">
@@ -54,6 +54,8 @@ export default function AppInfo() {
                 >
                   {row.value}
                 </a>
+              ) : row.brand ? (
+                <TrabaGEWordmark size="xs" />
               ) : (
                 <span className="truncate text-right font-medium text-slate-900 dark:text-slate-100">
                   {row.value}

@@ -90,16 +90,15 @@ export default function DocumentsSection({
     >
       <div className="space-y-5">
         <div>
-          <p className="mb-1 text-sm font-semibold text-gray-900">Curriculum Vitae</p>
-          <p className="mb-3 text-sm text-gray-500">
+          <p className="mb-1 text-sm font-semibold text-app-text">Curriculum Vitae</p>
+          <p className="mb-3 text-sm text-app-muted">
             Sube tu CV en formato PDF para compartirlo con empresas.
           </p>
-          <p className="mb-1 text-xs text-gray-500">{FILE_HINTS.cv}</p>
-          <p className="mb-4 text-sm text-gray-500">{cvName || 'No especificado'}</p>
+          <p className="mb-4 text-sm text-app-muted">{cvName || 'No especificado'}</p>
 
-          <div className="mb-4 rounded-xl border border-gray-200 bg-gray-50/80 p-4">
-            <p className="text-sm font-medium text-gray-900">¿No tienes un CV?</p>
-            <p className="mt-1 text-sm leading-relaxed text-gray-600">
+          <div className="mb-4 rounded-xl border border-app-border bg-app-surface/80 p-4">
+            <p className="text-sm font-medium text-app-text">¿No tienes un CV?</p>
+            <p className="mt-1 text-sm leading-relaxed text-app-muted">
               Genera uno automáticamente utilizando la información de tu perfil.
             </p>
           </div>
@@ -130,9 +129,9 @@ export default function DocumentsSection({
           </div>
         </div>
 
-        <div className="border-t border-gray-100 pt-5">
-          <p className="mb-1 text-sm font-medium text-gray-700">Carta de presentación (texto)</p>
-          <p className="mb-3 text-xs text-gray-500">
+        <div className="border-t border-app-divider pt-5">
+          <p className="mb-1 text-sm font-medium text-app-text">Carta de presentación (texto)</p>
+          <p className="mb-3 text-xs text-app-muted">
             Se guarda en tu perfil como texto, sin ocupar almacenamiento extra.
           </p>
           <CoverLetterEditor

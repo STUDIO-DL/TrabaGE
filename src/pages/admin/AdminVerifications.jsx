@@ -185,7 +185,7 @@ export default function AdminVerifications() {
           }}
           placeholder="Empresa, documento o estado"
         />
-        <label className="text-sm font-medium text-gray-700">
+        <label className="text-sm font-medium text-app-text">
           Estado
           <select
             value={statusFilter}
@@ -193,7 +193,7 @@ export default function AdminVerifications() {
               setStatusFilter(event.target.value);
               resetPage();
             }}
-            className="mt-1 w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900"
+            className="mt-1 w-full rounded-xl border border-app-border bg-app-card px-3 py-2.5 text-sm text-app-text"
           >
             <option value="all">Todos</option>
             <option value="pending">Pendientes</option>

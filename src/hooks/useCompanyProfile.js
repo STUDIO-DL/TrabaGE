@@ -5,24 +5,15 @@ import { useProfile } from './useProfile';
 import { companyService } from '../services/company.service';
 import { storageService } from '../services/storage.service';
 import { validateFile } from '../utils/validateFile';
-import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
+import { asUserFacingError, ERROR_ACTION } from '../utils/userFacingError';
 import { syncAuthIdentityMetadata, readIdentityFromUser } from '../utils/displayIdentity';
 import { getOwnCompanyProfileKey, getProfileQueryKey } from '../constants/profileQueryKeys';
 import { withSetupComplete } from '../utils/profilePersistence';
 import { logoPath, companyCoverPath } from '../constants/storage';
 
-function friendlyCompanyError(error) {
+function friendlyCompanyError(error, action = ERROR_ACTION.save_profile) {
   if (!error) return null;
-  const message = error.message?.toLowerCase?.() || '';
-
-  if (message.includes('violates row-level security')) {
-    return { ...error, message: 'No tienes permisos para modificar este dato.' };
-  }
-  if (error.code === 'WRITE_NO_ROW') {
-    return error;
-  }
-
-  return { ...error, message: getSupabaseErrorMessage(error) };
+  return asUserFacingError(error, { action });
 }
 
 function mergeBaseProfileRow(current, row) {

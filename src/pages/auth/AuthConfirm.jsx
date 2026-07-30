@@ -103,7 +103,7 @@ export default function AuthConfirm() {
   return (
     <main className="min-h-dvh bg-app-bg px-5 py-10 text-app-text">
       <div className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-md flex-col items-center justify-center text-center">
-        <TrabaGEWordmark className="h-10 w-auto" />
+        <TrabaGEWordmark size="hero" />
 
         <section className="mt-8 w-full rounded-3xl border border-app-border bg-app-card p-7 shadow-elevation-3">
           {status === 'loading' ? (

@@ -129,8 +129,8 @@ export default function AdminTopics() {
         label: 'Nombre',
         render: (row) => (
           <div>
-            <p className="font-medium text-gray-900">{row.name}</p>
-            <p className="text-xs text-gray-500">{row.slug}</p>
+            <p className="font-medium text-app-text">{row.name}</p>
+            <p className="text-xs text-app-muted">{row.slug}</p>
           </div>
         ),
       },
@@ -193,9 +193,9 @@ export default function AdminTopics() {
 
   return (
     <div className="space-y-6">
-      <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
-        <h2 className="text-sm font-semibold text-gray-900">Nuevo tema</h2>
-        <p className="mt-1 text-sm text-gray-500">
+      <div className="rounded-radius-lg border border-app-divider bg-app-card p-5 ">
+        <h2 className="text-sm font-semibold text-app-text">Nuevo tema</h2>
+        <p className="mt-1 text-sm text-app-muted">
           Los temas forman el catálogo oficial. No se permiten duplicados.
         </p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
@@ -224,7 +224,7 @@ export default function AdminTopics() {
           placeholder="Buscar tema…"
           className="sm:max-w-xs"
         />
-        <p className="text-sm text-gray-500">{filtered.length} temas</p>
+        <p className="text-sm text-app-muted">{filtered.length} temas</p>
       </div>
 
       <AdminTable

@@ -55,7 +55,7 @@ export default function PublicProfile() {
   if (!profile) {
     return (
       <PageContainer topBar={false} bottomNav={false} className="max-w-none">
-        <p className="p-8 text-center text-sm text-gray-500">Perfil no encontrado.</p>
+        <p className="p-space-xl text-center text-body-small text-app-muted">Perfil no encontrado.</p>
       </PageContainer>
     );
   }
@@ -72,15 +72,15 @@ export default function PublicProfile() {
         messageLoading={starting}
       >
         <AboutSection about={profile.about} />
-        <PersonalSocialSection socialLinks={profile.social_links} />
         <ExperienceSection items={profile.experience} />
         <EducationSection items={profile.education} />
-        <CertificationsSection items={profile.certifications} />
         <SkillsSection items={profile.skills} />
-        <LanguagesReadOnlySection items={profile.languages} />
-        <PortfolioLinksSection items={profile.candidate_links} />
-        <ServicesSection items={profile.services} />
         <ProjectsSection items={profile.projects} />
+        <CertificationsSection items={profile.certifications} />
+        <LanguagesReadOnlySection items={profile.languages} />
+        <ServicesSection items={profile.services} />
+        <PortfolioLinksSection items={profile.candidate_links} />
+        <PersonalSocialSection socialLinks={profile.social_links} />
       </CandidateProfileLayout>
     </PageContainer>
   );

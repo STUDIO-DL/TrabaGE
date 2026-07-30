@@ -23,6 +23,7 @@ import { companyService } from '../../services/company.service';
 import { isCompanyRequiredComplete } from '../../utils/profileRequirements';
 import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { normalizeSalaryInput } from '../../utils/formatSalary';
+import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
 import {
   benefitsToText,
   requirementsToText,
@@ -202,7 +203,7 @@ export default function PublishJob() {
       : await jobsService.createJob(payload);
 
     if (saveError) {
-      setError(saveError.message);
+      setError(getUserErrorMessage(saveError, ERROR_ACTION.publish_job));
       setLoading(false);
       return;
     }

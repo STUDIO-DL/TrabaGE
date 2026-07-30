@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getUserErrorMessage, ERROR_ACTION } from '../../../utils/userFacingError';
 import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
@@ -104,7 +105,7 @@ export default function ProjectModal({ isOpen, onClose, initial, onSave, loading
     );
 
     if (saveError) {
-      setError(saveError.message);
+      setError(getUserErrorMessage(saveError, ERROR_ACTION.save_project));
       return;
     }
 

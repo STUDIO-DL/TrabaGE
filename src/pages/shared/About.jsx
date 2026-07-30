@@ -48,7 +48,7 @@ export default function About() {
 
       <div className="mx-auto max-w-lg px-5 py-8">
         <div className="flex justify-center">
-          <TrabaGEWordmark className="h-9 w-auto" />
+          <TrabaGEWordmark size="lg" />
         </div>
 
         <h1 className="mt-6 text-center text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">

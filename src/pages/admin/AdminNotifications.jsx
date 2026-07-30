@@ -39,6 +39,7 @@ function formatAudience(filter = {}) {
 export default function AdminNotifications() {
   const { showToast } = useNotificationContext();
   const [history, setHistory] = useState([]);
+  const [pushStats, setPushStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [title, setTitle] = useState('');
@@ -56,9 +57,13 @@ export default function AdminNotifications() {
 
   const loadHistory = async () => {
     setLoading(true);
-    const { data, error } = await adminService.getPushBroadcastHistory();
+    const [{ data, error }, statsResult] = await Promise.all([
+      adminService.getPushBroadcastHistory(),
+      adminService.getPushDeliveryStats(24),
+    ]);
     if (error) showToast(getSupabaseErrorMessage(error), 'error');
     setHistory(data ?? []);
+    if (!statsResult.error) setPushStats(statsResult.data);
     setLoading(false);
   };
 
@@ -110,7 +115,12 @@ export default function AdminNotifications() {
       return;
     }
 
-    showToast(`Procesados: ${data?.processed ?? 0} · Enviados: ${data?.sent ?? 0}`, 'success');
+    const scheduled = data?.scheduled ?? data;
+    const messages = data?.message_pushes;
+    showToast(
+      `Programados: ${scheduled?.processed ?? 0} · Mensajes backup: ${messages?.sent ?? 0}`,
+      'success',
+    );
     await loadHistory();
   };
 
@@ -120,6 +130,34 @@ export default function AdminNotifications() {
 
   return (
     <div className="space-y-6">
+      {pushStats ? (
+        <AdminSectionCard title="Entrega push (últimas 24 h)">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-500">Enviados</p>
+              <p className="text-lg font-semibold text-slate-900">{pushStats.sent ?? 0}</p>
+            </div>
+            <div className="rounded-xl bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-500">Fallidos</p>
+              <p className="text-lg font-semibold text-slate-900">{pushStats.failed ?? 0}</p>
+            </div>
+            <div className="rounded-xl bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-500">Tasa éxito</p>
+              <p className="text-lg font-semibold text-slate-900">
+                {pushStats.success_rate == null ? '—' : `${pushStats.success_rate}%`}
+              </p>
+            </div>
+            <div className="rounded-xl bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-500">Dispositivos activos</p>
+              <p className="text-lg font-semibold text-slate-900">{pushStats.active_devices ?? 0}</p>
+            </div>
+          </div>
+          <p className="mt-3 text-xs text-slate-500">
+            Usuarios con al menos un dispositivo: {pushStats.users_with_active_device ?? 0}
+          </p>
+        </AdminSectionCard>
+      ) : null}
+
       <AdminSectionCard title="Enviar notificación push">
         <form className="space-y-4" onSubmit={handleSend}>
           <Input
@@ -145,10 +183,10 @@ export default function AdminNotifications() {
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-app-text">
               Audiencia
               <select
-                className="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
+                className="mt-1 w-full rounded-xl border border-app-border px-3 py-2 text-sm"
                 value={audience}
                 onChange={(event) => setAudience(event.target.value)}
               >
@@ -187,30 +225,30 @@ export default function AdminNotifications() {
               {sending ? 'Enviando…' : scheduledAt ? 'Programar envío' : 'Enviar ahora'}
             </Button>
             <Button type="button" variant="secondary" disabled={sending} onClick={handleProcessScheduled}>
-              Procesar programados
+              Procesar programados + backup mensajes
             </Button>
           </div>
         </form>
       </AdminSectionCard>
 
       <AdminSectionCard title="Historial de envíos">
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-app-divider">
           {history.length === 0 ? (
-            <li className="py-6 text-center text-sm text-gray-500">Sin envíos registrados.</li>
+            <li className="py-6 text-center text-sm text-app-muted">Sin envíos registrados.</li>
           ) : (
             history.map((item) => (
               <li key={item.id} className="flex items-start justify-between gap-4 py-4">
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900">{item.title}</p>
-                  <p className="mt-0.5 text-sm text-gray-500">{item.body}</p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="font-medium text-app-text">{item.title}</p>
+                  <p className="mt-0.5 text-sm text-app-muted">{item.body}</p>
+                  <p className="mt-1 text-xs text-app-subtle">
                     {formatAudience(item.audience_filter)} · {item.recipient_count ?? 0} destinatarios · {item.status}
                   </p>
                   {item.error ? (
                     <p className="mt-1 text-xs text-red-600">{item.error}</p>
                   ) : null}
                 </div>
-                <span className="shrink-0 text-xs text-gray-400">
+                <span className="shrink-0 text-xs text-app-subtle">
                   {formatRelativeTime(item.sent_at ?? item.scheduled_at ?? item.created_at)}
                 </span>
               </li>

@@ -17,9 +17,9 @@ import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 
 function DetailRow({ label, value }) {
   return (
-    <div className="flex flex-col gap-0.5 border-b border-gray-50 py-2 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-      <span className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</span>
-      <span className="text-sm text-gray-800 sm:max-w-[60%] sm:text-right">{value || '—'}</span>
+    <div className="flex flex-col gap-0.5 border-b border-app-divider py-2 last:border-b-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <span className="text-xs font-medium uppercase tracking-wide text-app-subtle">{label}</span>
+      <span className="text-sm text-app-text sm:max-w-[60%] sm:text-right">{value || '—'}</span>
     </div>
   );
 }
@@ -135,7 +135,7 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
             className="h-14 w-14"
           />
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold text-gray-900">{displayName}</p>
+            <p className="truncate text-base font-semibold text-app-text">{displayName}</p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-primary-50 px-2.5 py-1 text-xs font-medium text-primary-700">
                 {ROLE_LABELS[user.role] ?? user.role}
@@ -148,7 +148,7 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
           </div>
         </div>
 
-        <div className="rounded-2xl border border-gray-100 bg-gray-50/60 px-4 py-2">
+        <div className="rounded-radius-lg border border-app-divider bg-app-surface/60 px-4 py-2">
           <DetailRow label="Email" value={user.email} />
           <DetailRow label="Ciudad" value={detail?.city || user.city} />
           <DetailRow label="Registrado" value={formatDate(user.created_at)} />
@@ -158,13 +158,13 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
         {loading ? (
           <AdminUserDetailSkeleton />
         ) : !exists ? (
-          <div className="rounded-2xl border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-800">
+          <div className="rounded-radius-lg border border-dashed border-amber-200 bg-amber-50/60 p-4 text-sm text-amber-800">
             Este usuario todavía no ha completado su perfil. Solo se muestran los datos básicos
             de la cuenta.
           </div>
         ) : isCompany ? (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-gray-100 bg-white px-4 py-2">
+            <div className="rounded-radius-lg border border-app-divider bg-app-card px-4 py-2">
               <DetailRow label="Empresa / institución" value={detail.company_name} />
               <DetailRow label="Sector" value={detail.sector} />
               <DetailRow label="Descripción" value={detail.description} />
@@ -172,7 +172,7 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
               <DetailRow label="WhatsApp" value={detail.contact_whatsapp || detail.whatsapp} />
               <DetailRow label="Sitio web" value={detail.website} />
             </div>
-            <div className="grid gap-3 rounded-2xl border border-gray-100 bg-gray-50/60 p-4 sm:grid-cols-2">
+            <div className="grid gap-3 rounded-radius-lg border border-app-divider bg-app-surface/60 p-4 sm:grid-cols-2">
               <Input
                 label="Nombre de empresa"
                 value={form.company_name}
@@ -193,7 +193,7 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-gray-100 bg-white px-4 py-2">
+            <div className="rounded-radius-lg border border-app-divider bg-app-card px-4 py-2">
               <DetailRow label="Titular" value={detail.headline} />
               <DetailRow label="Sobre mí" value={detail.about} />
               <DetailRow
@@ -209,14 +209,14 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
               {candidateSections.map(([label, count]) => (
                 <div
                   key={label}
-                  className="rounded-xl border border-gray-100 bg-gray-50/60 p-2 text-center"
+                  className="rounded-xl border border-app-divider bg-app-surface/60 p-2 text-center"
                 >
-                  <p className="text-base font-semibold text-gray-900">{count}</p>
-                  <p className="text-[11px] text-gray-500">{label}</p>
+                  <p className="text-base font-semibold text-app-text">{count}</p>
+                  <p className="text-caption text-app-muted">{label}</p>
                 </div>
               ))}
             </div>
-            <div className="grid gap-3 rounded-2xl border border-gray-100 bg-gray-50/60 p-4 sm:grid-cols-2">
+            <div className="grid gap-3 rounded-radius-lg border border-app-divider bg-app-surface/60 p-4 sm:grid-cols-2">
               <Input
                 label="Nombre"
                 value={form.full_name}

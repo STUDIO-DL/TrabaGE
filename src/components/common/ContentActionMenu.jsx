@@ -26,6 +26,8 @@ export default function ContentActionMenu({
   align = 'right',
   variant = 'icon',
   className = '',
+  onEdit,
+  onDelete,
 }) {
   const [reportOpen, setReportOpen] = useState(false);
   const { isPreviewMode, user } = useAuth();
@@ -61,6 +63,8 @@ export default function ContentActionMenu({
         onShare={canShare ? handleShare : undefined}
         onCopy={canShare ? handleCopy : undefined}
         onReport={canReport ? handleReport : undefined}
+        onEdit={onEdit}
+        onDelete={onDelete}
         align={align}
         variant={variant}
         className={className}

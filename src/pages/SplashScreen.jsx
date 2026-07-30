@@ -185,7 +185,7 @@ export default function SplashScreen() {
       }
     >
       <div className="flex flex-col items-center text-center">
-        <TrabaGEWordmark className="splash-logo-in h-10 w-auto sm:h-11" />
+        <TrabaGEWordmark size="hero" className="splash-logo-in" />
 
         <EquatorialGuineaMap
           className="splash-map-in splash-map-glow mt-lg h-8 w-auto text-primary-600 sm:h-9"

@@ -164,13 +164,12 @@ function RegisterHeader({ subtitle }) {
   return (
     <div className="text-center">
       <div className="flex justify-center">
-        <TrabaGEWordmark className="h-9 w-auto sm:h-10" />
+        <TrabaGEWordmark size="hero" />
       </div>
-      <h1 className="mt-space-xl text-heading-l font-bold tracking-tight leading-tight text-app-text">
-        BIENVENIDO
+      <h1 className="mt-space-xl text-title font-semibold tracking-tight text-app-text">
+        Crear cuenta
       </h1>
       <p className="mx-auto mt-space-sm max-w-sm text-body-small leading-relaxed text-app-muted">{subtitle}</p>
-      <div className="mx-auto mt-space-base h-1.5 w-1.5 rounded-radius-circular bg-primary-500" aria-hidden />
     </div>
   );
 }
@@ -426,7 +425,7 @@ export default function Register() {
     : 'Crea tu cuenta y comienza tu camino profesional.';
 
   return (
-    <div className="keyboard-scroll-host min-h-dvh overflow-x-hidden overflow-y-auto bg-app-surface">
+    <div className="keyboard-scroll-host min-h-dvh overflow-x-hidden overflow-y-auto bg-gradient-to-b from-primary-50 via-app-card to-primary-50">
       <div
         className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-space-lg py-space-2xl sm:px-space-xl sm:py-space-3xl"
         style={{

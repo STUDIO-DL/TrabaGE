@@ -8,6 +8,14 @@ export const profileSectionStackClass = 'space-y-space-md px-space-base py-space
 
 export const profileInicioGridClass = 'space-y-space-md';
 
+/** Desktop: primary stack + secondary rail */
+export const profileInicioDesktopClass =
+  'grid grid-cols-1 gap-space-md lg:grid-cols-[minmax(0,1fr)_minmax(16rem,20rem)] lg:items-start';
+
+export const profileInicioMainClass = 'min-w-0 space-y-space-md';
+
+export const profileInicioAsideClass = 'min-w-0 space-y-space-md lg:sticky lg:top-20';
+
 export const sectionTitleClass = 'text-subtitle font-semibold text-app-text';
 
 export const sectionLinkClass =
@@ -25,10 +33,10 @@ export const profileBannerGradientClass =
   'absolute inset-0 bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500';
 
 /** Cover height — shared baseline (candidate profiles) */
-export const profileCoverHeightClass = 'h-[8rem] sm:h-[9rem]';
+export const profileCoverHeightClass = 'h-[7.5rem] sm:h-[8.5rem]';
 
 /** Company/org cover — taller LinkedIn-style banner */
-export const profileCompanyCoverHeightClass = 'h-[9.5rem] sm:h-[11rem]';
+export const profileCompanyCoverHeightClass = 'h-[9rem] sm:h-[10.5rem]';
 
 /** Content below cover */
 export const profileHeaderContentClass = 'px-space-base pb-space-lg pt-0';
@@ -37,7 +45,7 @@ export const profileHeaderContentClass = 'px-space-base pb-space-lg pt-0';
 export const profileCompanyLogoOverlapClass = '-mt-[4rem] sm:-mt-[4.25rem]';
 
 export const profileCompanyLogoFrameClass =
-  'rounded-radius-md bg-app-card p-1 ring-4 ring-app-card shadow-elevation-2';
+  'rounded-radius-md bg-app-card p-1 ring-4 ring-app-card';
 
 export const profileCompanyNameHeadingClass =
   'text-user-content break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';

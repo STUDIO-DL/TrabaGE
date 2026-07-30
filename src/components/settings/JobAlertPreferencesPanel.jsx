@@ -26,8 +26,8 @@ import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 function ChipGroup({ label, options, selected = [], onToggle, disabled = false }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-slate-700">{label}</p>
-      <div className="flex flex-wrap gap-2">
+      <p className="mb-space-sm text-body-small font-medium text-app-text">{label}</p>
+      <div className="flex flex-wrap gap-space-sm">
         {options.map((option) => {
           const value = option.value ?? option;
           const optionLabel = option.label ?? option;
@@ -40,10 +40,10 @@ function ChipGroup({ label, options, selected = [], onToggle, disabled = false }
               disabled={disabled}
               onClick={() => onToggle(value)}
               className={[
-                'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+                'rounded-radius-sm border px-space-sm py-1.5 text-caption font-medium transition-colors',
                 active
                   ? 'border-primary-300 bg-primary-50 text-primary-700'
-                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300',
+                  : 'border-app-border bg-app-card text-app-muted hover:border-app-muted/60',
                 disabled ? 'cursor-not-allowed opacity-50' : '',
               ].join(' ')}
             >
@@ -59,7 +59,7 @@ function ChipGroup({ label, options, selected = [], onToggle, disabled = false }
 export default function JobAlertPreferencesPanel() {
   const { isPreviewMode } = useAuth();
   const { profile, updateBasicInfo } = useCandidateProfile();
-  const { showToast } = useNotificationContext();
+  const { showToast, showErrorToast } = useNotificationContext();
 
   const WORK_MODE_OPTIONS = [
     { value: 'onsite', label: 'Presencial' },
@@ -120,7 +120,7 @@ export default function JobAlertPreferencesPanel() {
     });
     if (settingsError) {
       setSaving(false);
-      showToast(settingsError.message, 'error');
+      showErrorToast(settingsError, 'settings');
       return;
     }
 
@@ -130,7 +130,7 @@ export default function JobAlertPreferencesPanel() {
     setSaving(false);
 
     if (prefsError) {
-      showToast(prefsError.message, 'error');
+      showErrorToast(prefsError, 'settings');
       return;
     }
 
@@ -139,23 +139,23 @@ export default function JobAlertPreferencesPanel() {
   };
 
   return (
-    <section className="rounded-[28px] border border-slate-100 bg-white p-4 shadow-[0_18px_46px_rgba(15,23,42,0.05)] sm:p-5">
-      <div className="mb-5">
-        <h3 className="text-[16px] font-bold text-slate-950">Alertas de empleo</h3>
-        <p className="mt-1 text-[13px] leading-relaxed text-slate-500">
+    <section className="surface-card p-space-md sm:p-space-lg">
+      <div className="mb-space-md">
+        <h3 className="text-body font-semibold text-app-text">Alertas de empleo</h3>
+        <p className="mt-space-xs text-body-small leading-relaxed text-app-muted">
           Configura cuándo y dónde quieres recibir avisos sobre ofertas relevantes.
         </p>
       </div>
 
-      <div className="mb-5 rounded-xl border border-primary-100 bg-primary-50/60 p-4 text-left">
-        <p className="text-sm font-medium text-primary-900">Recomendaciones personalizadas</p>
-        <p className="mt-1.5 text-sm leading-relaxed text-primary-800/90">
+      <div className="mb-space-md rounded-radius-md border border-primary-100 bg-primary-50/60 p-space-md text-left">
+        <p className="text-body-small font-medium text-primary-900">Recomendaciones personalizadas</p>
+        <p className="mt-space-xs text-body-small leading-relaxed text-primary-800/90">
           Te avisaremos cuando publiquen ofertas que encajen con tu perfil y preferencias.
         </p>
       </div>
 
       <div className="space-y-5">
-        <label className="flex items-start gap-3 rounded-xl border border-slate-200 p-4">
+        <label className="flex items-start gap-space-sm rounded-radius-md border border-app-border p-space-md">
           <input
             type="checkbox"
             checked={notificationsEnabled}
@@ -164,13 +164,13 @@ export default function JobAlertPreferencesPanel() {
               setNotificationsEnabled(e.target.checked);
               setDirty(true);
             }}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-primary-600"
+            className="mt-0.5 h-4 w-4 rounded border-app-border text-primary-600"
           />
           <span>
-            <span className="block text-sm font-medium text-slate-900">
+            <span className="block text-body-small font-medium text-app-text">
               Notificarme cuando existan ofertas relevantes
             </span>
-            <span className="mt-0.5 block text-xs text-slate-500">
+            <span className="mt-space-xs block text-caption text-app-muted">
               Recibirás alertas in-app y push según tus preferencias de notificaciones y la frecuencia elegida.
             </span>
           </span>
@@ -271,8 +271,8 @@ export default function JobAlertPreferencesPanel() {
         />
 
         <div>
-          <p className="mb-2 text-sm font-medium text-slate-700">Palabras clave del perfil</p>
-          <p className="mb-2 text-xs text-slate-500">
+          <p className="mb-space-sm text-body-small font-medium text-app-text">Palabras clave del perfil</p>
+          <p className="mb-space-sm text-caption text-app-muted">
             Mejoran la coincidencia con ofertas (ej. ventas, contabilidad, recepción).
           </p>
           <div className="flex gap-2">
@@ -293,13 +293,13 @@ export default function JobAlertPreferencesPanel() {
               {prefs.keywords.map((keyword) => (
                 <span
                   key={keyword}
-                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-700"
+                  className="inline-flex items-center gap-1 rounded-radius-sm border border-app-border bg-app-surface px-space-sm py-1 text-caption text-app-text"
                 >
                   {keyword}
                   <button
                     type="button"
                     onClick={() => removeKeyword(keyword)}
-                    className="text-slate-400 hover:text-red-500"
+                    className="text-app-subtle hover:text-error-600"
                     aria-label={`Eliminar ${keyword}`}
                     disabled={isPreviewMode}
                   >

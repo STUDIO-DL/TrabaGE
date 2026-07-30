@@ -10,6 +10,7 @@ import { authService } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
 import { getErrorMessage, t } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
+import { isSafeInternalPath } from '../../utils/safeNavigation';
 
 export default function SetPassword() {
   const navigate = useNavigate();
@@ -21,7 +22,8 @@ export default function SetPassword() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = location.state?.redirectTo || getHomePath() || '/';
+  const rawRedirect = location.state?.redirectTo || getHomePath() || '/';
+  const redirectTo = isSafeInternalPath(rawRedirect) ? rawRedirect : getHomePath() || '/';
   const requiresCurrentPassword = location.state?.passwordRecovery !== true;
 
   if (!isAuthenticated || isPreviewMode) {
@@ -79,8 +81,8 @@ export default function SetPassword() {
           <div className="mb-sm flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-600">
             <Lock className="h-6 w-6" aria-hidden />
           </div>
-          <h1 className="text-title font-bold text-gray-900">Actualizar contraseña</h1>
-          <p className="mt-xs text-small text-gray-500">
+          <h1 className="text-title font-semibold tracking-tight text-app-text">Actualizar contraseña</h1>
+          <p className="mt-space-xs text-body-small text-app-muted">
             {requiresCurrentPassword
               ? 'Introduce tu contraseña actual y elige una nueva contraseña segura.'
               : 'Define una contraseña segura para proteger tu cuenta de TrabaGE.'}
@@ -102,7 +104,7 @@ export default function SetPassword() {
           </Button>
         </div>
       }
-      footerClassName="border-t border-gray-100 px-md pb-md pt-sm"
+      footerClassName="border-t border-app-divider px-md pb-md pt-sm"
     >
       <form id="set-password-form" onSubmit={handleSubmit} className="mt-sm space-y-sm">
         {requiresCurrentPassword ? (
@@ -123,7 +125,7 @@ export default function SetPassword() {
           autoComplete="new-password"
           required
         />
-        <p className="text-xs text-gray-500">
+        <p className="text-caption text-app-muted">
           {t('auth.passwordHint')}
         </p>
         <Input

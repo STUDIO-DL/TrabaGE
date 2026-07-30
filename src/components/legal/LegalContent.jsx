@@ -64,7 +64,7 @@ function renderTextWithLinks(text) {
 function LegalBlock({ block }) {
   if (block.type === 'ul') {
     return (
-      <ul className="my-2 list-disc space-y-1.5 pl-5 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
+      <ul className="my-2 list-disc space-y-1.5 pl-5 text-body-small leading-relaxed text-app-muted">
         {block.items.map((item) => (
           <li key={item}>{renderTextWithLinks(item)}</li>
         ))}
@@ -74,7 +74,7 @@ function LegalBlock({ block }) {
 
   if (block.type === 'link') {
     return (
-      <p className="my-2 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
+      <p className="my-2 text-body-small leading-relaxed text-app-muted">
         <a
           href={block.href}
           target="_blank"
@@ -88,7 +88,7 @@ function LegalBlock({ block }) {
   }
 
   return (
-    <p className="my-2 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300">
+    <p className="my-2 text-body-small leading-relaxed text-app-muted">
       {renderTextWithLinks(block.text ?? '')}
     </p>
   );
@@ -120,12 +120,12 @@ export function LegalTableOfContents({ articles, finalArticles = [] }) {
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
         Contenido
       </p>
-      <ol className="max-h-48 space-y-0.5 overflow-y-auto pr-1 text-[13px] sm:max-h-none">
+      <ol className="max-h-48 space-y-0.5 overflow-y-auto pr-1 text-body-small sm:max-h-none">
         {allArticles.map((article) => (
           <li key={article.id}>
             <a
               href={`#${article.id}`}
-              className="block rounded-lg px-2 py-1 text-slate-600 transition hover:bg-white hover:text-primary-600 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-primary-400"
+              className="block rounded-lg px-2 py-1 text-app-muted transition hover:bg-app-card hover:text-primary-600 dark:text-app-subtle  dark:hover:text-primary-400"
             >
               {article.title}
             </a>

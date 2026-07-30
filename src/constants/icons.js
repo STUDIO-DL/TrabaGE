@@ -10,6 +10,7 @@ import {
   Building2,
   Calendar,
   Camera,
+  ChartColumn,
   Check,
   ChevronDown,
   ChevronRight,
@@ -29,6 +30,7 @@ import {
   Globe,
   GraduationCap,
   Headphones,
+  Heart,
   Home,
   Image,
   Info,
@@ -60,11 +62,14 @@ import {
   Tags,
   Target,
   Trash2,
+  TrendingUp,
   Upload,
   User,
   Users,
+  WifiOff,
   Wrench,
   X,
+  Reply,
 } from 'lucide-react';
 
 /** Re-export all Lucide icons from a single place */
@@ -80,6 +85,7 @@ export {
   Building2,
   Calendar,
   Camera,
+  ChartColumn,
   Check,
   ChevronDown,
   ChevronRight,
@@ -99,6 +105,7 @@ export {
   Globe,
   GraduationCap,
   Headphones,
+  Heart,
   Home,
   Image,
   Info,
@@ -130,11 +137,14 @@ export {
   Tags,
   Target,
   Trash2,
+  TrendingUp,
   Upload,
   User,
   Users,
+  WifiOff,
   Wrench,
   X,
+  Reply,
 };
 
 /**

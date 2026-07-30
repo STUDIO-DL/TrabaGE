@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Button from '../ui/Button';
+import AppIcon from '../common/AppIcon';
+import { X, ICON_SIZES } from '../../constants/icons';
 import { MESSAGE_MAX_LENGTH } from '../../services/messages.service';
 
 const TEXTAREA_MAX_HEIGHT = 160;
@@ -11,7 +13,20 @@ function useFinePointer() {
   }, []);
 }
 
-export default function MessageComposer({ onSend, sending = false, disabled = false, blockedReason = null }) {
+function previewText(content) {
+  const text = String(content ?? '').trim();
+  if (!text) return 'Este mensaje ya no está disponible.';
+  return text.length > 100 ? `${text.slice(0, 97)}…` : text;
+}
+
+export default function MessageComposer({
+  onSend,
+  sending = false,
+  disabled = false,
+  blockedReason = null,
+  replyTarget = null,
+  onCancelReply,
+}) {
   const [value, setValue] = useState('');
   const textareaRef = useRef(null);
   const isFinePointer = useFinePointer();
@@ -32,14 +47,30 @@ export default function MessageComposer({ onSend, sending = false, disabled = fa
     adjustHeight();
   }, [adjustHeight, value]);
 
+  useEffect(() => {
+    if (!replyTarget) return;
+    textareaRef.current?.focus();
+  }, [replyTarget?.id]);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const trimmed = value.trim();
     if (!trimmed || sending || disabled || isBlocked) return;
 
-    const result = await onSend(trimmed);
+    const result = await onSend(trimmed, {
+      replyToMessageId: replyTarget?.id ?? null,
+      replyTo: replyTarget
+        ? {
+            id: replyTarget.id,
+            content: replyTarget.content,
+            sender_id: replyTarget.sender_id,
+            created_at: replyTarget.created_at,
+          }
+        : null,
+    });
     if (!result?.error) {
       setValue('');
+      onCancelReply?.();
       requestAnimationFrame(() => {
         adjustHeight();
         textareaRef.current?.focus();
@@ -64,6 +95,27 @@ export default function MessageComposer({ onSend, sending = false, disabled = fa
       data-chat-compose=""
       className="border-t border-app-border bg-app-card px-space-base py-space-sm"
     >
+      {replyTarget ? (
+        <div className="mb-space-sm flex items-start gap-space-sm rounded-radius-md bg-app-surface px-space-sm py-space-sm ring-1 ring-inset ring-app-border">
+          <div className="min-w-0 flex-1 border-l-2 border-primary-500 pl-space-sm">
+            <p className="truncate text-caption font-semibold text-app-text">
+              Respondiendo a {replyTarget.authorName || 'mensaje'}
+            </p>
+            <p className="line-clamp-2 text-caption text-app-muted">
+              {previewText(replyTarget.content)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => onCancelReply?.()}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-app-muted transition hover:bg-app-bg hover:text-app-text"
+            aria-label="Cancelar respuesta"
+          >
+            <AppIcon icon={X} size={ICON_SIZES.sm} />
+          </button>
+        </div>
+      ) : null}
+
       {isBlocked ? (
         <p className="mb-space-sm text-caption text-app-subtle" role="status">
           {blockedReason}

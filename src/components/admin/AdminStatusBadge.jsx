@@ -1,15 +1,15 @@
 const STYLES = {
-  active: 'bg-app-surface text-success-700 dark:text-success-400',
-  inactive: 'bg-app-surface text-app-muted',
-  pending: 'bg-app-surface text-app-muted',
-  approved: 'bg-app-surface text-success-700 dark:text-success-400',
-  rejected: 'bg-app-surface text-error-700 dark:text-error-400',
-  hidden: 'bg-app-surface text-app-muted',
-  reviewed: 'bg-app-surface text-app-muted',
-  resolved: 'bg-app-surface text-success-700 dark:text-success-400',
-  dismissed: 'bg-app-surface text-app-muted',
-  verified: 'bg-app-surface text-success-700 dark:text-success-400',
-  unverified: 'bg-app-surface text-app-muted',
+  active: 'text-success-700 dark:text-success-400',
+  inactive: 'text-app-muted',
+  pending: 'text-warning-700 dark:text-warning-400',
+  approved: 'text-success-700 dark:text-success-400',
+  rejected: 'text-error-700 dark:text-error-400',
+  hidden: 'text-app-muted',
+  reviewed: 'text-app-muted',
+  resolved: 'text-success-700 dark:text-success-400',
+  dismissed: 'text-app-muted',
+  verified: 'text-success-700 dark:text-success-400',
+  unverified: 'text-app-muted',
 };
 
 export default function AdminStatusBadge({ status, label }) {
@@ -19,7 +19,7 @@ export default function AdminStatusBadge({ status, label }) {
   return (
     <span
       className={[
-        'inline-flex rounded-full px-2.5 py-1 text-xs font-medium capitalize',
+        'inline-flex rounded-radius-sm bg-app-surface px-space-sm py-0.5 text-caption font-medium capitalize',
         STYLES[key] ?? STYLES.inactive,
       ].join(' ')}
     >

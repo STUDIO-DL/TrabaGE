@@ -4,6 +4,7 @@ import { jobsService } from '../services/jobs.service';
 import { useAuth } from './useAuth';
 import { useProfile } from './useProfile';
 import { ROLES, isEmployerRole } from '../constants/roles';
+import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 
 const DEBOUNCE_MS = 300;
 
@@ -65,7 +66,7 @@ export function useGlobalSearch(
 
       if (searchError) {
         setResults([]);
-        setError(searchError.message ?? 'No se pudo completar la búsqueda.');
+        setError(getUserErrorMessage(searchError, ERROR_ACTION.search));
       } else {
         setResults(data || []);
         setError(null);

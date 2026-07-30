@@ -1,8 +1,14 @@
+import { INSTITUTION_SEARCH_META } from './institutionSearchMeta';
+import { enrichCatalogEntry } from '../utils/catalogSearch';
+
 /**
  * Official educational institutions catalog for TrabaGE.
  *
  * Sourced from catalogo_instituciones_educativas_trabage.pdf
  * Countries: Guinea Ecuatorial, Camerún, Benín, Senegal, China, España.
+ *
+ * Search fields (short_name, acronym, aliases, provider) enrich a single official
+ * record — never duplicate institutions for alternate spellings/siglas.
  *
  * @typedef {'university'|'institute'|'school'|'fp'|'technical'} InstitutionType
  *
@@ -12,6 +18,10 @@
  * @property {string} country
  * @property {string} city
  * @property {InstitutionType} type
+ * @property {string} [short_name] - Common short label for search/display hints
+ * @property {string} [acronym] - Primary sigla (e.g. UNGE)
+ * @property {string[]} [aliases] - Alternate spellings, dotted forms, local names
+ * @property {string} [provider] - Partner/provider when the center operates under another brand
  * @property {string} [verifiedId] - Future: TrabaGE verified organization account id
  * @property {string} [logoUrl] - Future: official logo when institution is verified on TrabaGE
  */
@@ -26,7 +36,7 @@ export const INSTITUTION_TYPE_LABELS = {
 };
 
 /** @type {Institution[]} */
-export const INSTITUTIONS = [
+const RAW_INSTITUTIONS = [
   {
     id: 'universidad-de-abomey-calavi',
     name: 'Universidad de Abomey-Calavi',
@@ -173,6 +183,412 @@ export const INSTITUTIONS = [
     country: 'Guinea Ecuatorial',
     city: 'Malabo',
     type: 'university',
+  },
+  {
+    id: 'universidad-cardenal-herrera-okenve',
+    name: 'Universidad Cardenal Herrera Okenve',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'university',
+  },
+  {
+    id: 'colegio-espanol-de-malabo-cem',
+    name: 'Colegio Español de Malabo (CEM)',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'colegio-nacional-rey-malabo',
+    name: 'Colegio Nacional Rey Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'colegio-nacional-carlos-lwanga',
+    name: 'Colegio Nacional Carlos Lwanga',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'colegio-leon-mba',
+    name: 'Colegio Leon Mba',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'instituto-ecuatoguineano-de-administracion-igae',
+    name: 'Instituto Ecuatoguineano de Administración (IGAE)',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'instituto-politecnico-de-malabo',
+    name: 'Instituto Politécnico de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'instituto-politecnico-de-bata',
+    name: 'Instituto Politécnico de Bata',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'escuela-normal-de-magisterio-de-malabo',
+    name: 'Escuela Normal de Magisterio de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'escuela-normal-de-magisterio-de-bata',
+    name: 'Escuela Normal de Magisterio de Bata',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'colegio-la-salle-malabo',
+    name: 'Colegio La Salle Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'colegio-maria-inmaculada',
+    name: 'Colegio María Inmaculada',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'escuela-de-arte-y-diseno-de-malabo',
+    name: 'Escuela de Arte y Diseño de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'centro-de-formacion-profesional-san-jose',
+    name: 'Centro de Formación Profesional San José',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'colegio-adventista-de-malabo',
+    name: 'Colegio Adventista de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'liceo-frantz-fanon',
+    name: 'Liceo Frantz Fanon',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'institute',
+  },
+  {
+    id: 'liceo-juan-xxiii',
+    name: 'Liceo Juan XXIII',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'institute',
+  },
+  {
+    id: 'colegio-san-francisco-de-asis',
+    name: 'Colegio San Francisco de Asís',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'colegio-internacional-de-malabo',
+    name: 'Colegio Internacional de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'liceo-nacional-bioko',
+    name: 'Liceo Nacional Bioko',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'institute',
+  },
+  {
+    id: 'liceo-nacional-bata',
+    name: 'Liceo Nacional Bata',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'institute',
+  },
+  {
+    id: 'colegio-la-paz-bata',
+    name: 'Colegio La Paz Bata',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'centro-de-formacion-profesional-don-bosco-bata',
+    name: 'Centro de Formación Profesional Don Bosco Bata',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'escuela-de-hosteleria-y-turismo-de-malabo',
+    name: 'Escuela de Hostelería y Turismo de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'colegio-santa-maria-de-africa',
+    name: 'Colegio Santa María de África',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'instituto-tecnologico-de-guinea-ecuatorial-itge',
+    name: 'Instituto Tecnológico de Guinea Ecuatorial (ITGE)',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'escuela-de-enfermeria-y-sanidad-de-malabo',
+    name: 'Escuela de Enfermería y Sanidad de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'colegio-bilingue-emmanuel',
+    name: 'Colegio Bilingüe Emmanuel',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'colegio-santa-teresita-de-bata',
+    name: 'Colegio Santa Teresita de Bata',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'instituto-de-idiomas-de-la-unge',
+    name: 'Instituto de Idiomas de la UNGE',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'colegio-san-gabriel',
+    name: 'Colegio San Gabriel',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'liceo-modelo-ebibeyin',
+    name: 'Liceo Modelo Ebibeyin',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'institute',
+  },
+  {
+    id: 'colegio-inmaculada-concepcion',
+    name: 'Colegio Inmaculada Concepción',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'centro-de-capacitacion-agricola-de-bata',
+    name: 'Centro de Capacitación Agrícola de Bata',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'escuela-nautica-y-pesquera-de-luba',
+    name: 'Escuela Náutica y Pesquera de Luba',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'colegio-evangelico-de-malabo',
+    name: 'Colegio Evangélico de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'conservatorio-de-musica-de-malabo',
+    name: 'Conservatorio de Música de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'colegio-sagrado-corazon-de-jesus',
+    name: 'Colegio Sagrado Corazón de Jesús',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'instituto-politecnico-de-mongomo',
+    name: 'Instituto Politécnico de Mongomo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'escuela-de-capacitacion-forestal-de-bitika',
+    name: 'Escuela de Capacitación Forestal de Bitika',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'colegio-santa-cruz',
+    name: 'Colegio Santa Cruz',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'liceo-nacional-de-malabo-ii',
+    name: 'Liceo Nacional de Malabo II',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'institute',
+  },
+  {
+    id: 'colegio-san-jose-de-bata',
+    name: 'Colegio San José de Bata',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'instituto-de-ciencias-de-la-educacion-ice',
+    name: 'Instituto de Ciencias de la Educación (ICE)',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'university',
+  },
+  {
+    id: 'escuela-oficial-de-idiomas-de-malabo',
+    name: 'Escuela Oficial de Idiomas de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'colegio-bilingue-saint-george',
+    name: 'Colegio Bilingüe Saint George',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'colegio-la-milagrosa',
+    name: 'Colegio La Milagrosa',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'escuela-tecnica-superior-de-arquitectura-unge',
+    name: 'Escuela Técnica Superior de Arquitectura UNGE',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'university',
+  },
+  {
+    id: 'facultad-de-medicina-de-la-unge',
+    name: 'Facultad de Medicina de la UNGE',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'university',
+  },
+  {
+    id: 'facultad-de-derecho-de-la-unge',
+    name: 'Facultad de Derecho de la UNGE',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'university',
+  },
+  {
+    id: 'colegio-san-vicente-de-paul',
+    name: 'Colegio San Vicente de Paúl',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'escuela-de-artes-graficas-de-malabo',
+    name: 'Escuela de Artes Gráficas de Malabo',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'technical',
+  },
+  {
+    id: 'centro-educativo-los-pinos',
+    name: 'Centro Educativo Los Pinos',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'liceo-de-evinayong',
+    name: 'Liceo de Evinayong',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'institute',
+  },
+  {
+    id: 'colegio-san-pio-x',
+    name: 'Colegio San Pío X',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'escuela-de-formacion-profesional-maritima',
+    name: 'Escuela de Formación Profesional Marítima',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'fp',
+  },
+  {
+    id: 'colegio-madre-de-dios',
+    name: 'Colegio Madre de Dios',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
+  },
+  {
+    id: 'colegio-espanol-don-bosco',
+    name: 'Colegio Español Don Bosco',
+    country: 'Guinea Ecuatorial',
+    city: '',
+    type: 'school',
   },
   {
     id: 'centro-de-estudios-vitae',
@@ -364,5 +780,10 @@ export const INSTITUTIONS = [
     type: 'university',
   },
 ];
+
+/** @type {Institution[]} */
+export const INSTITUTIONS = RAW_INSTITUTIONS.map((entry) =>
+  enrichCatalogEntry(entry, INSTITUTION_SEARCH_META[entry.id]),
+);
 
 export default INSTITUTIONS;

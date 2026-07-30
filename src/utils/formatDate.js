@@ -67,3 +67,65 @@ export const formatDateRange = (start, end) => {
   if (!startLabel) return endLabel;
   return `${startLabel} – ${endLabel}`;
 };
+
+/** Local calendar day key (YYYY-MM-DD) for message day grouping. */
+export function getMessageDayKey(date) {
+  if (!date) return '';
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function startOfLocalDay(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function capitalizeLabel(value) {
+  const text = String(value ?? '').trim();
+  if (!text) return '';
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
+/**
+ * WhatsApp-style day separator label in the user's local timezone.
+ * Hoy / Ayer / weekday (within last 7 local days) / full date.
+ */
+export function formatMessageDaySeparator(date) {
+  if (!date) return '';
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+
+  const today = startOfLocalDay(new Date());
+  const messageDay = startOfLocalDay(d);
+  const diffDays = Math.round((today.getTime() - messageDay.getTime()) / 86_400_000);
+
+  if (diffDays === 0) return 'Hoy';
+  if (diffDays === 1) return 'Ayer';
+  if (diffDays >= 2 && diffDays < 7) {
+    return capitalizeLabel(d.toLocaleDateString('es-ES', { weekday: 'long' }));
+  }
+
+  return capitalizeLabel(
+    d.toLocaleDateString('es-ES', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }),
+  );
+}
+
+/** Clock time only (local), e.g. 14:32 */
+export function formatMessageTime(date) {
+  if (!date) return '';
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleTimeString('es-ES', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
+}

@@ -9,6 +9,7 @@ export default defineConfig({
     host: true,
   },
   build: {
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -27,7 +28,8 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       devOptions: { enabled: false },
-      includeAssets: ['robots.txt', 'sitemap.xml', 'favicon.ico', 'icons/*.png', 'manifest.json', 'OneSignalSDKWorker.js', 'OneSignalSDKUpdaterWorker.js'],
+      // Keep OneSignal workers out of Workbox precache — they must be controlled by OneSignal, not sw.js.
+      includeAssets: ['robots.txt', 'sitemap.xml', 'favicon.ico', 'icons/*.png', 'manifest.json'],
       manifest: false,
       workbox: {
         skipWaiting: false,
@@ -35,6 +37,8 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/\.netlify\//],
+        // Single SW architecture: Workbox PWA + OneSignal push handlers in /sw.js
+        importScripts: ['https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'],
         globPatterns: [
           'index.html',
           'manifest.json',

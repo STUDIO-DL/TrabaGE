@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import ApplicantCard from '../../components/company/ApplicantCard';
 import VerifiedBadge from '../../components/company/VerifiedBadge';
@@ -25,6 +26,8 @@ export default function Applicants() {
   const { profile } = useProfile();
   const { showToast } = useNotificationContext();
   const { startConversation, starting } = useStartConversation();
+  const [searchParams] = useSearchParams();
+  const jobFilterId = searchParams.get('job') || '';
   const verified = isCompanyVerified(profile);
   const [updatingId, setUpdatingId] = useState(null);
   const [query, setQuery] = useState('');
@@ -35,6 +38,7 @@ export default function Applicants() {
     const normalizedQuery = query.trim().toLowerCase();
 
     return applications.filter((application) => {
+      const matchesJob = !jobFilterId || application.job_id === jobFilterId;
       const matchesStatus = statusFilter === 'all' || application.status === statusFilter;
       const candidateName = application.candidate_profiles?.full_name || application.full_name || '';
       const jobTitle = application.jobs?.title || '';
@@ -43,9 +47,9 @@ export default function Applicants() {
         || candidateName.toLowerCase().includes(normalizedQuery)
         || jobTitle.toLowerCase().includes(normalizedQuery);
 
-      return matchesStatus && matchesQuery;
+      return matchesJob && matchesStatus && matchesQuery;
     });
-  }, [applications, query, statusFilter]);
+  }, [applications, query, statusFilter, jobFilterId]);
 
   const handleDownloadCv = async (applicationId) => {
     if (isPreviewMode) {
@@ -98,6 +102,8 @@ export default function Applicants() {
     <PageContainer
       backButton
       bottomNav={false}
+      desktopShell
+      width="wide"
       actions={verified ? <VerifiedBadge size="md" /> : null}
     >
       <div className="p-4">
@@ -124,6 +130,7 @@ export default function Applicants() {
         {!loading && (
           <p className="mb-3 text-sm text-gray-500">
             {filteredApplications.length} de {applications.length} postulaciones
+            {jobFilterId ? ' · filtrado por oferta' : ''}
           </p>
         )}
         {loading ? (

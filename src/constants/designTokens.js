@@ -122,12 +122,12 @@ export const radius = {
   btnSecondary: 12,
 };
 
-/** Exactly 4 elevation levels */
+/** Exactly 4 elevation levels — cards use border; 2–4 for overlays/modals. */
 export const elevation = {
-  1: '0 1px 2px rgb(var(--app-shadow) / 0.06), 0 1px 3px rgb(var(--app-shadow) / 0.04)',
-  2: '0 4px 8px rgb(var(--app-shadow) / 0.08), 0 2px 4px rgb(var(--app-shadow) / 0.04)',
-  3: '0 10px 24px rgb(var(--app-shadow) / 0.10), 0 4px 8px rgb(var(--app-shadow) / 0.05)',
-  4: '0 20px 40px rgb(var(--app-shadow) / 0.14), 0 8px 16px rgb(var(--app-shadow) / 0.06)',
+  1: '0 0 #0000',
+  2: '0 4px 12px rgb(var(--app-shadow) / 0.06)',
+  3: '0 12px 28px rgb(var(--app-shadow) / 0.08)',
+  4: '0 20px 40px rgb(var(--app-shadow) / 0.12)',
 };
 
 export const motion = {
@@ -208,10 +208,13 @@ export const typography = {
 
 export const layout = {
   maxWidth: {
-    screen: '32rem', // max-w-lg — mobile app shell
-    content: '42rem',
-    wide: '64rem',
+    screen: '32rem', // max-w-lg — mobile app column
+    content: '42rem', // feed / reading
+    wide: '72rem', // jobs / dense lists (≈ max-w-6xl)
+    shell: '80rem', // full desktop workspace
   },
+  sidebarWidth: 240,
+  asideWidth: 280,
   pagePaddingX: 16,
   pagePaddingY: 16,
   sectionGap: 20,

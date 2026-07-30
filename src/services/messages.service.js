@@ -2,11 +2,13 @@ import { supabase } from '../config/supabase';
 import { executeWrite } from '../utils/supabaseMutation';
 import { getDisplayName, getDisplayAvatar } from '../utils/displayIdentity';
 import { ROLES, isEmployerRole } from '../constants/roles';
+import { avatarTypeFromRole } from '../constants/avatarDefaults';
 import { isOrganizationProfile } from '../utils/orgLabels';
 import { notificationsService } from './notifications.service';
 import { reportError } from '../utils/logger';
 
 export const MESSAGES_PAGE_SIZE = 20;
+export const MESSAGE_SEARCH_PAGE_SIZE = 15;
 export const MESSAGE_MAX_LENGTH = 2000;
 export const MESSAGE_WAIT_FOR_REPLY =
   'Debes esperar a que esta persona responda antes de enviar otro mensaje.';
@@ -74,12 +76,14 @@ function mapParticipantSummary(profile, userId) {
 
   const role = resolveParticipantRole(profile);
   const isEmployer = isEmployerRole(role);
+  const displayAvatar = getDisplayAvatar(profile, role);
 
   return {
     userId,
     name: getDisplayName(profile, role, { context: 'messages' }),
-    avatarSrc: getDisplayAvatar(profile, role),
-    avatarType: isEmployer ? 'company' : 'personal',
+    // AppAvatar expects a string path/URL, not { src, isDefault }
+    avatarSrc: displayAvatar?.src ?? null,
+    avatarType: avatarTypeFromRole(role, { companyType: profile?.company_type, profile }),
     avatarVariant: isEmployer ? 'rounded' : 'circular',
     role,
     subtitle: buildParticipantSubtitle(profile, role),
@@ -131,25 +135,43 @@ export const messagesService = {
   },
 
   getMessages: async (conversationId, { cursor = null, limit = MESSAGES_PAGE_SIZE } = {}) => {
-    let query = supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: false })
-      .order('id', { ascending: false })
-      .limit(limit);
+    const buildQuery = (withReply) => {
+      let query = supabase
+        .from('messages')
+        .select(
+          withReply
+            ? `
+              *,
+              reply_to:reply_to_message_id (
+                id,
+                content,
+                sender_id,
+                created_at
+              )
+            `
+            : '*',
+        )
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: false })
+        .order('id', { ascending: false })
+        .limit(limit);
 
-    if (cursor?.createdAt) {
-      query = query.or(
-        `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
-      );
+      if (cursor?.createdAt) {
+        query = query.or(
+          `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+        );
+      }
+      return query;
+    };
+
+    let { data, error } = await buildQuery(true);
+    if (error && /reply_to_message_id|Could not find/i.test(String(error.message ?? ''))) {
+      ({ data, error } = await buildQuery(false));
     }
-
-    const { data, error } = await query;
     return { data: data ?? [], error };
   },
 
-  sendMessage: async (conversationId, content) => {
+  sendMessage: async (conversationId, content, { replyToMessageId = null } = {}) => {
     const trimmed = String(content ?? '').trim();
     if (!trimmed) {
       return { data: null, error: { message: 'El mensaje no puede estar vacío.' } };
@@ -164,15 +186,30 @@ export const messagesService = {
       return { data: null, error: { message: 'No autenticado' } };
     }
 
+    const payload = {
+      conversation_id: conversationId,
+      sender_id: userId,
+      content: trimmed,
+    };
+    if (replyToMessageId) {
+      payload.reply_to_message_id = replyToMessageId;
+    }
+
     const result = await executeWrite(
       supabase
         .from('messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: userId,
-          content: trimmed,
-        })
-        .select('*')
+        .insert(payload)
+        .select(
+          `
+          *,
+          reply_to:reply_to_message_id (
+            id,
+            content,
+            sender_id,
+            created_at
+          )
+        `,
+        )
         .single(),
     );
 
@@ -195,9 +232,6 @@ export const messagesService = {
     });
 
     if (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'F',location:'messages.service.js:getConversationSendState',message:'send-state RPC error fail-closed',data:{conversationId,canSendReturned:false,errorMessage:error?.message??null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       return {
         data: {
           canSend: false,
@@ -315,5 +349,120 @@ export const messagesService = {
       .eq('conversation_id', conversationId);
 
     return { data: data ?? [], error };
+  },
+
+  /**
+   * Server search over own conversations (participant names + last message).
+   * Empty query → { data: [] } (caller should show the full inbox list).
+   */
+  searchConversations: async (
+    query,
+    { limit = MESSAGE_SEARCH_PAGE_SIZE, offset = 0 } = {},
+  ) => {
+    const trimmed = String(query ?? '').trim();
+    if (!trimmed) return { data: [], error: null, hasMore: false };
+
+    const { data: rows, error } = await supabase.rpc('search_user_conversations', {
+      p_query: trimmed,
+      p_limit: limit,
+      p_offset: offset,
+    });
+
+    if (error) return { data: [], error, hasMore: false };
+
+    const otherUserIds = [...new Set((rows ?? []).map((row) => row.other_user_id))];
+    const summariesResult = await messagesService.getParticipantSummaries(otherUserIds);
+    const summaryMap = new Map(
+      (summariesResult.data ?? []).map((item) => [item.userId, item]),
+    );
+
+    const conversations = (rows ?? []).map((row) => ({
+      id: row.conversation_id,
+      createdAt: row.created_at,
+      otherParticipant:
+        summaryMap.get(row.other_user_id) ?? mapParticipantSummary(null, row.other_user_id),
+      otherLastReadAt: row.other_last_read_at,
+      myLastReadAt: row.my_last_read_at,
+      lastMessage: row.last_message_id
+        ? {
+            id: row.last_message_id,
+            content: row.last_message_content,
+            senderId: row.last_message_sender_id,
+            createdAt: row.last_message_created_at,
+          }
+        : null,
+      unreadCount: Number(row.unread_count ?? 0),
+    }));
+
+    return {
+      data: conversations,
+      error: null,
+      hasMore: conversations.length === limit,
+    };
+  },
+
+  /**
+   * Server search inside one conversation. Cursor = older than last result.
+   */
+  searchConversationMessages: async (
+    conversationId,
+    query,
+    { limit = MESSAGE_SEARCH_PAGE_SIZE, cursor = null } = {},
+  ) => {
+    const trimmed = String(query ?? '').trim();
+    if (!conversationId || !trimmed) return { data: [], error: null, hasMore: false };
+
+    const { data: rows, error } = await supabase.rpc('search_conversation_messages', {
+      p_conversation_id: conversationId,
+      p_query: trimmed,
+      p_limit: limit,
+      p_before_created_at: cursor?.createdAt ?? null,
+      p_before_id: cursor?.id ?? null,
+    });
+
+    if (error) return { data: [], error, hasMore: false };
+
+    const messages = (rows ?? []).map((row) => ({
+      id: row.id,
+      conversationId: row.conversation_id,
+      senderId: row.sender_id,
+      content: row.content,
+      createdAt: row.created_at,
+      snippet: row.snippet ?? row.content,
+    }));
+
+    return {
+      data: messages,
+      error: null,
+      hasMore: messages.length === limit,
+    };
+  },
+
+  /**
+   * Load a message window around an anchor for jump-to-search-hit.
+   * Empty data means the message is gone or inaccessible.
+   */
+  getMessagesAround: async (
+    conversationId,
+    messageId,
+    { before = MESSAGES_PAGE_SIZE, after = 10 } = {},
+  ) => {
+    if (!conversationId || !messageId) return { data: [], error: null, found: false };
+
+    const { data, error } = await supabase.rpc('get_conversation_messages_around', {
+      p_conversation_id: conversationId,
+      p_message_id: messageId,
+      p_before: before,
+      p_after: after,
+    });
+
+    if (error) return { data: [], error, found: false };
+
+    const rows = data ?? [];
+    return {
+      data: rows,
+      error: null,
+      found: rows.some((row) => row.id === messageId),
+    };
   },
 };

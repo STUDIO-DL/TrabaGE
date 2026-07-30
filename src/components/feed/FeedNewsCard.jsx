@@ -1,4 +1,3 @@
-import Card from '../ui/Card';
 import TimeAgo from '../common/TimeAgo';
 import { safeExternalUrl } from '../../utils/safeUrl';
 
@@ -8,29 +7,32 @@ export default function FeedNewsCard({ article }) {
   const externalUrl = safeExternalUrl(article.url);
 
   return (
-    <Card className="mb-3">
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-primary-600">Noticia</p>
-          <h3 className="mt-1 text-base font-semibold text-gray-900">{article.title}</h3>
-          {article.source && <p className="mt-0.5 text-xs text-gray-500">{article.source}</p>}
+    <article className="surface-flat border-b border-app-divider py-space-base last:border-b-0 sm:py-space-lg">
+      <div className="mb-space-sm flex items-start justify-between gap-space-sm">
+        <div className="min-w-0">
+          <p className="text-caption font-medium text-app-subtle">Noticia</p>
+          <h3 className="mt-space-xs text-user-content text-body font-semibold text-app-text">
+            {article.title}
+          </h3>
+          {article.source ? (
+            <p className="mt-space-xs text-caption text-app-muted">{article.source}</p>
+          ) : null}
         </div>
-        <TimeAgo
-          date={article.published_at}
-          className="shrink-0 text-xs text-gray-400"
-        />
+        <TimeAgo date={article.published_at} className="shrink-0 text-caption text-app-subtle" />
       </div>
-      {article.summary && <p className="text-sm text-gray-700">{article.summary}</p>}
-      {externalUrl && (
+      {article.summary ? (
+        <p className="text-body-small text-app-muted">{article.summary}</p>
+      ) : null}
+      {externalUrl ? (
         <a
           href={externalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-block text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="mt-space-sm inline-block text-body-small font-medium text-primary-600 hover:text-primary-700"
         >
           Leer más
         </a>
-      )}
-    </Card>
+      ) : null}
+    </article>
   );
 }

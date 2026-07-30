@@ -1,8 +1,8 @@
 import SearchBar from '../ui/SearchBar';
 import AppIcon from '../common/AppIcon';
-import NotificationBellButton from '../notifications/NotificationBellButton';
 import { Filter, ICON_SIZES } from '../../constants/icons';
 
+/** Search dominates; filters are a quiet secondary control. */
 export default function JobsSearchBar({ query = '', onQueryChange, onFiltersToggle, filtersOpen = false }) {
   return (
     <div className="flex items-center gap-space-sm">
@@ -10,24 +10,23 @@ export default function JobsSearchBar({ query = '', onQueryChange, onFiltersTogg
         <SearchBar
           value={query}
           onChange={(value) => onQueryChange?.(value)}
-          placeholder="Buscar por título, ciudad, empresa..."
+          placeholder="Buscar empleo, ciudad o empresa"
         />
       </div>
-      <NotificationBellButton className="h-11 w-11 border border-app-border bg-app-card" />
 
       <button
         type="button"
         onClick={onFiltersToggle}
         aria-expanded={filtersOpen}
+        aria-label="Filtros"
         className={[
-          'inline-flex min-h-touch shrink-0 items-center gap-space-sm rounded-radius-md border px-space-md py-space-sm text-body-small font-medium transition-colors duration-fast ease-out',
+          'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-radius-md border transition-colors duration-fast ease-out',
           filtersOpen
-            ? 'border-primary-200 bg-primary-50 text-primary-700'
-            : 'border-app-border bg-app-card text-app-muted hover:bg-app-surface',
+            ? 'border-primary-300 bg-primary-50 text-primary-700'
+            : 'border-app-border bg-app-card text-app-muted hover:bg-app-surface hover:text-app-text',
         ].join(' ')}
       >
         <AppIcon icon={Filter} size={ICON_SIZES.md} />
-        Filtros
       </button>
     </div>
   );

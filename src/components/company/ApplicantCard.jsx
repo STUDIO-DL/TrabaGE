@@ -6,7 +6,8 @@ import Button from '../ui/Button';
 import Select from '../ui/Select';
 import AppIcon from '../common/AppIcon';
 import { getUserProfilePath } from '../../utils/profileRoutes';
-import { Download, Eye, MessageSquare, ICON_SIZES } from '../../constants/icons';
+import { Download, Eye, ICON_SIZES } from '../../constants/icons';
+import MessagesChatIcon from '../messages/MessagesChatIcon';
 import {
   EMPLOYER_APPLICATION_STATUSES,
   getApplicationStatus,
@@ -60,8 +61,8 @@ export default function ApplicantCard({
   const answerEntries = getAnswerEntries(application);
 
   return (
-    <Card className="mb-3">
-      <div className="mb-3 flex items-start gap-3">
+    <Card className="mb-space-sm">
+      <div className="mb-space-sm flex items-start gap-space-md">
         <UserProfileLink
           userId={application.candidate_id}
           name={application.full_name || candidate?.full_name}
@@ -73,31 +74,31 @@ export default function ApplicantCard({
             userId={application.candidate_id}
             name={application.full_name || candidate?.full_name}
             layout="name"
-            nameClassName="font-semibold text-gray-900 hover:text-primary-700 transition-colors"
+            nameClassName="font-semibold text-app-text transition-colors hover:text-primary-700"
           />
-          <p className="text-sm text-gray-500 break-words">{job?.title}</p>
-          <Badge variant={status.variant} label={status.label} className="mt-2" />
+          <p className="break-words text-body-small text-app-muted">{job?.title}</p>
+          <Badge variant={status.variant} label={status.label} className="mt-space-sm" />
         </div>
       </div>
 
       {(coverLetter || answerEntries.length > 0) && (
-        <div className="mb-3 space-y-3 rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-app-border dark:bg-app-surface">
+        <div className="mb-space-sm space-y-space-sm rounded-radius-md border border-app-divider bg-app-surface p-space-sm">
           {coverLetter ? (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-app-muted">
+              <p className="text-caption font-semibold uppercase tracking-wide text-app-muted">
                 Carta de presentación
               </p>
-              <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-800 dark:text-app-text">
+              <p className="mt-space-xs whitespace-pre-wrap break-words text-body-small text-app-text">
                 {coverLetter}
               </p>
             </div>
           ) : null}
           {answerEntries.map((entry) => (
             <div key={entry.id}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-app-muted">
+              <p className="text-caption font-semibold uppercase tracking-wide text-app-muted">
                 {entry.label}
               </p>
-              <p className="mt-1 whitespace-pre-wrap break-words text-sm text-gray-800 dark:text-app-text">
+              <p className="mt-space-xs whitespace-pre-wrap break-words text-body-small text-app-text">
                 {entry.value}
               </p>
             </div>
@@ -105,7 +106,7 @@ export default function ApplicantCard({
         </div>
       )}
 
-      <div className="mb-3">
+      <div className="mb-space-sm">
         <Select
           label="Estado"
           value={application.status}
@@ -115,7 +116,7 @@ export default function ApplicantCard({
         />
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-space-sm">
         {profilePath ? (
           <Link to={profilePath}>
             <Button variant="secondary" size="sm" className="inline-flex items-center gap-1.5">
@@ -140,7 +141,7 @@ export default function ApplicantCard({
           onClick={() => onMessage?.(application)}
           loading={messageLoading}
         >
-          <AppIcon icon={MessageSquare} size={ICON_SIZES.default} />
+          <AppIcon icon={MessagesChatIcon} size={ICON_SIZES.default} />
           Mensaje
         </Button>
       </div>

@@ -103,4 +103,7 @@ export const TOAST = {
 
 /** Human-friendly fallback when an operation fails unexpectedly. */
 export const ERROR_GENERIC =
-  'No hemos podido completar la operación. Inténtalo de nuevo.';
+  'No hemos podido completar esta acción. Inténtalo de nuevo.';
+
+/** Prefer `getUserErrorMessage` / `ERROR_ACTION` from `utils/userFacingError`. */
+export { ERROR_ACTION, getUserErrorMessage, toUserFacingError } from './userFacingError';

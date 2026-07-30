@@ -24,8 +24,9 @@ const MESSAGES = {
       sessionExpired: 'Tu sesión ha expirado. Vuelve a iniciar sesión.',
       smtpError: 'No se pudo enviar el correo en este momento. Inténtalo de nuevo más tarde.',
       unexpected: 'No hemos podido completar la operación. Inténtalo de nuevo.',
+      googleLoginNoAccountTitle: 'No encontramos una cuenta',
       googleLoginNoAccount:
-        'No encontramos una cuenta asociada a este correo.\n\nSi todavía no tienes una cuenta en TrabaGE, puedes crear una utilizando "Crear cuenta".',
+        'No existe ninguna cuenta asociada a este correo electrónico.\n\nSi todavía no tienes una cuenta en TrabaGE, pulsa Crear cuenta para registrarte.',
       authIncomplete: 'No se pudo completar la autenticación. Inténtalo de nuevo.',
       passwordSaveFailed: 'No se pudo guardar la contraseña.',
       registerFailed: 'No se pudo completar el registro. Inténtalo de nuevo.',
@@ -70,8 +71,9 @@ const MESSAGES = {
       sessionExpired: 'Your session has expired. Please sign in again.',
       smtpError: 'Could not send the email at this time. Please try again later.',
       unexpected: 'An unexpected error occurred. Please try again later.',
+      googleLoginNoAccountTitle: 'We could not find an account',
       googleLoginNoAccount:
-        'We could not find an account linked to this email.\n\nIf you do not have a TrabaGE account yet, you can create one using "Create account".',
+        'There is no account linked to this email address.\n\nIf you do not have a TrabaGE account yet, tap Create account to register.',
       authIncomplete: 'Could not complete authentication. Please try again.',
       passwordSaveFailed: 'Could not save the password.',
       registerFailed: 'Could not complete registration. Please try again.',

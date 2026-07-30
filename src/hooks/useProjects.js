@@ -4,7 +4,7 @@ import { projectsService } from '../services/projects.service';
 import { storageService } from '../services/storage.service';
 import { projectImagePath } from '../constants/storage';
 import { validateFile } from '../utils/validateFile';
-import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
+import { asUserFacingError, ERROR_ACTION } from '../utils/userFacingError';
 import {
   getOwnCandidateProfileKey,
   getOwnCompanyProfileKey,
@@ -22,14 +22,8 @@ function friendlyProjectError(error) {
   if (message.includes('projects_limit_exceeded') || message.includes('límite de 3')) {
     return { ...error, message: 'Has alcanzado el límite de 3 proyectos.' };
   }
-  if (message.includes('violates row-level security')) {
-    return { ...error, message: 'No tienes permisos para modificar este dato.' };
-  }
-  if (message.includes('storage') || message.includes('bucket')) {
-    return { ...error, message: 'No se pudo subir la imagen. Inténtalo de nuevo.' };
-  }
 
-  return { ...error, message: getSupabaseErrorMessage(error, 'No se pudo guardar el proyecto.') };
+  return asUserFacingError(error, { action: ERROR_ACTION.save_project });
 }
 
 function sortProjects(items = []) {

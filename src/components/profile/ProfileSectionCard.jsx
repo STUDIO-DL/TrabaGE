@@ -1,16 +1,17 @@
 import AppIcon from '../common/AppIcon';
 import { ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
+import { profileSectionCardClass } from './profileLayoutClasses';
 
 /** Section headings — text only, no icons. */
 export const profileSectionTitleClass =
-  'text-user-content text-body font-bold tracking-tight text-app-text sm:text-subtitle';
+  'text-user-content text-body font-semibold tracking-tight text-app-text';
 
 function EditActionButton({ onClick, label = 'Editar' }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700"
+      className="inline-flex items-center gap-space-xs text-caption font-medium text-primary-600 transition-colors hover:text-primary-700"
     >
       <AppIcon icon={Pencil} size={ICON_SIZES.sm} />
       {label}
@@ -23,10 +24,29 @@ function DeleteActionButton({ onClick, label = 'Eliminar' }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
+      className="inline-flex items-center gap-space-xs text-caption font-medium text-error-600 transition-colors hover:text-error-700"
     >
       <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
       {label}
+    </button>
+  );
+}
+
+function SectionHeaderAction({ isEditAction, addLabel, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex shrink-0 items-center gap-space-xs text-caption font-medium text-primary-600 transition-colors hover:text-primary-700"
+    >
+      {isEditAction ? (
+        <>
+          <AppIcon icon={Pencil} size={ICON_SIZES.sm} />
+          Editar
+        </>
+      ) : (
+        <>+ {addLabel}</>
+      )}
     </button>
   );
 }
@@ -46,46 +66,56 @@ export default function ProfileSectionCard({
   children,
 }) {
   const isEditAction = addLabel === 'Editar';
+  const scrollClass = id ? ' scroll-mt-24' : '';
 
+  // Visitors never see empty sections
   if (isEmpty && !isOwn) return null;
 
+  // Own empty sections: same card shell, compact body
+  if (isEmpty && isOwn) {
+    return (
+      <section id={id} className={`${profileSectionCardClass}${scrollClass}`}>
+        <div className="flex items-center justify-between gap-space-md">
+          <div className="min-w-0">
+            <h3 className={profileSectionTitleClass}>{title}</h3>
+            <p className="mt-space-xs text-caption text-app-subtle">{emptyText}</p>
+          </div>
+          {onAdd ? (
+            <SectionHeaderAction
+              isEditAction={isEditAction}
+              addLabel={addLabel}
+              onClick={onAdd}
+            />
+          ) : null}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id={id} className={`surface-card p-space-md${id ? ' scroll-mt-24' : ''}`}>
+    <section id={id} className={`${profileSectionCardClass}${scrollClass}`}>
       <div className="mb-space-md flex items-center justify-between gap-space-sm">
         <h3 className={`${profileSectionTitleClass} min-w-0 flex-1`}>{title}</h3>
-        {isOwn && onAdd && (
-          <button
-            type="button"
+        {isOwn && onAdd ? (
+          <SectionHeaderAction
+            isEditAction={isEditAction}
+            addLabel={addLabel}
             onClick={onAdd}
-            className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700"
-          >
-            {isEditAction ? (
-              <>
-                <AppIcon icon={Pencil} size={ICON_SIZES.sm} />
-                Editar
-              </>
-            ) : (
-              <>+ {addLabel}</>
-            )}
-          </button>
-        )}
+          />
+        ) : null}
       </div>
 
-      {isEmpty ? (
-        <p className="text-sm text-app-subtle">{emptyText}</p>
-      ) : (
-        children
-      )}
+      {children}
 
-      {footerLabel && !isEmpty && (
+      {footerLabel ? (
         <button
           type="button"
           onClick={onFooterClick}
-          className="mt-4 text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="mt-space-md text-caption font-medium text-primary-600 hover:text-primary-700"
         >
           {footerLabel}
         </button>
-      )}
+      ) : null}
     </section>
   );
 }
@@ -102,18 +132,24 @@ export function ProfileEntryRow({
   children,
 }) {
   return (
-    <div className="border-b border-app-divider py-4 first:pt-0 last:border-0 last:pb-0">
+    <div className="border-b border-app-divider py-space-md first:pt-0 last:border-0 last:pb-0">
       <div className="min-w-0">
         <p className="text-user-content font-semibold text-app-text">{title || '—'}</p>
-        {subtitle && <p className="text-user-content mt-0.5 text-sm text-app-muted">{subtitle}</p>}
-        {meta && <p className="text-user-content mt-1 text-xs leading-relaxed text-app-subtle">{meta}</p>}
+        {subtitle ? (
+          <p className="text-user-content mt-space-xs text-body-small text-app-muted">{subtitle}</p>
+        ) : null}
+        {meta ? (
+          <p className="text-user-content mt-space-xs text-caption leading-relaxed text-app-subtle">
+            {meta}
+          </p>
+        ) : null}
         {children}
-        {isOwn && (onEdit || onDelete) && (
-          <div className="mt-2 flex gap-3">
-            {onEdit && <EditActionButton onClick={onEdit} />}
-            {onDelete && <DeleteActionButton onClick={onDelete} />}
+        {isOwn && (onEdit || onDelete) ? (
+          <div className="mt-space-sm flex gap-space-md">
+            {onEdit ? <EditActionButton onClick={onEdit} /> : null}
+            {onDelete ? <DeleteActionButton onClick={onDelete} /> : null}
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -122,9 +158,9 @@ export function ProfileEntryRow({
 export function SectionItemActions({ isOwn, onEdit, onDelete }) {
   if (!isOwn) return null;
   return (
-    <div className="mt-2 flex gap-3">
-      {onEdit && <EditActionButton onClick={onEdit} />}
-      {onDelete && <DeleteActionButton onClick={onDelete} />}
+    <div className="mt-space-sm flex gap-space-md">
+      {onEdit ? <EditActionButton onClick={onEdit} /> : null}
+      {onDelete ? <DeleteActionButton onClick={onDelete} /> : null}
     </div>
   );
 }

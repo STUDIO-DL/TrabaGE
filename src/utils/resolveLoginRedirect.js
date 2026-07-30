@@ -1,5 +1,10 @@
+import { isSafeInternalPath } from './safeNavigation.js';
+
+export { isSafeInternalPath } from './safeNavigation.js';
+
 export function buildPathFromLocationState(from) {
   if (!from?.pathname) return null;
+  if (!isSafeInternalPath(from.pathname)) return null;
   return `${from.pathname}${from.search || ''}${from.hash || ''}`;
 }
 
@@ -9,7 +14,7 @@ export function buildPathFromLocationState(from) {
 export function resolveLoginRedirectPath(location, fallback = '/') {
   const fromPath = buildPathFromLocationState(location?.state?.from);
   if (!fromPath || fromPath === '/login' || fromPath.startsWith('/register')) {
-    return fallback;
+    return isSafeInternalPath(fallback) ? fallback : '/';
   }
   return fromPath;
 }

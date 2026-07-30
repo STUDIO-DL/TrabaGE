@@ -1,37 +1,43 @@
 import { Link } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
-import { ChevronRight, Briefcase, ICON_SIZES } from '../../../constants/icons';
-import { getJobTypeLabel } from '../../../constants/jobTypes';
-import { getWorkModeLabel } from '../../../constants/workModes';
+import {
+  Briefcase,
+  ChevronRight,
+  Eye,
+  Pencil,
+  Users,
+  X,
+  ICON_SIZES,
+} from '../../../constants/icons';
 import Button from '../../ui/Button';
 import DashboardSectionEmpty from './DashboardSectionEmpty';
 import { useAuth } from '../../../hooks/useAuth';
 import { ROLES, rolePath } from '../../../constants/roles';
+import { formatDaysActive } from '../../../features/company-dashboard/dashboardFormatters';
 
 const STATUS_STYLES = {
-  draft: 'bg-gray-400',
-  active: 'bg-emerald-500',
-  paused: 'bg-amber-400',
-  closed: 'bg-gray-300',
+  draft: 'bg-app-muted',
+  active: 'bg-success-600',
+  paused: 'bg-amber-500',
+  closed: 'bg-app-subtle',
 };
 
-function getJobSubtitle(job) {
-  if (job.work_mode) {
-    return `${getWorkModeLabel(job.work_mode)} • ${getJobTypeLabel(job.job_type)}`;
-  }
-  const parts = [job.city, getJobTypeLabel(job.job_type)].filter(Boolean);
-  return parts.join(' • ') || getJobTypeLabel(job.job_type);
-}
+const STATUS_LABEL = {
+  draft: 'Borrador',
+  active: 'Activa',
+  paused: 'Pausada',
+  closed: 'Cerrada',
+};
 
-export default function DashboardJobsList({ jobs }) {
+export default function DashboardJobsList({ jobs = [], onCloseJob, closingId = null }) {
   const { role } = useAuth();
   const base = role || ROLES.BUSINESS;
-  const isEmpty = jobs.length === 0;
+  const isEmpty = !jobs.length;
 
   return (
-    <section className="flex h-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-gray-100 px-5 py-4">
-        <h2 className="text-base font-semibold text-gray-900">Ofertas de trabajo</h2>
+    <section className="surface-card flex h-full flex-col">
+      <div className="flex items-center justify-between gap-3 border-b border-app-border px-5 py-4">
+        <h2 className="text-base font-semibold text-app-text">Ofertas activas</h2>
         <Link
           to={rolePath(base, '/jobs')}
           className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
@@ -48,32 +54,66 @@ export default function DashboardJobsList({ jobs }) {
           description="Publica tu primera oferta para empezar a recibir candidatos."
         />
       ) : (
-        <ul className="divide-y divide-gray-100">
+        <ul className="divide-y divide-app-border">
           {jobs.map((job) => (
-            <li key={job.id}>
-              <Link
-                to={rolePath(base, `/jobs/${job.id}/edit`)}
-                className="flex items-center gap-3 px-5 py-4 transition hover:bg-gray-50"
-              >
-                <span
-                  className={`h-2.5 w-2.5 shrink-0 rounded-full ${STATUS_STYLES[job.status] ?? STATUS_STYLES.active}`}
-                  aria-hidden
-                />
+            <li key={job.id} className="px-5 py-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-gray-900">{job.title}</p>
-                  <p className="mt-0.5 truncate text-xs text-gray-500">{getJobSubtitle(job)}</p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`h-2 w-2 shrink-0 rounded-full ${STATUS_STYLES[job.status] ?? STATUS_STYLES.active}`}
+                      aria-hidden
+                    />
+                    <span className="text-xs font-medium text-app-muted">
+                      {STATUS_LABEL[job.status] || job.status}
+                    </span>
+                  </div>
+                  <p className="mt-1 truncate text-sm font-semibold text-app-text">{job.title}</p>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-app-muted">
+                    <span className="inline-flex items-center gap-1">
+                      <AppIcon icon={Eye} size={ICON_SIZES.sm} />
+                      {job.views ?? 0} vistas
+                    </span>
+                    <span className="inline-flex items-center gap-1">
+                      <AppIcon icon={Users} size={ICON_SIZES.sm} />
+                      {job.applications ?? 0} candidaturas
+                    </span>
+                    <span>Activa {formatDaysActive(job.days_active)}</span>
+                  </div>
                 </div>
-                <p className="shrink-0 text-xs text-gray-500">
-                  {job.candidates_count ?? 0} candidatos
-                </p>
-                <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} className="shrink-0 text-gray-300" />
-              </Link>
+
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <Link to={rolePath(base, `/jobs/${job.id}/edit`)}>
+                    <Button variant="secondary" size="sm" type="button">
+                      <AppIcon icon={Pencil} size={ICON_SIZES.sm} />
+                      Editar
+                    </Button>
+                  </Link>
+                  {job.status !== 'closed' && onCloseJob ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      type="button"
+                      disabled={closingId === job.id}
+                      onClick={() => onCloseJob(job)}
+                    >
+                      <AppIcon icon={X} size={ICON_SIZES.sm} />
+                      Cerrar
+                    </Button>
+                  ) : null}
+                  <Link to={rolePath(base, `/applicants?job=${job.id}`)}>
+                    <Button variant="ghost" size="sm" type="button">
+                      Ver
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </li>
           ))}
         </ul>
       )}
 
-      <div className="mt-auto border-t border-gray-100 p-4">
+      <div className="mt-auto border-t border-app-border p-4">
         <Link to={rolePath(base, '/jobs')}>
           <Button variant="secondary" fullWidth>
             Ver todas las ofertas

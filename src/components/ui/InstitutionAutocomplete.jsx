@@ -2,14 +2,15 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
 import AppIcon from '../common/AppIcon';
 import { GraduationCap, ICON_SIZES } from '../../constants/icons';
 import { INSTITUTIONS, INSTITUTION_TYPE_LABELS } from '../../data/institutions';
-import { searchInstitutions } from '../../utils/searchInstitutions';
+import { formatCatalogDisplayName, searchInstitutions } from '../../utils/searchInstitutions';
 import { KEYBOARD_GAP } from '../../hooks/useKeyboardInsets';
 import { measureBottomChromeHeight } from '../../utils/scrollInputIntoView';
 
 const MANUAL_FOOTER_ID = '__manual_entry__';
 const DEFAULT_LIST_MAX_HEIGHT = 224;
 const MIN_LIST_MAX_HEIGHT = 120;
-const MIN_SEARCH_CHARS = 2;
+const MIN_SEARCH_CHARS = 1;
+const EMPTY_MATCH_MESSAGE = 'No encontramos ninguna coincidencia';
 
 /**
  * LinkedIn-style institution combobox with local catalog search.
@@ -63,9 +64,13 @@ export default function InstitutionAutocomplete({
   }, [query, institutions, manualMode, catalogEmpty, hasMinQuery]);
 
   const showManualFooter = hasMinQuery && !manualMode;
+  const showEmptyMatch = hasMinQuery && !manualMode && results.length === 0 && !catalogEmpty;
   const optionCount = results.length + (showManualFooter ? 1 : 0);
   const showList =
-    open && !manualMode && hasMinQuery && (results.length > 0 || showManualFooter);
+    open &&
+    !manualMode &&
+    hasMinQuery &&
+    (results.length > 0 || showManualFooter || showEmptyMatch);
 
   const updateListMaxHeight = useCallback(() => {
     const root = rootRef.current;
@@ -268,9 +273,16 @@ export default function InstitutionAutocomplete({
           className="absolute z-30 mt-1 w-full overflow-auto overscroll-contain rounded-radius-md border border-app-border bg-app-card py-1 shadow-sm [-webkit-overflow-scrolling:touch]"
           style={{ maxHeight: listMaxHeight }}
         >
+          {showEmptyMatch && (
+            <li className="px-space-md py-space-sm text-caption text-app-muted" role="presentation">
+              {EMPTY_MATCH_MESSAGE}
+            </li>
+          )}
+
           {results.map((institution, index) => {
             const typeLabel = INSTITUTION_TYPE_LABELS[institution.type] || institution.type;
             const isActive = index === activeIndex;
+            const locationLabel = [institution.city, institution.country].filter(Boolean).join(' • ');
 
             return (
               <li
@@ -295,11 +307,13 @@ export default function InstitutionAutocomplete({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-body-small font-medium text-app-text">
-                      {institution.name}
+                      {formatCatalogDisplayName(institution)}
                     </span>
-                    <span className="mt-0.5 block truncate text-caption text-app-subtle">
-                      {institution.city} • {institution.country}
-                    </span>
+                    {locationLabel ? (
+                      <span className="mt-0.5 block truncate text-caption text-app-subtle">
+                        {locationLabel}
+                      </span>
+                    ) : null}
                   </span>
                   <span
                     className={[

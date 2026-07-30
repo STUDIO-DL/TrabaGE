@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import AppIcon from '../common/AppIcon';
-import { Briefcase, MapPin, Pencil, Save, X, ICON_SIZES } from '../../constants/icons';
+import { Pencil, Save, X, ICON_SIZES } from '../../constants/icons';
 
 /** Input hints for editable hero fields — never shown as visible placeholder text to visitors. */
 export const EDITOR_HINTS = {
@@ -143,7 +143,7 @@ export function EditableHeroSelect({
   saving,
   options,
   formatDisplay,
-  icon: Icon,
+  icon: _Icon,
   className = '',
 }) {
   const [editing, setEditing] = useState(false);
@@ -158,8 +158,7 @@ export function EditableHeroSelect({
   if (!isOwn) {
     if (!value) return null;
     return (
-      <p className={`flex items-center gap-1.5 text-caption text-app-muted ${className}`}>
-        {Icon && <AppIcon icon={Icon} size={ICON_SIZES.default} className="shrink-0" />}
+      <p className={`text-caption text-app-muted ${className}`}>
         {display}
       </p>
     );
@@ -168,21 +167,18 @@ export function EditableHeroSelect({
   if (editing) {
     return (
       <div className={`flex flex-col gap-2 ${className}`}>
-        <div className="flex items-center gap-2">
-          {Icon && <AppIcon icon={Icon} size={ICON_SIZES.default} className="shrink-0 text-app-muted" />}
-          <select
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            className="min-w-0 flex-1 rounded-radius-md border border-app-border bg-app-card px-3 py-2 text-sm text-app-text outline-none ring-2 ring-primary-500/30 focus:ring-primary-500"
-          >
-            <option value="">{placeholder || 'Seleccionar...'}</option>
-            {options.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="min-w-0 w-full rounded-radius-md border border-app-border bg-app-card px-3 py-2 text-sm text-app-text outline-none ring-2 ring-primary-500/30 focus:ring-primary-500"
+        >
+          <option value="">{placeholder || 'Seleccionar...'}</option>
+          {options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
         <div className="flex gap-2">
           <button
             type="button"
@@ -214,8 +210,7 @@ export function EditableHeroSelect({
 
   return (
     <div className={`group flex items-center gap-2 ${className}`}>
-      <p className={`text-user-content flex min-w-0 flex-1 items-center gap-1.5 text-caption text-app-muted`}>
-        {Icon && <AppIcon icon={Icon} size={ICON_SIZES.default} className="shrink-0" />}
+      <p className="text-user-content min-w-0 flex-1 text-caption text-app-muted">
         {display}
       </p>
       <button
@@ -241,8 +236,7 @@ export function EditableHeroYearsBadge({ value, isOwn, onSave, saving }) {
   if (!isOwn) {
     if (!hasYearsExperience(value)) return null;
     return (
-      <li className="inline-flex items-center gap-1.5 rounded-radius-full border border-app-border bg-app-surface px-3 py-1.5 text-caption text-app-muted">
-        <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0" />
+      <li className="inline-flex items-center rounded-radius-full border border-app-border bg-app-surface px-3 py-1.5 text-caption text-app-muted">
         {formatYearsLabel(value)}
       </li>
     );
@@ -251,21 +245,18 @@ export function EditableHeroYearsBadge({ value, isOwn, onSave, saving }) {
   if (editing) {
     return (
       <li className="flex w-full flex-col gap-2 rounded-radius-md border border-app-border bg-app-surface p-3 text-caption sm:w-auto">
-        <div className="flex items-center gap-2">
-          <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0 text-app-muted" />
-          <select
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            className="min-w-0 flex-1 rounded-radius-md border border-app-border bg-app-card px-2 py-1.5 text-app-text outline-none ring-2 ring-primary-500/30 focus:ring-primary-500"
-          >
-            <option value="">Seleccionar…</option>
-            {YEAR_OPTIONS.map((year) => (
-              <option key={year} value={String(year)}>
-                {year === 0 ? 'Sin experiencia previa' : `${year} ${year === 1 ? 'año' : 'años'}`}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="min-w-0 w-full rounded-radius-md border border-app-border bg-app-card px-2 py-1.5 text-app-text outline-none ring-2 ring-primary-500/30 focus:ring-primary-500"
+        >
+          <option value="">Seleccionar…</option>
+          {YEAR_OPTIONS.map((year) => (
+            <option key={year} value={String(year)}>
+              {year === 0 ? 'Sin experiencia previa' : `${year} ${year === 1 ? 'año' : 'años'}`}
+            </option>
+          ))}
+        </select>
         <div className="flex gap-2">
           <button
             type="button"
@@ -297,7 +288,6 @@ export function EditableHeroYearsBadge({ value, isOwn, onSave, saving }) {
 
   return (
     <li className="group inline-flex items-center gap-1.5 rounded-radius-full border border-app-border bg-app-surface px-3 py-1.5 text-caption text-app-muted">
-      <AppIcon icon={Briefcase} size={ICON_SIZES.default} className="shrink-0" />
       <span>{formatYearsLabel(value)}</span>
       <button
         type="button"

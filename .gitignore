@@ -32,9 +32,9 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# Supabase
-.supabase/
-scripts/admins.local.json
+# Local diagnostics
+tmp-cv-diag/
+
 
 
 

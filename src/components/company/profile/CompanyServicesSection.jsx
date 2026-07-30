@@ -3,7 +3,7 @@ import AppIcon from '../../common/AppIcon';
 import AutocompleteInput from '../../ui/AutocompleteInput';
 import Button from '../../ui/Button';
 import Card from '../../ui/Card';
-import { Sparkles, Trash2, ICON_COLORS, ICON_SIZES } from '../../../constants/icons';
+import { Trash2, ICON_SIZES } from '../../../constants/icons';
 import {
   COMPANY_SERVICE_SUGGESTIONS,
   filterCompanyServiceSuggestions,
@@ -14,10 +14,7 @@ const POPULAR_COUNT = 6;
 function ServiceCard({ name, onDelete, readOnly }) {
   return (
     <Card padding="md" className="flex items-center justify-between gap-space-sm">
-      <div className="flex min-w-0 items-center gap-space-sm">
-        <AppIcon icon={Sparkles} size={ICON_SIZES.sm} className={`shrink-0 ${ICON_COLORS.default}`} />
-        <span className="truncate text-body-small font-medium text-app-text">{name}</span>
-      </div>
+      <span className="min-w-0 truncate text-body-small font-medium text-app-text">{name}</span>
       {!readOnly && onDelete && (
         <button
           type="button"

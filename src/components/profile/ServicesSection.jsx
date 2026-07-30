@@ -59,18 +59,18 @@ export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) 
       footerLabel={footerLabel}
       onFooterClick={hasMore ? () => setExpanded((value) => !value) : undefined}
     >
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {visibleItems.map((item) => (
           <span
             key={item.id}
-            className="inline-flex items-center gap-1 rounded-full border border-app-border bg-app-surface px-3.5 py-1.5 text-sm text-app-text"
+            className="inline-flex min-h-touch items-center gap-1.5 rounded-radius-circular border border-app-border bg-app-surface px-4 py-2 text-body-small text-app-text"
           >
             {item.name}
             {isOwn && (
               <button
                 type="button"
                 onClick={() => onDelete?.(item.id)}
-                className="ml-0.5 rounded p-0.5 text-app-subtle hover:bg-app-surface hover:text-error-600"
+                className="ml-0.5 rounded-radius-sm p-1 text-app-muted hover:bg-app-surface hover:text-error-600"
                 aria-label="Eliminar"
               >
                 <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
@@ -98,14 +98,14 @@ export default function ServicesSection({ items = [], isOwn, onAdd, onDelete }) 
 
           {!serviceName.trim() && popularSuggestions.length > 0 && (
             <div>
-              <p className="mb-2 text-xs font-medium text-app-muted">Sugerencias</p>
+              <p className="mb-2 text-body-small font-medium text-app-muted">Sugerencias</p>
               <div className="flex flex-wrap gap-2">
                 {popularSuggestions.map((service) => (
                   <button
                     key={service}
                     type="button"
                     onClick={() => addService(service)}
-                    className="rounded-full border border-dashed border-app-border bg-app-card px-3 py-1 text-xs text-app-muted hover:border-app-muted hover:bg-app-surface hover:text-app-text"
+                    className="min-h-touch rounded-radius-circular border border-dashed border-app-border bg-app-card px-3.5 py-1.5 text-body-small text-app-muted hover:border-app-muted hover:bg-app-surface hover:text-app-text"
                   >
                     + {service}
                   </button>

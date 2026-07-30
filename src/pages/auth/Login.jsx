@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import AppIcon from '../../components/common/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
+import Modal from '../../components/ui/Modal';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
@@ -11,11 +12,7 @@ import { LegalFooterLinks } from '../../components/legal/LegalLinks';
 import {
   Eye,
   EyeOff,
-  Lock,
-  Mail,
   MailCheck,
-  ShieldCheck,
-  User,
   ICON_SIZES,
 } from '../../constants/icons';
 import { clearPreviewMode } from '../../constants/preview';
@@ -26,6 +23,7 @@ import {
   authService,
   getEmailNotVerifiedMessage,
   getGoogleLoginNoAccountMessage,
+  getGoogleLoginNoAccountTitle,
   isEmailNotVerifiedError,
 } from '../../services/auth.service';
 import { mapAuthError } from '../../utils/errors';
@@ -115,24 +113,32 @@ function LoginDecorations() {
   );
 }
 
-function GoogleAccountMissingPanel({ message, onDismiss }) {
+function GoogleAccountMissingDialog({ isOpen, onClose, onCreateAccount }) {
   return (
-    <div
-      role="status"
-      className="login-fade-in-delayed rounded-radius-xl border border-app-border bg-app-surface px-space-base py-space-base text-left"
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={getGoogleLoginNoAccountTitle()}
+      size="sm"
     >
-      <p className="whitespace-pre-line text-body-small leading-relaxed text-app-muted">{message}</p>
-      <div className="mt-space-base flex flex-col gap-space-sm sm:flex-row">
-        <Link to="/register" className="flex-1">
-          <Button fullWidth size="md" className="!rounded-radius-md">
-            Crear cuenta
-          </Button>
-        </Link>
-        <Button variant="secondary" fullWidth size="md" className="!rounded-radius-md" onClick={onDismiss}>
-          Volver al inicio de sesión
+      <p className="whitespace-pre-line text-body-small leading-relaxed text-app-muted">
+        {getGoogleLoginNoAccountMessage()}
+      </p>
+      <div className="mt-space-lg flex flex-col gap-space-sm sm:flex-row-reverse">
+        <Button fullWidth size="md" className="!rounded-radius-md" onClick={onCreateAccount}>
+          Crear cuenta
+        </Button>
+        <Button
+          variant="secondary"
+          fullWidth
+          size="md"
+          className="!rounded-radius-md"
+          onClick={onClose}
+        >
+          Volver
         </Button>
       </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -191,8 +197,8 @@ function LoginScreen({
   onExplore,
   onGoogleLogin,
   googleAccountMissing,
-  googleAccountMissingMessage,
   onDismissGoogleMissing,
+  onCreateAccountFromGoogleMissing,
   emailVerificationRequired,
   onDismissEmailVerification,
   verificationSuccess,
@@ -200,6 +206,12 @@ function LoginScreen({
   return (
     <div className="keyboard-scroll-host relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-gradient-to-b from-primary-50 via-app-card to-primary-50">
       <LoginDecorations />
+
+      <GoogleAccountMissingDialog
+        isOpen={googleAccountMissing && !emailVerificationRequired}
+        onClose={onDismissGoogleMissing}
+        onCreateAccount={onCreateAccountFromGoogleMissing}
+      />
 
       <div
         className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col px-space-lg py-space-3xl sm:px-space-xl"
@@ -210,7 +222,7 @@ function LoginScreen({
       >
         <div className="login-fade-in flex flex-1 flex-col justify-center">
           <div className="text-center">
-            <TrabaGEWordmark className="mx-auto block h-10 w-auto" />
+            <TrabaGEWordmark size="hero" className="mx-auto" />
           </div>
 
           <div className="mt-space-xl text-center">
@@ -223,11 +235,6 @@ function LoginScreen({
           <div className="login-card login-fade-in-delayed mt-space-xl p-space-lg sm:p-space-xl">
             {emailVerificationRequired ? (
               <EmailVerificationPanel email={email} onBack={onDismissEmailVerification} />
-            ) : googleAccountMissing ? (
-              <GoogleAccountMissingPanel
-                message={googleAccountMissingMessage || getGoogleLoginNoAccountMessage()}
-                onDismiss={onDismissGoogleMissing}
-              />
             ) : (
               <>
                 {verificationSuccess ? (
@@ -238,12 +245,7 @@ function LoginScreen({
                 <form onSubmit={onSubmit} className="space-y-space-base" autoComplete="off">
                   <Input
                     id="login-email"
-                    label={
-                      <span className="inline-flex items-center gap-space-sm">
-                        <AppIcon icon={Mail} size={ICON_SIZES.sm} className="text-primary-600" aria-hidden />
-                        Correo electrónico
-                      </span>
-                    }
+                    label="Correo electrónico"
                     type="email"
                     name="trabage-email"
                     autoComplete="email"
@@ -256,9 +258,8 @@ function LoginScreen({
                   <div>
                     <label
                       htmlFor="login-password"
-                      className="mb-space-sm flex items-center gap-space-sm text-label font-semibold text-app-text"
+                      className="mb-space-sm block text-label font-semibold text-app-text"
                     >
-                      <AppIcon icon={Lock} size={ICON_SIZES.sm} className="text-primary-600" aria-hidden />
                       Contraseña
                     </label>
                     <div className="relative">
@@ -319,23 +320,19 @@ function LoginScreen({
                     label="Iniciar sesión con Google"
                   />
 
-                  <Button
+                  <button
                     type="button"
-                    variant="secondary"
-                    fullWidth
-                    size="lg"
                     onClick={onExplore}
-                    className="!rounded-radius-md !bg-primary-50 !text-primary-700 hover:!bg-primary-100"
+                    className="mx-auto block w-full py-space-sm text-center text-body-small text-app-muted transition-colors duration-fast ease-out hover:text-app-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2"
                   >
-                    <AppIcon icon={User} size={ICON_SIZES.md} aria-hidden />
                     Explorar como invitado
-                  </Button>
+                  </button>
                 </div>
               </>
             )}
           </div>
 
-          {!googleAccountMissing && !emailVerificationRequired ? (
+          {!emailVerificationRequired ? (
             <p className="mt-space-xl text-center text-body-small text-app-subtle">
               ¿No tienes cuenta?{' '}
               <Link
@@ -348,17 +345,9 @@ function LoginScreen({
           ) : null}
         </div>
 
-        <div className="mt-space-2xl space-y-space-base">
+        <div className="mt-space-2xl space-y-space-sm">
           <LegalFooterLinks />
-          <div className="flex items-start justify-center gap-space-sm text-center">
-            <AppIcon icon={ShieldCheck} size={ICON_SIZES.sm} className="mt-0.5 shrink-0 text-primary-600" aria-hidden />
-            <p className="text-caption leading-relaxed text-app-subtle">
-              Seguro, confiable y hecho para ti.
-              <br />
-              TrabaGE es tu plataforma de oportunidades.
-            </p>
-          </div>
-          <div className="flex justify-center pt-space-xs">
+          <div className="flex justify-center">
             <ZarrelCredit variant="developed" />
           </div>
         </div>
@@ -387,8 +376,8 @@ export default function Login() {
   const [googleAccountMissing, setGoogleAccountMissing] = useState(
     () => location.state?.googleAccountMissing === true,
   );
-  const [googleAccountMissingMessage, setGoogleAccountMissingMessage] = useState(
-    () => location.state?.googleAccountMissingMessage || getGoogleLoginNoAccountMessage(),
+  const [googleAccountMissingEmail, setGoogleAccountMissingEmail] = useState(
+    () => String(location.state?.googleAccountMissingEmail || '').trim(),
   );
   const [emailVerificationRequired, setEmailVerificationRequired] = useState(
     () => location.state?.emailVerificationRequired === true,
@@ -400,9 +389,7 @@ export default function Login() {
   useEffect(() => {
     if (location.state?.googleAccountMissing) {
       setGoogleAccountMissing(true);
-      setGoogleAccountMissingMessage(
-        location.state.googleAccountMissingMessage || getGoogleLoginNoAccountMessage(),
-      );
+      setGoogleAccountMissingEmail(String(location.state.googleAccountMissingEmail || '').trim());
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, [location.state, location.pathname, navigate]);
@@ -453,6 +440,16 @@ export default function Login() {
 
   const handleDismissGoogleMissing = () => {
     setGoogleAccountMissing(false);
+    setGoogleAccountMissingEmail('');
+  };
+
+  const handleCreateAccountFromGoogleMissing = () => {
+    const prefillEmail = googleAccountMissingEmail || email;
+    setGoogleAccountMissing(false);
+    navigate('/register', {
+      replace: false,
+      state: prefillEmail ? { email: prefillEmail } : undefined,
+    });
   };
 
   const handleDismissEmailVerification = () => {
@@ -498,8 +495,8 @@ export default function Login() {
       onExplore={handleExplore}
       onGoogleLogin={handleGoogleLogin}
       googleAccountMissing={googleAccountMissing}
-      googleAccountMissingMessage={googleAccountMissingMessage}
       onDismissGoogleMissing={handleDismissGoogleMissing}
+      onCreateAccountFromGoogleMissing={handleCreateAccountFromGoogleMissing}
       emailVerificationRequired={emailVerificationRequired}
       onDismissEmailVerification={handleDismissEmailVerification}
       verificationSuccess={verificationSuccess}

@@ -17,8 +17,8 @@ export default function AdminConfirmModal({
 }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      {description && <p className="text-sm text-gray-600">{description}</p>}
-      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+      {description && <p className="text-body-small text-app-muted">{description}</p>}
+      <div className="mt-space-lg flex flex-col gap-space-sm sm:flex-row sm:justify-end">
         <Button variant="ghost" onClick={onClose} disabled={loading}>
           {cancelLabel}
         </Button>

@@ -18,7 +18,7 @@ export function useDiscoverPosts(sectionId) {
       const { data, error: fetchError } = await discoverService.getSectionPosts(sectionId);
       if (fetchError) {
         setPosts([]);
-        setError('No se pudieron cargar las publicaciones.');
+        setError('No pudimos cargar esta información. Revisa tu conexión y prueba de nuevo.');
         setLoading(false);
         return;
       }
@@ -39,7 +39,7 @@ export function useDiscoverPosts(sectionId) {
       setPosts(enriched.map((item) => item.payload));
     } catch {
       setPosts([]);
-      setError('No se pudieron cargar las publicaciones.');
+      setError('No pudimos cargar esta información. Revisa tu conexión y prueba de nuevo.');
     } finally {
       setLoading(false);
     }

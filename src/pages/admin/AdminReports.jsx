@@ -95,7 +95,7 @@ export default function AdminReports() {
         key: 'details',
         label: 'Detalle',
         render: (row) => (
-          <span className="block max-w-xs truncate text-gray-600">
+          <span className="block max-w-xs truncate text-app-muted">
             {row.reason_details || '—'}
           </span>
         ),

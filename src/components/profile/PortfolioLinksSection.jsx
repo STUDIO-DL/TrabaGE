@@ -51,24 +51,24 @@ export default function PortfolioLinksSection({ items = [], isOwn, onAdd, onDele
       isEmpty={!sortedItems.length && !isOwn}
       emptyText={getProfileSectionEmptyCopy('portfolio', isOwn)}
     >
-      <div className="space-y-2">
+      <div className="space-y-space-sm">
         {sortedItems.map((item) => {
           const safeHref = safeExternalUrl(item.url);
           return (
-          <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2">
+          <div key={item.id} className="flex min-h-touch items-center justify-between gap-space-sm rounded-radius-md border border-app-border px-space-md py-space-sm">
             {safeHref ? (
             <a
               href={safeHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="min-w-0 flex-1 truncate text-sm text-primary-700 hover:underline"
+              className="min-w-0 flex-1 truncate text-body-small text-primary-700 hover:underline"
             >
               {(item.label || item.type || 'Enlace').toString()}
               {' · '}
               {safeHref}
             </a>
             ) : (
-              <span className="min-w-0 flex-1 truncate text-sm text-gray-500">
+              <span className="min-w-0 flex-1 truncate text-body-small text-app-muted">
                 {(item.label || item.type || 'Enlace').toString()}
               </span>
             )}
@@ -76,7 +76,7 @@ export default function PortfolioLinksSection({ items = [], isOwn, onAdd, onDele
               <button
                 type="button"
                 onClick={() => onDelete?.(item.id)}
-                className="rounded p-1 text-gray-400 hover:bg-red-50 hover:text-red-600"
+                className="rounded-radius-sm p-1.5 text-app-muted hover:bg-error-50 hover:text-error-600"
                 aria-label="Eliminar enlace"
               >
                 <AppIcon icon={Trash2} size={ICON_SIZES.sm} />

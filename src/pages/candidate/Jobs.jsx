@@ -19,8 +19,6 @@ import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 
 import { JobListSkeleton } from '../../components/common/Skeleton';
 
-import { NoJobs } from '../../assets/empty-states';
-
 import { useJobs } from '../../hooks/useJobs';
 
 import { useProfile } from '../../hooks/useProfile';
@@ -170,10 +168,10 @@ export default function Jobs() {
     showRecommendations && recommendationMode === 'recommended' ? otherJobs : displayJobs;
 
   return (
-    <PageContainer topBar={false} className="max-w-lg">
+    <PageContainer topBar={false} width="wide">
       <JobsHeader />
 
-      <div className="space-y-4 px-4 pb-4 pt-4">
+      <div className="motion-page space-y-space-md px-space-base pb-space-md pt-space-md">
         <JobsSearchBar
           query={query}
           onQueryChange={setQuery}
@@ -185,7 +183,7 @@ export default function Jobs() {
 
         {error ? (
           <FetchErrorBanner
-            message="No se pudieron cargar las ofertas. Inténtalo de nuevo."
+            message="No pudimos cargar esta información. Revisa tu conexión y prueba de nuevo."
             onRetry={refetch}
           />
         ) : null}
@@ -195,8 +193,8 @@ export default function Jobs() {
         )}
 
         {showRecommendedSection && (
-          <section aria-label="Recomendado para ti" className="space-y-3">
-            <h2 className="text-title font-semibold text-app-text">Recomendado para ti</h2>
+          <section aria-label="Recomendado para ti" className="motion-list space-y-space-sm">
+            <h2 className="text-body font-semibold text-app-text">Recomendado para ti</h2>
             {recommendedJobs.map(({ job }) => (
               <JobCard
                 key={job.id}
@@ -210,19 +208,22 @@ export default function Jobs() {
         )}
 
         {showRecommendedSection && otherJobs.length > 0 && (
-          <h2 className="text-title font-semibold text-app-text">Más ofertas</h2>
+          <h2 className="text-body font-semibold text-app-text">Más ofertas</h2>
         )}
 
         <JobsToolbar count={loading ? 0 : displayJobs.length} sort={sort} onSortChange={setSort} />
 
-        <div className="space-y-3" aria-label="Listado de empleos">
+        <div
+          className="motion-list grid gap-space-sm sm:gap-space-md md:grid-cols-2"
+          aria-label="Listado de empleos"
+        >
           {loading ? (
             <JobListSkeleton count={3} />
           ) : displayJobs.length === 0 && !error ? (
             <EmptyState
-              image={NoJobs}
-              title="Nada por aquí todavía"
-              description="No hay ofertas activas en este momento. Vuelve pronto o ajusta tus alertas en Configuración > Notificaciones."
+              variant="text"
+              title="No hay contenido disponible en este momento."
+              description="Vuelve más tarde para descubrir nuevas oportunidades."
             />
           ) : (
             listJobs.map((job) => (

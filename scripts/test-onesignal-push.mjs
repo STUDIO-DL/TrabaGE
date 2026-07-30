@@ -9,6 +9,7 @@
  * - .env.local with VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
  * - OneSignal secrets deployed on send_push edge function
  * - User has granted push permission and has push_subscriptions row
+ * - For browser invoke from localhost: send_push CORS allowlist includes localhost:5173
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -18,6 +19,10 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
+
+const TEST_PUSH_TITLE = 'TrabaGE · Prueba de notificación';
+const TEST_PUSH_BODY =
+  'Esta es una notificación push de prueba. Si puedes verla fuera de TrabaGE, el sistema funciona correctamente.';
 
 function loadEnv() {
   const envPath = path.join(root, '.env.local');
@@ -82,9 +87,37 @@ async function main() {
   const userId = authData.user.id;
   console.log('✅ Sesión OK — user_id:', userId);
 
+  console.log('\n--- Preflight ---');
+  console.log('Título:', TEST_PUSH_TITLE);
+  console.log('Cuerpo:', TEST_PUSH_BODY);
+
+  const { data: subscriptions, error: subsError } = await supabase
+    .from('push_subscriptions')
+    .select('id, onesignal_subscription_id, is_active, platform, updated_at')
+    .eq('user_id', userId)
+    .eq('is_active', true)
+    .order('updated_at', { ascending: false })
+    .limit(5);
+
+  if (subsError) {
+    console.warn('⚠️  No se pudieron leer push_subscriptions:', subsError.message);
+  } else if (!subscriptions?.length) {
+    console.warn('⚠️  Sin filas activas en push_subscriptions para este usuario.');
+    console.log('   1. Abre http://localhost:5173 (o la PWA) e inicia sesión');
+    console.log('   2. Concede permiso de notificaciones del sistema');
+    console.log('   3. Confirma fila en push_subscriptions y vuelve a ejecutar');
+  } else {
+    console.log('📱 Suscripciones activas:', subscriptions.length);
+    for (const row of subscriptions) {
+      console.log(
+        `   - ${row.platform ?? 'web'} · ${String(row.onesignal_subscription_id).slice(0, 8)}… · ${row.updated_at}`,
+      );
+    }
+  }
+
   const { data: preflight, error: preflightError } = await supabase.rpc('send_test_push_notification', {
-    p_title: 'Prueba TrabaGE',
-    p_body: 'Notificación de prueba — cierra la app y revisa la bandeja del sistema.',
+    p_title: TEST_PUSH_TITLE,
+    p_body: TEST_PUSH_BODY,
   });
 
   if (preflightError) {
@@ -94,21 +127,18 @@ async function main() {
   }
 
   if (!preflight?.ok) {
-    console.warn('⚠️  Sin suscripciones OneSignal registradas para este usuario.');
-    console.log('   1. Instala la PWA en Android Chrome');
-    console.log('   2. Inicia sesión y activa notificaciones en Ajustes');
-    console.log('   3. Vuelve a ejecutar este script');
-    console.log('\nDetalle:', preflight?.message ?? preflight);
+    console.warn('⚠️  Preflight RPC no OK — no hay suscripción lista para este usuario.');
+    console.log('   Detalle:', preflight?.message ?? preflight);
     process.exit(1);
   }
 
-  console.log('📱 Suscripción OneSignal encontrada — enviando push de prueba...');
+  console.log('✅ Preflight RPC OK — enviando push real vía send_push…');
 
   const { data: pushResult, error: pushError } = await supabase.functions.invoke('send_push', {
     body: {
       recipient_id: userId,
-      title: 'Prueba TrabaGE',
-      body: 'Notificación de prueba — cierra la app y revisa la bandeja del sistema.',
+      title: TEST_PUSH_TITLE,
+      body: TEST_PUSH_BODY,
       data: {
         type: 'system_update',
         link: '/personal/notifications',
@@ -119,6 +149,9 @@ async function main() {
 
   if (pushError) {
     console.error('❌ send_push error:', pushError.message);
+    console.log(
+      '   Si invocas desde el navegador en localhost y falla CORS, redeploy send_push con allowlist (localhost:5173).',
+    );
     process.exit(1);
   }
 
@@ -129,8 +162,14 @@ async function main() {
 
   console.log('✅ Resultado send_push:', JSON.stringify(pushResult, null, 2));
 
+  if (pushResult?.onesignal?.id || pushResult?.id) {
+    console.log('✅ OneSignal aceptó el envío (id presente en respuesta).');
+  }
+
   if (pushResult?.sent > 0) {
-    console.log('\n🎉 Push enviado. Cierra la PWA en Android y verifica la bandeja del sistema.');
+    console.log('\n🎉 Push enviado a OneSignal.');
+    console.log('   Criterio ✅: debes ver el banner del SO (no solo toast/campana in-app).');
+    console.log('   Prueba: foreground, background, pestaña cerrada, dispositivo bloqueado si aplica.');
   } else if (pushResult?.skipped > 0) {
     console.log('\n⚠️  Push omitido — revisa preferencias (push_enabled + permiso concedido).');
   } else if (pushResult?.deduped > 0) {

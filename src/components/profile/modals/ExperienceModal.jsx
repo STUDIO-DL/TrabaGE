@@ -1,8 +1,10 @@
 import { useCallback, useState } from 'react';
+import { getUserErrorMessage, ERROR_ACTION } from '../../../utils/userFacingError';
 import Modal from '../../ui/Modal';
 import Input from '../../ui/Input';
 import Textarea from '../../ui/Textarea';
 import Button from '../../ui/Button';
+import OrganizationAutocomplete from '../../ui/OrganizationAutocomplete';
 import AppIcon from '../../common/AppIcon';
 import { Save, ICON_SIZES } from '../../../constants/icons';
 import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
@@ -70,7 +72,7 @@ export default function ExperienceModal({ isOpen, onClose, initial, onSave, load
     // #endregion
     const { error: saveError } = await onSave(payload, initial?.id);
     if (saveError) {
-      setError(saveError.message);
+      setError(getUserErrorMessage(saveError, ERROR_ACTION.save_experience));
       return;
     }
     clearDraft();
@@ -86,11 +88,12 @@ export default function ExperienceModal({ isOpen, onClose, initial, onSave, load
           onChange={(e) => updateForm({ position: e.target.value })}
           required
         />
-        <Input
+        <OrganizationAutocomplete
           label="Empresa"
           value={form.company}
-          onChange={(e) => updateForm({ company: e.target.value })}
+          onChange={(next) => updateForm({ company: next })}
           required
+          placeholder="Escribe el nombre de la empresa"
         />
         <Input
           label="Ubicación"

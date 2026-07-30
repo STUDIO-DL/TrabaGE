@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import ContentActionMenu from '../common/ContentActionMenu';
 import { Bookmark, ICON_SIZES } from '../../constants/icons';
@@ -8,7 +8,6 @@ import { avatarTypeFromCompanyProfile } from '../../constants/avatarDefaults';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
 import { getWorkModeLabel } from '../../constants/workModes';
-import { getUserProfilePath } from '../../utils/profileRoutes';
 
 function JobLocationLine({ city, workMode }) {
   if (!city && !workMode) return null;
@@ -32,58 +31,69 @@ export default function JobCard({
   onSaveToggle,
   saving = false,
 }) {
+  const navigate = useNavigate();
+
   if (!job) return null;
 
   const company = job.company_profiles;
   const avatarType = avatarTypeFromCompanyProfile(company);
   const detailPath = `/personal/jobs/${job.id}`;
-  const companyProfilePath = job.company_id
-    ? getUserProfilePath(job.company_id, 'company')
-    : null;
+
+  const openDetails = () => {
+    navigate(detailPath);
+  };
+
+  const handleCardKeyDown = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openDetails();
+    }
+  };
+
+  const handleSaveClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onSaveToggle?.();
+  };
+
+  const stopCardNavigation = (event) => {
+    event.stopPropagation();
+  };
 
   return (
-    <article className="min-w-0 max-w-full overflow-hidden rounded-radius-md border border-app-border bg-app-surface p-3 shadow-elevation-1 transition-colors duration-fast ease-out hover:border-primary-200/70 hover:bg-primary-50/30 dark:hover:bg-primary-950/20">
-      <div className="flex items-start gap-3">
-        {companyProfilePath ? (
-          <Link
-            to={companyProfilePath}
-            className="shrink-0"
-            aria-label={`Ver perfil de ${company?.company_name ?? 'empresa'}`}
-          >
-            <AppAvatar
-              type={avatarType}
-              src={company?.logo_path}
-              name={company?.company_name}
-              alt={company?.company_name}
-              size="md"
-              variant="rounded"
-              className="!rounded-radius-sm"
-            />
-          </Link>
-        ) : (
-          <Link to={detailPath} className="shrink-0" aria-label={`Ver ${job.title}`}>
-            <AppAvatar
-              type={avatarType}
-              src={company?.logo_path}
-              name={company?.company_name}
-              alt={company?.company_name}
-              size="md"
-              variant="rounded"
-              className="!rounded-radius-sm"
-            />
-          </Link>
-        )}
+    <article
+      role="link"
+      tabIndex={0}
+      onClick={openDetails}
+      onKeyDown={handleCardKeyDown}
+      className="relative min-w-0 max-w-full cursor-pointer overflow-hidden rounded-radius-lg border border-app-border bg-app-card p-space-md surface-press transition-colors duration-fast ease-out hover:border-app-muted/60"
+      aria-label={`Ver oferta: ${job.title}`}
+    >
+      {/* Visually hidden link for progressive enhancement / crawlers */}
+      <Link to={detailPath} tabIndex={-1} className="sr-only">
+        {job.title}
+      </Link>
 
-        <div className="min-w-0 flex-1 space-y-0.5">
-          <Link to={detailPath} className="block min-w-0">
-            <h3 className="text-user-content text-body-small font-semibold leading-tight text-app-text">
-              {job.title}
-            </h3>
-          </Link>
+      <div className="flex items-start gap-3">
+        <AppAvatar
+          type={avatarType}
+          src={company?.logo_path}
+          name={company?.company_name}
+          alt={company?.company_name}
+          size="md"
+          variant="rounded"
+          className="!rounded-radius-sm shrink-0"
+        />
+
+        <div className="min-w-0 flex-1 space-y-0.5 pr-1">
+          <h3 className="text-user-content text-body font-semibold leading-snug tracking-tight text-app-text">
+            {job.title}
+          </h3>
 
           <CompanyNameWithBadge
             company={company}
             userId={job.company_id}
+            linkToProfile={false}
             nameClassName="text-caption leading-tight text-app-muted truncate"
             className="max-w-full"
           />
@@ -91,7 +101,11 @@ export default function JobCard({
           <JobLocationLine city={job.city} workMode={job.work_mode} />
         </div>
 
-        <div className="-mr-1 -mt-0.5 flex shrink-0 items-center">
+        <div
+          className="-mr-1 -mt-0.5 flex shrink-0 items-center"
+          onClick={stopCardNavigation}
+          onKeyDown={stopCardNavigation}
+        >
           <ContentActionMenu
             shareUrl={generateJobUrl(job.id)}
             shareTitle={company?.company_name ? `${job.title} - ${company.company_name}` : job.title}
@@ -101,7 +115,7 @@ export default function JobCard({
           />
           <button
             type="button"
-            onClick={onSaveToggle}
+            onClick={handleSaveClick}
             disabled={!onSaveToggle || saving}
             className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-sm text-app-subtle transition-colors duration-fast hover:bg-primary-50/60 hover:text-app-muted disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-primary-950/30"
             aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}

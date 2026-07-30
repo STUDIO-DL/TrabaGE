@@ -44,10 +44,10 @@ export default function FeedTabs({ activeTab, onTabChange }) {
             aria-selected={isActive}
             onClick={() => onTabChange(tab.id)}
             className={[
-              'min-h-touch flex-1 border-b-2 pb-space-sm pt-space-md text-body-small font-medium transition-colors duration-fast',
+              'motion-tab-indicator min-h-touch flex-1 border-b-2 pb-space-sm pt-space-md text-body-small font-semibold',
               isActive
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-app-muted hover:text-app-text',
+                ? 'border-primary-600 bg-primary-50/60 text-primary-700'
+                : 'border-transparent font-medium text-app-muted hover:bg-primary-50/30 hover:text-app-text',
             ].join(' ')}
           >
             {tab.label}
