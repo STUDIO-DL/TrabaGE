@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react';
 import AppAvatar from '../common/AppAvatar';
 import AppIcon from '../common/AppIcon';
 import TimeAgo from '../common/TimeAgo';
@@ -31,6 +32,9 @@ export default function NotificationItem({
   actorAvatar,
   actorName,
 }) {
+  const rowRef = useRef(null);
+  const [ripples, setRipples] = useState([]);
+
   const metadata = notification.metadata ?? {};
   const avatarSrc = actorAvatar ?? metadata.avatar_path ?? metadata.avatar_url;
   const avatarAlt = actorName ?? metadata.actor_name ?? notification.title;
@@ -45,38 +49,78 @@ export default function NotificationItem({
   const openPostOnRow = category === NOTIFICATION_CATEGORY.POSTS;
   const avatarType = avatarTypeFromUserType(actorType);
 
+  const titleText = avatarAlt || notification.title;
+  const descriptionText = notification.body
+    ? notification.body
+    : actorId && notification.title && notification.title !== avatarAlt
+      ? notification.title
+      : null;
+
+  const spawnRipple = (event) => {
+    const row = rowRef.current;
+    if (!row) return;
+    const rect = row.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height) * 1.2;
+    const x = (event.clientX ?? rect.left + rect.width / 2) - rect.left - size / 2;
+    const y = (event.clientY ?? rect.top + rect.height / 2) - rect.top - size / 2;
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    setRipples((prev) => [...prev, { id, x, y, size }]);
+  };
+
+  const handleActivate = (event) => {
+    spawnRipple(event);
+    onClick?.(notification);
+  };
+
   return (
     <div
+      ref={rowRef}
       role="button"
       tabIndex={0}
-      onClick={() => onClick?.(notification)}
+      onClick={handleActivate}
       onKeyDown={(event) => {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          onClick?.(notification);
+          handleActivate(event);
         }
       }}
+      aria-label={isUnread ? `${titleText} (no leída)` : titleText}
       className={[
-        'group relative flex cursor-pointer items-start gap-space-md rounded-radius-lg px-space-md py-space-md transition-colors duration-fast ease-out',
-        isUnread ? 'bg-primary-50/70 hover:bg-primary-50' : 'hover:bg-app-surface',
+        'notification-row group relative flex cursor-pointer items-start gap-space-md overflow-hidden',
+        'border-b border-app-divider/80 px-space-base py-space-md last:border-b-0',
+        'transition-colors duration-fast ease-out',
+        'active:bg-primary-50/50 dark:active:bg-primary-950/25',
+        isUnread
+          ? 'bg-app-card hover:bg-primary-50/35 dark:hover:bg-primary-950/20'
+          : 'bg-app-card hover:bg-app-surface/60',
       ].join(' ')}
     >
-      <span className="mt-5 w-2 shrink-0">
-        {isUnread && (
-          <span className="block h-2 w-2 rounded-radius-circular bg-primary-600" aria-label="No leída" />
-        )}
-      </span>
+      {ripples.map((ripple) => (
+        <span
+          key={ripple.id}
+          className="notification-ripple pointer-events-none absolute rounded-radius-circular"
+          style={{
+            left: ripple.x,
+            top: ripple.y,
+            width: ripple.size,
+            height: ripple.size,
+          }}
+          onAnimationEnd={() => {
+            setRipples((prev) => prev.filter((item) => item.id !== ripple.id));
+          }}
+        />
+      ))}
 
-      <div className="relative shrink-0">
+      <div className="relative z-[1] shrink-0">
         {openPostOnRow || !actorId ? (
           <AppAvatar
             type={avatarType}
             src={avatarSrc}
             name={avatarAlt}
             alt={avatarAlt}
-            size="sm"
+            size="md"
             variant={avatarType === AvatarType.PERSONAL ? 'circular' : 'rounded'}
-            className="!h-8 !w-8"
+            className="!h-11 !w-11"
           />
         ) : (
           <UserProfileLink
@@ -84,29 +128,30 @@ export default function NotificationItem({
             userType={actorType}
             name={avatarAlt}
             avatar={avatarSrc}
-            size="sm"
+            size="md"
             layout="avatar"
             stopPropagation
           />
         )}
-        {badge && (
+        {badge ? (
           <span
-            className={`absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-radius-circular text-white ring-2 ring-app-card ${badge.className}`}
+            className={`absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-radius-circular text-white ring-2 ring-app-card ${badge.className}`}
             aria-hidden="true"
           >
             <AppIcon icon={badge.icon} size={10} />
           </span>
-        )}
+        ) : null}
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="relative z-[1] min-w-0 flex-1 pt-0.5">
         {openPostOnRow || !actorId ? (
           <p
-            className={`truncate text-body-small ${
-              isUnread ? 'font-semibold text-app-text' : 'font-medium text-app-muted'
-            }`}
+            className={[
+              'text-user-content text-body-small leading-snug',
+              isUnread ? 'font-semibold text-app-text' : 'font-medium text-app-muted',
+            ].join(' ')}
           >
-            {avatarAlt || notification.title}
+            {titleText}
           </p>
         ) : (
           <UserProfileLink
@@ -115,33 +160,58 @@ export default function NotificationItem({
             name={avatarAlt}
             layout="name"
             stopPropagation
-            nameClassName={`truncate text-body-small hover:text-primary-700 transition-colors ${
-              isUnread ? 'font-semibold text-app-text' : 'font-medium text-app-muted'
-            }`}
+            nameClassName={[
+              'text-user-content text-body-small leading-snug transition-colors hover:text-primary-700',
+              isUnread ? 'font-semibold text-app-text' : 'font-medium text-app-muted',
+            ].join(' ')}
             className="block min-w-0"
           />
         )}
-        {notification.body ? (
-          <p className="mt-0.5 line-clamp-2 text-body-small text-app-subtle">{notification.body}</p>
-        ) : actorId && notification.title && notification.title !== avatarAlt ? (
-          <p className="mt-0.5 line-clamp-2 text-body-small text-app-subtle">{notification.title}</p>
+
+        {descriptionText ? (
+          <p
+            className={[
+              'mt-0.5 line-clamp-2 text-body-small leading-snug',
+              isUnread ? 'text-app-muted' : 'text-app-subtle',
+            ].join(' ')}
+          >
+            {descriptionText}
+          </p>
         ) : null}
-        <TimeAgo date={notification.created_at} className="mt-space-xs block text-caption text-app-subtle" />
+
+        <TimeAgo
+          date={notification.created_at}
+          className={[
+            'mt-space-xs block text-caption',
+            isUnread ? 'font-medium text-primary-600/80' : 'text-app-subtle',
+          ].join(' ')}
+        />
       </div>
 
-      {onDelete && (
-        <button
-          type="button"
-          onClick={(event) => {
-            event.stopPropagation();
-            onDelete(notification);
-          }}
-          className="shrink-0 rounded-radius-sm p-space-sm text-app-subtle opacity-70 transition-opacity duration-fast ease-out hover:bg-error-50 hover:text-error-600 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-          aria-label="Eliminar notificación"
-        >
-          <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
-        </button>
-      )}
+      <div className="relative z-[1] flex shrink-0 items-center gap-space-xs self-center">
+        {onDelete ? (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onDelete(notification);
+            }}
+            className="rounded-radius-sm p-space-sm text-app-subtle opacity-70 transition-opacity duration-fast ease-out hover:bg-error-50 hover:text-error-600 focus:opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+            aria-label="Eliminar notificación"
+          >
+            <AppIcon icon={Trash2} size={ICON_SIZES.sm} />
+          </button>
+        ) : null}
+
+        <span
+          className={[
+            'notification-unread-dot block h-2.5 w-2.5 shrink-0 rounded-radius-circular bg-primary-600',
+            isUnread ? 'scale-100 opacity-100' : 'pointer-events-none scale-75 opacity-0',
+          ].join(' ')}
+          aria-hidden={!isUnread}
+          aria-label={isUnread ? 'No leída' : undefined}
+        />
+      </div>
     </div>
   );
 }

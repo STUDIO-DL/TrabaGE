@@ -79,8 +79,8 @@ function ConversationListPanel({ role, activeId, query, onQueryChange }) {
 
         {showEmptyInbox ? (
           <EmptyState
-            variant="text"
-            title="Sin conversaciones"
+            icon={MessagesChatIcon}
+            title="Aún no tienes conversaciones."
             description="Cuando envíes o recibas un mensaje, aparecerá aquí."
           />
         ) : null}
@@ -95,16 +95,13 @@ function ConversationListPanel({ role, activeId, query, onQueryChange }) {
 
         {!listLoading && !listError && listItems.length > 0
           ? listItems.map((conversation) => (
-              <div
+              <ConversationListItem
                 key={conversation.id}
-                className={conversation.id === activeId ? 'bg-app-surface/80' : undefined}
-              >
-                <ConversationListItem
-                  conversation={conversation}
-                  role={role}
-                  currentUserId={user?.id}
-                />
-              </div>
+                conversation={conversation}
+                role={role}
+                currentUserId={user?.id}
+                active={conversation.id === activeId}
+              />
             ))
           : null}
 

@@ -80,12 +80,17 @@ export function PostListSkeleton({ count = 3 }) {
 
 export function NotificationItemSkeleton() {
   return (
-    <div className="flex gap-space-md border-b border-app-divider py-space-base" aria-hidden="true">
-      <Skeleton className="h-10 w-10 shrink-0 rounded-radius-circular" />
-      <div className="min-w-0 flex-1 space-y-space-sm">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-3 w-2/3" />
+    <div
+      className="flex items-start gap-space-md border-b border-app-divider/80 px-0 py-space-md"
+      aria-hidden="true"
+    >
+      <Skeleton className="h-11 w-11 shrink-0 rounded-radius-circular" />
+      <div className="min-w-0 flex-1 space-y-space-sm pt-0.5">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-16" />
       </div>
+      <Skeleton className="mt-space-md h-2.5 w-2.5 shrink-0 rounded-radius-circular" />
     </div>
   );
 }

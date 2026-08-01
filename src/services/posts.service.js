@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase';
 import { topicsService } from './topics.service';
 import { normalizePostTopics, normalizePostsTopics } from '../utils/normalizePostTopics';
+import { GENERAL_TOPIC_SLUG } from '../constants/topics';
 
 const POST_SELECT = `*, ${topicsService.POST_TOPICS_EMBED}`;
 const POST_SELECT_BY_TOPIC = `*, post_topics!inner(topics!inner(id, name, slug))`;
@@ -25,19 +26,49 @@ export const postsService = {
       return { data: [], error: new Error('topicSlug is required') };
     }
 
-    let query = supabase
-      .from('posts')
-      .select(POST_SELECT_BY_TOPIC)
-      .eq('is_hidden', false)
-      .eq('post_topics.topics.slug', slug)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const fetchBySlug = async (matchSlug) => {
+      let query = supabase
+        .from('posts')
+        .select(POST_SELECT_BY_TOPIC)
+        .eq('is_hidden', false)
+        .eq('post_topics.topics.slug', matchSlug)
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    if (authorTypes?.length) {
-      query = query.in('author_type', authorTypes);
+      if (authorTypes?.length) {
+        query = query.in('author_type', authorTypes);
+      }
+
+      return withNormalizedTopics(await query);
+    };
+
+    // Specific topic filters also include general-audience ("Todos") posts.
+    if (slug === GENERAL_TOPIC_SLUG) {
+      return fetchBySlug(GENERAL_TOPIC_SLUG);
     }
 
-    return withNormalizedTopics(await query);
+    const [topicResult, generalResult] = await Promise.all([
+      fetchBySlug(slug),
+      fetchBySlug(GENERAL_TOPIC_SLUG),
+    ]);
+
+    if (topicResult.error && generalResult.error) {
+      return topicResult;
+    }
+
+    const merged = new Map();
+    [...(topicResult.data ?? []), ...(generalResult.data ?? [])].forEach((post) => {
+      if (post?.id) merged.set(post.id, post);
+    });
+
+    const data = [...merged.values()].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at),
+    );
+
+    return {
+      data: data.slice(0, limit),
+      error: topicResult.error && !topicResult.data?.length ? topicResult.error : null,
+    };
   },
 
   getFeed: async ({ limit = 30, offset = 0 } = {}) => {
@@ -82,4 +113,12 @@ export const postsService = {
   update: (id, data) => supabase.from('posts').update(data).eq('id', id).select().single(),
 
   delete: (id) => supabase.from('posts').delete().eq('id', id),
+
+  /** Owner-only delete — mirrors RLS `author_id = auth.uid()`. */
+  deleteOwn: (id, authorId) => {
+    if (!id || !authorId) {
+      return Promise.resolve({ data: null, error: new Error('missing_delete_identity') });
+    }
+    return supabase.from('posts').delete().eq('id', id).eq('author_id', authorId);
+  },
 };

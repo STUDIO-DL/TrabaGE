@@ -19,7 +19,7 @@ export function LegalFooterLinks({ className = '' }) {
       aria-label="Enlaces legales"
     >
       <LegalInlineLink to={LEGAL_ROUTES.terms}>Términos</LegalInlineLink>
-      <span className="text-slate-300" aria-hidden>
+      <span className="text-primary-200" aria-hidden>
         ·
       </span>
       <LegalInlineLink to={LEGAL_ROUTES.privacy}>Privacidad</LegalInlineLink>
@@ -29,7 +29,7 @@ export function LegalFooterLinks({ className = '' }) {
 
 export function LegalAcceptanceText({ className = '' }) {
   return (
-    <p className={`text-center text-xs leading-relaxed text-slate-500 ${className}`}>
+    <p className={`text-center text-xs leading-relaxed text-app-muted ${className}`}>
       Al crear una cuenta aceptas nuestros{' '}
       <LegalInlineLink to={LEGAL_ROUTES.terms}>Términos y Condiciones</LegalInlineLink> y la{' '}
       <LegalInlineLink to={LEGAL_ROUTES.privacy}>Política de Uso de Datos</LegalInlineLink>.

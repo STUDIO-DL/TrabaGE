@@ -1,38 +1,14 @@
-export const CITIES = [
-  'Malabo',
-  'Bata',
-  'Ebebiyín',
-  'Mongomo',
-  'Evinayong',
-  'Luba',
-  'Mbini',
-  'Micomeseng',
-  'Rebola',
-  'Aconibe',
-  'Añisoc',
-  'Nsok',
-  'Nkimi',
-  'Riaba',
-  'San Antonio de Palé',
-];
-
-/** Sentinel select value — never persisted as the city name. */
-export const CITY_OTHER_VALUE = '__other__';
-export const CITY_OTHER_LABEL = 'Otro';
-
-export const getCityLabel = (city) => city;
-
-export function isListedCity(city = '') {
-  return CITIES.includes(String(city).trim());
-}
-
 /**
- * Resolve the city <select> value from a stored city string.
- * @param {string} city
- * @param {boolean} [forceOther]
+ * @deprecated Import from `constants/locations` for new code.
+ * Re-exports kept so register, filters, publish job, etc. keep working.
  */
-export function getCitySelectValue(city = '', forceOther = false) {
-  const trimmed = String(city).trim();
-  if (forceOther || (trimmed && !isListedCity(trimmed))) return CITY_OTHER_VALUE;
-  return trimmed;
-}
+export {
+  CITIES,
+  ALL_CITIES,
+  CITY_OTHER_VALUE,
+  CITY_OTHER_LABEL,
+  getCityLabel,
+  isListedCity,
+  getCitySelectValue,
+  getCitiesForCountry,
+} from './locations';

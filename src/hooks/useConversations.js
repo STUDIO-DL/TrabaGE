@@ -4,6 +4,7 @@ import { useForegroundResumeRefresh } from './useForegroundResumeRefresh';
 import { supabase } from '../config/supabase';
 import { messagesService } from '../services/messages.service';
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
+import { subscribeConversationRead } from '../utils/conversationUnreadEvents';
 
 export function useConversations() {
   const { user, isPreviewMode } = useAuth();
@@ -31,9 +32,6 @@ export function useConversations() {
 
     const { data, error: fetchError } = await messagesService.getConversations(user.id);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'E',location:'useConversations.js:fetch',message:'conversations refetch',data:{soft,prevCount:conversationsRef.current.length,nextCount:(data??[]).length,hadError:Boolean(fetchError),showSkeleton},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     if (fetchError) {
       setError(fetchError ? getUserErrorMessage(fetchError, ERROR_ACTION.load_messages) : null);
@@ -53,6 +51,18 @@ export function useConversations() {
   useEffect(() => {
     fetchConversations({ soft: false });
   }, [fetchConversations]);
+
+  useEffect(() => {
+    return subscribeConversationRead((conversationId) => {
+      setConversations((prev) =>
+        prev.map((item) =>
+          item.id === conversationId && (item.unreadCount ?? 0) > 0
+            ? { ...item, unreadCount: 0 }
+            : item,
+        ),
+      );
+    });
+  }, []);
 
   useEffect(() => {
     if (!user?.id || isPreviewMode) return undefined;

@@ -35,11 +35,6 @@ async function fetchSharedCount(userId) {
 
 function teardownChannel() {
   if (sharedChannel) {
-    // #region agent log
-    const topic = sharedChannel.topic;
-    const existingBefore = (supabase.getChannels?.() || []).map((c) => ({ topic: c.topic, state: c.state }));
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'87c3e9'},body:JSON.stringify({sessionId:'87c3e9',hypothesisId:'A',location:'useUnreadNotificationsCount.js:teardownChannel',message:'teardown start',data:{topic,sharedUserId,listenerCount:listeners.size,existingBefore},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     void supabase.removeChannel(sharedChannel);
     sharedChannel = null;
   }
@@ -53,9 +48,6 @@ function ensureChannel(userId) {
   }
 
   if (sharedChannel && sharedUserId === userId) {
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'87c3e9'},body:JSON.stringify({sessionId:'87c3e9',hypothesisId:'C',location:'useUnreadNotificationsCount.js:ensureChannel',message:'reuse sharedChannel early return',data:{userId,listenerCount:listeners.size,channelState:sharedChannel?.state,topic:sharedChannel?.topic},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     return;
   }
 
@@ -69,9 +61,6 @@ function ensureChannel(userId) {
 
   const channelName = `notifications-unread-${userId}`;
   const existing = (supabase.getChannels?.() || []).filter((c) => c.topic === `realtime:${channelName}`);
-  // #region agent log
-  fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'87c3e9'},body:JSON.stringify({sessionId:'87c3e9',hypothesisId:'A',location:'useUnreadNotificationsCount.js:ensureChannel',message:'before channel().on()',data:{userId,channelName,sharedChannelIsNull:sharedChannel===null,existingCount:existing.length,existingStates:existing.map((c)=>({topic:c.topic,state:c.state})),listenerCount:listeners.size,allChannels:(supabase.getChannels?.()||[]).map((c)=>({topic:c.topic,state:c.state}))},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   try {
     sharedChannel = supabase
@@ -92,22 +81,13 @@ function ensureChannel(userId) {
         refetch,
       )
       .subscribe();
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'87c3e9'},body:JSON.stringify({sessionId:'87c3e9',hypothesisId:'B',location:'useUnreadNotificationsCount.js:ensureChannel',message:'subscribe() ok',data:{userId,channelName,state:sharedChannel?.state,topic:sharedChannel?.topic},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
   } catch (err) {
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'87c3e9'},body:JSON.stringify({sessionId:'87c3e9',hypothesisId:'A',location:'useUnreadNotificationsCount.js:ensureChannel',message:'channel().on() threw',data:{userId,channelName,error:String(err?.message||err),existingAfter:(supabase.getChannels?.()||[]).map((c)=>({topic:c.topic,state:c.state}))},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     throw err;
   }
 }
 
 function subscribeShared(userId, onChange) {
   listeners.add(onChange);
-  // #region agent log
-  fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'87c3e9'},body:JSON.stringify({sessionId:'87c3e9',hypothesisId:'C',location:'useUnreadNotificationsCount.js:subscribeShared',message:'listener added',data:{userId,listenerCount:listeners.size,hasSharedChannel:Boolean(sharedChannel),sharedUserId},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
   onChange(sharedCount);
 
   if (userId) {
@@ -121,9 +101,6 @@ function subscribeShared(userId, onChange) {
 
   return () => {
     listeners.delete(onChange);
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'87c3e9'},body:JSON.stringify({sessionId:'87c3e9',hypothesisId:'A',location:'useUnreadNotificationsCount.js:unsubscribe',message:'listener removed',data:{userId,listenerCount:listeners.size,willTeardown:listeners.size===0},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (listeners.size === 0) {
       teardownChannel();
       sharedUserId = null;

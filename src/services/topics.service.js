@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase';
 import { normalizePostTopics } from '../utils/normalizePostTopics';
+import { isGeneralTopic, sortTopicsForSelector } from '../constants/topics';
 
 const TOPIC_SELECT = 'id, name, slug';
 const POST_TOPICS_EMBED = `post_topics(topics(${TOPIC_SELECT}))`;
@@ -14,7 +15,7 @@ export const topicsService = {
       .eq('is_active', true)
       .order('name', { ascending: true });
 
-    return { data: data ?? [], error };
+    return { data: sortTopicsForSelector(data ?? []), error };
   },
 
   search: async (query = '') => {
@@ -31,13 +32,13 @@ export const topicsService = {
     }
 
     const { data, error } = await request;
-    return { data: data ?? [], error };
+    return { data: sortTopicsForSelector(data ?? []), error };
   },
 
   /**
    * Replace all topics for a post. Caller must own the post.
    * @param {string} postId
-   * @param {string[]} topicIds — 1 to 3 active topic ids
+   * @param {string[]} topicIds — 1 to 3 active topic ids (or only "Todos")
    */
   setPostTopics: async (postId, topicIds = []) => {
     const uniqueIds = [...new Set((topicIds ?? []).filter(Boolean))];
@@ -46,6 +47,21 @@ export const topicsService = {
       return {
         data: null,
         error: new Error('Selecciona entre 1 y 3 temas.'),
+      };
+    }
+
+    const { data: topicRows, error: lookupError } = await supabase
+      .from('topics')
+      .select(TOPIC_SELECT)
+      .in('id', uniqueIds);
+
+    if (lookupError) return { data: null, error: lookupError };
+
+    const generalCount = (topicRows ?? []).filter(isGeneralTopic).length;
+    if (generalCount > 0 && uniqueIds.length > 1) {
+      return {
+        data: null,
+        error: new Error('El tema «Todos» no se puede combinar con otros temas.'),
       };
     }
 

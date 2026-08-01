@@ -137,17 +137,17 @@ export default function PushPermissionPrompt() {
       role="region"
       aria-label="Activar notificaciones"
     >
-      <div className="pointer-events-auto flex max-w-md items-start gap-3 rounded-2xl border border-primary-100 bg-white/95 p-4 shadow-[0_18px_46px_rgba(37,99,235,0.16)] backdrop-blur-sm">
+      <div className="pointer-events-auto flex max-w-md items-start gap-3 rounded-2xl border border-primary-100 bg-app-card/95 p-4 shadow-[0_18px_46px_rgba(37,99,235,0.16)] backdrop-blur-sm">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary-600 text-white shadow-[0_10px_24px_rgba(37,99,235,0.28)]">
           <AppIcon icon={Bell} size={ICON_SIZES.sm} strokeWidth={2.1} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[14px] font-semibold text-slate-950">Activa las notificaciones</p>
-          <p className="mt-1 text-[12px] leading-relaxed text-slate-500">
+          <p className="text-[14px] font-semibold text-app-text">Activa las notificaciones</p>
+          <p className="mt-1 text-[12px] leading-relaxed text-app-muted">
             Recibe avisos sobre mensajes, ofertas de empleo y novedades importantes.
           </p>
           {needsIosInstallHint && !isPwaInstalled() ? (
-            <p className="mt-2 text-[12px] leading-relaxed text-slate-500">
+            <p className="mt-2 text-[12px] leading-relaxed text-app-muted">
               En iPhone, para recibir avisos con la app cerrada, añade TrabaGE a tu pantalla de
               inicio desde el menú Compartir de Safari.
             </p>
@@ -177,7 +177,7 @@ export default function PushPermissionPrompt() {
         <button
           type="button"
           onClick={dismiss}
-          className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600"
+          className="rounded-lg p-1 text-app-subtle transition-colors hover:bg-primary-50 hover:text-primary-700"
           aria-label="Cerrar"
         >
           <AppIcon icon={X} size={ICON_SIZES.sm} />

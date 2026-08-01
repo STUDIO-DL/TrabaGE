@@ -58,7 +58,7 @@ export default function AppAvatar({
   return (
     <div
       className={[
-        'relative shrink-0 overflow-hidden border border-app-border bg-slate-100 dark:bg-slate-800/80',
+        'relative shrink-0 overflow-hidden border border-app-border bg-app-surface dark:bg-app-elevated',
         box,
         shapeClass,
         className,

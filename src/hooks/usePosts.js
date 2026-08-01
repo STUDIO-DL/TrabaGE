@@ -267,5 +267,10 @@ export function usePosts(authorId, { enabled = true } = {}) {
     fetchPosts({ append: true, offset: posts.length });
   }, [fetchPosts, hasMore, loading, loadingMore, posts.length]);
 
-  return { posts, loading, loadingMore, hasMore, error, refetch: fetchPosts, loadMore };
+  const removePost = useCallback((postId) => {
+    if (!postId) return;
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
+  }, []);
+
+  return { posts, loading, loadingMore, hasMore, error, refetch: fetchPosts, loadMore, removePost };
 }

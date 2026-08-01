@@ -89,7 +89,13 @@ export default function PageContainer({
   return (
     <div className="page-shell min-h-dvh min-w-0 max-w-full overflow-x-hidden bg-app-bg text-app-text lg:pb-0">
       <TabletBrandBar />
-      <div className="flex min-h-dvh w-full min-w-0">
+      {/*
+        Do not use min-h-dvh on this inner flex: .page-shell already has
+        min-h-dvh + padding-bottom for the fixed BottomNav. A nested min-h-dvh
+        forces the shell taller than the viewport and leaves a blank scroll
+        gap under the last feed card (web-like, not LinkedIn-like).
+      */}
+      <div className="flex w-full min-w-0">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
           {top}

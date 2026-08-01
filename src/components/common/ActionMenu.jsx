@@ -30,6 +30,8 @@ export default function ActionMenu({
   onReport,
   onEdit,
   onDelete,
+  reportLabel = 'Reportar',
+  deleteLabel = 'Eliminar',
   align = 'right',
   variant = 'icon',
   className = '',
@@ -161,7 +163,7 @@ export default function ActionMenu({
               {onReport ? (
                 <button type="button" role="menuitem" onClick={() => run(onReport)} className={MENU_ITEM_CLASS}>
                   <AppIcon icon={AlertTriangle} size={ICON_SIZES.sm} className="text-warning-600" />
-                  Reportar
+                  {reportLabel}
                 </button>
               ) : null}
               {onDelete ? (
@@ -172,7 +174,7 @@ export default function ActionMenu({
                   className={`${MENU_ITEM_CLASS} text-error-600`}
                 >
                   <AppIcon icon={Trash2} size={ICON_SIZES.sm} className="text-error-600" />
-                  Eliminar
+                  {deleteLabel}
                 </button>
               ) : null}
             </div>,

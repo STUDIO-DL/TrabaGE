@@ -17,7 +17,7 @@ export default function Textarea({ label, error, hint, className = '', id, rows 
           'transition-colors duration-fast ease-out placeholder:text-app-subtle placeholder:opacity-80',
           'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
           'disabled:cursor-not-allowed disabled:bg-app-disabled disabled:text-app-text-disabled',
-          error ? 'border-error-500 focus:ring-error-100' : 'border-app-border',
+          error ? 'border-error-500 focus:ring-error-100' : 'border-app-border hover:border-primary-200',
         ].join(' ')}
         aria-invalid={error ? true : undefined}
         required={required}

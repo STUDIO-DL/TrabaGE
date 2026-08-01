@@ -21,7 +21,7 @@ function BackButton({ onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
+      className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-primary-500 transition-colors duration-fast hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:hover:bg-primary-950/40"
       aria-label="Volver"
     >
       <AppIcon icon={ArrowLeft} size={ICON_SIZES.md} />

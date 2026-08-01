@@ -21,6 +21,7 @@ export const JOB_CATEGORIES = [
   'Transporte',
   'Hostelería',
   'Finanzas',
+  'Economía',
   'Comercio',
   'Energía',
   'Agricultura',

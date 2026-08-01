@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import FeedItemRenderer from '../feed/FeedItemRenderer';
 import EmptyState from '../common/EmptyState';
 import { PostListSkeleton } from '../common/Skeleton';
@@ -13,10 +13,31 @@ import {
   FETCH_ERROR_TITLE,
 } from '../../constants/emptyContent';
 
+const EXIT_MS = 180;
+
 export default function ParaTiPanel({ emptyDescription }) {
   const { user } = useAuth();
-  const { items, loading, loadingMore, hasMore, error, refetch, loadMore } = useIntelligentFeed();
-  const { handleEdit, handleDelete } = usePostMutations({ onSuccess: refetch });
+  const { items, loading, loadingMore, hasMore, error, refetch, loadMore, removePost } =
+    useIntelligentFeed();
+  const [exitingIds, setExitingIds] = useState(() => new Set());
+  const { handleEdit, handleDelete, deleteConfirmModal } = usePostMutations({
+    onSuccess: (deletedPost) => {
+      if (!deletedPost?.id) {
+        refetch();
+        return;
+      }
+      const id = deletedPost.id;
+      setExitingIds((prev) => new Set(prev).add(id));
+      window.setTimeout(() => {
+        removePost(id);
+        setExitingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+      }, EXIT_MS);
+    },
+  });
   const feedItems = items.filter(isHomeFeedPostItem);
 
   useEffect(() => {
@@ -32,7 +53,7 @@ export default function ParaTiPanel({ emptyDescription }) {
   const showSkeleton = loading || (Boolean(error) && items.length === 0);
 
   return (
-    <div className="space-y-space-sm p-space-base">
+    <div className="space-y-space-sm px-space-base pt-space-base pb-0">
       {error && items.length > 0 ? (
         <div
           className="mb-space-md rounded-radius-lg border border-error-100 bg-error-50 px-space-base py-space-md text-body-small text-error-800"
@@ -76,8 +97,12 @@ export default function ParaTiPanel({ emptyDescription }) {
           return (
             <div
               key={item.item_key ?? item.id}
-              className="card-enter"
-              style={{ animationDelay: `${Math.min(index, 6) * 30}ms` }}
+              className={exitingIds.has(post?.id) ? 'card-exit' : 'card-enter'}
+              style={
+                exitingIds.has(post?.id)
+                  ? undefined
+                  : { animationDelay: `${Math.min(index, 6) * 30}ms` }
+              }
             >
               <FeedItemRenderer
                 item={item}
@@ -89,18 +114,25 @@ export default function ParaTiPanel({ emptyDescription }) {
           );
         })
       )}
-      {loadingMore && <PostListSkeleton count={1} />}
-      {!loading && !showSkeleton && hasMore && !loadingMore && (
-        <Button
-          variant="secondary"
-          fullWidth
-          className="mt-space-sm"
-          onClick={loadMore}
-          aria-label="Cargar más publicaciones"
-        >
-          Cargar más
-        </Button>
-      )}
+      {loadingMore ? (
+        <div className="pb-space-base">
+          <PostListSkeleton count={1} />
+        </div>
+      ) : null}
+      {!loading && !showSkeleton && hasMore && !loadingMore ? (
+        <div className="pb-space-base">
+          <Button
+            variant="secondary"
+            fullWidth
+            className="mt-space-sm"
+            onClick={loadMore}
+            aria-label="Cargar más publicaciones"
+          >
+            Cargar más
+          </Button>
+        </div>
+      ) : null}
+      {deleteConfirmModal}
     </div>
   );
 }

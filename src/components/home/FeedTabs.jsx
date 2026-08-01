@@ -47,7 +47,7 @@ export default function FeedTabs({ activeTab, onTabChange }) {
               'motion-tab-indicator min-h-touch flex-1 border-b-2 pb-space-sm pt-space-md text-body-small font-semibold',
               isActive
                 ? 'border-primary-600 bg-primary-50/60 text-primary-700'
-                : 'border-transparent font-medium text-app-muted hover:bg-primary-50/30 hover:text-app-text',
+                : 'border-transparent font-medium text-primary-400/90 hover:bg-primary-50/40 hover:text-primary-700 dark:text-primary-300/60',
             ].join(' ')}
           >
             {tab.label}

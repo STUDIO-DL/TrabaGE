@@ -24,6 +24,38 @@ export const formatRelativeTime = (date) => {
   return formatDate(d);
 };
 
+/**
+ * Inbox list timestamps — WhatsApp / Instagram style.
+ * Ahora · 5 min · 2 h · Ayer · Lun · 12 jul
+ */
+export function formatConversationListTime(date) {
+  if (!date) return '';
+  const d = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+
+  const now = new Date();
+  const diffMs = Math.max(0, now.getTime() - d.getTime());
+  const diffMins = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMs / 3_600_000);
+
+  if (diffMins < 1) return 'Ahora';
+  if (diffMins < 60) return `${diffMins} min`;
+  if (diffHours < 24) return `${diffHours} h`;
+
+  const today = startOfLocalDay(now);
+  const messageDay = startOfLocalDay(d);
+  const diffDays = Math.round((today.getTime() - messageDay.getTime()) / 86_400_000);
+
+  if (diffDays === 1) return 'Ayer';
+  if (diffDays >= 2 && diffDays < 7) {
+    return capitalizeLabel(d.toLocaleDateString('es-ES', { weekday: 'short' })).replace(/\.$/, '');
+  }
+
+  return d
+    .toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+    .replace(/\.$/, '');
+}
+
 const pluralize = (value, singular, plural) =>
   `Hace ${value} ${value === 1 ? singular : plural}`;
 

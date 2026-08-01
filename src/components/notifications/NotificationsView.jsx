@@ -1,18 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../layout/PageContainer';
-import TopBar from '../layout/TopBar';
+import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
 import NotificationItem from './NotificationItem';
 import EmptyState from '../common/EmptyState';
 import FetchErrorBanner from '../common/FetchErrorBanner';
 import { NotificationListSkeleton } from '../common/Skeleton';
 import Button from '../ui/Button';
-import { Bell } from '../../constants/icons';
+import { NoNotifications } from '../../assets/empty-states';
 import { useNotifications } from '../../hooks/useNotifications';
 import { usePushPermission } from '../../hooks/usePushPermission';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
-import { ROLES, isEmployerRole, isPersonalRole } from '../../constants/roles';
+import { isEmployerRole, isPersonalRole } from '../../constants/roles';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { analyticsService } from '../../services/analytics.service';
 import {
@@ -25,8 +25,8 @@ import {
 
 const CANDIDATE_EMPTY_COPY = {
   [NOTIFICATION_CATEGORY.ALL]: {
-    title: 'No tienes notificaciones',
-    description: 'Cuando recibas notificaciones importantes, las verás aquí.',
+    title: 'Aún no tienes notificaciones.',
+    description: 'Cuando recibas avisos importantes, aparecerán aquí.',
   },
   [NOTIFICATION_CATEGORY.JOBS]: {
     title: 'Sin notificaciones de empleos',
@@ -40,7 +40,7 @@ const CANDIDATE_EMPTY_COPY = {
 
 const EMPLOYER_EMPTY_COPY = {
   [NOTIFICATION_CATEGORY.ALL]: {
-    title: 'Estás al día',
+    title: 'Aún no tienes notificaciones.',
     description: 'Te avisaremos de postulaciones, interacciones y novedades de tus publicaciones.',
   },
   [NOTIFICATION_CATEGORY.JOBS]: {
@@ -58,6 +58,37 @@ const EMPLOYER_EMPTY_COPY = {
 const MIN_VISIBLE = 6;
 const MAX_AUTO_FETCH_PAGES = 5;
 
+function NotificationsHeader({ unreadCount, onMarkAllAsRead }) {
+  const hasUnread = unreadCount > 0;
+
+  return (
+    <header className={`${topBarOuterClass} bg-app-card/95`}>
+      <div className={`${topBarInnerClass} h-auto min-h-topbar items-center py-space-sm`}>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-subtitle font-semibold tracking-tight text-app-text">
+            Notificaciones
+          </h1>
+          {hasUnread ? (
+            <p className="mt-0.5 text-caption font-medium text-primary-600">
+              {unreadCount} sin leer
+            </p>
+          ) : null}
+        </div>
+        {hasUnread ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMarkAllAsRead}
+            className="shrink-0 text-primary-600 hover:bg-primary-50 hover:text-primary-700"
+          >
+            Marcar todas como leídas
+          </Button>
+        ) : null}
+      </div>
+    </header>
+  );
+}
+
 export default function NotificationsView({ role = 'candidate' }) {
   usePushPermission();
   const navigate = useNavigate();
@@ -65,6 +96,7 @@ export default function NotificationsView({ role = 'candidate' }) {
   const { showToast } = useNotificationContext();
   const {
     notifications,
+    unreadCount,
     loading,
     loadingMore,
     hasMore,
@@ -83,8 +115,6 @@ export default function NotificationsView({ role = 'candidate' }) {
     () => notifications.filter((n) => matchesCategory(n, activeFilter)),
     [notifications, activeFilter],
   );
-
-  const hasUnread = useMemo(() => notifications.some((n) => !n.read), [notifications]);
 
   // Infinite scroll (mirrors the Feed pattern).
   useEffect(() => {
@@ -130,103 +160,104 @@ export default function NotificationsView({ role = 'candidate' }) {
   };
 
   const handleDelete = async (notification) => {
-    const { error } = await deleteNotification(notification.id);
+    const { error: deleteError } = await deleteNotification(notification.id);
     showToast(
-      error ? getSupabaseErrorMessage(error) : 'Notificación eliminada.',
-      error ? 'error' : 'success',
+      deleteError ? getSupabaseErrorMessage(deleteError) : 'Notificación eliminada.',
+      deleteError ? 'error' : 'success',
     );
   };
 
   const emptyCopyByRole = isEmployerRole(role) ? EMPLOYER_EMPTY_COPY : CANDIDATE_EMPTY_COPY;
   const emptyCopy = emptyCopyByRole[activeFilter] ?? emptyCopyByRole[NOTIFICATION_CATEGORY.ALL];
+  const showIllustration = activeFilter === NOTIFICATION_CATEGORY.ALL;
 
   return (
     <PageContainer
+      className="bg-app-card"
+      contentClassName="bg-app-card"
       topBar={
-        <TopBar
-          actions={
-            hasUnread ? (
-              <Button variant="ghost" size="sm" onClick={markAllAsRead}>
-                Marcar todo leído
-              </Button>
-            ) : null
-          }
-        />
+        <NotificationsHeader unreadCount={unreadCount} onMarkAllAsRead={markAllAsRead} />
       }
     >
-      {/* Segmented filter chips — horizontally scrollable, no scrollbar clutter */}
-      <div className="sticky-below-topbar border-b border-app-border bg-app-bg/95 backdrop-blur supports-[backdrop-filter]:bg-app-bg/80">
-        <div className="flex gap-space-sm overflow-x-auto px-space-base py-space-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {NOTIFICATION_FILTERS.map((filter) => {
-            const isActive = activeFilter === filter.id;
-            return (
-              <button
-                key={filter.id}
-                type="button"
-                onClick={() => setActiveFilter(filter.id)}
-                aria-pressed={isActive}
-                className={[
-                  'shrink-0 rounded-radius-circular px-space-base py-space-sm text-body-small font-medium transition-colors duration-fast',
-                  'min-h-touch',
-                  isActive
-                    ? 'bg-primary-600 text-white shadow-elevation-1'
-                    : 'bg-primary-50/50 text-primary-800/70 hover:bg-primary-50 hover:text-primary-800',
-                ].join(' ')}
-              >
-                {filter.label}
-              </button>
-            );
-          })}
+      <div className="min-h-full bg-app-card">
+        {/* Segmented filter chips — horizontally scrollable, no scrollbar clutter */}
+        <div className="notifications-filters-sticky border-b border-app-divider bg-app-card/95 backdrop-blur supports-[backdrop-filter]:bg-app-card/90">
+          <div className="flex gap-space-sm overflow-x-auto px-space-base py-space-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {NOTIFICATION_FILTERS.map((filter) => {
+              const isActive = activeFilter === filter.id;
+              return (
+                <button
+                  key={filter.id}
+                  type="button"
+                  onClick={() => setActiveFilter(filter.id)}
+                  aria-pressed={isActive}
+                  className={[
+                    'shrink-0 rounded-radius-circular px-space-base py-space-sm text-body-small font-medium transition-colors duration-fast',
+                    'min-h-touch',
+                    isActive
+                      ? 'bg-primary-600 text-white'
+                      : 'bg-transparent text-app-muted ring-1 ring-app-border hover:bg-primary-50/50 hover:text-primary-700',
+                  ].join(' ')}
+                >
+                  {filter.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
 
-      <div className="p-space-md">
-        {error ? (
-          <FetchErrorBanner
-            message="No se pudieron cargar las notificaciones. Inténtalo de nuevo."
-            onRetry={refetch}
-            className="mb-space-md"
-          />
-        ) : null}
+        <div className="mx-auto w-full max-w-lg md:max-w-2xl lg:max-w-3xl">
+          {error ? (
+            <FetchErrorBanner
+              message="No se pudieron cargar las notificaciones. Inténtalo de nuevo."
+              onRetry={refetch}
+              className="mx-space-base mt-space-md"
+            />
+          ) : null}
 
-        {loading ? (
-          <NotificationListSkeleton count={6} />
-        ) : filtered.length === 0 && !error ? (
-          <EmptyState
-            variant="text"
-            title={emptyCopy.title}
-            description={emptyCopy.description}
-          />
-        ) : (
-          <div className="divide-y divide-app-divider">
-            {filtered.map((n) => (
-              <NotificationItem
-                key={n.id}
-                notification={n}
-                onClick={handleClick}
-                onDelete={handleDelete}
-              />
-            ))}
-          </div>
-        )}
+          {loading ? (
+            <div className="px-space-base">
+              <NotificationListSkeleton count={6} />
+            </div>
+          ) : filtered.length === 0 && !error ? (
+            <EmptyState
+              image={showIllustration ? NoNotifications : undefined}
+              variant={showIllustration ? 'default' : 'text'}
+              title={emptyCopy.title}
+              description={emptyCopy.description}
+            />
+          ) : (
+            <div className="motion-list">
+              {filtered.map((n) => (
+                <NotificationItem
+                  key={n.id}
+                  notification={n}
+                  onClick={handleClick}
+                  onDelete={handleDelete}
+                />
+              ))}
+            </div>
+          )}
 
-        {loadingMore && (
-          <div className="pt-space-sm">
-            <NotificationListSkeleton count={2} />
-          </div>
-        )}
+          {loadingMore ? (
+            <div className="px-space-base pt-space-sm">
+              <NotificationListSkeleton count={2} />
+            </div>
+          ) : null}
 
-        {!loading && hasMore && !loadingMore && filtered.length > 0 && (
-          <Button
-            variant="secondary"
-            fullWidth
-            className="mt-space-md"
-            onClick={loadMore}
-            aria-label="Cargar más notificaciones"
-          >
-            Cargar más
-          </Button>
-        )}
+          {!loading && hasMore && !loadingMore && filtered.length > 0 ? (
+            <div className="px-space-base py-space-md">
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={loadMore}
+                aria-label="Cargar más notificaciones"
+              >
+                Cargar más
+              </Button>
+            </div>
+          ) : null}
+        </div>
       </div>
     </PageContainer>
   );

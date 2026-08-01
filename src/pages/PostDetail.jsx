@@ -81,7 +81,7 @@ export default function PostDetail() {
     });
   }, [postId]);
 
-  const { handleEdit, handleDelete } = usePostMutations({
+  const { handleEdit, handleDelete, deleteConfirmModal } = usePostMutations({
     onSuccess: (deletedPost) => {
       if (deletedPost) {
         navigate(-1);
@@ -127,6 +127,7 @@ export default function PostDetail() {
             />
           </div>
         )}
+        {deleteConfirmModal}
       </div>
     </PageContainer>
   );

@@ -174,5 +174,17 @@ export function useIntelligentFeed({ authorId } = {}) {
     fetchFeed({ append: false });
   }, [fetchFeed]);
 
-  return { items, loading, loadingMore, hasMore, error, refetch, loadMore };
+  const removePost = useCallback((postId) => {
+    if (!postId) return;
+    setItems((prev) =>
+      prev.filter((item) => {
+        const payloadId = item?.payload?.id;
+        if (payloadId && payloadId === postId) return false;
+        const key = String(item?.item_key ?? item?.id ?? '');
+        return key !== `post:${postId}`;
+      }),
+    );
+  }, []);
+
+  return { items, loading, loadingMore, hasMore, error, refetch, loadMore, removePost };
 }

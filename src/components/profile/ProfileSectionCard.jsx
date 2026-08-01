@@ -2,7 +2,8 @@ import AppIcon from '../common/AppIcon';
 import { ICON_SIZES, Pencil, Trash2 } from '../../constants/icons';
 import { profileSectionCardClass } from './profileLayoutClasses';
 
-/** Section headings — text only, no icons. */
+export { profileSectionCardClass };
+
 export const profileSectionTitleClass =
   'text-user-content text-body font-semibold tracking-tight text-app-text';
 

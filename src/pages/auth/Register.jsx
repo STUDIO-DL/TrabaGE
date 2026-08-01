@@ -40,7 +40,7 @@ import { getErrorMessage } from '../../utils/i18n';
 import { validateStrongPassword } from '../../utils/passwordValidation';
 
 const fieldClassName =
-  'h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base text-base text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
+  'h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base text-base text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle hover:border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100';
 
 const AUTH_ALERT_ERROR =
   'rounded-radius-md border border-error-200 bg-error-50 px-space-md py-space-sm text-body-small text-error-700 whitespace-pre-wrap break-words';
@@ -441,7 +441,7 @@ export default function Register() {
     : 'Crea tu cuenta y comienza tu camino profesional.';
 
   return (
-    <div className="keyboard-scroll-host min-h-dvh overflow-x-hidden overflow-y-auto bg-gradient-to-b from-primary-50 via-app-card to-primary-50">
+    <div className="keyboard-scroll-host min-h-dvh overflow-x-hidden overflow-y-auto bg-gradient-to-b from-primary-50 via-app-card to-primary-50/80">
       <div
         className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-space-lg py-space-2xl sm:px-space-xl sm:py-space-3xl"
         style={{

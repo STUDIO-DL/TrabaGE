@@ -121,9 +121,9 @@ export default function AutocompleteInput({
         onFocus={() => setOpen(true)}
         onKeyDown={handleKeyDown}
         className={[
-          'w-full rounded-xl border bg-white px-4 py-2.5 text-base outline-none transition-colors',
+          'w-full rounded-xl border bg-app-card px-4 py-2.5 text-base outline-none transition-colors',
           'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
-          'border-gray-200',
+          'border-app-border hover:border-primary-200',
           inputClassName,
         ].join(' ')}
       />
@@ -133,7 +133,7 @@ export default function AutocompleteInput({
           id={listId}
           role="listbox"
           className={[
-            'absolute z-20 mt-1 w-full overflow-auto overscroll-contain rounded-xl border border-gray-200 bg-white py-1 shadow-lg [-webkit-overflow-scrolling:touch]',
+            'absolute z-20 mt-1 w-full overflow-auto overscroll-contain rounded-xl border border-app-border bg-app-card py-1 shadow-elevation-3 [-webkit-overflow-scrolling:touch]',
             listClassName,
           ].join(' ')}
           style={{ maxHeight: listMaxHeight }}
@@ -145,7 +145,7 @@ export default function AutocompleteInput({
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(item)}
                 className={[
-                  'flex min-h-touch w-full px-4 py-space-sm text-left text-sm text-gray-800 hover:bg-gray-50',
+                  'flex min-h-touch w-full px-4 py-space-sm text-left text-sm text-app-text hover:bg-primary-50',
                   index === activeIndex ? 'bg-primary-50 text-primary-800' : '',
                 ].join(' ')}
               >

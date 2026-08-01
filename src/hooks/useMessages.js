@@ -4,6 +4,7 @@ import { useForegroundResumeRefresh } from './useForegroundResumeRefresh';
 import { supabase } from '../config/supabase';
 import { messagesService, MESSAGES_PAGE_SIZE } from '../services/messages.service';
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
+import { emitConversationRead } from '../utils/conversationUnreadEvents';
 
 function sortMessagesAscending(messages) {
   return [...messages].sort(
@@ -193,6 +194,7 @@ export function useMessages(conversationId) {
 
   const markRead = useCallback(async () => {
     if (!conversationId || isPreviewMode) return;
+    emitConversationRead(conversationId);
     await Promise.all([
       messagesService.markConversationRead(conversationId),
       messagesService.markMessageNotificationsRead(conversationId),

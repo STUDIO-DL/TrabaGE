@@ -91,7 +91,7 @@ export default function CompanyDashboardSidebar({ profile }) {
                 'flex items-center gap-space-sm rounded-radius-md px-space-sm py-2 text-body-small font-medium transition-colors duration-fast',
                 isActive
                   ? 'bg-primary-50 text-primary-700'
-                  : 'text-app-muted hover:bg-primary-50/50 hover:text-app-text',
+                  : 'text-primary-400/90 hover:bg-primary-50/60 hover:text-primary-700 dark:text-primary-300/55',
               ].join(' ')
             }
           >
@@ -100,7 +100,7 @@ export default function CompanyDashboardSidebar({ profile }) {
                 <AppIcon
                   icon={icon}
                   size={ICON_SIZES.sm}
-                  className={isActive ? 'text-primary-600' : 'text-app-subtle'}
+                  className={isActive ? 'text-primary-600' : 'text-primary-400/80 dark:text-primary-300/55'}
                 />
                 {label}
               </>

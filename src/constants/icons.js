@@ -2,6 +2,7 @@ import {
   Award,
   AlertTriangle,
   ArrowLeft,
+  ArrowRight,
   AtSign,
   BadgeCheck,
   Bell,
@@ -77,6 +78,7 @@ export {
   Award,
   AlertTriangle,
   ArrowLeft,
+  ArrowRight,
   AtSign,
   BadgeCheck,
   Bell,
@@ -166,18 +168,18 @@ export const ICON_STROKE = {
   bold: 2.25,
 };
 
-/** Light: near-black icons · Dark: near-white · Green for active/important only */
+/** Light: brand blue for active · blue-gray inactive (not pure slate) */
 export const ICON_COLORS = {
   default: 'text-app-text',
-  primary: 'text-primary-600',
-  inactive: 'text-app-muted',
+  primary: 'text-primary-600 dark:text-primary-400',
+  inactive: 'text-primary-400/80 dark:text-primary-300/55',
   muted: 'text-app-subtle',
   positive: 'text-success-600',
 };
 
-/** Unified neutral icon surface for section headers (no decorative hues). */
+/** Unified brand-soft icon surface for section headers */
 export const ICON_SURFACE_CLASS =
-  'bg-app-surface text-app-text ring-1 ring-app-border dark:bg-app-elevated';
+  'bg-primary-50 text-primary-700 ring-1 ring-primary-150 dark:bg-primary-950/40 dark:text-primary-300 dark:ring-primary-800/60';
 
 /** Bottom navigation */
 export const NAV_ICONS = {

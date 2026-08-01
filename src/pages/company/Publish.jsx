@@ -112,7 +112,7 @@ export default function Publish() {
               key={id}
               type="button"
               onClick={() => handleOptionSelect(id)}
-              className="surface-card flex items-start gap-3 p-4 text-left transition hover:border-app-muted/50"
+              className="surface-card flex items-start gap-3 p-4 text-left transition hover:border-primary-200 hover:bg-primary-50/40"
             >
               <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${ICON_SURFACE}`}>
                 <AppIcon icon={Icon} size={ICON_SIZES.default} />

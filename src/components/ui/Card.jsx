@@ -25,7 +25,7 @@ export default function Card({
         'surface-card',
         paddingMap[padding] ?? paddingMap.md,
         interactive
-          ? 'surface-press hover:border-app-muted/50'
+          ? 'surface-press hover:border-primary-200 hover:bg-primary-50/50'
           : '',
         className,
       ]

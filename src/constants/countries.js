@@ -1,13 +1,5 @@
-export const DEFAULT_COUNTRY = 'Guinea Ecuatorial';
-
-export const COUNTRIES = [
-  DEFAULT_COUNTRY,
-  'Camerún',
-  'Gabón',
-  'Nigeria',
-  'España',
-  'Francia',
-  'Portugal',
-  'Estados Unidos',
-  'Otro',
-];
+/**
+ * @deprecated Import from `constants/locations` for new code.
+ * Re-exports kept for existing imports.
+ */
+export { DEFAULT_COUNTRY, COUNTRIES, isKnownCountry } from './locations';

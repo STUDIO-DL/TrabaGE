@@ -4,9 +4,9 @@ const variants = {
   warning: 'bg-warning-100 text-warning-800',
   success: 'bg-success-100 text-success-800',
   error: 'bg-error-100 text-error-800',
-  info: 'bg-primary-100 text-primary-800',
-  default: 'bg-app-disabled text-app-muted',
-  primary: 'bg-primary-100 text-primary-800',
+  info: 'bg-primary-50 text-primary-700 ring-1 ring-primary-100',
+  default: 'bg-primary-50 text-primary-700 ring-1 ring-primary-100',
+  primary: 'bg-primary-50 text-primary-700 ring-1 ring-primary-100',
 };
 
 export default function Badge({ variant = 'default', label, children, className = '' }) {

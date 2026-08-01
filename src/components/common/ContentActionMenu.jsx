@@ -28,6 +28,8 @@ export default function ContentActionMenu({
   className = '',
   onEdit,
   onDelete,
+  reportLabel = 'Reportar',
+  deleteLabel = 'Eliminar',
 }) {
   const [reportOpen, setReportOpen] = useState(false);
   const { isPreviewMode, user } = useAuth();
@@ -36,7 +38,8 @@ export default function ContentActionMenu({
   const resolvedUrl = resolveShareUrl(shareUrl);
   const description = shareText || getShareDescription(targetType);
   const canShare = Boolean(resolvedUrl);
-  const canReport = Boolean(targetId);
+  // Owner menus pass onDelete — never offer Report on your own content.
+  const canReport = Boolean(targetId) && !onDelete;
 
   const handleShare = () => {
     if (!resolvedUrl) return;
@@ -65,6 +68,8 @@ export default function ContentActionMenu({
         onReport={canReport ? handleReport : undefined}
         onEdit={onEdit}
         onDelete={onDelete}
+        reportLabel={reportLabel}
+        deleteLabel={deleteLabel}
         align={align}
         variant={variant}
         className={className}

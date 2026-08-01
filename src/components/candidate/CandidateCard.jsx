@@ -2,7 +2,7 @@ import UserProfileLink from '../common/UserProfileLink';
 import { getUserProfilePath } from '../../utils/profileRoutes';
 
 const cardClass =
-  'surface-card flex items-center gap-space-md p-space-md transition-colors duration-fast hover:border-app-muted/50';
+  'surface-card flex items-center gap-space-md p-space-md transition-colors duration-fast hover:border-primary-200 hover:bg-primary-50/40';
 
 export default function CandidateCard({
   candidate,

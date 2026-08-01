@@ -8,7 +8,7 @@ export default function ProfileSettingsButton({ onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-600 transition-colors duration-fast ease-out hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-200 active:scale-[0.97]"
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-primary-500 transition-colors duration-fast ease-out hover:bg-primary-50 hover:text-primary-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-200 active:scale-[0.97] dark:text-primary-400 dark:hover:bg-primary-950/40"
       aria-label="Configuración"
     >
       <AppIcon icon={Settings} size={ICON_SIZES.default} strokeWidth={2} />

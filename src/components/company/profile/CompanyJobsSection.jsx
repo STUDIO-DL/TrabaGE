@@ -30,7 +30,7 @@ function CompanyJobCard({ job }) {
   const statusVariant = STATUS_VARIANTS[job.status] ?? 'success';
 
   return (
-    <article className="flex flex-col gap-space-md rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1">
+    <article className="flex flex-col gap-space-md rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1 transition-colors duration-fast hover:border-primary-200 hover:bg-primary-50/30">
       <div className="min-w-0 space-y-space-sm">
         <h4 className="line-clamp-2 text-body-small font-semibold leading-snug text-app-text">
           {job.title}

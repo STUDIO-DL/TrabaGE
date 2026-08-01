@@ -1,6 +1,7 @@
 export const SECTORS = [
   'Tecnología',
   'Finanzas',
+  'Economía',
   'Salud',
   'Educación',
   'Construcción',

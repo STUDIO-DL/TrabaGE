@@ -39,6 +39,7 @@ export default {
           DEFAULT: colors.primary[600],
           50: colors.primary[50],
           100: colors.primary[100],
+          150: colors.primary[150],
           200: colors.primary[200],
           300: colors.primary[300],
           400: colors.primary[400],

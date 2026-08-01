@@ -83,7 +83,7 @@ export default function Modal({
       />
       <div
         className={[
-          'relative z-10 flex w-full max-w-full flex-col overflow-hidden bg-app-card p-space-base text-app-text shadow-elevation-4 keyboard-aware-footer overscroll-contain',
+          'relative z-10 flex w-full max-w-full flex-col overflow-hidden border border-app-border bg-app-card p-space-base text-app-text shadow-elevation-4 keyboard-aware-footer overscroll-contain',
           footerAware ? 'min-h-0' : 'overflow-y-auto',
           panelMotion,
           isSheet
@@ -110,7 +110,7 @@ export default function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto min-h-touch min-w-touch shrink-0 rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface"
+            className="ml-auto min-h-touch min-w-touch shrink-0 rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-950/40"
             aria-label="Cerrar"
           >
             <AppIcon icon={X} size={ICON_SIZES.md} />

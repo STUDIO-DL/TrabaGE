@@ -19,7 +19,7 @@ export default function AccountTypeCards({ value, onChange, disabled = false }) 
               'disabled:cursor-not-allowed disabled:opacity-60',
               selected
                 ? 'border-primary-500 bg-primary-50/70 shadow-[0_0_0_1px_rgba(37,99,235,0.12)]'
-                : 'border-slate-200 bg-white hover:border-primary-200 hover:bg-slate-50/80',
+                : 'border-app-border bg-app-card hover:border-primary-200 hover:bg-primary-50/40',
             ].join(' ')}
           >
             <span
@@ -27,13 +27,13 @@ export default function AccountTypeCards({ value, onChange, disabled = false }) 
                 'flex h-10 w-10 items-center justify-center rounded-full transition-colors duration-200',
                 selected
                   ? 'bg-primary-100 text-primary-600'
-                  : 'bg-slate-50 text-slate-400 group-hover:bg-primary-50 group-hover:text-primary-500',
+                  : 'bg-primary-50/70 text-primary-400 group-hover:bg-primary-50 group-hover:text-primary-500',
               ].join(' ')}
             >
               <Icon className="h-[1.15rem] w-[1.15rem]" strokeWidth={1.75} aria-hidden />
             </span>
-            <span className="mt-2 text-sm font-semibold text-slate-900">{label}</span>
-            <span className="mt-1 text-[11px] leading-snug text-slate-500">{description}</span>
+            <span className="mt-2 text-sm font-semibold text-app-text">{label}</span>
+            <span className="mt-1 text-[11px] leading-snug text-app-muted">{description}</span>
           </button>
         );
       })}

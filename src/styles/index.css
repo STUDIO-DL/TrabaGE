@@ -15,23 +15,24 @@
     --color-success: #16a34a;
 
     /* Semantic RGB channels (Tailwind alpha-value compatible) */
-    /* Canvas: cool blue-white so pure white cards have hierarchy + brand presence */
-    --app-bg: 245 248 255;
-    --app-surface: 237 242 252;
+    /* Canvas + chrome: cool blue-white hierarchy, brand accent without saturation */
+    --app-bg: 244 247 254;
+    --app-surface: 236 242 252;
     --app-card: 255 255 255;
     --app-elevated: 255 255 255;
     --app-text: 9 9 11;
-    --app-muted: 113 113 122;
-    --app-subtle: 161 161 170;
-    --app-border: 219 228 245;
-    --app-divider: 226 232 240;
+    --app-muted: 100 112 132;
+    --app-subtle: 148 163 184;
+    --app-border: 205 222 246;
+    --app-divider: 220 230 244;
     --app-overlay: 9 9 11;
     --app-disabled: 241 245 249;
-    --app-text-disabled: 161 161 170;
+    --app-text-disabled: 148 163 184;
     --app-text-inverse: 255 255 255;
     --app-primary-soft: 239 246 255;
     --app-primary: 37 99 235;
-    --app-shadow: 9 9 11;
+    /* Blue-tinted shadow key (used at low alpha in elevation) */
+    --app-shadow: 30 64 175;
 
     /* Motion */
     --motion-fast: 150ms;
@@ -62,22 +63,22 @@
     --color-text: #fafafa;
     --color-muted: #a1a1aa;
     --color-border: #27272a;
-    --app-bg: 8 12 20;
-    --app-surface: 12 18 32;
-    --app-card: 18 24 38;
-    --app-elevated: 24 32 48;
+    --app-bg: 8 12 22;
+    --app-surface: 12 18 34;
+    --app-card: 16 24 40;
+    --app-elevated: 22 32 52;
     --app-text: 250 250 250;
-    --app-muted: 161 161 170;
-    --app-subtle: 113 113 122;
-    --app-border: 36 48 72;
-    --app-divider: 24 32 48;
+    --app-muted: 148 163 184;
+    --app-subtle: 100 116 139;
+    --app-border: 40 58 92;
+    --app-divider: 30 44 72;
     --app-overlay: 0 0 0;
     --app-disabled: 24 32 48;
-    --app-text-disabled: 82 82 91;
+    --app-text-disabled: 100 116 139;
     --app-text-inverse: 9 9 11;
     --app-primary-soft: 30 58 138;
     --app-primary: 96 165 250;
-    --app-shadow: 0 0 0;
+    --app-shadow: 37 99 235;
   }
 
   html {
@@ -154,36 +155,64 @@
   }
 
   /*
-   * Touch / installed-app shell.
-   * Do NOT set overscroll-behavior-y: none here — that blocks Android Chrome
-   * pull-to-refresh while iOS Safari often still rubber-bands (asymmetric UX).
-   * Horizontal lock stays on html/body via overscroll-behavior-x: none.
-   * Nested hosts (chat, modals, forms) keep overscroll-contain locally.
+   * Native-app text selection (LinkedIn-like) on touch devices / installed PWA.
+   * Long-press must not open the system select/copy menu on feed, profiles, chat, etc.
+   * Desktop mouse users keep normal selection for accessibility.
    */
   @media (hover: none) and (pointer: coarse) {
     html {
       scroll-behavior: auto;
     }
 
-    /* Avoid accidental selection on chrome; keep content copyable */
-    button,
-    [role='button'],
-    nav,
-    header,
-    [data-bottom-nav],
-    label {
+    html,
+    body,
+    #root {
       -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
       user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
+    /* Keep typing / paste / select-all working in editable fields */
     input,
     textarea,
     select,
     [contenteditable='true'],
+    [contenteditable=''],
     .allow-text-select {
-      -webkit-user-select: text;
-      user-select: text;
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+      -webkit-touch-callout: default;
     }
+  }
+
+  /* Same rules when the early boot script marks the installed / touch app shell */
+  html[data-app-shell='1'],
+  html[data-app-shell='1'] body,
+  html[data-app-shell='1'] #root {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html[data-app-shell='1'] input,
+  html[data-app-shell='1'] textarea,
+  html[data-app-shell='1'] select,
+  html[data-app-shell='1'] [contenteditable='true'],
+  html[data-app-shell='1'] [contenteditable=''],
+  html[data-app-shell='1'] .allow-text-select {
+    -webkit-user-select: text !important;
+    -moz-user-select: text !important;
+    -ms-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: default;
   }
 
   ::selection {
@@ -194,6 +223,11 @@
 @layer components {
   .page-shell {
     @apply min-h-dvh min-w-0 max-w-full overflow-x-hidden;
+    /*
+     * Reserve space so the last feed/list item clears the fixed BottomNav.
+     * Keep this as the ONLY bottom spacer — nested min-h-dvh children must not
+     * also force 100dvh or the document grows by ~nav height of empty scroll.
+     */
     padding-bottom: calc(
       var(--bottom-nav-height) + var(--safe-area-bottom) + var(--keyboard-offset, 0px)
     );
@@ -227,6 +261,29 @@
     position: sticky;
     top: calc(env(safe-area-inset-top, 0px) + 3rem);
     z-index: 10;
+  }
+
+  /* Notifications header can grow with unread subtitle */
+  .notifications-filters-sticky {
+    position: sticky;
+    top: calc(env(safe-area-inset-top, 0px) + 3.75rem);
+    z-index: 10;
+  }
+
+  .notification-ripple {
+    background: rgb(var(--app-primary) / 0.16);
+    transform: scale(0);
+    animation: notificationRipple 480ms var(--ease-out) forwards;
+  }
+
+  .notification-unread-dot {
+    transition:
+      opacity var(--motion-fast) var(--ease-out),
+      transform var(--motion-fast) var(--ease-out);
+  }
+
+  .dark .notification-ripple {
+    background: rgb(var(--app-primary) / 0.22);
   }
 
   /* Company/org profile tabs — pin below viewport top while header scrolls away */
@@ -279,7 +336,9 @@
 
   .login-shell {
     @apply flex min-h-dvh min-w-0 flex-col overflow-x-hidden;
-    background: rgb(var(--app-surface));
+    background:
+      radial-gradient(120% 80% at 50% -10%, rgb(var(--app-primary) / 0.1), transparent 55%),
+      linear-gradient(180deg, rgb(var(--app-primary-soft)) 0%, rgb(var(--app-surface)) 42%, rgb(var(--app-bg)) 100%);
     padding-top: env(safe-area-inset-top, 0px);
   }
 
@@ -296,9 +355,12 @@
   }
 
   .login-card {
-    @apply w-full min-w-0 overflow-hidden rounded-radius-xl shadow-elevation-3;
+    @apply w-full min-w-0 overflow-hidden rounded-radius-xl border border-app-border shadow-elevation-3;
     background: rgb(var(--app-card));
     max-width: min(100%, 30rem);
+    box-shadow:
+      0 0 0 1px rgb(var(--app-border) / 0.65),
+      0 12px 28px rgb(var(--app-shadow) / 0.09);
   }
 
   .login-headline {
@@ -337,6 +399,11 @@
     border-color: rgb(var(--app-border));
     background: rgb(var(--app-card));
     color: rgb(var(--app-text));
+  }
+
+  .btn-secondary-mobile:hover {
+    border-color: rgb(var(--app-primary) / 0.28);
+    background: rgb(var(--app-primary-soft) / 0.55);
   }
 
   .mobile-hero-image {
@@ -509,30 +576,72 @@
     filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.22));
   }
 
-  /* Single surface system — border only (Linear/Notion). No stacked shadow. */
+  /* Single surface system — soft brand border (Linear/Stripe). */
   .surface-card {
     @apply min-w-0 max-w-full overflow-hidden rounded-radius-lg border border-app-border bg-app-card text-app-text;
-    box-shadow: none;
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--app-primary-soft) / 0.35) 0%,
+      rgb(var(--app-card)) 28%
+    );
+    box-shadow: 0 1px 2px rgb(var(--app-shadow) / 0.04);
+    transition: border-color var(--motion-fast) var(--ease-out),
+      background-color var(--motion-fast) var(--ease-out),
+      box-shadow var(--motion-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .surface-card.surface-press:hover,
+    a.surface-card:hover,
+    button.surface-card:hover {
+      border-color: rgb(var(--app-primary) / 0.22);
+      background-color: rgb(var(--app-primary-soft) / 0.45);
+    }
   }
 
   /**
    * Profile section modules only (candidate + company).
-   * Soft separation — not a floating block. Do not reuse on feed/list rows.
+   * Soft brand identity — not a floating block. Do not reuse on feed/list rows.
    */
   .profile-section-card {
     @apply min-w-0 max-w-full rounded-radius-lg border border-app-border bg-app-card text-app-text;
-    box-shadow: 0 4px 12px rgb(var(--app-shadow) / 0.06);
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--app-primary-soft) / 0.55) 0,
+      rgb(var(--app-primary-soft) / 0.55) 2.75rem,
+      rgb(var(--app-card)) 2.75rem
+    );
+    box-shadow:
+      0 1px 2px rgb(var(--app-shadow) / 0.04),
+      0 8px 20px rgb(var(--app-shadow) / 0.05);
   }
 
   .dark .profile-section-card {
-    /* Dark: --app-shadow is zero; separation via border + card vs page bg */
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--app-primary-soft) / 0.22) 0,
+      rgb(var(--app-primary-soft) / 0.22) 2.75rem,
+      rgb(var(--app-card)) 2.75rem
+    );
     box-shadow: none;
   }
 
-  /* Flat content blocks (feed / list items) — divider language, not boxed cards */
+  /* Flat content blocks (feed / list items) — blue-gray divider language */
   .surface-flat {
     @apply min-w-0 max-w-full bg-app-card text-app-text;
-    box-shadow: none;
+    border-bottom: 1px solid rgb(var(--app-divider));
+    box-shadow: inset 0 0 0 1px transparent;
+    transition: background-color var(--motion-fast) var(--ease-out),
+      box-shadow var(--motion-fast) var(--ease-out),
+      border-color var(--motion-fast) var(--ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .surface-flat:hover {
+      background-color: rgb(var(--app-primary-soft) / 0.4);
+      border-bottom-color: rgb(var(--app-primary) / 0.14);
+      box-shadow: inset 0 0 0 1px rgb(var(--app-primary) / 0.06);
+    }
   }
 
   .surface-inset {
@@ -556,6 +665,14 @@
   .dark .surface-flat,
   .dark .surface-inset {
     box-shadow: none;
+  }
+
+  .dark .surface-card {
+    background-image: linear-gradient(
+      180deg,
+      rgb(var(--app-primary-soft) / 0.18) 0%,
+      rgb(var(--app-card)) 32%
+    );
   }
 
   /* Quiet press feedback for interactive surfaces */
@@ -892,6 +1009,18 @@
   }
 }
 
+@keyframes cardFadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
 @keyframes snackbarIn {
   from {
     opacity: 0;
@@ -915,8 +1044,24 @@
   }
 }
 
+@keyframes notificationRipple {
+  from {
+    transform: scale(0);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
 .card-enter {
   animation: cardFadeIn var(--motion-normal) var(--ease-out) both;
+}
+
+.card-exit {
+  animation: cardFadeOut var(--motion-fast) var(--ease-out) both;
+  pointer-events: none;
 }
 
 .search-screen-enter {
@@ -925,10 +1070,20 @@
 
 @media (prefers-reduced-motion: reduce) {
   .card-enter,
+  .card-exit,
   .search-screen-enter,
   .motion-page,
-  .motion-list > * {
+  .motion-list > *,
+  .notification-ripple {
     animation: none !important;
+  }
+
+  .notification-ripple {
+    display: none !important;
+  }
+
+  .notification-unread-dot {
+    transition: none !important;
   }
 }
 

@@ -19,6 +19,7 @@ export const colors = {
   primary: {
     50: '#EFF6FF',
     100: '#DBEAFE',
+    150: '#CDE4FD', // brand accent border / soft chrome (between 100–200)
     200: '#BFDBFE',
     300: '#93C5FD',
     400: '#60A5FA',
@@ -122,12 +123,12 @@ export const radius = {
   btnSecondary: 12,
 };
 
-/** Exactly 4 elevation levels — cards use border; 2–4 for overlays/modals. */
+/** Exactly 4 elevation levels — soft blue-tinted shadows (Stripe/Linear). */
 export const elevation = {
   1: '0 0 #0000',
-  2: '0 4px 12px rgb(var(--app-shadow) / 0.06)',
-  3: '0 12px 28px rgb(var(--app-shadow) / 0.08)',
-  4: '0 20px 40px rgb(var(--app-shadow) / 0.12)',
+  2: '0 4px 14px rgb(var(--app-shadow) / 0.07)',
+  3: '0 12px 28px rgb(var(--app-shadow) / 0.09)',
+  4: '0 20px 42px rgb(var(--app-shadow) / 0.12)',
 };
 
 export const motion = {

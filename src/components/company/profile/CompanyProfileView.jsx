@@ -102,12 +102,20 @@ export default function CompanyProfileView({
     hasMore: postsHasMore,
     loadMore: loadMorePosts,
     refetch: refetchPosts,
+    removePost: removeOwnedPost,
   } = usePosts(companyId, { enabled: shouldLoadPosts });
 
   const canManagePosts = isOwn && !readOnly;
-  const { handleEdit: handleEditPost, handleDelete: handleDeletePost } = usePostMutations({
-    onSuccess: refetchPosts,
-  });
+  const { handleEdit: handleEditPost, handleDelete: handleDeletePost, deleteConfirmModal } =
+    usePostMutations({
+      onSuccess: (deletedPost) => {
+        if (deletedPost?.id) {
+          removeOwnedPost(deletedPost.id);
+          return;
+        }
+        refetchPosts();
+      },
+    });
 
   const goToTab = (tabId) => {
     setActiveTab(tabId);
@@ -361,6 +369,7 @@ export default function CompanyProfileView({
       />
 
       {tabPanel}
+      {deleteConfirmModal}
     </div>
   );
 }

@@ -6,7 +6,7 @@ import { LogOut, X, ICON_SIZES } from '../../../constants/icons';
 export default function LogoutConfirmModal({ isOpen, onClose, onConfirm, loading }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="¿Cerrar sesión?">
-      <p className="text-sm text-gray-600">
+      <p className="text-sm text-app-muted">
         ¿Seguro que quieres cerrar sesión?
       </p>
       <div className="mt-6 flex flex-col gap-2">

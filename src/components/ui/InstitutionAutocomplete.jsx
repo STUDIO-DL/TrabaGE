@@ -297,7 +297,7 @@ export default function InstitutionAutocomplete({
                   onClick={() => selectInstitution(institution)}
                   className={[
                     'flex min-h-touch w-full items-start gap-space-sm px-space-md py-space-sm text-left transition-colors',
-                    isActive ? 'bg-primary-50' : 'hover:bg-gray-50',
+                    isActive ? 'bg-primary-50' : 'hover:bg-primary-50/60',
                   ].join(' ')}
                 >
                   <AppIcon
@@ -320,7 +320,7 @@ export default function InstitutionAutocomplete({
                       'hidden min-[360px]:inline-flex shrink-0 rounded-full border px-2 py-0.5 text-caption font-medium',
                       isActive
                         ? 'border-primary-200 bg-primary-100 text-primary-800'
-                        : 'border-gray-200 bg-gray-50 text-app-muted',
+                        : 'border-app-border bg-primary-50/50 text-app-muted',
                     ].join(' ')}
                   >
                     {typeLabel}
@@ -342,8 +342,8 @@ export default function InstitutionAutocomplete({
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={enableManualEntry}
                 className={[
-                  'min-h-touch w-full border-t border-gray-100 px-space-md py-space-sm text-left text-caption text-primary-700 transition-colors',
-                  activeIndex === results.length ? 'bg-primary-50' : 'hover:bg-gray-50',
+                  'min-h-touch w-full border-t border-app-divider px-space-md py-space-sm text-left text-caption text-primary-700 transition-colors',
+                  activeIndex === results.length ? 'bg-primary-50' : 'hover:bg-primary-50/60',
                 ].join(' ')}
               >
                 No encuentras tu institución educativa? Escríbela manualmente.

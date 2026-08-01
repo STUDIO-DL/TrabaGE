@@ -9,7 +9,7 @@ import { LegalFooterLinks } from './LegalLinks';
  */
 export default function LegalBrandFooter() {
   return (
-    <footer className="mt-10 border-t border-slate-100 pt-8 dark:border-slate-800">
+    <footer className="mt-10 border-t border-app-border pt-8">
       <div className="text-center">
         <p className="inline-flex items-baseline gap-1 text-xs font-medium tracking-tight text-app-text">
           <span aria-hidden>©</span>
@@ -22,7 +22,7 @@ export default function LegalBrandFooter() {
             href={ZARREL_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-medium text-slate-600 underline decoration-slate-300 underline-offset-2 transition hover:text-slate-800 dark:text-slate-300 dark:decoration-slate-600 dark:hover:text-slate-100"
+            className="font-medium text-primary-600 underline decoration-primary-200 underline-offset-2 transition hover:text-primary-700 hover:decoration-primary-400"
           >
             {ZARREL_NAME}
           </a>

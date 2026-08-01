@@ -15,7 +15,7 @@ export default function ZarrelCredit({
   return (
     <p
       className={[
-        'text-[11px] leading-none tracking-wide text-slate-400 dark:text-slate-500',
+        'text-[11px] leading-none tracking-wide text-app-subtle',
         className,
       ]
         .filter(Boolean)
@@ -27,7 +27,7 @@ export default function ZarrelCredit({
         target="_blank"
         rel="noopener noreferrer"
         className={[
-          'font-medium text-slate-500 underline decoration-slate-300/80 underline-offset-[3px] transition hover:text-slate-700 hover:decoration-slate-400 dark:text-slate-400 dark:decoration-slate-600 dark:hover:text-slate-300',
+          'font-medium text-primary-600/80 underline decoration-primary-200 underline-offset-[3px] transition hover:text-primary-700 hover:decoration-primary-400',
           linkClassName,
         ]
           .filter(Boolean)

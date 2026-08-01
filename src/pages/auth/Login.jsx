@@ -174,7 +174,7 @@ function LoginScreen({
   verificationSuccess,
 }) {
   return (
-    <div className="keyboard-scroll-host relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-gradient-to-b from-primary-50 via-app-card to-primary-50">
+    <div className="keyboard-scroll-host relative min-h-dvh w-full overflow-x-hidden overflow-y-auto bg-gradient-to-b from-primary-50 via-app-card to-primary-50/80">
       <LoginDecorations />
 
       <GoogleAccountMissingDialog
@@ -242,7 +242,7 @@ function LoginScreen({
                         placeholder="Ingresa tu contraseña"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base py-space-sm pr-12 text-base text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
+                        className="h-input-md w-full min-w-0 rounded-radius-md border border-app-border bg-app-card px-space-base py-space-sm pr-12 text-base text-app-text outline-none transition-colors duration-fast ease-out placeholder:text-app-subtle hover:border-primary-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
                       />
                       <button
                         type="button"

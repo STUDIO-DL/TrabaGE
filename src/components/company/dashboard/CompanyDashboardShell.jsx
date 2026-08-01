@@ -22,7 +22,8 @@ export default function CompanyDashboardShell({ profile, children }) {
   return (
     <div className="page-shell min-h-dvh min-w-0 max-w-full overflow-x-hidden bg-app-surface lg:pb-0">
       <TabletTopBar />
-      <div className="flex min-h-dvh w-full min-w-0">
+      {/* Avoid nested min-h-dvh inside .page-shell (blank end-of-scroll gap). */}
+      <div className="flex w-full min-w-0">
         <CompanyDashboardSidebar profile={profile} />
         <main className="min-w-0 flex-1 overflow-x-hidden">{children}</main>
       </div>

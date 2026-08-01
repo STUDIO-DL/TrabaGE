@@ -93,7 +93,7 @@ export const TOAST = {
   profileUpdated: 'Perfil actualizado.',
   postCreated: 'Publicación creada correctamente.',
   postUpdated: 'Publicación actualizada.',
-  postDeleted: 'Publicación eliminada.',
+  postDeleted: 'Publicación eliminada correctamente.',
   jobPublished: 'Oferta publicada.',
   jobDeleted: 'Oferta eliminada.',
   appearanceUpdated: 'Apariencia actualizada.',

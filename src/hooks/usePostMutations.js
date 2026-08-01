@@ -1,12 +1,19 @@
-import { useCallback } from 'react';
+import { createElement, useCallback, useState } from 'react';
+import { useAuth } from './useAuth';
 import { useNotificationContext } from '../context/NotificationContext';
 import { postsService } from '../services/posts.service';
 import { storageService } from '../services/storage.service';
-import { STORAGE_BUCKETS } from '../constants/storage';
 import { TOAST } from '../utils/copyLabels';
+import DeletePostConfirmModal from '../components/feed/DeletePostConfirmModal';
+
+const DELETE_ERROR_TOAST =
+  'No hemos podido eliminar la publicación. Inténtalo de nuevo.';
 
 export function usePostMutations({ onSuccess } = {}) {
+  const { user } = useAuth();
   const { showToast } = useNotificationContext();
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const handleEdit = useCallback(
     async (post) => {
@@ -30,26 +37,56 @@ export function usePostMutations({ onSuccess } = {}) {
     [onSuccess, showToast],
   );
 
-  const handleDelete = useCallback(
-    async (post) => {
-      const ok = window.confirm('¿Eliminar esta publicación?');
-      if (!ok) return;
+  const handleDelete = useCallback((post) => {
+    if (!post?.id) return;
+    if (!user?.id || post.author_id !== user.id) {
+      showToast(DELETE_ERROR_TOAST, 'error');
+      return;
+    }
+    setPendingDelete(post);
+  }, [showToast, user?.id]);
 
-      const { error } = await postsService.delete(post.id);
+  const cancelDelete = useCallback(() => {
+    if (deleting) return;
+    setPendingDelete(null);
+  }, [deleting]);
+
+  const confirmDelete = useCallback(async () => {
+    const post = pendingDelete;
+    if (!post?.id || !user?.id) return;
+    if (post.author_id !== user.id) {
+      setPendingDelete(null);
+      showToast(DELETE_ERROR_TOAST, 'error');
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const { error } = await postsService.deleteOwn(post.id, user.id);
       if (error) {
-        showToast('No se pudo eliminar la publicación.', 'error');
+        showToast(DELETE_ERROR_TOAST, 'error');
         return;
       }
 
-      if (post.post_image_path) {
-        await storageService.deleteFile(STORAGE_BUCKETS.POST_IMAGES, post.post_image_path);
+      // Best-effort storage cleanup after the row is gone (RLS still allows own folder delete).
+      if (post.post_image_path || post.id) {
+        await storageService.deleteOldPostImage(user.id, post.id, post.post_image_path);
       }
 
+      setPendingDelete(null);
       showToast(TOAST.postDeleted, 'success');
       onSuccess?.(post);
-    },
-    [onSuccess, showToast],
-  );
+    } finally {
+      setDeleting(false);
+    }
+  }, [onSuccess, pendingDelete, showToast, user?.id]);
 
-  return { handleEdit, handleDelete };
+  const deleteConfirmModal = createElement(DeletePostConfirmModal, {
+    isOpen: Boolean(pendingDelete),
+    onClose: cancelDelete,
+    onConfirm: confirmDelete,
+    loading: deleting,
+  });
+
+  return { handleEdit, handleDelete, deleteConfirmModal };
 }

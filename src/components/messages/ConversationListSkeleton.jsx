@@ -2,7 +2,10 @@ import Skeleton from '../common/Skeleton';
 
 function ConversationItemSkeleton() {
   return (
-    <div className="flex items-center gap-space-md border-b border-app-border px-space-base py-space-md" aria-hidden="true">
+    <div
+      className="flex items-center gap-space-md border-b border-app-divider/80 px-space-base py-space-md"
+      aria-hidden="true"
+    >
       <Skeleton className="h-12 w-12 shrink-0 rounded-radius-circular" />
       <div className="min-w-0 flex-1 space-y-space-sm">
         <div className="flex items-center justify-between gap-space-sm">
@@ -11,6 +14,7 @@ function ConversationItemSkeleton() {
         </div>
         <Skeleton className="h-3 w-4/5" />
       </div>
+      <Skeleton className="h-2.5 w-2.5 shrink-0 rounded-radius-circular" />
     </div>
   );
 }

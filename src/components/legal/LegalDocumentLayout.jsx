@@ -39,7 +39,7 @@ export default function LegalDocumentLayout({
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl px-space-md py-space-lg sm:px-space-lg sm:py-space-xl">
+      <div className="allow-text-select mx-auto max-w-3xl px-space-md py-space-lg sm:px-space-lg sm:py-space-xl">
         <div className="mb-space-lg border-b border-app-divider pb-space-md">
           {intro.part ? (
             <p className="text-caption font-semibold uppercase tracking-wider text-primary-600">

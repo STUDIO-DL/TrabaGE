@@ -65,7 +65,7 @@ function SocialListRow({ network, href }) {
       href={safeHref}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex min-h-touch items-center gap-space-sm py-space-xs transition-colors duration-200 hover:bg-gray-50"
+      className="group flex min-h-touch items-center gap-space-sm rounded-radius-sm py-space-xs transition-colors duration-200 hover:bg-primary-50/60"
     >
       <span
         className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-radius-md ${network.activeClass}`}
@@ -73,8 +73,8 @@ function SocialListRow({ network, href }) {
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-caption text-gray-500">{network.label}</p>
-        <p className="truncate text-body-small font-medium text-gray-900">{handle}</p>
+        <p className="text-caption text-app-muted">{network.label}</p>
+        <p className="truncate text-body-small font-medium text-app-text">{handle}</p>
       </div>
       <AppIcon
         icon={ExternalLink}
@@ -146,7 +146,7 @@ export default function PersonalSocialSection({
     >
       {isOwn ? (
         <div className="space-y-4">
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-app-muted">
             Añade enlaces a tus perfiles públicos. Solo se aceptan URLs seguras (https).
           </p>
           {PERSONAL_SOCIAL_NETWORKS.map((network) => (

@@ -3,6 +3,11 @@ import Input from '../ui/Input';
 import AppIcon from '../common/AppIcon';
 import { Check, Search } from '../../constants/icons';
 import { topicsService } from '../../services/topics.service';
+import {
+  getTopicDisplayLabel,
+  isGeneralTopic,
+  sortTopicsForSelector,
+} from '../../constants/topics';
 
 const MAX_TOPICS = 3;
 
@@ -21,7 +26,7 @@ export default function TopicSelector({
 
     topicsService.listActive().then(({ data, error }) => {
       if (cancelled) return;
-      if (!error) setCatalog(data ?? []);
+      if (!error) setCatalog(sortTopicsForSelector(data ?? []));
       setLoading(false);
     });
 
@@ -35,10 +40,23 @@ export default function TopicSelector({
     [selected],
   );
 
+  const hasGeneralSelected = useMemo(
+    () => (selected ?? []).some(isGeneralTopic),
+    [selected],
+  );
+
   const filteredCatalog = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return catalog;
-    return catalog.filter((topic) => topic.name.toLowerCase().includes(q));
+    const base = sortTopicsForSelector(catalog);
+    if (!q) return base;
+    return base.filter((topic) => {
+      const label = getTopicDisplayLabel(topic, { forSelector: true }).toLowerCase();
+      return (
+        topic.name.toLowerCase().includes(q) ||
+        label.includes(q) ||
+        String(topic.slug ?? '').toLowerCase().includes(q)
+      );
+    });
   }, [catalog, query]);
 
   const handleToggle = (topic) => {
@@ -49,12 +67,19 @@ export default function TopicSelector({
       return;
     }
 
-    if (selected.length >= max) return;
-    onChange?.([...selected, topic]);
+    // "Todos" is exclusive — cannot mix with specific topics.
+    if (isGeneralTopic(topic)) {
+      onChange?.([topic]);
+      return;
+    }
+
+    const withoutGeneral = (selected ?? []).filter((item) => !isGeneralTopic(item));
+    if (withoutGeneral.length >= max) return;
+    onChange?.([...withoutGeneral, topic]);
   };
 
-  const atLimit = selected.length >= max;
-  const remaining = Math.max(0, max - selected.length);
+  const atLimit = hasGeneralSelected || selected.length >= max;
+  const remaining = hasGeneralSelected ? 0 : Math.max(0, max - selected.length);
 
   return (
     <section
@@ -70,7 +95,7 @@ export default function TopicSelector({
             Temas
           </h2>
           <p className="mt-space-xs text-caption text-app-muted">
-            Elige entre 1 y {max} para clasificar tu publicación.
+            Elige «Todos» para interés general, o entre 1 y {max} temas específicos.
           </p>
         </div>
         <span
@@ -82,7 +107,7 @@ export default function TopicSelector({
           ].join(' ')}
           aria-live="polite"
         >
-          {selected.length}/{max}
+          {hasGeneralSelected ? '1/1' : `${selected.length}/${max}`}
         </span>
       </div>
 
@@ -117,7 +142,10 @@ export default function TopicSelector({
           <ul className="divide-y divide-app-border">
             {filteredCatalog.map((topic) => {
               const isSelected = selectedIds.has(topic.id);
-              const isDisabledOption = disabled || (!isSelected && atLimit);
+              const isDisabledOption =
+                disabled ||
+                (!isSelected && atLimit && !isGeneralTopic(topic)) ||
+                (!isSelected && hasGeneralSelected && !isGeneralTopic(topic));
 
               return (
                 <li key={topic.id} role="option" aria-selected={isSelected}>
@@ -148,7 +176,7 @@ export default function TopicSelector({
                       ) : null}
                     </span>
                     <span className="min-w-0 flex-1 text-body-small font-medium">
-                      {topic.name}
+                      {getTopicDisplayLabel(topic, { forSelector: true })}
                     </span>
                   </button>
                 </li>
@@ -161,6 +189,10 @@ export default function TopicSelector({
       {selected.length < 1 ? (
         <p className="mt-space-sm text-caption text-app-subtle">
           Elige al menos un tema para publicar.
+        </p>
+      ) : hasGeneralSelected ? (
+        <p className="mt-space-sm text-caption text-app-muted">
+          «Todos» es exclusivo: la publicación podrá llegar a cualquier feed según el ranking.
         </p>
       ) : atLimit ? (
         <p className="mt-space-sm text-caption text-app-muted">

@@ -1,22 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import FormPageLayout from '../../components/layout/FormPageLayout';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Textarea from '../../components/ui/Textarea';
+import LocationFields from '../../components/common/LocationFields';
 import { FormPageSkeleton } from '../../components/common/Skeleton';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import { ProfileEntryRow } from '../../components/profile/ProfileSectionCard';
-import {
-  CITIES,
-  CITY_OTHER_LABEL,
-  CITY_OTHER_VALUE,
-  getCitySelectValue,
-  isListedCity,
-} from '../../constants/cities';
-import { COUNTRIES, DEFAULT_COUNTRY } from '../../constants/countries';
+import { DEFAULT_COUNTRY } from '../../constants/locations';
 import { SECTORS } from '../../constants/sectors';
 import { GraduationCap } from '../../constants/icons';
 import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
@@ -90,7 +84,6 @@ export default function EditIntro() {
   const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [modalSaving, setModalSaving] = useState(false);
-  const [forceOtherCity, setForceOtherCity] = useState(false);
 
   const initialForm = useMemo(() => {
     if (!user) return emptyForm;
@@ -130,23 +123,6 @@ export default function EditIntro() {
       String(form.intro_education_id) === String(editingEducation.id),
   );
 
-  // #region agent log
-  useEffect(() => {
-    if (!draftEnabled) return;
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'B',location:'EditIntro.jsx:draftHydrate',message:'edit-intro draft/form snapshot',data:{draftEnabled,loading,hasProfile:Boolean(profile),formName:form?.full_name||'',profileName:profile?.full_name||'',formSector:form?.sector||'',profileSector:profile?.sector||'',formShowEdu:Boolean(form?.show_education_in_intro),profileShowEdu:Boolean(profile?.show_education_in_intro),formIntroEduId:form?.intro_education_id||null,profileIntroEduId:profile?.intro_education_id||null,draftDiffers:Boolean(form&&profile&&(form.full_name!==(profile.full_name||'')||form.headline!==(profile.headline||'')||form.sector!==(profile.sector||'')))},timestamp:Date.now()})}).catch(()=>{});
-  }, [draftEnabled, loading, profile, form]);
-
-  useEffect(() => {
-    if (!draftEnabled) return;
-    const list = profile?.experience ?? [];
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'C',location:'EditIntro.jsx:currentExperience',message:'resolved current experience',data:{count:list.length,selectedId:currentExperience?.id||null,selectedPosition:currentExperience?.position||null,selectedEnd:currentExperience?.end_date||null,selectedIsCurrent:currentExperience?.is_current??null,all:list.map((e)=>({id:e.id,position:e.position,end_date:e.end_date||null,is_current:e.is_current??null})),pickedEndedJob:Boolean(currentExperience?.end_date)},timestamp:Date.now()})}).catch(()=>{});
-  }, [draftEnabled, currentExperience, profile?.experience]);
-
-  useEffect(() => {
-    if (!educationOpen) return;
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E1',location:'EditIntro.jsx:EducationModalProps',message:'showInIntro prop resolved for education modal',data:{mode:editingEducation?.id?'edit':'add',editingId:editingEducation?.id||null,formShowEdu:Boolean(form.show_education_in_intro),formIntroEduId:form.intro_education_id||null,resolvedShowInIntro:educationModalShowInIntro},timestamp:Date.now()})}).catch(()=>{});
-  }, [educationOpen, editingEducation, form.show_education_in_intro, form.intro_education_id, educationModalShowInIntro]);
-  // #endregion
 
   const educationOptions = useMemo(
     () => buildEducationSelectOptions(profile?.education),
@@ -158,24 +134,6 @@ export default function EditIntro() {
       event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
-
-  const citySelectValue = getCitySelectValue(form.city, forceOtherCity);
-  const showCustomCity = citySelectValue === CITY_OTHER_VALUE;
-
-  const handleCitySelectChange = (event) => {
-    const value = event.target.value;
-    if (value === CITY_OTHER_VALUE) {
-      setForceOtherCity(true);
-      setForm((prev) => ({
-        ...prev,
-        city: isListedCity(prev.city) ? '' : prev.city,
-      }));
-      setErrors((prev) => ({ ...prev, city: undefined }));
-      return;
-    }
-    setForceOtherCity(false);
-    setField('city')(event);
   };
 
   const openExperience = (item = null) => {
@@ -193,9 +151,6 @@ export default function EditIntro() {
     const nextErrors = validateIntroForm(form);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'A',location:'EditIntro.jsx:handleSave:validation',message:'intro save blocked by validation',data:{errorKeys:Object.keys(nextErrors),errors:nextErrors},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       const firstError = Object.values(nextErrors)[0];
       showToast(firstError, 'error');
       const firstField = Object.keys(nextErrors)[0];
@@ -215,16 +170,10 @@ export default function EditIntro() {
       intro_education_id: form.show_education_in_intro ? form.intro_education_id || null : null,
     };
 
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'A',location:'EditIntro.jsx:handleSave:before',message:'intro save payload',data:{payload:{...payload,about:payload.about? '[set]':null},showEdu:payload.show_education_in_intro,introEduId:payload.intro_education_id},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     const { error } = await updateBasicInfo(payload);
     setSaving(false);
 
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'A',location:'EditIntro.jsx:handleSave:after',message:'intro save result',data:{ok:!error,errorMessage:error?.message||null,errorCode:error?.code||null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     if (error) {
       showErrorToast(error, 'save_profile');
@@ -237,9 +186,6 @@ export default function EditIntro() {
   };
 
   const saveExperience = async (data, id) => {
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'D',location:'EditIntro.jsx:saveExperience',message:'experience save from edit-intro',data:{id:id||null,hasIsCurrent:'is_current' in (data||{}),is_current:data?.is_current??null,end_date:data?.end_date||null,position:data?.position||null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     setModalSaving(true);
     const result = id ? await updateExperience(id, data) : await addExperience(data);
     setModalSaving(false);
@@ -450,43 +396,20 @@ export default function EditIntro() {
           </EditIntroSection>
 
           <EditIntroSection title="Ubicación">
-            <Select
-              label="País/Región"
-              name="country"
-              value={form.country}
-              onChange={setField('country')}
-              error={errors.country}
+            <LocationFields
+              country={form.country}
+              city={form.city}
               required
-              options={[
-                { value: '', label: 'Seleccionar país' },
-                ...COUNTRIES.map((country) => ({ value: country, label: country })),
-              ]}
+              errors={errors}
+              onCountryChange={(nextCountry) => {
+                setForm((prev) => ({ ...prev, country: nextCountry, city: '' }));
+                setErrors((prev) => ({ ...prev, country: undefined, city: undefined }));
+              }}
+              onCityChange={(nextCity) => {
+                setForm((prev) => ({ ...prev, city: nextCity }));
+                setErrors((prev) => ({ ...prev, city: undefined }));
+              }}
             />
-            <Select
-              label="Ciudad"
-              name="city-select"
-              value={citySelectValue}
-              onChange={handleCitySelectChange}
-              error={showCustomCity ? undefined : errors.city}
-              required={!showCustomCity}
-              options={[
-                { value: '', label: 'Seleccionar ciudad' },
-                ...CITIES.map((city) => ({ value: city, label: city })),
-                { value: CITY_OTHER_VALUE, label: CITY_OTHER_LABEL },
-              ]}
-            />
-            {showCustomCity ? (
-              <Input
-                label="Escribe tu ciudad"
-                name="city"
-                id="city"
-                value={form.city}
-                onChange={setField('city')}
-                error={errors.city}
-                required
-                placeholder="Ciudad fuera de Guinea Ecuatorial"
-              />
-            ) : null}
           </EditIntroSection>
         </form>
       </FormPageLayout>

@@ -10,7 +10,8 @@ import { useNotificationContext } from '../../../context/NotificationContext';
 import { jobsService } from '../../../services/jobs.service';
 import { getPreviewMediaUrls } from '../../../constants/preview';
 import { validateFile } from '../../../utils/validateFile';
-import { CITIES } from '../../../constants/cities';
+import LocationFields from '../../common/LocationFields';
+import { DEFAULT_COUNTRY } from '../../../constants/locations';
 import { SECTORS } from '../../../constants/sectors';
 import { Save, ICON_SIZES } from '../../../constants/icons';
 import CompanyProfileView from './CompanyProfileView';
@@ -82,7 +83,7 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
       intro: profile?.intro || '',
       description: profile?.description || '',
       city: profile?.city || '',
-      country: profile?.country || 'Guinea Ecuatorial',
+      country: profile?.country || DEFAULT_COUNTRY,
       address: profile?.address || '',
       sector: profile?.sector || '',
       company_type: profile?.company_type || '',
@@ -189,20 +190,15 @@ function CompanyEditModal({ mode, profile, loading, onClose, onSave }) {
 
         {mode === 'details' && (
           <>
-            <Select
-              label="Ciudad"
-              value={form.city || ''}
-              onChange={setField('city')}
-              options={[
-                { value: '', label: 'Seleccionar' },
-                ...CITIES.map((city) => ({ value: city, label: city })),
-              ]}
-            />
-            <Input
-              label="País"
-              value={form.country || ''}
-              onChange={setField('country')}
-              placeholder="Guinea Ecuatorial"
+            <LocationFields
+              country={form.country || ''}
+              city={form.city || ''}
+              onCountryChange={(nextCountry) => {
+                setForm((prev) => ({ ...prev, country: nextCountry, city: '' }));
+              }}
+              onCityChange={(nextCity) => {
+                setForm((prev) => ({ ...prev, city: nextCity }));
+              }}
             />
             <Input
               label="Dirección"

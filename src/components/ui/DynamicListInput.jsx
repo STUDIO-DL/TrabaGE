@@ -27,7 +27,7 @@ export default function DynamicListInput({
   return (
     <div className="w-full">
       {label && (
-        <p className="mb-1.5 block text-sm font-medium text-gray-700">{label}</p>
+        <p className="mb-1.5 block text-sm font-medium text-app-text">{label}</p>
       )}
       <div className="space-y-2">
         {items.map((item, index) => (
@@ -41,7 +41,7 @@ export default function DynamicListInput({
             <button
               type="button"
               onClick={() => removeItem(index)}
-              className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 text-gray-400 hover:border-red-200 hover:text-red-500"
+              className="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-app-border text-app-subtle transition-colors hover:border-error-200 hover:bg-error-50 hover:text-error-500"
               aria-label="Eliminar"
             >
               <AppIcon icon={Trash2} size={ICON_SIZES.default} />

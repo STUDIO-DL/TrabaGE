@@ -57,7 +57,7 @@ export default function BottomNav() {
       aria-label="Navegación principal"
       data-bottom-nav=""
       className={[
-        'fixed inset-x-0 bottom-0 z-nav border-t border-app-border bg-app-card/95 backdrop-blur supports-[backdrop-filter]:bg-app-card/90 keyboard-aware-footer lg:hidden',
+        'fixed inset-x-0 bottom-0 z-nav border-t border-app-border bg-app-card/95 backdrop-blur supports-[backdrop-filter]:bg-app-card/92 keyboard-aware-footer lg:hidden',
         isKeyboardVisible ? '' : 'pb-safe',
       ].join(' ')}
       style={{ bottom: bottomBarInset }}

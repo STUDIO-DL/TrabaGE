@@ -5,6 +5,10 @@ import {
   FEED_CONTENT_TYPES,
   FEED_MAX_CONSECUTIVE_SAME_TYPE,
 } from '../constants/feedContentTypes';
+import {
+  GENERAL_TOPIC_FEED_BOOST,
+  postHasGeneralTopic,
+} from '../constants/topics';
 
 function tokenize(value) {
   return String(value ?? '')
@@ -100,6 +104,8 @@ export function scoreFeedItem(item, context = {}) {
       }
       if (isEmployerAuthor(post?.author_type)) score += institutionMode ? 6 : 10;
       if (item.content_type === FEED_CONTENT_TYPES.ADVICE) score += 8;
+      // General audience topic: modest boost — expands reach, does not dominate ranking.
+      if (postHasGeneralTopic(post)) score += GENERAL_TOPIC_FEED_BOOST;
       break;
     }
 

@@ -30,7 +30,7 @@ function PostCard({
   const hasText = Boolean(post.content?.trim());
 
   return (
-    <article className="surface-flat min-w-0 max-w-full border-b border-app-divider py-space-base last:border-b-0 sm:py-space-lg">
+    <article className="surface-flat min-w-0 max-w-full py-space-base last:border-b-0 sm:py-space-lg">
       <div className="mb-space-md flex items-start gap-space-md">
         <UserProfileLink
           userId={authorId}
@@ -65,6 +65,8 @@ function PostCard({
           shareText={(post.content || '').slice(0, 120) || 'Mira esta publicación en TrabaGE.'}
           targetType={REPORT_TARGET_TYPES.POST}
           targetId={post.id}
+          reportLabel="Reportar publicación"
+          deleteLabel="Eliminar publicación"
           onEdit={canManage ? () => onEdit?.(post) : undefined}
           onDelete={canManage ? () => onDelete?.(post) : undefined}
         />

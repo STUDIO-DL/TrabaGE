@@ -72,9 +72,6 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
       imageFile,
       topicIds: selectedTopics.map((topic) => topic.id),
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'4306af'},body:JSON.stringify({sessionId:'4306af',runId:'post-fix',hypothesisId:'A',location:'PostComposer.jsx:handleSubmit',message:'publish result before clear',data:{hasResult:result!==undefined,ok:result?.ok??null,willClear:result?.ok===true,contentLen:trimmedContent.length,topicCount:selectedTopics.length},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (result?.ok !== true) return;
     setContent('');
     setSelectedTopics([]);

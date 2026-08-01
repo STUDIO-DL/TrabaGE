@@ -129,9 +129,6 @@ export default function EducationModal({
     if (!justOpened) return;
     setFieldErrors({});
     setSubmitError('');
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E1',location:'EducationModal.jsx:open',message:'education modal opened',data:{mode:initial?.id?'edit':'add',editingId:initial?.id||null,showInIntroProp:Boolean(showInIntro),draftKey,institution:initialForm.institution||'',formShowInIntro:Boolean(initialForm.showInIntro)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
   }, [isOpen, initial, showInIntro, draftKey, initialForm.institution, initialForm.showInIntro]);
 
   const setField = useCallback((patch) => {
@@ -149,9 +146,6 @@ export default function EducationModal({
 
     const errors = validateForm(form);
     if (Object.keys(errors).length) {
-      // #region agent log
-      fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E4',location:'EducationModal.jsx:validation',message:'education modal validation failed',data:{mode:initial?.id?'edit':'add',errorKeys:Object.keys(errors),errors,institutionLen:(form.institution||'').length,hasStart:Boolean(form.startMonth&&form.startYear),isCurrent:Boolean(form.is_current),showInIntro:Boolean(form.showInIntro)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       setFieldErrors(errors);
       return;
     }
@@ -169,16 +163,10 @@ export default function EducationModal({
       skills: form.skills,
     };
 
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E1',location:'EducationModal.jsx:submit',message:'education modal submit',data:{mode:initial?.id?'edit':'add',editingId:initial?.id||null,showInIntro:Boolean(form.showInIntro),showInIntroProp:Boolean(showInIntro),institution:payload.institution,program:payload.program,start_date:payload.start_date,end_date:payload.end_date,is_current:payload.is_current,skillsCount:(payload.skills||[]).length},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
 
     const { error: saveError } = await onSave(payload, initial?.id, {
       showInIntro: form.showInIntro,
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7421/ingest/6e8f1d4e-4a35-4c67-91d4-e4cf9bf02656',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'fe2e54'},body:JSON.stringify({sessionId:'fe2e54',runId:'pre-fix',hypothesisId:'E2',location:'EducationModal.jsx:afterSave',message:'education modal onSave returned',data:{ok:!saveError,errorMessage:saveError?.message||null,errorCode:saveError?.code||null,showInIntro:Boolean(form.showInIntro)},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
     if (saveError) {
       setSubmitError(saveError.message);
       return;
