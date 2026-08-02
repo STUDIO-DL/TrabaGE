@@ -118,17 +118,17 @@ export const radius = {
   lg: 16,
   xl: 24,
   circular: 9999,
-  /** Component-specific (existing brand feel) */
-  btnPrimary: 12,
-  btnSecondary: 12,
+  /** Buttons / inputs — compact, Material-like */
+  btnPrimary: 10,
+  btnSecondary: 10,
 };
 
-/** Exactly 4 elevation levels — soft blue-tinted shadows (Stripe/Linear). */
+/** Exactly 4 elevation levels — nearly invisible neutral shadows. */
 export const elevation = {
-  1: '0 0 #0000',
-  2: '0 4px 14px rgb(var(--app-shadow) / 0.07)',
-  3: '0 12px 28px rgb(var(--app-shadow) / 0.09)',
-  4: '0 20px 42px rgb(var(--app-shadow) / 0.12)',
+  1: '0 1px 2px rgb(var(--app-shadow) / 0.04)',
+  2: '0 2px 8px rgb(var(--app-shadow) / 0.06)',
+  3: '0 4px 16px rgb(var(--app-shadow) / 0.08)',
+  4: '0 8px 24px rgb(var(--app-shadow) / 0.1)',
 };
 
 export const motion = {
@@ -175,13 +175,13 @@ export const componentSize = {
   button: {
     sm: { height: 32, px: 10, font: 'caption' },
     md: { height: 40, px: 14, font: 'button' },
-    lg: { height: 48, px: 20, font: 'button' },
-    primaryMobile: { height: 48, radius: 12 },
-    secondaryMobile: { height: 44, radius: 12 },
+    lg: { height: 44, px: 18, font: 'button' },
+    primaryMobile: { height: 44, radius: 10 },
+    secondaryMobile: { height: 44, radius: 10 },
   },
   input: {
-    height: 40,
-    radius: 12,
+    height: 44,
+    radius: 10,
   },
   avatar: {
     sm: 28,
@@ -194,13 +194,13 @@ export const componentSize = {
 };
 
 export const typography = {
-  display: { size: 36, lineHeight: 1.1, weight: 800, letterSpacing: '-0.02em' },
-  headingXl: { size: 28, lineHeight: 1.15, weight: 800, letterSpacing: '-0.02em' },
-  headingL: { size: 24, lineHeight: 1.2, weight: 700, letterSpacing: '-0.015em' },
-  headingM: { size: 18, lineHeight: 1.3, weight: 700, letterSpacing: '-0.01em' },
-  title: { size: 21, lineHeight: 1.3, weight: 600, letterSpacing: '-0.01em' },
-  subtitle: { size: 17, lineHeight: 1.35, weight: 500 },
-  body: { size: 15, lineHeight: 1.5, weight: 400 },
+  display: { size: 28, lineHeight: 1.15, weight: 700, letterSpacing: '-0.015em' },
+  headingXl: { size: 24, lineHeight: 1.2, weight: 600, letterSpacing: '-0.01em' },
+  headingL: { size: 22, lineHeight: 1.25, weight: 600, letterSpacing: '-0.01em' },
+  headingM: { size: 18, lineHeight: 1.3, weight: 600, letterSpacing: '-0.005em' },
+  title: { size: 20, lineHeight: 1.3, weight: 600, letterSpacing: '-0.01em' },
+  subtitle: { size: 16, lineHeight: 1.4, weight: 500 },
+  body: { size: 16, lineHeight: 1.5, weight: 400 },
   bodySmall: { size: 14, lineHeight: 1.45, weight: 400 },
   caption: { size: 12, lineHeight: 1.4, weight: 400 },
   button: { size: 14, lineHeight: 1.2, weight: 600 },
@@ -218,7 +218,7 @@ export const layout = {
   asideWidth: 280,
   pagePaddingX: 16,
   pagePaddingY: 16,
-  sectionGap: 20,
+  sectionGap: 24,
   logoMaxHeight: 80,
   onboardingIllustrationMax: 260,
   onboardingIllustrationMin: 220,
@@ -254,6 +254,6 @@ export const tailwindClasses = {
 
 /** Alias for older typography shape */
 export const buttons = {
-  primary: { height: 48, radius: 12 },
-  secondary: { height: 44, radius: 12 },
+  primary: { height: 44, radius: 10 },
+  secondary: { height: 44, radius: 10 },
 };

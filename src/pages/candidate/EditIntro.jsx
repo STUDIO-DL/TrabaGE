@@ -7,7 +7,6 @@ import Select from '../../components/ui/Select';
 import Textarea from '../../components/ui/Textarea';
 import LocationFields from '../../components/common/LocationFields';
 import { FormPageSkeleton } from '../../components/common/Skeleton';
-import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import { ProfileEntryRow } from '../../components/profile/ProfileSectionCard';
 import { DEFAULT_COUNTRY } from '../../constants/locations';
@@ -22,7 +21,6 @@ import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { formatDateRange } from '../../utils/formatDate';
 import {
   buildEducationSelectOptions,
-  getCurrentExperience,
   HEADLINE_MAX_LENGTH,
   validateIntroForm,
 } from '../../utils/profileIntro';
@@ -70,8 +68,6 @@ export default function EditIntro() {
     profile,
     loading,
     updateBasicInfo,
-    addExperience,
-    updateExperience,
     addEducation,
     updateEducation,
     syncEducationIntro,
@@ -79,9 +75,7 @@ export default function EditIntro() {
 
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [experienceOpen, setExperienceOpen] = useState(false);
   const [educationOpen, setEducationOpen] = useState(false);
-  const [editingExperience, setEditingExperience] = useState(null);
   const [editingEducation, setEditingEducation] = useState(null);
   const [modalSaving, setModalSaving] = useState(false);
 
@@ -112,17 +106,11 @@ export default function EditIntro() {
     enabled: draftEnabled,
   });
 
-  const currentExperience = useMemo(
-    () => getCurrentExperience(profile?.experience),
-    [profile?.experience],
-  );
-
   const educationModalShowInIntro = Boolean(
     form.show_education_in_intro &&
       editingEducation?.id &&
       String(form.intro_education_id) === String(editingEducation.id),
   );
-
 
   const educationOptions = useMemo(
     () => buildEducationSelectOptions(profile?.education),
@@ -134,11 +122,6 @@ export default function EditIntro() {
       event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
-
-  const openExperience = (item = null) => {
-    setEditingExperience(item);
-    setExperienceOpen(true);
   };
 
   const openEducation = (item = null) => {
@@ -183,16 +166,6 @@ export default function EditIntro() {
     clearDraft();
     showToast(TOAST.saved, 'success');
     navigate('/personal/profile');
-  };
-
-  const saveExperience = async (data, id) => {
-    setModalSaving(true);
-    const result = id ? await updateExperience(id, data) : await addExperience(data);
-    setModalSaving(false);
-    if (!result.error) {
-      showToast('Experiencia guardada.', 'success');
-    }
-    return result;
   };
 
   const saveEducation = async (data, id, options = {}) => {
@@ -302,36 +275,6 @@ export default function EditIntro() {
             />
           </EditIntroSection>
 
-          <EditIntroSection title="Puesto actual">
-            {currentExperience ? (
-              <div className="rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
-                <p className="text-body-small font-medium text-app-text">
-                  {currentExperience.position}
-                </p>
-                <p className="text-caption text-app-muted">{currentExperience.company}</p>
-              </div>
-            ) : (
-              <p className="text-body-small text-app-muted">
-                Aún no has añadido ningún puesto.
-              </p>
-            )}
-            <div className="flex flex-col gap-space-sm sm:flex-row">
-              {currentExperience ? (
-                <Button
-                  type="button"
-                  variant="outlined"
-                  fullWidth
-                  onClick={() => openExperience(currentExperience)}
-                >
-                  Editar puesto
-                </Button>
-              ) : null}
-              <Button type="button" variant="outlined" fullWidth onClick={() => openExperience()}>
-                + Añadir puesto
-              </Button>
-            </div>
-          </EditIntroSection>
-
           <EditIntroSection title="Sector">
             <Select
               label="Industria"
@@ -414,13 +357,6 @@ export default function EditIntro() {
         </form>
       </FormPageLayout>
 
-      <ExperienceModal
-        isOpen={experienceOpen}
-        onClose={() => setExperienceOpen(false)}
-        initial={editingExperience}
-        onSave={saveExperience}
-        loading={modalSaving}
-      />
       <EducationModal
         isOpen={educationOpen}
         onClose={() => setEducationOpen(false)}

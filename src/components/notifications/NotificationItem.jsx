@@ -89,10 +89,10 @@ export default function NotificationItem({
         'notification-row group relative flex cursor-pointer items-start gap-space-md overflow-hidden',
         'border-b border-app-divider/80 px-space-base py-space-md last:border-b-0',
         'transition-colors duration-fast ease-out',
-        'active:bg-primary-50/50 dark:active:bg-primary-950/25',
+        'active:bg-app-surface',
         isUnread
-          ? 'bg-app-card hover:bg-primary-50/35 dark:hover:bg-primary-950/20'
-          : 'bg-app-card hover:bg-app-surface/60',
+          ? 'bg-app-card hover:bg-app-surface'
+          : 'bg-app-card hover:bg-app-surface',
       ].join(' ')}
     >
       {ripples.map((ripple) => (

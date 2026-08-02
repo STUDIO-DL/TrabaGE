@@ -24,9 +24,7 @@ export default function Card({
       className={[
         'surface-card',
         paddingMap[padding] ?? paddingMap.md,
-        interactive
-          ? 'surface-press hover:border-primary-200 hover:bg-primary-50/50'
-          : '',
+        interactive ? 'surface-press hover:bg-app-surface' : '',
         className,
       ]
         .filter(Boolean)

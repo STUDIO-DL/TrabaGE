@@ -181,7 +181,7 @@ export default function NotificationsView({ role = 'candidate' }) {
     >
       <div className="min-h-full bg-app-card">
         {/* Segmented filter chips — horizontally scrollable, no scrollbar clutter */}
-        <div className="notifications-filters-sticky border-b border-app-divider bg-app-card/95 backdrop-blur supports-[backdrop-filter]:bg-app-card/90">
+        <div className="notifications-filters-sticky border-b border-app-divider bg-white dark:bg-app-card">
           <div className="flex gap-space-sm overflow-x-auto px-space-base py-space-md [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {NOTIFICATION_FILTERS.map((filter) => {
               const isActive = activeFilter === filter.id;
@@ -196,7 +196,7 @@ export default function NotificationsView({ role = 'candidate' }) {
                     'min-h-touch',
                     isActive
                       ? 'bg-primary-600 text-white'
-                      : 'bg-transparent text-app-muted ring-1 ring-app-border hover:bg-primary-50/50 hover:text-primary-700',
+                      : 'bg-transparent text-app-muted ring-1 ring-app-border hover:bg-app-surface hover:text-app-text',
                   ].join(' ')}
                 >
                   {filter.label}

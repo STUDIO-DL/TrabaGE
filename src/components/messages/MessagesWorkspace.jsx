@@ -149,7 +149,7 @@ export default function MessagesWorkspace({ conversationId = null }) {
         />
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col bg-app-bg">
+      <main className="flex min-w-0 flex-1 flex-col bg-[var(--chat-wallpaper-bg)]">
         {conversationId ? (
           <ConversationView conversationId={conversationId} role={resolvedRole} embedded />
         ) : (

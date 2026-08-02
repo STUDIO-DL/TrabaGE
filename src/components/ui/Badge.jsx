@@ -1,11 +1,11 @@
 const variants = {
-  verified: 'bg-success-100 text-success-800',
-  pending: 'bg-warning-100 text-warning-800',
-  warning: 'bg-warning-100 text-warning-800',
-  success: 'bg-success-100 text-success-800',
-  error: 'bg-error-100 text-error-800',
-  info: 'bg-primary-50 text-primary-700 ring-1 ring-primary-100',
-  default: 'bg-primary-50 text-primary-700 ring-1 ring-primary-100',
+  verified: 'bg-success-50 text-success-700 ring-1 ring-success-100',
+  pending: 'bg-warning-50 text-warning-800 ring-1 ring-warning-100',
+  warning: 'bg-warning-50 text-warning-800 ring-1 ring-warning-100',
+  success: 'bg-success-50 text-success-700 ring-1 ring-success-100',
+  error: 'bg-error-50 text-error-700 ring-1 ring-error-100',
+  info: 'bg-app-surface text-app-muted ring-1 ring-app-border',
+  default: 'bg-app-surface text-app-muted ring-1 ring-app-border',
   primary: 'bg-primary-50 text-primary-700 ring-1 ring-primary-100',
 };
 

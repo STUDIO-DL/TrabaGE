@@ -289,8 +289,8 @@ export default function CompanyProfileView({
           hasMore={postsHasMore}
           onLoadMore={loadMorePosts}
           canManage={canManagePosts}
-          onEdit={handleEditPost}
-          onDelete={handleDeletePost}
+          onEdit={canManagePosts ? handleEditPost : undefined}
+          onDelete={canManagePosts ? handleDeletePost : undefined}
           readOnly={readOnly}
           profile={profile}
         />

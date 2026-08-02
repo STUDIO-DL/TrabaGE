@@ -116,7 +116,7 @@ export const profilePersonalAvatarFrameClass =
   'rounded-radius-circular bg-app-card p-0.5 ring-4 ring-app-card shadow-elevation-2';
 
 export const profileNameHeadingClass =
-  'text-user-content break-words text-title font-bold leading-snug text-app-text sm:text-heading-m';
+  'text-user-content break-words text-heading-l font-semibold leading-snug text-app-text';
 
 export const profileHeaderInfoClass = 'min-w-0 flex-1 pt-space-xs sm:pt-space-md';
 

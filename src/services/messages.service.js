@@ -1,6 +1,6 @@
 import { supabase } from '../config/supabase';
 import { executeWrite } from '../utils/supabaseMutation';
-import { getDisplayName, getDisplayAvatar } from '../utils/displayIdentity';
+import { getDisplayName } from '../utils/displayIdentity';
 import { ROLES, isEmployerRole } from '../constants/roles';
 import { avatarTypeFromRole } from '../constants/avatarDefaults';
 import { isOrganizationProfile } from '../utils/orgLabels';
@@ -76,13 +76,12 @@ function mapParticipantSummary(profile, userId) {
 
   const role = resolveParticipantRole(profile);
   const isEmployer = isEmployerRole(role);
-  const displayAvatar = getDisplayAvatar(profile, role);
 
   return {
     userId,
     name: getDisplayName(profile, role, { context: 'messages' }),
-    // AppAvatar expects a string path/URL, not { src, isDefault }
-    avatarSrc: displayAvatar?.src ?? null,
+    // Raw storage path/URL only — AppAvatar resolves defaults (never pass bundled SVG URLs)
+    avatarSrc: isEmployer ? profile?.logo_path ?? null : profile?.avatar_path ?? null,
     avatarType: avatarTypeFromRole(role, { companyType: profile?.company_type, profile }),
     avatarVariant: isEmployer ? 'rounded' : 'circular',
     role,

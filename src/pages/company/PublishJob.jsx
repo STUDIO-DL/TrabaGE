@@ -21,7 +21,7 @@ import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
 import { companyService } from '../../services/company.service';
 import { isCompanyRequiredComplete } from '../../utils/profileRequirements';
-import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
+import { exitGuestToAuth } from '../../utils/guestMode';
 import { normalizeSalaryInput } from '../../utils/formatSalary';
 import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
 import {
@@ -165,9 +165,15 @@ export default function PublishJob() {
     };
   }, [jobId, user?.id]);
 
+  useEffect(() => {
+    if (isPreviewMode) {
+      exitGuestToAuth(navigate);
+    }
+  }, [isPreviewMode, navigate]);
+
   const saveJob = async (status) => {
     if (isPreviewMode) {
-      showToast(GUEST_MODE_MESSAGE, 'info');
+      exitGuestToAuth(navigate);
       return;
     }
 

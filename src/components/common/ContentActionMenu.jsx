@@ -28,6 +28,7 @@ export default function ContentActionMenu({
   className = '',
   onEdit,
   onDelete,
+  editLabel = 'Editar',
   reportLabel = 'Reportar',
   deleteLabel = 'Eliminar',
 }) {
@@ -68,6 +69,7 @@ export default function ContentActionMenu({
         onReport={canReport ? handleReport : undefined}
         onEdit={onEdit}
         onDelete={onDelete}
+        editLabel={editLabel}
         reportLabel={reportLabel}
         deleteLabel={deleteLabel}
         align={align}

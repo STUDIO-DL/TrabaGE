@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../../components/ui/Button';
 import CompanyDashboardShell from '../../components/company/dashboard/CompanyDashboardShell';
 import DashboardHero from '../../components/company/dashboard/DashboardHero';
@@ -25,9 +26,11 @@ import { useCompanyDashboardSummary } from '../../features/company-dashboard/use
 import { jobsService } from '../../services/jobs.service';
 import { getOrgLabels } from '../../utils/orgLabels';
 import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
+import { exitGuestToAuth } from '../../utils/guestMode';
 
 export default function Dashboard() {
   const { user, isPreviewMode, role } = useAuth();
+  const navigate = useNavigate();
   const { profile, loading: profileLoading } = useProfile();
   const { unreadCount } = useNotifications();
   const { showToast } = useNotificationContext();
@@ -66,9 +69,11 @@ export default function Dashboard() {
     Number(stats.unread_notifications || 0),
   );
 
+  const goAuth = () => exitGuestToAuth(navigate);
+
   const handleCloseJob = async (job) => {
     if (isPreviewMode) {
-      showToast('Modo vista previa: acción no disponible', 'info');
+      goAuth();
       return;
     }
     if (!job?.id) return;
@@ -123,36 +128,47 @@ export default function Dashboard() {
 
         <DashboardVerificationBanner profile={companyProfile} />
 
+        {isPreviewMode ? (
+          <p className="text-caption font-medium text-app-subtle">Ejemplo de analíticas</p>
+        ) : null}
+
         <div className="grid grid-cols-2 gap-space-sm lg:grid-cols-4 lg:gap-space-md">
           <DashboardStatCard
             icon={FileText}
-            value={stats.applications_total}
+            value={isPreviewMode ? null : stats.applications_total}
             label="Candidaturas"
-            deltaPct={stats.applications_delta_pct}
+            deltaPct={isPreviewMode ? null : stats.applications_delta_pct}
+            hint={isPreviewMode ? 'Sin actividad todavía' : null}
             linkLabel="Ver"
-            to={rolePath(base, '/applicants')}
+            to={isPreviewMode ? undefined : rolePath(base, '/applicants')}
+            onLinkClick={isPreviewMode ? goAuth : undefined}
           />
           <DashboardStatCard
             icon={Eye}
-            value={stats.views_total}
+            value={isPreviewMode ? null : stats.views_total}
             label="Visualizaciones"
-            deltaPct={stats.views_delta_pct}
+            deltaPct={isPreviewMode ? null : stats.views_delta_pct}
+            hint={isPreviewMode ? 'Sin actividad todavía' : null}
             linkLabel="Analíticas"
-            to={rolePath(base, '/analytics')}
+            to={isPreviewMode ? undefined : rolePath(base, '/analytics')}
+            onLinkClick={isPreviewMode ? goAuth : undefined}
           />
           <DashboardStatCard
             icon={Users}
-            value={stats.followers_total}
+            value={isPreviewMode ? null : stats.followers_total}
             label="Seguidores"
-            deltaPct={stats.followers_delta_pct}
+            deltaPct={isPreviewMode ? null : stats.followers_delta_pct}
+            hint={isPreviewMode ? 'Sin actividad todavía' : null}
           />
           <DashboardStatCard
             icon={Heart}
-            value={stats.interactions_total}
+            value={isPreviewMode ? null : stats.interactions_total}
             label="Interacciones"
-            deltaPct={stats.interactions_delta_pct}
+            deltaPct={isPreviewMode ? null : stats.interactions_delta_pct}
+            hint={isPreviewMode ? 'Sin actividad todavía' : null}
             linkLabel="Feed"
-            to={rolePath(base, '/feed')}
+            to={isPreviewMode ? undefined : rolePath(base, '/feed')}
+            onLinkClick={isPreviewMode ? goAuth : undefined}
           />
         </div>
 

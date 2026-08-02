@@ -29,7 +29,8 @@ function PostsEmptyState({ readOnly, profile }) {
   );
 }
 
-function renderPostCard(post, { canManage, onEdit, onDelete }) {
+function renderPostCard(post, { canManage, onEdit, onDelete, currentUserId }) {
+  const ownsPost = Boolean(canManage && currentUserId && post.author_id === currentUserId);
   return (
     <PostCard
       key={post.id}
@@ -40,9 +41,9 @@ function renderPostCard(post, { canManage, onEdit, onDelete }) {
       authorAvatar={post.author_avatar}
       authorType={post.author_type}
       authorCompany={post.author_company}
-      canManage={canManage}
-      onEdit={onEdit}
-      onDelete={onDelete}
+      canManage={ownsPost}
+      onEdit={ownsPost ? onEdit : undefined}
+      onDelete={ownsPost ? onDelete : undefined}
     />
   );
 }
@@ -59,6 +60,8 @@ export default function CompanyPostsSection({
   readOnly = false,
   profile = null,
 }) {
+  const { user } = useAuth();
+  const currentUserId = user?.id;
   const limit = maxVisible ?? posts.length;
   const visiblePosts = posts.slice(0, limit);
   const hasMore = posts.length > limit;
@@ -74,7 +77,9 @@ export default function CompanyPostsSection({
 
   const feed = (
     <div className="space-y-space-base">
-      {visiblePosts.map((post) => renderPostCard(post, { canManage, onEdit, onDelete }))}
+      {visiblePosts.map((post) =>
+        renderPostCard(post, { canManage, onEdit, onDelete, currentUserId }),
+      )}
     </div>
   );
 
@@ -117,6 +122,9 @@ export function CompanyPostsFeed({
   readOnly = false,
   profile = null,
 }) {
+  const { user } = useAuth();
+  const currentUserId = user?.id;
+
   if (loading) {
     return <PostListSkeleton count={3} />;
   }
@@ -128,7 +136,9 @@ export function CompanyPostsFeed({
   return (
     <div>
       <div className="space-y-space-md">
-        {posts.map((post) => renderPostCard(post, { canManage, onEdit, onDelete }))}
+        {posts.map((post) =>
+          renderPostCard(post, { canManage, onEdit, onDelete, currentUserId }),
+        )}
       </div>
       {hasMore ? (
         <Button

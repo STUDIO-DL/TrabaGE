@@ -69,13 +69,20 @@ export function usePostMutations({ onSuccess } = {}) {
       }
 
       // Best-effort storage cleanup after the row is gone (RLS still allows own folder delete).
-      if (post.post_image_path || post.id) {
-        await storageService.deleteOldPostImage(user.id, post.id, post.post_image_path);
+      // Failures here must not surface as a failed delete — the post row is already removed.
+      try {
+        if (post.post_image_path || post.id) {
+          await storageService.deleteOldPostImage(user.id, post.id, post.post_image_path);
+        }
+      } catch {
+        /* ignore storage cleanup errors */
       }
 
       setPendingDelete(null);
       showToast(TOAST.postDeleted, 'success');
       onSuccess?.(post);
+    } catch {
+      showToast(DELETE_ERROR_TOAST, 'error');
     } finally {
       setDeleting(false);
     }

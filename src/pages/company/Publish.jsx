@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import PageContainer from '../../components/layout/PageContainer';
 import PostComposer from '../../components/feed/PostComposer';
@@ -10,7 +10,7 @@ import { useCreatePost } from '../../hooks/useCreatePost';
 import { ROLES, rolePath, isEmployerRole } from '../../constants/roles';
 import { getOwnCompanyProfileKey } from '../../constants/profileQueryKeys';
 import { companyService } from '../../services/company.service';
-import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
+import { exitGuestToAuth } from '../../utils/guestMode';
 
 const PUBLISH_MODES = {
   SELECT: 'select',
@@ -71,22 +71,14 @@ export default function Publish() {
     navigate(rolePath(base, '/jobs/create'));
   };
 
+  useEffect(() => {
+    if (isPreviewMode) {
+      exitGuestToAuth(navigate);
+    }
+  }, [isPreviewMode, navigate]);
+
   if (isPreviewMode) {
-    return (
-      <PageContainer topBar={false} bottomNav={false} className="bg-app-bg">
-        <div className="p-4">
-          <div className="rounded-2xl border border-primary-100 bg-primary-50 p-6 text-center">
-            <p className="text-sm text-primary-900">{GUEST_MODE_MESSAGE}</p>
-            <Link
-              to="/login"
-              className="mt-4 inline-block rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-700"
-            >
-              Iniciar sesión
-            </Link>
-          </div>
-        </div>
-      </PageContainer>
-    );
+    return null;
   }
 
   if (mode === PUBLISH_MODES.POST) {

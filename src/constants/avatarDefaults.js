@@ -27,16 +27,49 @@ export const DEFAULT_COMPANY_LOGO = DEFAULT_AVATAR_SRC[AvatarType.BUSINESS];
 /** @deprecated Use DEFAULT_AVATAR_SRC[AvatarType.ORGANIZATION] */
 export const DEFAULT_ORGANIZATION_LOGO = DEFAULT_AVATAR_SRC[AvatarType.ORGANIZATION];
 
+const INVALID_PATH_PATTERN = /^(null|undefined|none|n\/a)$/i;
+
 export function getDefaultAvatarSrc(type = AvatarType.PERSONAL) {
   return DEFAULT_AVATAR_SRC[type] ?? DEFAULT_AVATAR_SRC[AvatarType.PERSONAL];
 }
 
 function isHttpUrl(value) {
-  return typeof value === 'string' && value.trim().startsWith('http');
+  return typeof value === 'string' && /^https?:\/\//i.test(value.trim());
 }
 
 function isValidImagePath(value) {
-  return typeof value === 'string' && value.trim().length > 0;
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+  if (INVALID_PATH_PATTERN.test(trimmed)) return false;
+  return true;
+}
+
+/** Bundled default SVGs or other static app assets — never treat as storage paths. */
+export function isBundledAvatarAsset(value) {
+  if (typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  if (!trimmed) return false;
+
+  const defaults = Object.values(DEFAULT_AVATAR_SRC);
+  if (defaults.some((src) => src && trimmed === src)) return true;
+
+  if (trimmed.startsWith('data:image/')) return false;
+  if (trimmed.startsWith('blob:')) return false;
+
+  // Vite-dev and built asset URLs (e.g. /assets/default-personal-xxxx.svg)
+  if (
+    /\/assets\/default-(personal|business|organization)/i.test(trimmed) ||
+    /default-(personal|business|organization)\.svg/i.test(trimmed)
+  ) {
+    return true;
+  }
+
+  if (trimmed.startsWith('/assets/') || trimmed.startsWith('/src/assets/')) {
+    return true;
+  }
+
+  return false;
 }
 
 export function avatarTypeFromRole(role, { companyType, profile } = {}) {
@@ -83,19 +116,30 @@ export function avatarTypeFromCompanyProfile(profile) {
 
 /**
  * Resolves a displayable avatar URL with type-specific defaults.
- * Returns { src, isDefault } — callers may pass src to AppAvatar for onError fallback.
+ * Returns { src, isDefault } — when isDefault, src is null (AppAvatar renders inline fallback).
+ * Use resolveAvatarSrc() when a concrete URL string is required (e.g. PDF export).
  */
 export function resolveAvatarImageSrc(type = AvatarType.PERSONAL, imagePath) {
-  const defaultSrc = getDefaultAvatarSrc(type);
-
-  if (!isValidImagePath(imagePath)) {
-    return { src: defaultSrc, isDefault: true };
+  if (!isValidImagePath(imagePath) || isBundledAvatarAsset(imagePath)) {
+    return { src: null, isDefault: true };
   }
 
   const trimmed = imagePath.trim();
 
-  if (isHttpUrl(trimmed)) {
+  if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
     return { src: trimmed, isDefault: false };
+  }
+
+  if (isHttpUrl(trimmed)) {
+    if (isBundledAvatarAsset(trimmed)) {
+      return { src: null, isDefault: true };
+    }
+    return { src: trimmed, isDefault: false };
+  }
+
+  // Absolute site paths are never storage keys (bundled defaults already handled above)
+  if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
+    return { src: null, isDefault: true };
   }
 
   const resolved =
@@ -105,16 +149,22 @@ export function resolveAvatarImageSrc(type = AvatarType.PERSONAL, imagePath) {
     return { src: resolved, isDefault: false };
   }
 
-  return { src: defaultSrc, isDefault: true };
+  return { src: null, isDefault: true };
 }
 
-/** Convenience: returns resolved src string only. */
+/** Convenience: returns a concrete src string (bundled default when missing). */
 export function resolveAvatarSrc(type, imagePath) {
-  return resolveAvatarImageSrc(type, imagePath).src;
+  const resolved = resolveAvatarImageSrc(type, imagePath);
+  return resolved.src ?? getDefaultAvatarSrc(type);
 }
 
+/**
+ * Path or remote URL for AppAvatar — never a bundled default URL
+ * (avoids double-resolving defaults as Supabase storage paths).
+ */
 export function resolveAuthorAvatar(authorType, { avatarPath, logoPath, companyType, profile } = {}) {
   const type = avatarTypeFromAuthorType(authorType, { companyType, profile });
   const path = isPersonalAuthor(authorType) ? avatarPath : logoPath;
-  return resolveAvatarSrc(type, path);
+  const resolved = resolveAvatarImageSrc(type, path);
+  return resolved.isDefault ? null : resolved.src;
 }

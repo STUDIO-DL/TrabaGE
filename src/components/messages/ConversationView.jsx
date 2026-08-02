@@ -8,6 +8,7 @@ import FetchErrorBanner from '../common/FetchErrorBanner';
 import Skeleton from '../common/Skeleton';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
+import ChatWallpaper from './ChatWallpaper';
 import MessageDaySeparator from './MessageDaySeparator';
 import ConversationMessageSearchPanel from './ConversationMessageSearchPanel';
 import KeyboardAwareFooter from '../layout/KeyboardAwareFooter';
@@ -407,7 +408,7 @@ export default function ConversationView({ conversationId, role, embedded = fals
   );
 
   const thread = (
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+      <ChatWallpaper>
         {searchOpen ? (
           <ConversationMessageSearchPanel
             query={searchQuery}
@@ -427,7 +428,7 @@ export default function ConversationView({ conversationId, role, embedded = fals
         ) : null}
 
         {error ? (
-          <div className="shrink-0 p-space-base">
+          <div className="shrink-0 bg-white p-space-base dark:bg-app-card">
             <FetchErrorBanner message={error} onRetry={refetch} />
           </div>
         ) : null}
@@ -437,7 +438,7 @@ export default function ConversationView({ conversationId, role, embedded = fals
         {!loading ? (
           <div
             ref={scrollRef}
-            className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-space-base py-space-md"
+            className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain bg-transparent px-space-base py-space-md"
             data-no-pull-refresh
             style={embedded ? undefined : { paddingBottom: composeInset }}
           >
@@ -505,13 +506,13 @@ export default function ConversationView({ conversationId, role, embedded = fals
             />
           </div>
         </KeyboardAwareFooter>
-      </div>
+      </ChatWallpaper>
   );
 
   if (embedded) {
     return (
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-app-card">
-        <header className="flex shrink-0 items-center gap-space-sm border-b border-app-divider px-space-md py-space-sm">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--chat-wallpaper-bg)] transition-[background-color] duration-[250ms]">
+        <header className="flex shrink-0 items-center gap-space-sm border-b border-app-divider bg-app-card px-space-md py-space-sm">
           {headerCenter}
           <div className="ml-auto shrink-0">{searchAction}</div>
         </header>
@@ -524,8 +525,8 @@ export default function ConversationView({ conversationId, role, embedded = fals
     <PageContainer
       topBar={<TopBar backButton center={headerCenter} actions={searchAction} />}
       bottomNav={false}
-      className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden"
-      contentClassName="flex min-h-0 flex-1 flex-col overflow-hidden"
+      className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[var(--chat-wallpaper-bg)] transition-[background-color] duration-[250ms]"
+      contentClassName="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--chat-wallpaper-bg)] transition-[background-color] duration-[250ms]"
     >
       {thread}
     </PageContainer>

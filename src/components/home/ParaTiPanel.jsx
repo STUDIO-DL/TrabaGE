@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import FeedItemRenderer from '../feed/FeedItemRenderer';
+import FeedEndMarker from '../feed/FeedEndMarker';
 import EmptyState from '../common/EmptyState';
 import { PostListSkeleton } from '../common/Skeleton';
 import Button from '../ui/Button';
@@ -51,6 +52,9 @@ export default function ParaTiPanel({ emptyDescription }) {
   }, [loadMore]);
 
   const showSkeleton = loading || (Boolean(error) && items.length === 0);
+
+  const showEndMarker =
+    !loading && !showSkeleton && !loadingMore && !hasMore && feedItems.length > 0;
 
   return (
     <div className="space-y-space-sm px-space-base pt-space-base pb-0">
@@ -114,24 +118,19 @@ export default function ParaTiPanel({ emptyDescription }) {
           );
         })
       )}
-      {loadingMore ? (
-        <div className="pb-space-base">
-          <PostListSkeleton count={1} />
-        </div>
-      ) : null}
+      {loadingMore ? <PostListSkeleton count={1} /> : null}
       {!loading && !showSkeleton && hasMore && !loadingMore ? (
-        <div className="pb-space-base">
-          <Button
-            variant="secondary"
-            fullWidth
-            className="mt-space-sm"
-            onClick={loadMore}
-            aria-label="Cargar más publicaciones"
-          >
-            Cargar más
-          </Button>
-        </div>
+        <Button
+          variant="secondary"
+          fullWidth
+          className="mt-space-sm"
+          onClick={loadMore}
+          aria-label="Cargar más publicaciones"
+        >
+          Cargar más
+        </Button>
       ) : null}
+      {showEndMarker ? <FeedEndMarker /> : null}
       {deleteConfirmModal}
     </div>
   );

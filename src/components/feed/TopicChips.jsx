@@ -23,8 +23,8 @@ export default function TopicChips({ topics = [], className = '' }) {
             className={[
               'inline-flex items-center rounded-radius-md border px-2.5 py-1 text-caption',
               general
-                ? 'border-primary-150 bg-primary-50/70 text-primary-700 dark:border-primary-800/50 dark:bg-primary-950/30 dark:text-primary-300'
-                : 'border-app-border text-app-muted',
+                ? 'border-app-border bg-app-surface text-app-muted'
+                : 'border-app-border bg-white text-app-muted',
             ].join(' ')}
           >
             {getTopicDisplayLabel(topic)}

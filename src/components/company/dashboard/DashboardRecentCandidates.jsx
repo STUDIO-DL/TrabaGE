@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
 import AppAvatar from '../../common/AppAvatar';
 import Button from '../../ui/Button';
@@ -13,6 +13,7 @@ import {
   funnelStatusLabel,
   funnelStatusTone,
 } from '../../../features/company-dashboard/dashboardFormatters';
+import { exitGuestToAuth } from '../../../utils/guestMode';
 
 const STATUS_CLASS = {
   success: 'bg-success-600/10 text-success-700 dark:text-success-400',
@@ -21,20 +22,32 @@ const STATUS_CLASS = {
 };
 
 export default function DashboardRecentCandidates({ candidates = [] }) {
-  const { role } = useAuth();
+  const { role, isPreviewMode } = useAuth();
+  const navigate = useNavigate();
   const base = role || ROLES.BUSINESS;
 
   return (
     <section className="surface-card">
       <div className="flex items-center justify-between gap-3 border-b border-app-border px-5 py-4">
         <h2 className="text-base font-semibold text-app-text">Candidaturas recientes</h2>
-        <Link
-          to={rolePath(base, '/applicants')}
-          className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
-        >
-          Ver todos
-          <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
-        </Link>
+        {isPreviewMode ? (
+          <button
+            type="button"
+            onClick={() => exitGuestToAuth(navigate)}
+            className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
+          >
+            Ver todos
+            <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
+          </button>
+        ) : (
+          <Link
+            to={rolePath(base, '/applicants')}
+            className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
+          >
+            Ver todos
+            <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
+          </Link>
+        )}
       </div>
 
       {candidates.length === 0 ? (

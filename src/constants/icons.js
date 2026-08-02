@@ -168,18 +168,18 @@ export const ICON_STROKE = {
   bold: 2.25,
 };
 
-/** Light: brand blue for active · blue-gray inactive (not pure slate) */
+/** Active: brand blue · inactive: slate gray */
 export const ICON_COLORS = {
   default: 'text-app-text',
   primary: 'text-primary-600 dark:text-primary-400',
-  inactive: 'text-primary-400/80 dark:text-primary-300/55',
+  inactive: 'text-app-subtle',
   muted: 'text-app-subtle',
   positive: 'text-success-600',
 };
 
-/** Unified brand-soft icon surface for section headers */
+/** Quiet icon surface for section headers — no loud brand wash */
 export const ICON_SURFACE_CLASS =
-  'bg-primary-50 text-primary-700 ring-1 ring-primary-150 dark:bg-primary-950/40 dark:text-primary-300 dark:ring-primary-800/60';
+  'bg-app-surface text-app-muted ring-1 ring-app-border';
 
 /** Bottom navigation */
 export const NAV_ICONS = {

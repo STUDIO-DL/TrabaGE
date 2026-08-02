@@ -96,7 +96,7 @@ export const PREVIEW_COMPANY_PROFILE = {
   is_verified: false,
   verification_status: 'not_submitted',
   verified_at: null,
-  company_type: null,
+  company_type: 'business',
   company_size: null,
   founded_year: null,
   website: null,

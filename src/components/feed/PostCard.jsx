@@ -66,6 +66,7 @@ function PostCard({
           targetType={REPORT_TARGET_TYPES.POST}
           targetId={post.id}
           reportLabel="Reportar publicación"
+          editLabel="Editar publicación"
           deleteLabel="Eliminar publicación"
           onEdit={canManage ? () => onEdit?.(post) : undefined}
           onDelete={canManage ? () => onDelete?.(post) : undefined}

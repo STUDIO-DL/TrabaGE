@@ -9,14 +9,14 @@ import {
   authService,
   consumeOAuthIntent,
   discardUnregisteredOAuthSession,
-  isLikelyUnregisteredGoogleLogin,
+  isRegisteredTrabaGEAccount,
   OAUTH_INTENTS,
 } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
-import { queueWelcomeEmailOnRegistrationComplete } from '../../services/welcomeEmail.service';
 import { mapAuthError, isExpiredVerificationUserMessage, isOAuthCancelledError } from '../../utils/errors';
 import { getErrorMessage } from '../../utils/i18n';
-import { extractGoogleProfile } from '../../utils/googleProfile';
+import { extractGoogleProfile, isGoogleUser } from '../../utils/googleProfile';
+import { reportError } from '../../utils/logger';
 import { useAuth } from '../../hooks/useAuth';
 
 const MAX_ATTEMPTS = 8;
@@ -37,14 +37,16 @@ function isExpiredLinkError(message) {
   );
 }
 
+/**
+ * Tear down any Google OAuth session that is not a pre-registered TrabaGE account.
+ * Awaits delete + sign-out so the user is never left partially authenticated.
+ */
 async function rejectUnregisteredGoogleLogin(session, clearAuthAfterOAuthRejection) {
   const googleProfile = extractGoogleProfile(session.user);
   const googleEmail = googleProfile.email || String(session.user?.email || '').trim() || null;
 
-  void (async () => {
-    await discardUnregisteredOAuthSession(session.user);
-    await clearAuthAfterOAuthRejection();
-  })();
+  await discardUnregisteredOAuthSession(session.user);
+  await clearAuthAfterOAuthRejection();
 
   return {
     email: googleEmail,
@@ -123,18 +125,47 @@ export default function AuthCallback() {
           }
 
           const oauthIntent = consumeOAuthIntent();
-          const isGoogleLogin = oauthIntent === OAUTH_INTENTS.LOGIN;
-          const isGoogleSignup = oauthIntent === OAUTH_INTENTS.SIGNUP;
+          const usedGoogle = isGoogleUser(session.user);
 
-          // Reject brand-new Google LOGIN orphans immediately (no DB round-trip).
-          if (isGoogleLogin && isLikelyUnregisteredGoogleLogin(session.user)) {
-            const missing = await rejectUnregisteredGoogleLogin(
-              session,
-              clearAuthAfterOAuthRejection,
-            );
-            if (cancelled) return true;
-            setGoogleMissing(missing);
-            return true;
+          // Google never creates TrabaGE accounts (login-only for pre-registered emails).
+          if (usedGoogle) {
+            // Legacy signup intent / Register Google path — reject and send to register.
+            if (oauthIntent === OAUTH_INTENTS.SIGNUP) {
+              const missing = await rejectUnregisteredGoogleLogin(
+                session,
+                clearAuthAfterOAuthRejection,
+              );
+              if (cancelled) return true;
+              setGoogleMissing(missing);
+              return true;
+            }
+
+            let registered = false;
+            try {
+              registered = await isRegisteredTrabaGEAccount(session.user, {
+                loginIntent: oauthIntent === OAUTH_INTENTS.LOGIN || !oauthIntent,
+              });
+            } catch (checkError) {
+              // Fail closed: never admit Google users when the registry check fails.
+              reportCheckFailure(checkError);
+              const missing = await rejectUnregisteredGoogleLogin(
+                session,
+                clearAuthAfterOAuthRejection,
+              );
+              if (cancelled) return true;
+              setGoogleMissing(missing);
+              return true;
+            }
+
+            if (!registered) {
+              const missing = await rejectUnregisteredGoogleLogin(
+                session,
+                clearAuthAfterOAuthRejection,
+              );
+              if (cancelled) return true;
+              setGoogleMissing(missing);
+              return true;
+            }
           }
 
           const {
@@ -143,9 +174,9 @@ export default function AuthCallback() {
             role: flowRole,
             redirectTo,
           } = await completePostAuthFlow(session.user, {
-            preferProfile: isGoogleSignup,
+            preferProfile: false,
             // Returning Google LOGIN: skip bootstrap; hydrate finishes in background.
-            fastLogin: isGoogleLogin,
+            fastLogin: usedGoogle && oauthIntent === OAUTH_INTENTS.LOGIN,
           });
 
           if (flowError) {
@@ -158,7 +189,7 @@ export default function AuthCallback() {
 
           if (needsAccountTypeSelection) {
             if (cancelled) return true;
-            if (isGoogleLogin) {
+            if (usedGoogle) {
               const missing = await rejectUnregisteredGoogleLogin(
                 session,
                 clearAuthAfterOAuthRejection,
@@ -171,10 +202,7 @@ export default function AuthCallback() {
             return true;
           }
 
-          // Welcome email ONLY after Google SIGNUP — never block navigation.
-          if (isGoogleSignup) {
-            void queueWelcomeEmailOnRegistrationComplete();
-          }
+          // Never queue welcome email from Google OAuth — registration is email/password only.
 
           // Seed auth + navigate immediately; full hydrate runs in background.
           acceptSession(session, { role: flowRole, redirectTo });
@@ -253,7 +281,7 @@ export default function AuthCallback() {
               state: {
                 email: googleMissing.email || undefined,
                 fullName: googleMissing.fullName || undefined,
-                // Do not force account type — user must choose Profesional/Empresa/Organización.
+                // Do not force account type — user must choose personal / empresa.
                 fromGoogleLoginMissing: true,
               },
             })
@@ -296,4 +324,8 @@ export default function AuthCallback() {
   }
 
   return <AuthLoadingScreen />;
+}
+
+function reportCheckFailure(error) {
+  reportError(error, { area: 'auth_callback_google_registry_check' });
 }

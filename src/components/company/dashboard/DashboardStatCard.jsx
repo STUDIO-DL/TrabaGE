@@ -15,8 +15,12 @@ export default function DashboardStatCard({
   linkLabel,
   to,
   loading = false,
+  /** Override secondary line (e.g. guest demo: "Sin actividad todavía") */
+  hint = null,
+  onLinkClick,
 }) {
   const delta = formatDeltaPct(deltaPct);
+  const displayValue = value === null || value === undefined ? '—' : value;
 
   return (
     <div className="surface-card p-space-md">
@@ -27,14 +31,25 @@ export default function DashboardStatCard({
           ) : null}
           <p className="truncate text-caption font-medium text-app-muted">{label}</p>
         </div>
-        {to ? (
-          <Link
-            to={to}
-            className="inline-flex shrink-0 items-center gap-0.5 text-caption font-medium text-app-muted transition-colors hover:text-primary-600"
-          >
-            {linkLabel}
-            <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
-          </Link>
+        {to || onLinkClick ? (
+          onLinkClick ? (
+            <button
+              type="button"
+              onClick={onLinkClick}
+              className="inline-flex shrink-0 items-center gap-0.5 text-caption font-medium text-app-muted transition-colors hover:text-primary-600"
+            >
+              {linkLabel}
+              <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
+            </button>
+          ) : (
+            <Link
+              to={to}
+              className="inline-flex shrink-0 items-center gap-0.5 text-caption font-medium text-app-muted transition-colors hover:text-primary-600"
+            >
+              {linkLabel}
+              <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
+            </Link>
+          )
         ) : null}
       </div>
 
@@ -46,22 +61,28 @@ export default function DashboardStatCard({
       ) : (
         <>
           <p className="mt-space-md text-heading-m font-semibold tracking-tight text-app-text">
-            {value ?? 0}
+            {displayValue}
           </p>
           <p
             className={[
               'mt-space-xs text-caption font-medium',
-              delta.tone === 'positive'
-                ? 'text-success-600'
-                : delta.tone === 'negative'
-                  ? 'text-error-600'
-                  : 'text-app-subtle',
+              hint
+                ? 'text-app-subtle'
+                : delta.tone === 'positive'
+                  ? 'text-success-600'
+                  : delta.tone === 'negative'
+                    ? 'text-error-600'
+                    : 'text-app-subtle',
             ].join(' ')}
           >
-            {delta.text}
-            {delta.tone === 'positive' || delta.tone === 'negative' ? (
-              <span className="font-normal text-app-subtle"> vs semana anterior</span>
-            ) : null}
+            {hint ?? (
+              <>
+                {delta.text}
+                {delta.tone === 'positive' || delta.tone === 'negative' ? (
+                  <span className="font-normal text-app-subtle"> vs semana anterior</span>
+                ) : null}
+              </>
+            )}
           </p>
         </>
       )}

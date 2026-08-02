@@ -3,7 +3,7 @@ import AppIcon from '../common/AppIcon';
 import { ArrowLeft, ICON_SIZES } from '../../constants/icons';
 
 export const topBarOuterClass =
-  'sticky top-0 z-30 border-b border-app-border bg-app-card/95 pt-safe backdrop-blur';
+  'sticky top-0 z-30 border-b border-app-border bg-white pt-safe dark:bg-app-card';
 
 export const topBarInnerClass =
   'mx-auto flex h-topbar w-full max-w-lg items-center gap-space-sm px-space-base md:max-w-2xl lg:max-w-5xl';
@@ -21,7 +21,7 @@ function BackButton({ onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-primary-500 transition-colors duration-fast hover:bg-primary-50 hover:text-primary-700 dark:text-primary-400 dark:hover:bg-primary-950/40"
+      className="inline-flex min-h-touch min-w-touch shrink-0 items-center justify-center rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-app-surface hover:text-app-text"
       aria-label="Volver"
     >
       <AppIcon icon={ArrowLeft} size={ICON_SIZES.md} />

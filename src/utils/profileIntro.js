@@ -1,29 +1,5 @@
 export const HEADLINE_MAX_LENGTH = 220;
 
-export function getCurrentExperience(experience = []) {
-  if (!experience?.length) return null;
-
-  const sorted = [...experience].sort((a, b) => {
-    const aCurrent = !a.end_date;
-    const bCurrent = !b.end_date;
-    if (aCurrent && !bCurrent) return -1;
-    if (!aCurrent && bCurrent) return 1;
-    const aDate = a.end_date || a.start_date || '';
-    const bDate = b.end_date || b.start_date || '';
-    return bDate.localeCompare(aDate);
-  });
-
-  return sorted[0];
-}
-
-export function formatCurrentPosition(experienceItem) {
-  if (!experienceItem) return null;
-  const company = experienceItem.company?.trim();
-  const position = experienceItem.position?.trim();
-  if (company && position) return `${company} · ${position}`;
-  return company || position || null;
-}
-
 export function formatEducationIntroLine(educationItem) {
   if (!educationItem?.institution?.trim()) return null;
   return educationItem.institution.trim();

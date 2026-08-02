@@ -2,6 +2,7 @@ import { supabase } from '../config/supabase';
 import { topicsService } from './topics.service';
 import { normalizePostTopics, normalizePostsTopics } from '../utils/normalizePostTopics';
 import { GENERAL_TOPIC_SLUG } from '../constants/topics';
+import { executeDelete } from '../utils/supabaseMutation';
 
 const POST_SELECT = `*, ${topicsService.POST_TOPICS_EMBED}`;
 const POST_SELECT_BY_TOPIC = `*, post_topics!inner(topics!inner(id, name, slug))`;
@@ -114,11 +115,16 @@ export const postsService = {
 
   delete: (id) => supabase.from('posts').delete().eq('id', id),
 
-  /** Owner-only delete — mirrors RLS `author_id = auth.uid()`. */
+  /**
+   * Owner-only delete — mirrors RLS `author_id = auth.uid()`.
+   * Uses `.select('id')` + executeDelete so a blocked/zero-row delete is never treated as success.
+   */
   deleteOwn: (id, authorId) => {
     if (!id || !authorId) {
       return Promise.resolve({ data: null, error: new Error('missing_delete_identity') });
     }
-    return supabase.from('posts').delete().eq('id', id).eq('author_id', authorId);
+    return executeDelete(
+      supabase.from('posts').delete().eq('id', id).eq('author_id', authorId).select('id'),
+    );
   },
 };

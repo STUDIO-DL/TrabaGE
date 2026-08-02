@@ -32,12 +32,12 @@ export default function Input({
         <input
           id={inputId}
           className={[
-            'h-input-md min-h-touch w-full rounded-radius-md border bg-app-card px-space-md text-base text-app-text outline-none',
+            'h-input-md min-h-touch w-full rounded-btn-primary border bg-white px-space-md text-base text-app-text outline-none dark:bg-app-card',
             'transition-colors duration-fast ease-out placeholder:text-app-subtle placeholder:opacity-80',
             'focus:border-primary-500 focus:ring-2 focus:ring-primary-100',
             'disabled:cursor-not-allowed disabled:bg-app-disabled disabled:text-app-text-disabled',
             Icon ? 'pl-9' : '',
-            error ? 'border-error-500 focus:ring-error-100' : 'border-app-border hover:border-primary-200',
+            error ? 'border-error-500 focus:ring-error-100' : 'border-app-border hover:border-app-muted/40',
           ].join(' ')}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${inputId}-error` : hint ? `${inputId}-hint` : undefined}

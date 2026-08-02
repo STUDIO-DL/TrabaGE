@@ -4,35 +4,34 @@
 
 @layer base {
   :root {
-    /* Brand */
+    /* Brand — LinkedIn / Notion / Material sober palette */
     --color-primary: #2563eb;
     --color-bg: #ffffff;
-    --color-surface: #f9fafb;
-    --color-text: #111827;
-    --color-muted: #6b7280;
-    --color-border: #e5e7eb;
+    --color-surface: #ffffff;
+    --color-text: #0f172a;
+    --color-muted: #64748b;
+    --color-border: #e2e8f0;
     --color-danger: #dc2626;
     --color-success: #16a34a;
 
     /* Semantic RGB channels (Tailwind alpha-value compatible) */
-    /* Canvas + chrome: cool blue-white hierarchy, brand accent without saturation */
-    --app-bg: 244 247 254;
-    --app-surface: 236 242 252;
+    --app-bg: 255 255 255;
+    --app-surface: 248 250 252;
     --app-card: 255 255 255;
     --app-elevated: 255 255 255;
-    --app-text: 9 9 11;
-    --app-muted: 100 112 132;
+    --app-text: 15 23 42;
+    --app-muted: 100 116 139;
     --app-subtle: 148 163 184;
-    --app-border: 205 222 246;
-    --app-divider: 220 230 244;
-    --app-overlay: 9 9 11;
+    --app-border: 226 232 240;
+    --app-divider: 226 232 240;
+    --app-overlay: 15 23 42;
     --app-disabled: 241 245 249;
     --app-text-disabled: 148 163 184;
     --app-text-inverse: 255 255 255;
     --app-primary-soft: 239 246 255;
     --app-primary: 37 99 235;
-    /* Blue-tinted shadow key (used at low alpha in elevation) */
-    --app-shadow: 30 64 175;
+    /* Neutral shadow key — almost invisible */
+    --app-shadow: 15 23 42;
 
     /* Motion */
     --motion-fast: 150ms;
@@ -48,7 +47,7 @@
     --keyboard-gap: 14px;
     --page-padding-x: 16px;
     --page-padding-y: 16px;
-    --section-gap: 20px;
+    --section-gap: 24px;
     --bottom-nav-height: 4.25rem;
     --guest-bar-height: 2.75rem;
     --radius-sm: 8px;
@@ -222,12 +221,13 @@
 
 @layer components {
   .page-shell {
-    @apply min-h-dvh min-w-0 max-w-full overflow-x-hidden;
     /*
-     * Reserve space so the last feed/list item clears the fixed BottomNav.
-     * Keep this as the ONLY bottom spacer — nested min-h-dvh children must not
-     * also force 100dvh or the document grows by ~nav height of empty scroll.
+     * Do NOT set min-h-dvh here. body/#root already paint the viewport.
+     * min-h-dvh + padding-bottom on the shell stretches the content box and
+     * leaves a large blank scroll gap under the last feed card (unlike LinkedIn).
+     * Only reserve clearance for the fixed BottomNav after real content.
      */
+    @apply min-w-0 max-w-full overflow-x-hidden;
     padding-bottom: calc(
       var(--bottom-nav-height) + var(--safe-area-bottom) + var(--keyboard-offset, 0px)
     );
@@ -335,10 +335,7 @@
   }
 
   .login-shell {
-    @apply flex min-h-dvh min-w-0 flex-col overflow-x-hidden;
-    background:
-      radial-gradient(120% 80% at 50% -10%, rgb(var(--app-primary) / 0.1), transparent 55%),
-      linear-gradient(180deg, rgb(var(--app-primary-soft)) 0%, rgb(var(--app-surface)) 42%, rgb(var(--app-bg)) 100%);
+    @apply flex min-h-dvh min-w-0 flex-col overflow-x-hidden bg-app-bg;
     padding-top: env(safe-area-inset-top, 0px);
   }
 
@@ -355,17 +352,14 @@
   }
 
   .login-card {
-    @apply w-full min-w-0 overflow-hidden rounded-radius-xl border border-app-border shadow-elevation-3;
-    background: rgb(var(--app-card));
+    @apply w-full min-w-0 overflow-hidden rounded-radius-md border border-app-border bg-app-card shadow-elevation-1;
     max-width: min(100%, 30rem);
-    box-shadow:
-      0 0 0 1px rgb(var(--app-border) / 0.65),
-      0 12px 28px rgb(var(--app-shadow) / 0.09);
   }
 
   .login-headline {
-    font-size: clamp(1.65rem, 2.4vw + 0.75rem, 2.65rem);
-    line-height: 1.15;
+    font-size: clamp(1.375rem, 1.5vw + 0.9rem, 1.5rem);
+    line-height: 1.25;
+    font-weight: 600;
   }
 
   .onboarding-illustration-in {
@@ -576,71 +570,43 @@
     filter: drop-shadow(0 0 10px rgba(37, 99, 235, 0.22));
   }
 
-  /* Single surface system — soft brand border (Linear/Stripe). */
+  /* LinkedIn-like card: white, soft border, almost no shadow */
   .surface-card {
-    @apply min-w-0 max-w-full overflow-hidden rounded-radius-lg border border-app-border bg-app-card text-app-text;
-    background-image: linear-gradient(
-      180deg,
-      rgb(var(--app-primary-soft) / 0.35) 0%,
-      rgb(var(--app-card)) 28%
-    );
-    box-shadow: 0 1px 2px rgb(var(--app-shadow) / 0.04);
+    @apply min-w-0 max-w-full overflow-hidden rounded-radius-md border border-app-border bg-app-card text-app-text shadow-elevation-1;
     transition: border-color var(--motion-fast) var(--ease-out),
-      background-color var(--motion-fast) var(--ease-out),
-      box-shadow var(--motion-fast) var(--ease-out);
+      background-color var(--motion-fast) var(--ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .surface-card.surface-press:hover,
     a.surface-card:hover,
     button.surface-card:hover {
-      border-color: rgb(var(--app-primary) / 0.22);
-      background-color: rgb(var(--app-primary-soft) / 0.45);
+      background-color: rgb(var(--app-surface));
     }
   }
 
   /**
    * Profile section modules only (candidate + company).
-   * Soft brand identity — not a floating block. Do not reuse on feed/list rows.
+   * Clean white cards — no tinted headers or heavy elevation.
    */
   .profile-section-card {
-    @apply min-w-0 max-w-full rounded-radius-lg border border-app-border bg-app-card text-app-text;
-    background-image: linear-gradient(
-      180deg,
-      rgb(var(--app-primary-soft) / 0.55) 0,
-      rgb(var(--app-primary-soft) / 0.55) 2.75rem,
-      rgb(var(--app-card)) 2.75rem
-    );
-    box-shadow:
-      0 1px 2px rgb(var(--app-shadow) / 0.04),
-      0 8px 20px rgb(var(--app-shadow) / 0.05);
+    @apply min-w-0 max-w-full rounded-radius-md border border-app-border bg-app-card text-app-text shadow-elevation-1;
   }
 
   .dark .profile-section-card {
-    background-image: linear-gradient(
-      180deg,
-      rgb(var(--app-primary-soft) / 0.22) 0,
-      rgb(var(--app-primary-soft) / 0.22) 2.75rem,
-      rgb(var(--app-card)) 2.75rem
-    );
     box-shadow: none;
   }
 
-  /* Flat content blocks (feed / list items) — blue-gray divider language */
+  /* Flat content blocks (feed / list items) — hairline dividers */
   .surface-flat {
     @apply min-w-0 max-w-full bg-app-card text-app-text;
     border-bottom: 1px solid rgb(var(--app-divider));
-    box-shadow: inset 0 0 0 1px transparent;
-    transition: background-color var(--motion-fast) var(--ease-out),
-      box-shadow var(--motion-fast) var(--ease-out),
-      border-color var(--motion-fast) var(--ease-out);
+    transition: background-color var(--motion-fast) var(--ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .surface-flat:hover {
-      background-color: rgb(var(--app-primary-soft) / 0.4);
-      border-bottom-color: rgb(var(--app-primary) / 0.14);
-      box-shadow: inset 0 0 0 1px rgb(var(--app-primary) / 0.06);
+      background-color: rgb(var(--app-surface));
     }
   }
 
@@ -667,12 +633,60 @@
     box-shadow: none;
   }
 
-  .dark .surface-card {
-    background-image: linear-gradient(
-      180deg,
-      rgb(var(--app-primary-soft) / 0.18) 0%,
-      rgb(var(--app-card)) 32%
-    );
+  /**
+   * TrabaGE chat wallpaper — tall WhatsApp-style pattern panel.
+   * Layers use <img> tiles (see ChatWallpaper.jsx); ThemeProvider `.dark` crossfades.
+   */
+  :root {
+    --chat-wallpaper-bg: #f8fafc;
+    --chat-wallpaper-transition: 250ms var(--ease-standard);
+  }
+
+  .dark {
+    --chat-wallpaper-bg: #0f172a;
+  }
+
+  .chat-wallpaper {
+    background-color: var(--chat-wallpaper-bg);
+    transition: background-color var(--chat-wallpaper-transition);
+  }
+
+  .chat-wallpaper__layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-color: transparent;
+    background-repeat: repeat;
+    background-position: center top;
+    /* MUST be scroll — `local` on empty layers often paints nothing */
+    background-attachment: scroll;
+    background-size: min(100%, 26rem) auto;
+    transition: opacity var(--chat-wallpaper-transition);
+  }
+
+  @media (min-width: 1024px) {
+    .chat-wallpaper__layer {
+      background-size: 24rem auto;
+    }
+  }
+
+  .chat-wallpaper__layer--light {
+    background-color: #f8fafc;
+    opacity: 1;
+  }
+
+  .chat-wallpaper__layer--dark {
+    background-color: #0f172a;
+    opacity: 0;
+  }
+
+  .dark .chat-wallpaper__layer--light {
+    opacity: 0;
+  }
+
+  .dark .chat-wallpaper__layer--dark {
+    opacity: 1;
   }
 
   /* Quiet press feedback for interactive surfaces */

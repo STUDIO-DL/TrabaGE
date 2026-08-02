@@ -6,7 +6,6 @@ import Button from '../../components/ui/Button';
 import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
 import TrabaGEWordmark from '../../components/splash/TrabaGEWordmark';
 import AccountTypeCards from '../../components/auth/AccountTypeCards';
-import { GoogleAuthButton } from '../../components/auth/SocialAuthButtons';
 import ZarrelCredit from '../../components/branding/ZarrelCredit';
 import { LegalInlineLink } from '../../components/legal/LegalLinks';
 import {
@@ -28,7 +27,6 @@ import {
   getRegisterConfig,
   normalizeFieldOptions,
 } from '../../constants/registerAccountConfig';
-import { clearPreviewMode } from '../../constants/preview';
 import { LEGAL_ROUTES } from '../../constants/legalRoutes';
 import { useAuth } from '../../hooks/useAuth';
 import { getOnboardingComplete } from '../../context/AuthContext';
@@ -250,34 +248,6 @@ export default function Register() {
     }
 
     return true;
-  };
-
-  const handleGoogleRegister = async () => {
-    setError('');
-
-    if (accountKind !== ACCOUNT_KINDS.PERSONAL) {
-      return;
-    }
-
-    if (!accountKind) {
-      setError(getErrorMessage('selectAccountType'));
-      return;
-    }
-
-    if (!validateLegalConfirmations()) {
-      return;
-    }
-
-    // Google signup: personal accounts only. Identity (name, email, avatar)
-    // comes from Google after OAuth — no registration form fields.
-    authService.rememberAccountKind(accountKind);
-    authService.rememberPendingAccountType(accountKind);
-    clearPreviewMode();
-
-    const { error: googleError } = await authService.signupWithGoogle(accountKind);
-    if (googleError) {
-      setError(mapAuthError(googleError));
-    }
   };
 
   const handleOAuthRoleComplete = async (e) => {
@@ -621,25 +591,6 @@ export default function Register() {
                     Crear cuenta
                   </Button>
                 </form>
-
-                {accountKind === ACCOUNT_KINDS.PERSONAL ? (
-                  <>
-                    <div className="relative my-space-lg">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-app-border" />
-                      </div>
-                      <div className="relative flex justify-center text-caption text-app-subtle">
-                        <span className="bg-app-card px-space-md">o regístrate con</span>
-                      </div>
-                    </div>
-
-                    <GoogleAuthButton
-                      onClick={handleGoogleRegister}
-                      label="Continuar con Google"
-                      disabled={!legalConfirmationsComplete}
-                    />
-                  </>
-                ) : null}
 
                 <p className="mt-space-lg text-center text-body-small text-app-subtle">
                   ¿Ya tienes cuenta?{' '}

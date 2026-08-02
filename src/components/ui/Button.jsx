@@ -1,20 +1,20 @@
 const variants = {
   primary:
-    'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 disabled:bg-primary-300 disabled:text-white/80',
+    'rounded-btn-primary bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 disabled:bg-primary-300 disabled:text-white/80',
   secondary:
-    'bg-app-card text-app-text ring-1 ring-inset ring-app-border hover:bg-app-surface active:bg-app-disabled disabled:bg-app-disabled disabled:text-app-text-disabled',
+    'rounded-btn-secondary bg-white text-primary-600 ring-1 ring-inset ring-app-border hover:bg-app-surface active:bg-app-disabled disabled:bg-app-disabled disabled:text-app-text-disabled dark:bg-app-card',
   outlined:
-    'bg-transparent text-primary-600 ring-1 ring-inset ring-primary-600 hover:bg-primary-50 active:bg-primary-100 disabled:ring-primary-300 disabled:text-primary-300',
-  text: 'bg-transparent text-primary-600 hover:bg-primary-50 active:bg-primary-100 disabled:text-app-text-disabled',
-  ghost: 'bg-transparent text-primary-600 hover:bg-primary-50 active:bg-primary-100 disabled:text-app-text-disabled',
+    'rounded-btn-secondary bg-white text-primary-600 ring-1 ring-inset ring-app-border hover:bg-app-surface active:bg-app-disabled disabled:ring-app-border disabled:text-app-text-disabled dark:bg-app-card',
+  text: 'rounded-radius-md bg-transparent text-primary-600 hover:bg-app-surface active:bg-app-disabled disabled:text-app-text-disabled',
+  ghost: 'rounded-radius-md bg-transparent text-primary-600 hover:bg-app-surface active:bg-app-disabled disabled:text-app-text-disabled',
   danger:
-    'bg-error-600 text-white hover:bg-error-700 active:bg-error-800 disabled:bg-error-300',
+    'rounded-btn-primary bg-error-600 text-white hover:bg-error-700 active:bg-error-800 disabled:bg-error-300',
 };
 
 const sizes = {
-  sm: 'h-btn-sm min-h-touch sm:min-h-0 px-space-sm text-caption rounded-radius-md',
-  md: 'h-btn-md min-h-touch px-space-md text-button rounded-radius-md',
-  lg: 'h-btn-lg min-h-touch px-space-lg text-button rounded-radius-md',
+  sm: 'h-btn-sm min-h-touch sm:min-h-0 px-space-sm text-caption',
+  md: 'h-btn-md min-h-touch px-space-md text-button',
+  lg: 'h-btn-lg min-h-touch px-space-lg text-button',
 };
 
 export default function Button({
@@ -35,8 +35,8 @@ export default function Button({
       type={type}
       disabled={disabled || loading}
       className={[
-        'inline-flex items-center justify-center gap-space-sm font-semibold transition-all duration-fast ease-out',
-        'active:scale-[0.98]',
+        'inline-flex items-center justify-center gap-space-sm font-semibold transition-colors duration-fast ease-out',
+        'active:scale-[0.99]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2',
         'disabled:cursor-not-allowed disabled:active:scale-100',
         resolvedVariant,

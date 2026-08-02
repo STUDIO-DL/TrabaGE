@@ -20,7 +20,7 @@ function TabletBrandBar() {
     : rolePath(ROLES.PERSONAL, '/feed');
 
   return (
-    <header className="sticky top-0 z-30 hidden items-center justify-between border-b border-app-border bg-app-elevated/95 px-space-md py-space-sm backdrop-blur md:flex lg:hidden">
+    <header className="sticky top-0 z-30 hidden items-center justify-between border-b border-app-border bg-white px-space-md py-space-sm md:flex lg:hidden dark:bg-app-card">
       <Link to={home} className="inline-flex">
         <TrabaGEWordmark size="md" />
       </Link>
@@ -87,20 +87,18 @@ export default function PageContainer({
   }
 
   return (
-    <div className="page-shell min-h-dvh min-w-0 max-w-full overflow-x-hidden bg-app-bg text-app-text lg:pb-0">
+    <div className="page-shell min-w-0 max-w-full overflow-x-hidden bg-app-bg text-app-text lg:pb-0">
       <TabletBrandBar />
       {/*
-        Do not use min-h-dvh on this inner flex: .page-shell already has
-        min-h-dvh + padding-bottom for the fixed BottomNav. A nested min-h-dvh
-        forces the shell taller than the viewport and leaves a blank scroll
-        gap under the last feed card (web-like, not LinkedIn-like).
+        Height comes from content only. Viewport fill is body/#root (min-h-dvh).
+        Avoid nested min-h-dvh / flex-1 stretch that creates blank end-of-feed scroll.
       */}
       <div className="flex w-full min-w-0">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
           {top}
           {aside ? (
-            <div className="mx-auto flex w-full min-w-0 max-w-6xl flex-1 justify-center gap-space-lg lg:px-space-md xl:px-space-lg">
+            <div className="mx-auto flex w-full min-w-0 max-w-6xl justify-center gap-space-lg lg:px-space-md xl:px-space-lg">
               <main className={[mainClass, 'mx-auto lg:mx-0'].filter(Boolean).join(' ')}>
                 {children}
               </main>

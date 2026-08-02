@@ -65,7 +65,7 @@ function SocialListRow({ network, href }) {
       href={safeHref}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex min-h-touch items-center gap-space-sm rounded-radius-sm py-space-xs transition-colors duration-200 hover:bg-primary-50/60"
+      className="group flex min-h-touch items-center gap-space-sm rounded-radius-sm py-space-xs transition-colors duration-200 hover:bg-app-surface"
     >
       <span
         className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-radius-md ${network.activeClass}`}

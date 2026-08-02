@@ -52,7 +52,7 @@ export default function AppSidebar({ className = '' }) {
                     'flex items-center gap-space-sm rounded-radius-md px-space-sm py-2 text-body-small font-semibold transition-colors duration-fast',
                     isActive
                       ? 'bg-primary-600 text-white'
-                      : 'bg-primary-50 text-primary-700 hover:bg-primary-100',
+                      : 'bg-app-surface text-primary-600 ring-1 ring-inset ring-app-border hover:bg-app-disabled',
                   ].join(' ')
                 }
               >
@@ -70,8 +70,8 @@ export default function AppSidebar({ className = '' }) {
                 [
                   'flex items-center gap-space-sm rounded-radius-md px-space-sm py-2 text-body-small font-medium transition-colors duration-fast',
                   isActive
-                    ? 'bg-primary-50 text-primary-700'
-                    : 'text-primary-400/85 hover:bg-primary-50/60 hover:text-primary-700 dark:text-primary-300/55',
+                    ? 'bg-app-surface font-semibold text-primary-600'
+                    : 'text-app-muted hover:bg-app-surface hover:text-app-text',
                 ].join(' ')
               }
             >
@@ -80,7 +80,7 @@ export default function AppSidebar({ className = '' }) {
                   <span className="relative shrink-0">
                     <NavIcon
                       name={icon}
-                      className={isActive ? 'text-primary-600' : 'text-primary-400/80 dark:text-primary-300/50'}
+                      className={isActive ? 'text-primary-600' : 'text-app-subtle'}
                     />
                     {showBadge && unreadCount > 0 ? (
                       <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-radius-circular bg-primary-600 ring-2 ring-app-card" />

@@ -96,7 +96,7 @@ export default function EmploymentPreferencesSection({
       title="Preferencias de empleo"
       isEmpty={false}
     >
-      <div className="mb-5 rounded-xl border border-primary-100 bg-primary-50/60 p-4 text-left">
+      <div className="mb-5 rounded-radius-md border border-app-border bg-app-surface p-4 text-left">
         <p className="text-sm font-medium text-primary-900">¿Para qué sirven?</p>
         <p className="mt-1.5 text-sm leading-relaxed text-primary-800/90">
           Indícanos qué tipo de empleo te interesa. Usaremos estas preferencias para recomendarte

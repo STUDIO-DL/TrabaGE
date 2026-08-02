@@ -9,7 +9,6 @@ export const EDITOR_HINTS = {
   city: 'Añade tu ubicación',
   years: 'Selecciona años de experiencia',
   sector: 'Añade tu sector',
-  position: 'Añade tu puesto actual',
   education: 'Selecciona un centro educativo',
 };
 

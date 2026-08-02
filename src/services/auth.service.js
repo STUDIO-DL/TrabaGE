@@ -629,23 +629,26 @@ export function isLikelyUnregisteredGoogleLogin(user) {
 
 /**
  * A TrabaGE account exists when the user already has a profile, is admin,
- * has signup metadata, confirmed email from a non-Google-only identity, or is
- * a returning auth user with a role. Pure Google OAuth always sets
- * email_confirmed_at — that alone is NOT a TrabaGE account (LOGIN without signup).
+ * has signup metadata from email registration, or has a non-Google identity.
+ * Pure Google OAuth (even with a default user_roles row) is NOT a TrabaGE account.
  *
  * @param {object} [options]
- * @param {boolean} [options.loginIntent] — skip DB when clearly a fresh Google LOGIN orphan.
+ * @param {boolean} [options.loginIntent] — fast-reject brand-new Google LOGIN orphans.
  */
 export async function isRegisteredTrabaGEAccount(user, options = {}) {
   if (!user?.id) return false;
 
   const { loginIntent = false } = options;
+  const googleOnly = isGoogleOnlyIdentity(user);
+  const signupMeta = hasSignupMetadata(user);
 
-  if (loginIntent && isLikelyUnregisteredGoogleLogin(user)) {
+  // Brand-new Google LOGIN orphans — no DB round-trip.
+  if (loginIntent && googleOnly && !signupMeta && isBrandNewAuthUser(user)) {
     return false;
   }
 
-  // Role + profiles in parallel (was sequential: profiles then role).
+  // Google-only without registration-form metadata cannot be "registered"
+  // unless a real profile already exists (prior email signup / legacy Google signup).
   const [profileRole, roleResult] = await Promise.all([
     getExistingProfileRole(user.id),
     supabase.from('user_roles').select('role').eq('user_id', user.id).maybeSingle(),
@@ -653,9 +656,9 @@ export async function isRegisteredTrabaGEAccount(user, options = {}) {
 
   if (profileRole) return true;
 
-  if (hasSignupMetadata(user)) return true;
+  if (signupMeta) return true;
 
-  if (user.email_confirmed_at && !isGoogleOnlyIdentity(user)) return true;
+  if (user.email_confirmed_at && !googleOnly) return true;
 
   const identities = user.identities || [];
   if (identities.length > 1) return true;
@@ -664,25 +667,25 @@ export async function isRegisteredTrabaGEAccount(user, options = {}) {
 
   const role = normalizeStoredRole(roleResult.data?.role);
   if (role === ROLES.ADMIN) return true;
-  if (!role) return false;
 
-  if (isBrandNewAuthUser(user) && isGoogleOnlyIdentity(user)) return false;
+  // Default personal role from handle_new_user is NOT enough for Google-only users.
+  if (googleOnly && !signupMeta) {
+    return false;
+  }
 
-  return true;
+  return Boolean(role);
 }
 
 /**
  * Removes the orphan auth session created by Google OAuth when the user tried
  * to sign in without an existing TrabaGE account. Never leaves them logged in.
- * Hard-delete only for brand-new Google-only orphans — Google always has
- * email_confirmed_at, so that flag alone must not block cleanup.
+ * Hard-delete only for Google-only users without signup metadata (no farewell email).
  */
 export async function discardUnregisteredOAuthSession(user = null) {
   const canHardDelete =
     user &&
     !hasSignupMetadata(user) &&
-    isGoogleOnlyIdentity(user) &&
-    isBrandNewAuthUser(user);
+    isGoogleOnlyIdentity(user);
 
   if (canHardDelete) {
     try {
@@ -1174,40 +1177,16 @@ export const authService = {
     return result;
   },
 
-  signupWithGoogle: async (accountKind = ROLES.PERSONAL) => {
-    if (!isSupabaseConfigured) {
-      return configError();
-    }
-
-    const normalizedRole = normalizeAccountType(accountKind);
-    if (normalizedRole !== ROLES.PERSONAL) {
-      return {
-        data: null,
-        error: {
-          message: 'El registro con Google solo está disponible para cuentas personales.',
-        },
-      };
-    }
-
-    savePendingAccountType(ROLES.PERSONAL);
-    saveOAuthIntent(OAUTH_INTENTS.SIGNUP);
-
-    const result = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: getOAuthCallbackRedirectUrl(),
-        queryParams: {
-          prompt: 'select_account',
-        },
+  signupWithGoogle: async () => {
+    // Google must never create TrabaGE accounts. Registration is email/password only;
+    // existing accounts may use loginWithGoogle to sign in.
+    return {
+      data: null,
+      error: {
+        message:
+          'El registro con Google no está disponible. Crea tu cuenta eligiendo el tipo (personal o empresa) y luego podrás iniciar sesión con Google si tu correo ya está registrado.',
       },
-    });
-
-    if (result.error) {
-      consumePendingAccountType();
-      sessionStorage.removeItem(OAUTH_INTENT_KEY);
-    }
-
-    return result;
+    };
   },
 
   loginWithApple: () => {

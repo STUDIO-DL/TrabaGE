@@ -149,10 +149,9 @@ async function testRegisterAccountTypes(page, results) {
       await page.getByRole('button', { name: 'Crear cuenta' }).waitFor({ timeout: 5000 });
 
       const googleButton = page.getByRole('button', { name: 'Continuar con Google' });
-      if (accountCase.id === 'personal') {
-        await googleButton.waitFor({ timeout: 5000 });
-      } else if (await googleButton.count()) {
-        throw new Error('Google signup must not appear for business/organization');
+      // Google must never create accounts — no Google signup on Register for any type.
+      if (await googleButton.count()) {
+        throw new Error('Google signup must not appear on Register');
       }
 
       record(results, name, 'pass');

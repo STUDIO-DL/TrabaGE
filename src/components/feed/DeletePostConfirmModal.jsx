@@ -12,10 +12,9 @@ export default function DeletePostConfirmModal({
 }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Eliminar publicación" size="sm">
-      <div className="space-y-space-sm text-body-small text-app-muted">
-        <p>¿Seguro que deseas eliminar esta publicación?</p>
-        <p>Esta acción es permanente y no se puede deshacer.</p>
-      </div>
+      <p className="text-body-small text-app-muted">
+        Esta acción no se puede deshacer. ¿Deseas eliminar esta publicación?
+      </p>
       <div className="mt-space-lg flex flex-col gap-space-sm sm:flex-row sm:justify-end">
         <Button variant="ghost" onClick={onClose} disabled={loading}>
           Cancelar

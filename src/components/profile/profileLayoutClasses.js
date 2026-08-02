@@ -20,13 +20,13 @@ export const profileActionBarInnerClass =
 export const profileDesktopGridClass =
   'grid gap-space-md lg:grid-cols-[minmax(0,1fr)_minmax(16rem,18.75rem)] lg:items-start lg:gap-space-lg xl:grid-cols-[minmax(0,1fr)_20rem] xl:gap-space-xl';
 
-export const profileDesktopMainClass = 'motion-list min-w-0 space-y-space-md';
+export const profileDesktopMainClass = 'motion-list min-w-0 space-y-space-base';
 
 export const profileDesktopAsideClass =
-  'hidden min-w-0 space-y-space-md lg:sticky lg:top-20 lg:block';
+  'hidden min-w-0 space-y-space-base lg:sticky lg:top-20 lg:block';
 
 /**
  * Shared shell for independent profile sections (Sobre mí, Educación, etc.).
  * Visual only — padding + profile-section-card tokens from index.css.
  */
-export const profileSectionCardClass = 'profile-section-card p-space-base';
+export const profileSectionCardClass = 'profile-section-card p-space-base sm:p-space-lg';

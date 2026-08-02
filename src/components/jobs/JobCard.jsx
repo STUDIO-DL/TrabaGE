@@ -66,7 +66,7 @@ export default function JobCard({
       tabIndex={0}
       onClick={openDetails}
       onKeyDown={handleCardKeyDown}
-      className="relative min-w-0 max-w-full cursor-pointer overflow-hidden rounded-radius-lg border border-app-border bg-app-card p-space-md surface-press transition-colors duration-fast ease-out hover:border-primary-200 hover:bg-primary-50/40 focus-visible:border-primary-200 focus-visible:bg-primary-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-100 active:bg-primary-50"
+      className="relative min-w-0 max-w-full cursor-pointer overflow-hidden rounded-radius-md border border-app-border bg-app-card p-space-base surface-press transition-colors duration-fast ease-out hover:bg-app-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-100 active:bg-app-surface"
       aria-label={`Ver oferta: ${job.title}`}
     >
       {/* Visually hidden link for progressive enhancement / crawlers */}
@@ -117,7 +117,7 @@ export default function JobCard({
             type="button"
             onClick={handleSaveClick}
             disabled={!onSaveToggle || saving}
-            className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-sm text-app-subtle transition-colors duration-fast hover:bg-primary-50/60 hover:text-app-muted disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-primary-950/30"
+            className="inline-flex min-h-touch min-w-touch items-center justify-center rounded-radius-sm text-app-subtle transition-colors duration-fast hover:bg-app-surface hover:text-app-muted disabled:cursor-not-allowed disabled:opacity-50"
             aria-label={saved ? 'Quitar de guardados' : 'Guardar empleo'}
             aria-pressed={saved}
           >

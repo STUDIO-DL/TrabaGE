@@ -24,9 +24,7 @@ import {
 } from '../company/profile/companyProfileStyles';
 import { formatYearsLabel, hasYearsExperience } from './ProfileHeroFields';
 import {
-  formatCurrentPosition,
   formatLocation,
-  getCurrentExperience,
   getIntroEducationLine,
 } from '../../utils/profileIntro';
 import { getDisplayName } from '../../utils/displayIdentity';
@@ -72,7 +70,6 @@ export default function CandidateProfileHeader({
   });
   const educationLine = getIntroEducationLine(profile);
   const locationText = formatLocation(profile);
-  const currentPosition = formatCurrentPosition(getCurrentExperience(profile?.experience));
   const showYearsBadge = hasYearsExperience(profile?.years_experience);
   const sector = profile?.sector?.trim();
   const headline = profile?.headline?.trim();
@@ -189,7 +186,7 @@ export default function CandidateProfileHeader({
                   <button
                     type="button"
                     onClick={onEditIntro}
-                    className="text-left text-title font-bold leading-snug text-app-subtle hover:text-primary-600"
+                    className="text-left text-heading-l font-semibold leading-snug text-app-subtle hover:text-primary-600"
                   >
                     Añade tu nombre
                   </button>
@@ -211,12 +208,6 @@ export default function CandidateProfileHeader({
             </div>
 
             {headline ? <p className={profileHeadlineClass}>{headline}</p> : null}
-
-            {currentPosition ? (
-              <p className="mt-space-xs break-words text-caption text-app-muted">
-                {currentPosition}
-              </p>
-            ) : null}
 
             {sector ? (
               <p className="mt-space-xs break-words text-caption text-app-muted">

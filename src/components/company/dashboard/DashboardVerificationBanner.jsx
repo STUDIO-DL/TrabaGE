@@ -1,35 +1,43 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../ui/Button';
 import { getVerificationStatus, isCompanyVerified } from '../../../utils/companyVerification';
 import { ROLES, rolePath } from '../../../constants/roles';
 import { useAuth } from '../../../hooks/useAuth';
+import { exitGuestToAuth } from '../../../utils/guestMode';
 
 /** Only show when action is needed — verified state is silent. */
 export default function DashboardVerificationBanner({ profile }) {
-  const { role } = useAuth();
+  const { role, isPreviewMode } = useAuth();
+  const navigate = useNavigate();
   const base = role || ROLES.BUSINESS;
 
-  if (isCompanyVerified(profile)) return null;
+  if (!isPreviewMode && isCompanyVerified(profile)) return null;
 
-  const pending = getVerificationStatus(profile) === 'pending';
+  const pending = !isPreviewMode && getVerificationStatus(profile) === 'pending';
+
+  const title = pending ? 'Verificación en revisión' : 'Verifica tu empresa';
+  const description = pending
+    ? 'Estamos revisando tus documentos.'
+    : 'Las empresas verificadas generan mayor confianza dentro de TrabaGE.';
+  const cta = pending ? 'Ver estado' : 'Verificar';
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-space-md border-b border-warning-200/60 pb-space-md">
       <div className="min-w-0">
-        <p className="text-body-small font-semibold text-app-text">
-          {pending ? 'Verificación en revisión' : 'Verifica tu empresa'}
-        </p>
-        <p className="mt-space-xs text-caption text-app-muted">
-          {pending
-            ? 'Estamos revisando tus documentos.'
-            : 'Las cuentas verificadas generan más confianza.'}
-        </p>
+        <p className="text-body-small font-semibold text-app-text">{title}</p>
+        <p className="mt-space-xs text-caption text-app-muted">{description}</p>
       </div>
-      <Link to={rolePath(base, '/verification')}>
-        <Button variant="secondary" size="sm">
-          {pending ? 'Ver estado' : 'Verificar'}
+      {isPreviewMode ? (
+        <Button variant="secondary" size="sm" onClick={() => exitGuestToAuth(navigate)}>
+          {cta}
         </Button>
-      </Link>
+      ) : (
+        <Link to={rolePath(base, '/verification')}>
+          <Button variant="secondary" size="sm">
+            {cta}
+          </Button>
+        </Link>
+      )}
     </div>
   );
 }

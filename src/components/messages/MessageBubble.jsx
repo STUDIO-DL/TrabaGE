@@ -114,9 +114,9 @@ export default function MessageBubble({
       [
         'break-words rounded-radius-lg px-space-md py-space-sm',
         isOwn
-          ? 'rounded-br-sm bg-primary-600 text-white'
-          : 'rounded-bl-sm bg-app-surface text-app-text ring-1 ring-inset ring-app-border',
-        highlighted ? 'ring-2 ring-primary-400 ring-offset-2 ring-offset-app-bg' : '',
+          ? 'rounded-br-sm bg-primary-600 text-white shadow-sm'
+          : 'rounded-bl-sm bg-white text-app-text shadow-sm ring-1 ring-inset ring-app-border dark:bg-app-card',
+        highlighted ? 'ring-2 ring-primary-400 ring-offset-2 ring-offset-[var(--chat-wallpaper-bg)]' : '',
       ]
         .filter(Boolean)
         .join(' '),

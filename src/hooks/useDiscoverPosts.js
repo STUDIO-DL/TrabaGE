@@ -49,5 +49,10 @@ export function useDiscoverPosts(sectionId) {
     void load();
   }, [load]);
 
-  return { posts, loading, error, reload: load };
+  const removePost = useCallback((postId) => {
+    if (!postId) return;
+    setPosts((prev) => prev.filter((post) => post.id !== postId));
+  }, []);
+
+  return { posts, loading, error, reload: load, removePost };
 }

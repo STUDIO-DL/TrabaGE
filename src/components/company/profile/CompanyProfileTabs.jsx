@@ -20,7 +20,7 @@ export default function CompanyProfileTabs({ activeTab, onTabChange, hasServices
 
   return (
     <nav
-      className={`${stickyTop} border-b border-app-border bg-app-card shadow-[0_1px_0_rgba(0,0,0,0.04)] supports-[backdrop-filter]:bg-app-card/95 supports-[backdrop-filter]:backdrop-blur`}
+      className={`${stickyTop} border-b border-app-border bg-white dark:bg-app-card`}
       aria-label="Secciones del perfil"
     >
       <div className={profileTabNavInnerClass} role="tablist">
@@ -35,8 +35,8 @@ export default function CompanyProfileTabs({ activeTab, onTabChange, hasServices
               onClick={() => onTabChange(tab.id)}
               className={`${profileTabButtonClass} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 ${
                 isActive
-                  ? 'bg-primary-50/70 font-semibold text-primary-700'
-                  : 'text-app-muted hover:bg-primary-50/40 hover:text-app-text'
+                  ? 'font-semibold text-primary-600'
+                  : 'text-app-muted hover:text-app-text'
               }`}
               aria-current={isActive ? 'page' : undefined}
             >

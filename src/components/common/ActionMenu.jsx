@@ -30,6 +30,7 @@ export default function ActionMenu({
   onReport,
   onEdit,
   onDelete,
+  editLabel = 'Editar',
   reportLabel = 'Reportar',
   deleteLabel = 'Eliminar',
   align = 'right',
@@ -145,7 +146,7 @@ export default function ActionMenu({
               {onEdit ? (
                 <button type="button" role="menuitem" onClick={() => run(onEdit)} className={MENU_ITEM_CLASS}>
                   <AppIcon icon={Pencil} size={ICON_SIZES.sm} className="text-app-subtle" />
-                  Editar
+                  {editLabel}
                 </button>
               ) : null}
               {onShare ? (

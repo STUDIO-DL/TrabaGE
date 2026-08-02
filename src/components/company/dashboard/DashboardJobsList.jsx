@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AppIcon from '../../common/AppIcon';
 import {
   Briefcase,
@@ -14,6 +14,7 @@ import DashboardSectionEmpty from './DashboardSectionEmpty';
 import { useAuth } from '../../../hooks/useAuth';
 import { ROLES, rolePath } from '../../../constants/roles';
 import { formatDaysActive } from '../../../features/company-dashboard/dashboardFormatters';
+import { exitGuestToAuth } from '../../../utils/guestMode';
 
 const STATUS_STYLES = {
   draft: 'bg-app-muted',
@@ -30,7 +31,8 @@ const STATUS_LABEL = {
 };
 
 export default function DashboardJobsList({ jobs = [], onCloseJob, closingId = null }) {
-  const { role } = useAuth();
+  const { role, isPreviewMode } = useAuth();
+  const navigate = useNavigate();
   const base = role || ROLES.BUSINESS;
   const isEmpty = !jobs.length;
 
@@ -38,13 +40,24 @@ export default function DashboardJobsList({ jobs = [], onCloseJob, closingId = n
     <section className="surface-card flex h-full flex-col">
       <div className="flex items-center justify-between gap-3 border-b border-app-border px-5 py-4">
         <h2 className="text-base font-semibold text-app-text">Ofertas activas</h2>
-        <Link
-          to={rolePath(base, '/jobs')}
-          className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
-        >
-          Ver todas
-          <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
-        </Link>
+        {isPreviewMode ? (
+          <button
+            type="button"
+            onClick={() => exitGuestToAuth(navigate)}
+            className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
+          >
+            Ver todas
+            <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
+          </button>
+        ) : (
+          <Link
+            to={rolePath(base, '/jobs')}
+            className="inline-flex items-center gap-0.5 text-xs font-medium text-primary-600 hover:text-primary-700"
+          >
+            Ver todas
+            <AppIcon icon={ChevronRight} size={ICON_SIZES.sm} />
+          </Link>
+        )}
       </div>
 
       {isEmpty ? (
