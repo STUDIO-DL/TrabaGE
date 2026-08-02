@@ -6,7 +6,9 @@ import { formatMessageTime } from '../../utils/formatDate';
 
 const SWIPE_THRESHOLD = 56;
 const SWIPE_MAX = 72;
-const SWIPE_ACTIVATE_ANGLE = 1.2; // |dx| must exceed |dy| * this
+const SWIPE_ACTIVATE_ANGLE = 1.2;
+const LONG_PRESS_MS = 420;
+const LONG_PRESS_MOVE_PX = 10;
 
 function previewText(content) {
   const text = String(content ?? '').trim();
@@ -14,6 +16,9 @@ function previewText(content) {
   return text.length > 120 ? `${text.slice(0, 117)}…` : text;
 }
 
+/**
+ * Presentational message bubble. Selection / long-press callbacks come from the parent.
+ */
 export default function MessageBubble({
   message,
   isOwn,
@@ -22,11 +27,17 @@ export default function MessageBubble({
   showAvatar = false,
   replyAuthorName = '',
   highlighted = false,
+  selected = false,
+  selectionActive = false,
   onReply,
   onOpenReply,
+  onLongPress,
+  onSelectPress,
 }) {
   const rowRef = useRef(null);
   const pointerRef = useRef(null);
+  const longPressTimerRef = useRef(null);
+  const longPressFiredRef = useRef(false);
   const [offsetX, setOffsetX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [finePointer, setFinePointer] = useState(false);
@@ -40,6 +51,15 @@ export default function MessageBubble({
     return () => mq.removeEventListener?.('change', sync);
   }, []);
 
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current != null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => () => clearLongPressTimer(), [clearLongPressTimer]);
+
   const replyTo = message?.reply_to ?? null;
   const hasReplyRef = Boolean(message?.reply_to_message_id);
   const replyMissing = hasReplyRef && !replyTo;
@@ -48,6 +68,7 @@ export default function MessageBubble({
     : previewText(replyTo?.content);
 
   const replyProgress = Math.min(1, Math.max(0, offsetX / SWIPE_THRESHOLD));
+  const swipeEnabled = Boolean(onReply) && !message?.optimistic && !selectionActive;
 
   const resetSwipe = useCallback(() => {
     setOffsetX(0);
@@ -59,9 +80,25 @@ export default function MessageBubble({
     onReply?.(message);
   }, [message, onReply]);
 
+  const fireLongPress = useCallback(() => {
+    longPressFiredRef.current = true;
+    onLongPress?.(message);
+  }, [message, onLongPress]);
+
   const onPointerDown = (event) => {
-    if (finePointer || event.button !== 0) return;
-    if (!onReply || message?.optimistic) return;
+    if (event.button !== 0) return;
+    longPressFiredRef.current = false;
+
+    if (onLongPress && !message?.optimistic) {
+      clearLongPressTimer();
+      longPressTimerRef.current = window.setTimeout(() => {
+        longPressTimerRef.current = null;
+        fireLongPress();
+      }, LONG_PRESS_MS);
+    }
+
+    if (finePointer || !swipeEnabled) return;
+
     pointerRef.current = {
       id: event.pointerId,
       startX: event.clientX,
@@ -76,6 +113,20 @@ export default function MessageBubble({
   };
 
   const onPointerMove = (event) => {
+    const dxFromStart = pointerRef.current
+      ? event.clientX - pointerRef.current.startX
+      : 0;
+    const dyFromStart = pointerRef.current
+      ? event.clientY - pointerRef.current.startY
+      : 0;
+
+    if (
+      longPressTimerRef.current != null &&
+      (Math.abs(dxFromStart) > LONG_PRESS_MOVE_PX || Math.abs(dyFromStart) > LONG_PRESS_MOVE_PX)
+    ) {
+      clearLongPressTimer();
+    }
+
     const state = pointerRef.current;
     if (!state || state.id !== event.pointerId) return;
 
@@ -84,13 +135,14 @@ export default function MessageBubble({
 
     if (state.locked == null) {
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      // Prefer vertical scroll unless clearly horizontal right swipe
       if (Math.abs(dy) > Math.abs(dx) * SWIPE_ACTIVATE_ANGLE || dx < 0) {
         state.locked = 'vertical';
+        clearLongPressTimer();
         resetSwipe();
         return;
       }
       state.locked = 'horizontal';
+      clearLongPressTimer();
       setDragging(true);
     }
 
@@ -101,33 +153,71 @@ export default function MessageBubble({
   };
 
   const onPointerUp = (event) => {
+    clearLongPressTimer();
     const state = pointerRef.current;
-    if (!state || state.id !== event.pointerId) return;
+    const firedLongPress = longPressFiredRef.current;
+    longPressFiredRef.current = false;
 
-    const shouldReply = state.locked === 'horizontal' && offsetX >= SWIPE_THRESHOLD;
+    if (state && state.id === event.pointerId) {
+      const shouldReply = state.locked === 'horizontal' && offsetX >= SWIPE_THRESHOLD;
+      resetSwipe();
+      if (shouldReply && !firedLongPress) triggerReply();
+      return;
+    }
+
+    // Tap while selection mode is active → toggle/select
+    if (selectionActive && !firedLongPress && onSelectPress && !message?.optimistic) {
+      onSelectPress(message);
+    }
+  };
+
+  const onPointerCancel = () => {
+    clearLongPressTimer();
+    longPressFiredRef.current = false;
     resetSwipe();
-    if (shouldReply) triggerReply();
+  };
+
+  const onContextMenu = (event) => {
+    // Desktop: right-click enters selection (same as long-press).
+    if (!onLongPress || message?.optimistic) return;
+    event.preventDefault();
+    onLongPress(message);
   };
 
   const bubbleClass = useMemo(
     () =>
       [
-        'break-words rounded-radius-lg px-space-md py-space-sm',
+        'break-words rounded-radius-lg px-space-md py-space-sm transition-[transform,box-shadow,background-color] duration-fast ease-out',
         isOwn
           ? 'rounded-br-sm bg-primary-600 text-white shadow-sm'
           : 'rounded-bl-sm bg-white text-app-text shadow-sm ring-1 ring-inset ring-app-border dark:bg-app-card',
-        highlighted ? 'ring-2 ring-primary-400 ring-offset-2 ring-offset-[var(--chat-wallpaper-bg)]' : '',
+        selected
+          ? isOwn
+            ? 'ring-2 ring-primary-300 ring-offset-2 ring-offset-[var(--chat-wallpaper-bg)] scale-[1.02]'
+            : 'bg-primary-50 ring-2 ring-primary-200 ring-offset-2 ring-offset-[var(--chat-wallpaper-bg)] scale-[1.02] dark:bg-primary-950/40 dark:ring-primary-700'
+          : '',
+        highlighted && !selected
+          ? 'ring-2 ring-primary-400 ring-offset-2 ring-offset-[var(--chat-wallpaper-bg)]'
+          : '',
       ]
         .filter(Boolean)
         .join(' '),
-    [highlighted, isOwn],
+    [highlighted, isOwn, selected],
   );
 
   return (
     <div
       ref={rowRef}
       data-message-id={message.id}
-      className={`group relative flex items-end ${isOwn ? 'justify-end' : 'justify-start'}`}
+      data-selected={selected ? 'true' : undefined}
+      className={[
+        'group relative flex items-end',
+        isOwn ? 'justify-end' : 'justify-start',
+        selected ? 'z-[1]' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      onContextMenu={onContextMenu}
     >
       {!isOwn && showAvatar && avatar ? (
         <div className="mr-space-sm shrink-0">
@@ -159,7 +249,7 @@ export default function MessageBubble({
         </div>
 
         <div
-          className="touch-pan-y"
+          className="touch-pan-y select-none"
           style={{
             transform: `translateX(${offsetX}px)`,
             transition: dragging ? 'none' : 'transform 180ms ease-out',
@@ -167,10 +257,10 @@ export default function MessageBubble({
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
-          onPointerCancel={resetSwipe}
+          onPointerCancel={onPointerCancel}
         >
           <div className={['relative', bubbleClass].join(' ')}>
-            {finePointer && onReply && !message?.optimistic ? (
+            {finePointer && onReply && !message?.optimistic && !selectionActive ? (
               <button
                 type="button"
                 onClick={triggerReply}
@@ -220,4 +310,9 @@ export default function MessageBubble({
       </div>
     </div>
   );
+}
+
+/** True when the message has copyable text (images-only would return false). */
+export function messageHasCopyableText(message) {
+  return Boolean(String(message?.content ?? '').trim());
 }

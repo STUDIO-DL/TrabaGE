@@ -132,12 +132,31 @@ export async function sendOneSignalNotification(
       const result = await response.json().catch(() => ({}));
       const notificationId = typeof result?.id === 'string' ? result.id : '';
       const invalidExternalIds = extractInvalidExternalIds(result?.errors);
+      const recipientsRaw = result?.recipients;
+      const recipients =
+        typeof recipientsRaw === 'number' && Number.isFinite(recipientsRaw)
+          ? recipientsRaw
+          : null;
 
       if (response.ok && notificationId) {
+        // OneSignal can return HTTP 200 + id with 0 subscribed devices.
+        // Treat that as failure so we don't log "sent" / block retries via dedup.
+        if (recipients === 0) {
+          return {
+            ok: false,
+            notificationId,
+            recipients: 0,
+            error:
+              'OneSignal no entregó a ningún dispositivo (recipients=0). Revisa external_id y suscripción push.',
+            invalidExternalIds,
+            retryable: false,
+          };
+        }
+
         return {
           ok: true,
           notificationId,
-          recipients: Number(result?.recipients ?? externalIds.length),
+          recipients: recipients ?? externalIds.length,
           invalidExternalIds,
         };
       }

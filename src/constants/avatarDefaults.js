@@ -1,4 +1,4 @@
-import DefaultPersonalAvatar from '../assets/avatars/default-personal.svg';
+import DefaultAvatarPng from '../assets/images/default_avatar.png';
 import DefaultBusinessAvatar from '../assets/avatars/default-business.svg';
 import DefaultOrganizationAvatar from '../assets/avatars/default-organization.svg';
 import { AUTHOR_TYPES, isPersonalAuthor } from './authorTypes';
@@ -12,8 +12,11 @@ export const AvatarType = {
   ORGANIZATION: 'organization',
 };
 
+/** Official TrabaGE default for personal profiles (and any missing photo). */
+export const DEFAULT_AVATAR_PNG = DefaultAvatarPng;
+
 export const DEFAULT_AVATAR_SRC = {
-  [AvatarType.PERSONAL]: DefaultPersonalAvatar,
+  [AvatarType.PERSONAL]: DefaultAvatarPng,
   [AvatarType.BUSINESS]: DefaultBusinessAvatar,
   [AvatarType.ORGANIZATION]: DefaultOrganizationAvatar,
 };
@@ -45,7 +48,7 @@ function isValidImagePath(value) {
   return true;
 }
 
-/** Bundled default SVGs or other static app assets — never treat as storage paths. */
+/** Bundled default assets — never treat as Supabase storage paths. */
 export function isBundledAvatarAsset(value) {
   if (typeof value !== 'string') return false;
   const trimmed = value.trim();
@@ -57,10 +60,10 @@ export function isBundledAvatarAsset(value) {
   if (trimmed.startsWith('data:image/')) return false;
   if (trimmed.startsWith('blob:')) return false;
 
-  // Vite-dev and built asset URLs (e.g. /assets/default-personal-xxxx.svg)
   if (
     /\/assets\/default-(personal|business|organization)/i.test(trimmed) ||
-    /default-(personal|business|organization)\.svg/i.test(trimmed)
+    /default-(personal|business|organization)\.svg/i.test(trimmed) ||
+    /default_avatar\.(png|svg|webp)/i.test(trimmed)
   ) {
     return true;
   }
@@ -116,8 +119,7 @@ export function avatarTypeFromCompanyProfile(profile) {
 
 /**
  * Resolves a displayable avatar URL with type-specific defaults.
- * Returns { src, isDefault } — when isDefault, src is null (AppAvatar renders inline fallback).
- * Use resolveAvatarSrc() when a concrete URL string is required (e.g. PDF export).
+ * Returns { src, isDefault } — when isDefault, src is null (AppAvatar shows official default).
  */
 export function resolveAvatarImageSrc(type = AvatarType.PERSONAL, imagePath) {
   if (!isValidImagePath(imagePath) || isBundledAvatarAsset(imagePath)) {
@@ -137,7 +139,7 @@ export function resolveAvatarImageSrc(type = AvatarType.PERSONAL, imagePath) {
     return { src: trimmed, isDefault: false };
   }
 
-  // Absolute site paths are never storage keys (bundled defaults already handled above)
+  // Absolute site paths are never storage keys
   if (trimmed.startsWith('/') && !trimmed.startsWith('//')) {
     return { src: null, isDefault: true };
   }
@@ -152,15 +154,14 @@ export function resolveAvatarImageSrc(type = AvatarType.PERSONAL, imagePath) {
   return { src: null, isDefault: true };
 }
 
-/** Convenience: returns a concrete src string (bundled default when missing). */
+/** Concrete src string (official default when missing). */
 export function resolveAvatarSrc(type, imagePath) {
   const resolved = resolveAvatarImageSrc(type, imagePath);
   return resolved.src ?? getDefaultAvatarSrc(type);
 }
 
 /**
- * Path or remote URL for AppAvatar — never a bundled default URL
- * (avoids double-resolving defaults as Supabase storage paths).
+ * Path or remote URL for AppAvatar — never a bundled default URL.
  */
 export function resolveAuthorAvatar(authorType, { avatarPath, logoPath, companyType, profile } = {}) {
   const type = avatarTypeFromAuthorType(authorType, { companyType, profile });

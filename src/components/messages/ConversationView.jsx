@@ -6,13 +6,16 @@ import AppAvatar from '../common/AppAvatar';
 import AppIcon from '../common/AppIcon';
 import FetchErrorBanner from '../common/FetchErrorBanner';
 import Skeleton from '../common/Skeleton';
-import MessageBubble from './MessageBubble';
+import MessageBubble, { messageHasCopyableText } from './MessageBubble';
 import MessageComposer from './MessageComposer';
 import ChatWallpaper from './ChatWallpaper';
 import MessageDaySeparator from './MessageDaySeparator';
+import MessageSelectionBar from './MessageSelectionBar';
+import DeleteMessageSheet from './DeleteMessageSheet';
 import ConversationMessageSearchPanel from './ConversationMessageSearchPanel';
 import KeyboardAwareFooter from '../layout/KeyboardAwareFooter';
 import { useMessages } from '../../hooks/useMessages';
+import { useMessageSelection } from '../../hooks/useMessageSelection';
 import { useConversationMessageSearch } from '../../hooks/useConversationMessageSearch';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -20,6 +23,8 @@ import { isEmployerRole } from '../../constants/roles';
 import { Search, ICON_SIZES } from '../../constants/icons';
 import { messagesService, MESSAGE_WAIT_FOR_REPLY } from '../../services/messages.service';
 import { getMessageDayKey } from '../../utils/formatDate';
+import { copyToClipboard } from '../../utils/shareContent';
+import { triggerLightHaptic } from '../../utils/hapticFeedback';
 
 const BOTTOM_THRESHOLD = 50;
 const COMPOSE_INSET_FALLBACK = 72;
@@ -40,7 +45,7 @@ function ConversationSkeleton() {
   );
 }
 
-export default function ConversationView({ conversationId, role, embedded = false }) {
+export default function ConversationView({ conversationId, role: _role, embedded = false }) {
   const { user } = useAuth();
   const { showToast, showErrorToast } = useNotificationContext();
   const scrollRef = useRef(null);
@@ -67,10 +72,14 @@ export default function ConversationView({ conversationId, role, embedded = fals
     canSend,
     blockedReason,
     sendMessage,
+    deleteMessage,
     loadMore,
     ensureMessageLoaded,
     refetch,
   } = useMessages(conversationId);
+  const selection = useMessageSelection({ conversationId });
+  const [deleteSheetOpen, setDeleteSheetOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const {
     results: searchResults,
     loading: searchLoading,
@@ -336,6 +345,78 @@ export default function ConversationView({ conversationId, role, embedded = fals
     setSearchOpen(false);
   }, []);
 
+  const selectedMessages = selection.selectedIdList
+    .map((id) => messages.find((item) => item.id === id))
+    .filter(Boolean);
+
+  const canCopySelection =
+    selectedMessages.length > 0 && selectedMessages.every((item) => messageHasCopyableText(item));
+
+  const canDeleteSelection =
+    selectedMessages.length > 0 &&
+    selectedMessages.every((item) => item.sender_id === user?.id && !item.optimistic);
+
+  const handleMessageLongPress = useCallback(
+    (message) => {
+      if (!message?.id || message.optimistic) return;
+      if (searchOpen) setSearchOpen(false);
+      setReplyTarget(null);
+      selection.enter(message.id);
+    },
+    [searchOpen, selection],
+  );
+
+  const handleMessageSelectPress = useCallback(
+    (message) => {
+      if (!message?.id || message.optimistic) return;
+      selection.toggle(message.id);
+    },
+    [selection],
+  );
+
+  const handleCopySelected = useCallback(async () => {
+    if (!canCopySelection) return;
+    const text = selectedMessages
+      .map((item) => String(item.content ?? '').trim())
+      .filter(Boolean)
+      .join('\n\n');
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      triggerLightHaptic();
+      showToast('Mensaje copiado', 'success');
+      selection.clear();
+    } else {
+      showToast('No se pudo copiar el mensaje.', 'error');
+    }
+  }, [canCopySelection, selectedMessages, selection, showToast]);
+
+  const handleRequestDelete = useCallback(() => {
+    if (!canDeleteSelection) return;
+    setDeleteSheetOpen(true);
+  }, [canDeleteSelection]);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!canDeleteSelection || deleting) return;
+    setDeleting(true);
+    const ids = selectedMessages.map((item) => item.id);
+    let failed = false;
+    for (const id of ids) {
+      const result = await deleteMessage(id);
+      if (result.error) {
+        failed = true;
+        showErrorToast(result.error, 'delete_message');
+        break;
+      }
+    }
+    setDeleting(false);
+    setDeleteSheetOpen(false);
+    if (!failed) {
+      triggerLightHaptic();
+      showToast(ids.length > 1 ? 'Mensajes eliminados' : 'Mensaje eliminado', 'success');
+      selection.clear();
+    }
+  }, [canDeleteSelection, deleteMessage, deleting, selectedMessages, selection, showErrorToast, showToast]);
+
   const handleSend = async (content, options = {}) => {
     isAtBottomRef.current = true;
     const result = await sendMessage(content, options);
@@ -395,7 +476,7 @@ export default function ConversationView({ conversationId, role, embedded = fals
     <span className="truncate text-subtitle font-semibold text-app-text">Conversación</span>
   );
 
-  const searchAction = (
+  const searchAction = selection.isActive ? null : (
     <button
       type="button"
       onClick={() => setSearchOpen((open) => !open)}
@@ -407,9 +488,20 @@ export default function ConversationView({ conversationId, role, embedded = fals
     </button>
   );
 
+  const selectionBar = (
+    <MessageSelectionBar
+      selectedCount={selection.selectedCount}
+      canCopy={canCopySelection}
+      canDelete={canDeleteSelection}
+      onCancel={selection.clear}
+      onCopy={handleCopySelected}
+      onDelete={handleRequestDelete}
+    />
+  );
+
   const thread = (
       <ChatWallpaper>
-        {searchOpen ? (
+        {searchOpen && !selection.isActive ? (
           <ConversationMessageSearchPanel
             query={searchQuery}
             onQueryChange={setSearchQuery}
@@ -483,8 +575,12 @@ export default function ConversationView({ conversationId, role, embedded = fals
                       showAvatar={showAvatar}
                       replyAuthorName={replyAuthorName}
                       highlighted={highlightedMessageId === message.id}
-                      onReply={handleReply}
-                      onOpenReply={handleOpenReply}
+                      selected={selection.isSelected(message.id)}
+                      selectionActive={selection.isActive}
+                      onReply={selection.isActive ? undefined : handleReply}
+                      onOpenReply={selection.isActive ? undefined : handleOpenReply}
+                      onLongPress={handleMessageLongPress}
+                      onSelectPress={handleMessageSelectPress}
                     />
                   </div>
                 );
@@ -494,28 +590,46 @@ export default function ConversationView({ conversationId, role, embedded = fals
           </div>
         ) : null}
 
-        <KeyboardAwareFooter fixed={!embedded} as="div">
-          <div ref={composeRef}>
-            <MessageComposer
-              onSend={handleSend}
-              sending={sending}
-              disabled={loading || Boolean(error) || !canSend}
-              blockedReason={!canSend ? (blockedReason ?? MESSAGE_WAIT_FOR_REPLY) : null}
-              replyTarget={replyTarget}
-              onCancelReply={handleCancelReply}
-            />
-          </div>
-        </KeyboardAwareFooter>
+        {!selection.isActive ? (
+          <KeyboardAwareFooter fixed={!embedded} as="div">
+            <div ref={composeRef}>
+              <MessageComposer
+                onSend={handleSend}
+                sending={sending}
+                disabled={loading || Boolean(error) || !canSend}
+                blockedReason={!canSend ? (blockedReason ?? MESSAGE_WAIT_FOR_REPLY) : null}
+                replyTarget={replyTarget}
+                onCancelReply={handleCancelReply}
+              />
+            </div>
+          </KeyboardAwareFooter>
+        ) : (
+          <div ref={composeRef} className="hidden" aria-hidden />
+        )}
+
+        <DeleteMessageSheet
+          isOpen={deleteSheetOpen}
+          onClose={() => {
+            if (!deleting) setDeleteSheetOpen(false);
+          }}
+          onConfirm={handleConfirmDelete}
+          loading={deleting}
+          count={selectedMessages.length}
+        />
       </ChatWallpaper>
   );
 
   if (embedded) {
     return (
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[var(--chat-wallpaper-bg)] transition-[background-color] duration-[250ms]">
-        <header className="flex shrink-0 items-center gap-space-sm border-b border-app-divider bg-app-card px-space-md py-space-sm">
-          {headerCenter}
-          <div className="ml-auto shrink-0">{searchAction}</div>
-        </header>
+        {selection.isActive ? (
+          selectionBar
+        ) : (
+          <header className="flex shrink-0 items-center gap-space-sm border-b border-app-divider bg-app-card px-space-md py-space-sm">
+            {headerCenter}
+            <div className="ml-auto shrink-0">{searchAction}</div>
+          </header>
+        )}
         {thread}
       </div>
     );
@@ -523,7 +637,13 @@ export default function ConversationView({ conversationId, role, embedded = fals
 
   return (
     <PageContainer
-      topBar={<TopBar backButton center={headerCenter} actions={searchAction} />}
+      topBar={
+        selection.isActive ? (
+          selectionBar
+        ) : (
+          <TopBar backButton center={headerCenter} actions={searchAction} />
+        )
+      }
       bottomNav={false}
       className="flex h-dvh max-h-dvh min-h-0 flex-col overflow-hidden bg-[var(--chat-wallpaper-bg)] transition-[background-color] duration-[250ms]"
       contentClassName="flex min-h-0 flex-1 flex-col overflow-hidden bg-[var(--chat-wallpaper-bg)] transition-[background-color] duration-[250ms]"

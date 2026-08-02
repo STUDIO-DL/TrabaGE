@@ -267,6 +267,36 @@ export function useMessages(conversationId) {
     [conversationId, isPreviewMode, syncSendState, user?.id],
   );
 
+  const deleteMessage = useCallback(
+    async (messageId) => {
+      if (!conversationId || !user?.id || isPreviewMode || !messageId) {
+        return { error: { message: 'No se pudo eliminar el mensaje.' } };
+      }
+
+      const target = messagesRef.current.find((item) => item.id === messageId);
+      if (!target || target.sender_id !== user.id) {
+        return { error: { message: 'Solo puedes eliminar tus propios mensajes.' } };
+      }
+
+      // Optimistic remove
+      setMessages((prev) => prev.filter((item) => item.id !== messageId));
+
+      const { data, error: deleteError } = await messagesService.softDeleteOwnMessage(messageId);
+
+      if (deleteError) {
+        // Restore on failure
+        setMessages((prev) => {
+          if (prev.some((item) => item.id === messageId)) return prev;
+          return sortMessagesAscending([...prev, target]);
+        });
+        return { error: deleteError };
+      }
+
+      return { data, error: null };
+    },
+    [conversationId, isPreviewMode, user?.id],
+  );
+
   useEffect(() => {
     markedReadRef.current = false;
     sendingLockRef.current = false;
@@ -326,6 +356,7 @@ export function useMessages(conversationId) {
         },
         (payload) => {
           const incoming = payload.new;
+          if (incoming?.deleted_at) return;
           setMessages((prev) => {
             if (prev.some((item) => item.id === incoming.id)) return prev;
             return sortMessagesAscending([...prev, incoming]);
@@ -335,6 +366,30 @@ export function useMessages(conversationId) {
           if (incoming.sender_id !== user?.id) {
             void markRead();
           }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const updated = payload.new;
+          if (!updated?.id) return;
+          if (updated.deleted_at) {
+            setMessages((prev) => prev.filter((item) => item.id !== updated.id));
+            return;
+          }
+          setMessages((prev) => {
+            const index = prev.findIndex((item) => item.id === updated.id);
+            if (index < 0) return prev;
+            const next = [...prev];
+            next[index] = { ...next[index], ...updated };
+            return next;
+          });
         },
       )
       .on(
@@ -371,6 +426,7 @@ export function useMessages(conversationId) {
     canSend,
     blockedReason,
     sendMessage,
+    deleteMessage,
     loadMore,
     ensureMessageLoaded,
     refetch: fetchMessages,

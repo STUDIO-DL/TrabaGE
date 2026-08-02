@@ -134,6 +134,14 @@ export const messagesService = {
   },
 
   getMessages: async (conversationId, { cursor = null, limit = MESSAGES_PAGE_SIZE } = {}) => {
+    const sanitize = (rows) =>
+      (rows ?? []).map((row) => {
+        if (row?.reply_to?.deleted_at) {
+          return { ...row, reply_to: null };
+        }
+        return row;
+      });
+
     const buildQuery = (withReply) => {
       let query = supabase
         .from('messages')
@@ -145,12 +153,14 @@ export const messagesService = {
                 id,
                 content,
                 sender_id,
-                created_at
+                created_at,
+                deleted_at
               )
             `
             : '*',
         )
         .eq('conversation_id', conversationId)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
         .order('id', { ascending: false })
         .limit(limit);
@@ -164,10 +174,20 @@ export const messagesService = {
     };
 
     let { data, error } = await buildQuery(true);
-    if (error && /reply_to_message_id|Could not find/i.test(String(error.message ?? ''))) {
+    if (error && /reply_to_message_id|Could not find|deleted_at/i.test(String(error.message ?? ''))) {
       ({ data, error } = await buildQuery(false));
     }
-    return { data: data ?? [], error };
+    return { data: sanitize(data), error };
+  },
+
+  softDeleteOwnMessage: async (messageId) => {
+    if (!messageId) {
+      return { data: null, error: { message: 'Mensaje no válido.' } };
+    }
+    const { data, error } = await supabase.rpc('soft_delete_own_message', {
+      p_message_id: messageId,
+    });
+    return { data: data ?? null, error };
   },
 
   sendMessage: async (conversationId, content, { replyToMessageId = null } = {}) => {
