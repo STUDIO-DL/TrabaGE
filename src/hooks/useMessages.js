@@ -5,6 +5,7 @@ import { supabase } from '../config/supabase';
 import { messagesService, MESSAGES_PAGE_SIZE } from '../services/messages.service';
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 import { emitConversationRead } from '../utils/conversationUnreadEvents';
+import { computeMessageExpiresAt, isMessageActive } from '../constants/messageTtl';
 
 function sortMessagesAscending(messages) {
   return [...messages].sort(
@@ -221,6 +222,7 @@ export function useMessages(conversationId) {
         sender_id: user.id,
         content: trimmed,
         created_at: new Date().toISOString(),
+        expires_at: computeMessageExpiresAt(),
         optimistic: true,
         reply_to_message_id: replyToMessageId || null,
         reply_to: replyTo || null,
@@ -356,7 +358,7 @@ export function useMessages(conversationId) {
         },
         (payload) => {
           const incoming = payload.new;
-          if (incoming?.deleted_at) return;
+          if (!isMessageActive(incoming)) return;
           setMessages((prev) => {
             if (prev.some((item) => item.id === incoming.id)) return prev;
             return sortMessagesAscending([...prev, incoming]);
@@ -379,7 +381,7 @@ export function useMessages(conversationId) {
         (payload) => {
           const updated = payload.new;
           if (!updated?.id) return;
-          if (updated.deleted_at) {
+          if (!isMessageActive(updated)) {
             setMessages((prev) => prev.filter((item) => item.id !== updated.id));
             return;
           }
@@ -390,6 +392,21 @@ export function useMessages(conversationId) {
             next[index] = { ...next[index], ...updated };
             return next;
           });
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        (payload) => {
+          const removedId = payload.old?.id;
+          if (!removedId) return;
+          setMessages((prev) => prev.filter((item) => item.id !== removedId));
+          void syncSendState();
         },
       )
       .on(
@@ -414,6 +431,22 @@ export function useMessages(conversationId) {
   useForegroundResumeRefresh(() => {
     void fetchMessages();
   }, [fetchMessages]);
+
+  // Prune locally when TTL elapses (no DB UPDATE fires at expires_at).
+  useEffect(() => {
+    if (!conversationId || isPreviewMode) return undefined;
+
+    const prune = () => {
+      setMessages((prev) => {
+        const next = prev.filter((item) => item.optimistic || isMessageActive(item));
+        return next.length === prev.length ? prev : next;
+      });
+    };
+
+    prune();
+    const timer = window.setInterval(prune, 60_000);
+    return () => window.clearInterval(timer);
+  }, [conversationId, isPreviewMode]);
 
   return {
     messages,

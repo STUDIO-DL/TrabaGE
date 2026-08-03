@@ -1,4 +1,4 @@
-import { isEmployerAuthor } from '../constants/authorTypes';
+import { AUTHOR_TYPES, isEmployerAuthor } from '../constants/authorTypes';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
@@ -14,6 +14,8 @@ import { ROLES } from '../constants/roles';
 import { useAuth } from '../hooks/useAuth';
 import { usePostMutations } from '../hooks/usePostMutations';
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
+import { PostEngagementProvider } from '../features/post-engagement/ui/PostEngagementContext';
+import { professionalPanelService } from '../features/professional-panel/data/professionalPanel.service';
 
 async function enrichPost(post) {
   if (!post) return post;
@@ -95,6 +97,16 @@ export default function PostDetail() {
     fetchPost();
   }, [fetchPost]);
 
+  useEffect(() => {
+    if (!post?.id || !post.author_id) return;
+    if (user?.id && user.id === post.author_id) return;
+    const authorType = post.author_type || AUTHOR_TYPES.PERSONAL;
+    if (isEmployerAuthor(authorType)) return;
+    void professionalPanelService.trackPostView(post.author_id, post.id, {
+      source: 'post_detail',
+    });
+  }, [post, user?.id]);
+
   return (
     <PageContainer backButton bottomNav={false}>
       <div className="p-space-base">
@@ -111,21 +123,23 @@ export default function PostDetail() {
             description="El contenido puede haber sido eliminado o no estar disponible."
           />
         ) : (
-          <div className="card-enter">
-            <PostCard
-              post={post}
-              authorId={post.author_id}
-              authorName={post.author_name}
-              authorHeadline={post.author_headline}
-              authorAvatar={post.author_avatar}
-              authorType={post.author_type}
-              authorCompany={post.author_company}
-              canManage={post.author_id === user?.id}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              defaultTextExpanded
-            />
-          </div>
+          <PostEngagementProvider postIds={post?.id ? [post.id] : []}>
+            <div className="card-enter">
+              <PostCard
+                post={post}
+                authorId={post.author_id}
+                authorName={post.author_name}
+                authorHeadline={post.author_headline}
+                authorAvatar={post.author_avatar}
+                authorType={post.author_type}
+                authorCompany={post.author_company}
+                canManage={post.author_id === user?.id}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                defaultTextExpanded
+              />
+            </div>
+          </PostEngagementProvider>
         )}
         {deleteConfirmModal}
       </div>

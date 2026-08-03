@@ -14,10 +14,8 @@ import {
   EyeOff,
   Lock,
   Mail,
-  MapPin,
   ICON_SIZES,
 } from '../../constants/icons';
-import { CITIES } from '../../constants/cities';
 import {
   ACCOUNT_KINDS,
   accountKindToRole,
@@ -206,7 +204,6 @@ export default function Register() {
   const [email, setEmail] = useState(() => location.state?.email || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [city, setCity] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [confirmedAge, setConfirmedAge] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -329,11 +326,6 @@ export default function Register() {
       return;
     }
 
-    if (!city.trim()) {
-      setError(getErrorMessage('selectCity'));
-      return;
-    }
-
     if (!validateLegalConfirmations()) {
       return;
     }
@@ -343,7 +335,7 @@ export default function Register() {
     submitLockRef.current = true;
 
     const role = accountKindToRole(accountKind);
-    const metadata = config.buildMetadata(typeValues, { city: city.trim() });
+    const metadata = config.buildMetadata(typeValues);
     const { error: registerError, redirectTo, pendingVerification, rateLimited, emailDeliveryFailed } = await register(
       submittedEmail,
       password,
@@ -530,16 +522,6 @@ export default function Register() {
                     autoComplete="new-password"
                     value={confirmPassword}
                     onChange={setConfirmPassword}
-                  />
-
-                  <SelectField
-                    id="register-city"
-                    label="Ciudad"
-                    icon={MapPin}
-                    placeholder="Selecciona tu ciudad"
-                    options={normalizeFieldOptions(CITIES)}
-                    value={city}
-                    onChange={setCity}
                   />
 
                   <label className="flex cursor-pointer items-start gap-space-sm pt-space-xs">

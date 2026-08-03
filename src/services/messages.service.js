@@ -4,6 +4,7 @@ import { getDisplayName } from '../utils/displayIdentity';
 import { ROLES, isEmployerRole } from '../constants/roles';
 import { avatarTypeFromRole } from '../constants/avatarDefaults';
 import { isOrganizationProfile } from '../utils/orgLabels';
+import { isMessageActive } from '../constants/messageTtl';
 import { notificationsService } from './notifications.service';
 import { reportError } from '../utils/logger';
 
@@ -135,12 +136,14 @@ export const messagesService = {
 
   getMessages: async (conversationId, { cursor = null, limit = MESSAGES_PAGE_SIZE } = {}) => {
     const sanitize = (rows) =>
-      (rows ?? []).map((row) => {
-        if (row?.reply_to?.deleted_at) {
-          return { ...row, reply_to: null };
-        }
-        return row;
-      });
+      (rows ?? [])
+        .filter((row) => isMessageActive(row))
+        .map((row) => {
+          if (row?.reply_to && !isMessageActive(row.reply_to)) {
+            return { ...row, reply_to: null };
+          }
+          return row;
+        });
 
     const buildQuery = (withReply) => {
       let query = supabase
@@ -154,13 +157,15 @@ export const messagesService = {
                 content,
                 sender_id,
                 created_at,
-                deleted_at
+                deleted_at,
+                expires_at
               )
             `
             : '*',
         )
         .eq('conversation_id', conversationId)
         .is('deleted_at', null)
+        .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
         .order('id', { ascending: false })
         .limit(limit);
@@ -174,7 +179,7 @@ export const messagesService = {
     };
 
     let { data, error } = await buildQuery(true);
-    if (error && /reply_to_message_id|Could not find|deleted_at/i.test(String(error.message ?? ''))) {
+    if (error && /reply_to_message_id|Could not find|deleted_at|expires_at/i.test(String(error.message ?? ''))) {
       ({ data, error } = await buildQuery(false));
     }
     return { data: sanitize(data), error };
@@ -477,7 +482,7 @@ export const messagesService = {
 
     if (error) return { data: [], error, found: false };
 
-    const rows = data ?? [];
+    const rows = (data ?? []).filter((row) => isMessageActive(row));
     return {
       data: rows,
       error: null,

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import PageContainer from '../../components/layout/PageContainer';
 import CandidateProfileLayout from '../../components/profile/CandidateProfileLayout';
@@ -11,6 +12,7 @@ import ServicesSection from '../../components/profile/ServicesSection';
 import ProjectsSection from '../../components/profile/ProjectsSection';
 import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
 import PersonalSocialSection from '../../components/profile/PersonalSocialSection';
+import ProfilePostsSection from '../../components/profile/ProfilePostsSection';
 import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { ProfilePageSkeleton } from '../../components/common/Skeleton';
 import { useProfile } from '../../hooks/useProfile';
@@ -19,12 +21,19 @@ import { generateProfileUrl } from '../../utils/generateShareUrl';
 import { useStartConversation } from '../../hooks/useStartConversation';
 import { getDisplayName } from '../../utils/displayIdentity';
 import { ROLES } from '../../constants/roles';
+import { professionalPanelService } from '../../features/professional-panel/data/professionalPanel.service';
 
 export default function PublicProfile() {
   const { userId } = useParams();
-  const { user } = useAuth();
+  const { user, isPreviewMode } = useAuth();
   const { profile, loading, error, refetch } = useProfile(userId);
   const { startConversation, starting } = useStartConversation();
+
+  useEffect(() => {
+    if (!userId || !profile || isPreviewMode) return;
+    if (user?.id && user.id === userId) return;
+    void professionalPanelService.trackProfileView(userId, { source: 'public_profile' });
+  }, [isPreviewMode, profile, user?.id, userId]);
 
   const displayName = getDisplayName(profile, ROLES.PERSONAL, {
     fallbackAuthorName: profile?.full_name,
@@ -76,6 +85,12 @@ export default function PublicProfile() {
         <EducationSection items={profile.education} />
         <SkillsSection items={profile.skills} />
         <ProjectsSection items={profile.projects} />
+        <ProfilePostsSection
+          authorId={userId}
+          postsPath={`/profile/${userId}/posts`}
+          backTo={`/profile/${userId}`}
+          enabled={Boolean(userId)}
+        />
         <CertificationsSection items={profile.certifications} />
         <LanguagesReadOnlySection items={profile.languages} />
         <ServicesSection items={profile.services} />

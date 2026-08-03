@@ -15,6 +15,8 @@ const PAGE_TITLES = {
   '/admin/posts': 'Publicaciones',
   '/admin/topics': 'Temas',
   '/admin/reports': 'Reportes',
+  '/admin/deleted-accounts': 'Cuentas eliminadas',
+  '/admin/communications': 'Comunicación',
   '/admin/notifications': 'Notificaciones',
   '/admin/profile': 'Perfil',
   '/admin/settings': 'Configuración',

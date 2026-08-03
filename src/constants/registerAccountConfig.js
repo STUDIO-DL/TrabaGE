@@ -61,9 +61,8 @@ export const REGISTER_ACCOUNT_CONFIG = {
         errorKey: 'registerFullNameRequired',
       },
     ],
-    buildMetadata: (values, common) => ({
+    buildMetadata: (values) => ({
       fullName: values.fullName?.trim() || undefined,
-      city: common.city,
       accountKind: ACCOUNT_KINDS.PERSONAL,
     }),
   },
@@ -91,8 +90,7 @@ export const REGISTER_ACCOUNT_CONFIG = {
         required: false,
       },
     ],
-    buildMetadata: (values, common) => ({
-      city: common.city,
+    buildMetadata: (values) => ({
       accountKind: ACCOUNT_KINDS.BUSINESS,
       orgDetails: {
         company_name: values.orgName?.trim() || undefined,
@@ -125,8 +123,7 @@ export const REGISTER_ACCOUNT_CONFIG = {
         errorKey: 'registerOrgTypeRequired',
       },
     ],
-    buildMetadata: (values, common) => ({
-      city: common.city,
+    buildMetadata: (values) => ({
       accountKind: ACCOUNT_KINDS.ORGANIZATION,
       orgDetails: {
         company_name: values.orgName?.trim() || undefined,

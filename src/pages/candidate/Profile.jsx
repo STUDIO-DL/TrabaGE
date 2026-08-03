@@ -15,6 +15,8 @@ import LanguagesSection from '../../components/profile/LanguagesSection';
 import PortfolioLinksSection from '../../components/profile/PortfolioLinksSection';
 import DocumentsSection from '../../components/profile/DocumentsSection';
 import ProfileMoreSection from '../../components/profile/ProfileMoreSection';
+import ProfilePostsSection from '../../components/profile/ProfilePostsSection';
+import ProfileSavedPostsSection from '../../components/profile/ProfileSavedPostsSection';
 import ExperienceModal from '../../components/profile/modals/ExperienceModal';
 import EducationModal from '../../components/profile/modals/EducationModal';
 import ProjectModal from '../../components/profile/modals/ProjectModal';
@@ -349,6 +351,21 @@ export default function Profile() {
             showToast(error ? error.message : 'Proyecto eliminado.', error ? 'error' : 'success');
           }}
         />
+
+        <ProfilePostsSection
+          authorId={user?.id}
+          postsPath="/personal/profile/posts"
+          backTo="/personal/profile"
+          enabled={Boolean(user?.id)}
+        />
+
+        {canEdit ? (
+          <ProfileSavedPostsSection
+            savedPath="/personal/profile/saved"
+            backTo="/personal/profile"
+            enabled={Boolean(user?.id)}
+          />
+        ) : null}
 
         <CertificationsSection
           items={profile?.certifications}

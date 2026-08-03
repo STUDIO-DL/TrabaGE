@@ -8,6 +8,7 @@ const QUICK_ACTIONS = [
   { to: '/admin/verifications', label: 'Verificaciones' },
   { to: '/admin/jobs', label: 'Ofertas' },
   { to: '/admin/posts', label: 'Publicaciones' },
+  { to: '/admin/communications', label: 'Comunicación' },
   { to: '/admin/reports', label: 'Reportes' },
 ];
 

@@ -3,7 +3,10 @@ import { createPortal } from 'react-dom';
 import AppIcon from './AppIcon';
 import {
   AlertTriangle,
+  Bookmark,
+  BookmarkCheck,
   Copy,
+  EyeOff,
   MoreHorizontal,
   Pencil,
   Share2,
@@ -30,9 +33,14 @@ export default function ActionMenu({
   onReport,
   onEdit,
   onDelete,
+  onSave,
+  onHide,
+  saved = false,
   editLabel = 'Editar',
   reportLabel = 'Reportar',
   deleteLabel = 'Eliminar',
+  saveLabel,
+  hideLabel = 'Ocultar publicación',
   align = 'right',
   variant = 'icon',
   className = '',
@@ -43,7 +51,10 @@ export default function ActionMenu({
   const [open, setOpen] = useState(false);
   const [coords, setCoords] = useState(null);
 
-  const hasItems = Boolean(onShare || onCopy || onReport || onEdit || onDelete);
+  const resolvedSaveLabel = saveLabel || (saved ? 'Quitar de guardados' : 'Guardar publicación');
+  const hasItems = Boolean(
+    onShare || onCopy || onReport || onEdit || onDelete || onSave || onHide,
+  );
   const triggerClass = TRIGGER_VARIANTS[variant] || TRIGGER_VARIANTS.icon;
 
   const updatePosition = () => {
@@ -82,7 +93,7 @@ export default function ActionMenu({
       window.removeEventListener('scroll', handleReposition, true);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, align, onShare, onCopy, onReport, onEdit, onDelete]);
+  }, [open, align, onShare, onCopy, onReport, onEdit, onDelete, onSave, onHide, saved]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -143,6 +154,16 @@ export default function ActionMenu({
                 visibility: coords ? 'visible' : 'hidden',
               }}
             >
+              {onSave ? (
+                <button type="button" role="menuitem" onClick={() => run(onSave)} className={MENU_ITEM_CLASS}>
+                  <AppIcon
+                    icon={saved ? BookmarkCheck : Bookmark}
+                    size={ICON_SIZES.sm}
+                    className="text-app-subtle"
+                  />
+                  {resolvedSaveLabel}
+                </button>
+              ) : null}
               {onEdit ? (
                 <button type="button" role="menuitem" onClick={() => run(onEdit)} className={MENU_ITEM_CLASS}>
                   <AppIcon icon={Pencil} size={ICON_SIZES.sm} className="text-app-subtle" />
@@ -159,6 +180,12 @@ export default function ActionMenu({
                 <button type="button" role="menuitem" onClick={() => run(onCopy)} className={MENU_ITEM_CLASS}>
                   <AppIcon icon={Copy} size={ICON_SIZES.sm} className="text-app-subtle" />
                   Copiar enlace
+                </button>
+              ) : null}
+              {onHide ? (
+                <button type="button" role="menuitem" onClick={() => run(onHide)} className={MENU_ITEM_CLASS}>
+                  <AppIcon icon={EyeOff} size={ICON_SIZES.sm} className="text-app-subtle" />
+                  {hideLabel}
                 </button>
               ) : null}
               {onReport ? (

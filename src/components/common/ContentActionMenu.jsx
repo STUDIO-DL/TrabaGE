@@ -28,9 +28,14 @@ export default function ContentActionMenu({
   className = '',
   onEdit,
   onDelete,
+  onSave,
+  onHide,
+  saved = false,
   editLabel = 'Editar',
   reportLabel = 'Reportar',
   deleteLabel = 'Eliminar',
+  saveLabel,
+  hideLabel = 'Ocultar publicación',
 }) {
   const [reportOpen, setReportOpen] = useState(false);
   const { isPreviewMode, user } = useAuth();
@@ -69,9 +74,14 @@ export default function ContentActionMenu({
         onReport={canReport ? handleReport : undefined}
         onEdit={onEdit}
         onDelete={onDelete}
+        onSave={onSave}
+        onHide={onHide}
+        saved={saved}
         editLabel={editLabel}
         reportLabel={reportLabel}
         deleteLabel={deleteLabel}
+        saveLabel={saveLabel}
+        hideLabel={hideLabel}
         align={align}
         variant={variant}
         className={className}

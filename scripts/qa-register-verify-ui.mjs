@@ -70,7 +70,6 @@ async function main() {
       await page.getByLabel(/Correo/i).first().fill(email);
       await page.locator('input[type="password"]').first().fill(PASSWORD);
       await page.locator('input[type="password"]').nth(1).fill(PASSWORD);
-      await page.locator('#register-city').selectOption({ index: 1 });
       await page.getByRole('checkbox').check();
       await page.getByRole('button', { name: 'Crear cuenta' }).click();
 

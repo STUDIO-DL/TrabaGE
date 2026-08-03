@@ -203,7 +203,7 @@ export default function SettingsScreen({ accountType }) {
     navigate('/login', { replace: true });
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = async (feedback) => {
     if (isPreviewMode) {
       showToast(GUEST_MODE_MESSAGE, 'info');
       setDeleteOpen(false);
@@ -213,7 +213,7 @@ export default function SettingsScreen({ accountType }) {
     setDeleteLoading(true);
     markAccountDeleted();
     try {
-      const { error } = await authService.deleteAccount();
+      const { error } = await authService.deleteAccount(feedback);
       if (error) {
         clearAccountDeleted();
         showToast(getSupabaseErrorMessage(error, 'No se pudo eliminar la cuenta.'), 'error');
@@ -365,7 +365,6 @@ export default function SettingsScreen({ accountType }) {
         onClose={() => setDeleteOpen(false)}
         onConfirm={handleDeleteAccount}
         loading={deleteLoading}
-        email={user?.email}
       />
     </PageContainer>
   );

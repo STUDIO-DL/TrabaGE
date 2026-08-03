@@ -13,6 +13,7 @@ import MessageDaySeparator from './MessageDaySeparator';
 import MessageSelectionBar from './MessageSelectionBar';
 import DeleteMessageSheet from './DeleteMessageSheet';
 import ConversationMessageSearchPanel from './ConversationMessageSearchPanel';
+import EphemeralMessagesBanner from './EphemeralMessagesBanner';
 import KeyboardAwareFooter from '../layout/KeyboardAwareFooter';
 import { useMessages } from '../../hooks/useMessages';
 import { useMessageSelection } from '../../hooks/useMessageSelection';
@@ -280,27 +281,6 @@ export default function ConversationView({ conversationId, role: _role, embedded
     setReplyTarget(null);
   }, []);
 
-  const handleOpenReply = useCallback(
-    (replyToId) => {
-      if (!replyToId || !scrollRef.current) return;
-
-      const target = scrollRef.current.querySelector(`[data-message-id="${replyToId}"]`);
-      if (!target) {
-        showToast('Ese mensaje no está cargado todavía. Desplázate hacia arriba para verlo.', 'info');
-        return;
-      }
-
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setHighlightedMessageId(replyToId);
-      if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
-      highlightTimerRef.current = window.setTimeout(() => {
-        setHighlightedMessageId(null);
-        highlightTimerRef.current = null;
-      }, 1600);
-    },
-    [showToast],
-  );
-
   const highlightMessageInView = useCallback((messageId) => {
     const target = scrollRef.current?.querySelector(`[data-message-id="${messageId}"]`);
     if (!target) return false;
@@ -313,6 +293,31 @@ export default function ConversationView({ conversationId, role: _role, embedded
     }, 1800);
     return true;
   }, []);
+
+  const handleOpenReply = useCallback(
+    async (replyToId) => {
+      if (!replyToId || !scrollRef.current) return;
+
+      if (highlightMessageInView(replyToId)) return;
+
+      const status = await ensureMessageLoaded(replyToId);
+      if (status === 'missing') {
+        showToast('Este mensaje ya no está disponible.', 'info');
+        return;
+      }
+      if (status === 'error') {
+        showToast('No hemos podido abrir ese mensaje.', 'error');
+        return;
+      }
+
+      requestAnimationFrame(() => {
+        if (!highlightMessageInView(replyToId)) {
+          showToast('Este mensaje ya no está disponible.', 'info');
+        }
+      });
+    },
+    [ensureMessageLoaded, highlightMessageInView, showToast],
+  );
 
   const handleSelectSearchResult = useCallback(
     async (item) => {
@@ -518,6 +523,8 @@ export default function ConversationView({ conversationId, role: _role, embedded
             messagesEmpty={!loading && messages.length === 0}
           />
         ) : null}
+
+        {!searchOpen ? <EphemeralMessagesBanner /> : null}
 
         {error ? (
           <div className="shrink-0 bg-white p-space-base dark:bg-app-card">

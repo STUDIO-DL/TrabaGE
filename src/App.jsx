@@ -21,6 +21,7 @@ import { ToastContainer } from './components/ui/Toast';
 import OfflineScreen from './components/common/OfflineScreen';
 import DocumentPullToRefresh from './components/layout/DocumentPullToRefresh';
 import MaintenanceGate from './components/routing/MaintenanceGate';
+import { CommunicationsHost } from './features/communications';
 import { MaintenanceProvider } from './context/MaintenanceContext';
 import { useNotificationContext } from './context/NotificationContext';
 import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
@@ -91,6 +92,9 @@ const CompanyNotificationSettings = lazy(() => import('./pages/company/Notificat
 const Verification = lazy(() => import('./pages/company/Verification'));
 const MessagesInbox = lazy(() => import('./pages/shared/MessagesInbox'));
 const Conversation = lazy(() => import('./pages/shared/Conversation'));
+const AuthorFeed = lazy(() => import('./pages/shared/AuthorFeed'));
+const SavedPosts = lazy(() => import('./pages/shared/SavedPosts'));
+const ProfessionalPanel = lazy(() => import('./pages/candidate/ProfessionalPanel'));
 
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
@@ -102,7 +106,9 @@ const AdminJobs = lazy(() => import('./pages/admin/AdminJobs'));
 const AdminPosts = lazy(() => import('./pages/admin/AdminPosts'));
 const AdminTopics = lazy(() => import('./pages/admin/AdminTopics'));
 const AdminReports = lazy(() => import('./pages/admin/AdminReports'));
+const AdminDeletedAccounts = lazy(() => import('./pages/admin/AdminDeletedAccounts'));
 const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
+const AdminCommunications = lazy(() => import('./pages/admin/AdminCommunications'));
 const AdminProfile = lazy(() => import('./pages/admin/AdminProfile'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings'));
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
@@ -180,6 +186,8 @@ function EmployerAppRoutes() {
       <Route path="messages/:conversationId" element={<Conversation />} />
       <Route path="notifications" element={<CompanyNotifications />} />
       <Route path="profile" element={<CompanyProfile />} />
+      <Route path="profile/posts" element={<AuthorFeed />} />
+      <Route path="profile/saved" element={<SavedPosts />} />
       <Route path="settings" element={<CompanySettings />} />
       <Route path="settings/appearance" element={<CompanyAppearance />} />
       <Route path="settings/notifications" element={<CompanyNotificationSettings />} />
@@ -261,6 +269,9 @@ function AppRoutes() {
                   <Route path="/personal/messages/:conversationId" element={<Conversation />} />
                   <Route path="/personal/notifications" element={<CandidateNotifications />} />
                   <Route path="/personal/profile" element={<CandidateProfile />} />
+                  <Route path="/personal/profile/posts" element={<AuthorFeed />} />
+                  <Route path="/personal/profile/saved" element={<SavedPosts />} />
+                  <Route path="/personal/profile/professional-panel" element={<ProfessionalPanel />} />
                   <Route path="/personal/profile/edit-intro" element={<EditIntro />} />
                   <Route path="/personal/settings" element={<CandidateSettings />} />
                   <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
@@ -288,6 +299,8 @@ function AppRoutes() {
                     <Route path="/admin/posts" element={<AdminPosts />} />
                     <Route path="/admin/topics" element={<AdminTopics />} />
                     <Route path="/admin/reports" element={<AdminReports />} />
+                    <Route path="/admin/deleted-accounts" element={<AdminDeletedAccounts />} />
+                    <Route path="/admin/communications" element={<AdminCommunications />} />
                     <Route path="/admin/notifications" element={<AdminNotifications />} />
                     <Route path="/admin/profile" element={<AdminProfile />} />
                     <Route path="/admin/settings" element={<AdminSettings />} />
@@ -322,8 +335,11 @@ function AppRoutes() {
               {/* Public deep-link entry points (clean shareable URLs). See src/utils/deepLinks.js */}
               {/* /@:username does not match in RR6 — use /:atHandle and resolve only @* segments */}
               <Route path="/profile/:userId" element={<PublicProfile />} />
+              <Route path="/profile/:userId/posts" element={<AuthorFeed />} />
               <Route path="/company/:companyId" element={<CompanyPublicProfile />} />
               <Route path="/companies/:companyId" element={<CompanyPublicProfile />} />
+              <Route path="/companies/:companyId/posts" element={<AuthorFeed />} />
+              <Route path="/company/:companyId/posts" element={<AuthorFeed />} />
               <Route path="/job/:id" element={<JobDetail />} />
               <Route path="/personal/jobs/:id" element={<JobDetail />} />
               <Route path="/post/:postId" element={<PostDetail />} />
@@ -365,6 +381,7 @@ export default function App() {
                   <MaintenanceGate>
                     <AppRoutes />
                   </MaintenanceGate>
+                  <CommunicationsHost />
                 </MaintenanceProvider>
               </NotificationProvider>
             </KeyboardProvider>

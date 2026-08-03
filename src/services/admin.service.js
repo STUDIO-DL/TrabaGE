@@ -536,4 +536,25 @@ export const adminService = {
     });
     return { data, error };
   },
+
+  getDeletedAccounts: async () => {
+    const { data, error } = await supabase.rpc('admin_list_deleted_accounts');
+    return { data: data ?? [], error };
+  },
+
+  getDeletedAccountsStats: async () => {
+    const { data, error } = await supabase.rpc('admin_deleted_accounts_stats');
+    if (error) return { data: null, error };
+    return {
+      data: {
+        total: data?.total ?? 0,
+        avgRating: data?.avg_rating ?? null,
+        byReason: data?.by_reason ?? [],
+        byMonth: data?.by_month ?? [],
+        byCountry: data?.by_country ?? [],
+        byAccountType: data?.by_account_type ?? [],
+      },
+      error: null,
+    };
+  },
 };

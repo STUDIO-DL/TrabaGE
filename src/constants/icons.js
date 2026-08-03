@@ -71,6 +71,8 @@ import {
   Wrench,
   X,
   Reply,
+  Repeat2,
+  BookmarkCheck,
 } from 'lucide-react';
 
 /** Re-export all Lucide icons from a single place */
@@ -147,6 +149,8 @@ export {
   Wrench,
   X,
   Reply,
+  Repeat2,
+  BookmarkCheck,
 };
 
 /**

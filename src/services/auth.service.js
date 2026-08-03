@@ -1199,7 +1199,12 @@ export const authService = {
 
   logout: () => supabase.auth.signOut(),
 
-  deleteAccount: async () => {
+  /**
+   * Permanently deletes the authenticated account.
+   * Optional exit-survey payload is snapshotted server-side before auth.users delete.
+   * @param {{ reasonCode?: string, reasonOther?: string, rating?: number|null, improvementComment?: string }} [feedback]
+   */
+  deleteAccount: async (feedback = {}) => {
     if (isOneSignalConfigured()) {
       try {
         await clearOneSignalUserId();
@@ -1208,7 +1213,24 @@ export const authService = {
       }
     }
 
-    const result = await supabase.rpc('delete_own_account', { p_send_goodbye: true });
+    const reasonCode = String(feedback?.reasonCode ?? '').trim() || null;
+    const reasonOther = String(feedback?.reasonOther ?? '').trim() || null;
+    const improvementComment = String(feedback?.improvementComment ?? '').trim() || null;
+    const ratingRaw = feedback?.rating;
+    const rating =
+      ratingRaw == null || ratingRaw === ''
+        ? null
+        : Number.isFinite(Number(ratingRaw))
+          ? Math.min(10, Math.max(1, Math.round(Number(ratingRaw))))
+          : null;
+
+    const result = await supabase.rpc('delete_own_account', {
+      p_send_goodbye: true,
+      p_reason_code: reasonCode,
+      p_reason_other: reasonOther,
+      p_rating: rating,
+      p_improvement_comment: improvementComment,
+    });
     if (!result.error) {
       const payload =
         typeof result.data === 'string'

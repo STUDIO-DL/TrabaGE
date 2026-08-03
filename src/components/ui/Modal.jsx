@@ -18,6 +18,8 @@ export default function Modal({
   size = 'md',
   /** When true, children include KeyboardAwareFooter — panel skips keyboard bottom padding to avoid double inset. */
   footerAware = false,
+  /** When false, hides X / overlay / Escape dismissal (e.g. mandatory legal campaigns). */
+  dismissible = true,
 }) {
   const { mounted, exiting } = useAnimatedPresence(isOpen, 200);
   const { keyboardHeight, keyboardGap, isKeyboardVisible } = useKeyboard();
@@ -26,7 +28,7 @@ export default function Modal({
     if (!mounted || exiting) return undefined;
 
     const handleKey = (e) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && dismissible) onClose();
     };
 
     document.addEventListener('keydown', handleKey);
@@ -36,7 +38,7 @@ export default function Modal({
       document.removeEventListener('keydown', handleKey);
       document.body.style.overflow = '';
     };
-  }, [mounted, exiting, onClose]);
+  }, [mounted, exiting, onClose, dismissible]);
 
   if (!mounted) return null;
 
@@ -78,8 +80,9 @@ export default function Modal({
       <button
         type="button"
         className={`absolute inset-0 bg-app-overlay/55 ${overlayMotion}`}
-        aria-label="Cerrar modal"
-        onClick={onClose}
+        aria-label={dismissible ? 'Cerrar modal' : undefined}
+        onClick={dismissible ? onClose : undefined}
+        tabIndex={dismissible ? 0 : -1}
       />
       <div
         className={[
@@ -107,14 +110,16 @@ export default function Modal({
               {title}
             </h2>
           )}
-          <button
-            type="button"
-            onClick={onClose}
-            className="ml-auto min-h-touch min-w-touch shrink-0 rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-950/40"
-            aria-label="Cerrar"
-          >
-            <AppIcon icon={X} size={ICON_SIZES.md} />
-          </button>
+          {dismissible ? (
+            <button
+              type="button"
+              onClick={onClose}
+              className="ml-auto min-h-touch min-w-touch shrink-0 rounded-radius-sm p-space-sm text-app-muted transition-colors duration-fast hover:bg-primary-50 hover:text-primary-700 dark:hover:bg-primary-950/40"
+              aria-label="Cerrar"
+            >
+              <AppIcon icon={X} size={ICON_SIZES.md} />
+            </button>
+          ) : null}
         </div>
         {footerAware ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>

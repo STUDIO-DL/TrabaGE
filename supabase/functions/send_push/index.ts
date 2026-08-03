@@ -60,6 +60,12 @@ function buildDedupKey(userId: string, notificationType: string, data: Record<st
 
     String(data.application_id ?? '') ||
 
+    String(data.post_id ?? '') ||
+
+    String(data.comment_id ?? '') ||
+
+    String(data.follower_id ?? '') ||
+
     String(data.target_id ?? '') ||
 
     String(data.request_id ?? '') ||
@@ -1175,11 +1181,14 @@ serve(async (req) => {
 
 
 
-  if (!title || !body) {
+  if (!title) {
 
-    return jsonResponse({ error: 'title and body required' }, 400);
+    return jsonResponse({ error: 'title required' }, 400);
 
   }
+
+  // Likes / reposts often send an empty body; OneSignal still needs contents.
+  const pushBody = String(body ?? '').trim() || String(title);
 
 
 
@@ -1196,6 +1205,12 @@ serve(async (req) => {
 
 
   const isSelfOnly = uniqueExternalIds.every((id) => id === callerId);
+
+  // If the payload claims an actor / follower / sender, it must be the caller.
+  const claimedActor = data?.actor_id ?? data?.follower_id ?? data?.sender_id;
+  if (claimedActor && String(claimedActor) !== callerId) {
+    return jsonResponse({ error: 'No autorizado' }, 403);
+  }
 
 
 
@@ -1239,6 +1254,22 @@ serve(async (req) => {
 
 
 
+    if (data?.post_id) {
+
+      notificationQuery = notificationQuery.eq('metadata->>post_id', String(data.post_id));
+
+    }
+
+
+
+    if (data?.actor_id) {
+
+      notificationQuery = notificationQuery.eq('metadata->>actor_id', String(data.actor_id));
+
+    }
+
+
+
     const { data: notifications, error } = await notificationQuery;
 
     if (error) {
@@ -1273,7 +1304,7 @@ serve(async (req) => {
 
   for (const batch of chunkArray(uniqueExternalIds, PUSH_BATCH_SIZE)) {
 
-    const result = await sendToRecipients(admin, batch, title, body, data, appUrl, { notificationType });
+    const result = await sendToRecipients(admin, batch, title, pushBody, data, appUrl, { notificationType });
 
     if (result.error) {
 

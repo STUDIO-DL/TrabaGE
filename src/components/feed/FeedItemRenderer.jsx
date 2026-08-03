@@ -13,6 +13,7 @@ function FeedItemRenderer({
   canManage = false,
   onEdit,
   onDelete,
+  onHidden,
 }) {
   const post = item.payload;
 
@@ -44,6 +45,7 @@ function FeedItemRenderer({
           canManage={canManage}
           onEdit={onEdit}
           onDelete={onDelete}
+          onHidden={onHidden}
         />
       );
   }

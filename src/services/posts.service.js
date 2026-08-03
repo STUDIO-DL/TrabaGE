@@ -100,6 +100,23 @@ export const postsService = {
     return withNormalizedTopics(result);
   },
 
+  /** Lightweight count for profile section badges — does not load post bodies. */
+  countByAuthor: async (authorId, { includeHidden = false } = {}) => {
+    if (!authorId) return { count: 0, error: null };
+
+    let query = supabase
+      .from('posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('author_id', authorId);
+
+    if (!includeHidden) {
+      query = query.eq('is_hidden', false);
+    }
+
+    const { count, error } = await query;
+    return { count: count ?? 0, error };
+  },
+
   getById: async (id, { includeHidden = false } = {}) => {
     let query = supabase.from('posts').select(POST_SELECT).eq('id', id);
     if (!includeHidden) {

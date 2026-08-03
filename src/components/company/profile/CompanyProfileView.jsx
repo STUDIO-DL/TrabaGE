@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ChevronRight,
   ICON_SIZES,
@@ -11,13 +12,15 @@ import CompanyAboutSection from './CompanyAboutSection';
 import CompanyAboutTabSection from './CompanyAboutTabSection';
 import CompanyServicesSection from './CompanyServicesSection';
 import CompanyJobsSection from './CompanyJobsSection';
-import { CompanyPostsFeed } from './CompanyPostsSection';
 import CompanyInfoRows, { hasVisibleCompanyInfoRows } from './CompanyInfoRows';
 import CompanySocialCard, { hasCompanySocialLinks } from './CompanySocialCard';
 import CompanyProfileSectionCard from './CompanyProfileSectionCard';
 import ProjectsSection from '../../profile/ProjectsSection';
-import { usePosts } from '../../../hooks/usePosts';
-import { usePostMutations } from '../../../hooks/usePostMutations';
+import ProfilePostsSection from '../../profile/ProfilePostsSection';
+import ProfileSavedPostsSection from '../../profile/ProfileSavedPostsSection';
+import { useAuthorPostCount } from '../../../hooks/useAuthorPostCount';
+import { useAuth } from '../../../hooks/useAuth';
+import { ROLES, rolePath } from '../../../constants/roles';
 import {
   sectionLinkClass,
   profileContentShellClass,
@@ -81,6 +84,8 @@ export default function CompanyProfileView({
   onEditProject,
   onDeleteProject,
 }) {
+  const navigate = useNavigate();
+  const { role } = useAuth();
   const [aboutExpanded, setAboutExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('inicio');
 
@@ -93,31 +98,36 @@ export default function CompanyProfileView({
   const showFollowerCount = readOnly || isOwn;
   const showPublicActions =
     readOnly && Boolean(showFollowButton || onMessage || shareUrl || reportTargetId);
-  const shouldLoadPosts = activeTab === 'publicaciones';
 
-  const {
-    posts,
-    loading: postsLoading,
-    loadingMore: postsLoadingMore,
-    hasMore: postsHasMore,
-    loadMore: loadMorePosts,
-    refetch: refetchPosts,
-    removePost: removeOwnedPost,
-  } = usePosts(companyId, { enabled: shouldLoadPosts });
+  const { count: postsCount, loading: postsCountLoading } = useAuthorPostCount(companyId, {
+    enabled: Boolean(companyId),
+  });
 
-  const canManagePosts = isOwn && !readOnly;
-  const { handleEdit: handleEditPost, handleDelete: handleDeletePost, deleteConfirmModal } =
-    usePostMutations({
-      onSuccess: (deletedPost) => {
-        if (deletedPost?.id) {
-          removeOwnedPost(deletedPost.id);
-          return;
-        }
-        refetchPosts();
+  const postsPath = useMemo(() => {
+    if (!companyId) return null;
+    if (isOwn && !readOnly) {
+      return rolePath(role || ROLES.BUSINESS, '/profile/posts');
+    }
+    return `/companies/${companyId}/posts`;
+  }, [companyId, isOwn, readOnly, role]);
+
+  const openAuthorPosts = () => {
+    if (!postsPath) return;
+    navigate(postsPath, {
+      state: {
+        authorId: companyId,
+        title: 'Publicaciones',
+        from: readOnly ? `/companies/${companyId}` : rolePath(role || ROLES.BUSINESS, '/profile'),
+        emptyDescription: 'Aún no hay publicaciones.',
       },
     });
+  };
 
   const goToTab = (tabId) => {
+    if (tabId === 'publicaciones') {
+      openAuthorPosts();
+      return;
+    }
     setActiveTab(tabId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -145,6 +155,14 @@ export default function CompanyProfileView({
         ? '1 servicio'
         : `${services.length} servicios`
       : 'Añade los servicios que ofreces';
+
+  const postsHighlightSubtitle = postsCountLoading
+    ? 'Cargando…'
+    : postsCount > 0
+      ? postsCount === 1
+        ? '1 publicación'
+        : `${postsCount} publicaciones`
+      : 'Aún no hay publicaciones.';
 
   let tabPanel = null;
 
@@ -199,6 +217,27 @@ export default function CompanyProfileView({
               />
             ) : null}
 
+            {companyId && postsPath ? (
+              <ProfilePostsSection
+                authorId={companyId}
+                postsPath={postsPath}
+                backTo={
+                  readOnly
+                    ? `/companies/${companyId}`
+                    : rolePath(role || ROLES.BUSINESS, '/profile')
+                }
+                enabled={Boolean(companyId)}
+              />
+            ) : null}
+
+            {isOwn && !readOnly ? (
+              <ProfileSavedPostsSection
+                savedPath={rolePath(role || ROLES.BUSINESS, '/profile/saved')}
+                backTo={rolePath(role || ROLES.BUSINESS, '/profile')}
+                enabled
+              />
+            ) : null}
+
             <CompanyProfileSectionCard title="Explorar">
               <div className="divide-y divide-app-divider">
                 <InicioHighlightRow
@@ -207,9 +246,9 @@ export default function CompanyProfileView({
                   onClick={() => goToTab('empleos')}
                 />
                 <InicioHighlightRow
-                  title="Publicaciones"
-                  subtitle="Ver el feed de la empresa"
-                  onClick={() => goToTab('publicaciones')}
+                  title={postsCountLoading ? 'Publicaciones' : `Publicaciones (${postsCount})`}
+                  subtitle={postsHighlightSubtitle}
+                  onClick={openAuthorPosts}
                 />
                 {showServiciosTab ? (
                   <InicioHighlightRow
@@ -273,27 +312,6 @@ export default function CompanyProfileView({
             embedded
           />
         </CompanyProfileSectionCard>
-      </div>
-    );
-  } else if (activeTab === 'publicaciones') {
-    tabPanel = (
-      <div
-        className={`${profileContentShellClass} ${profileSectionStackClass}`}
-        role="tabpanel"
-        aria-label="Publicaciones"
-      >
-        <CompanyPostsFeed
-          posts={posts}
-          loading={postsLoading}
-          loadingMore={postsLoadingMore}
-          hasMore={postsHasMore}
-          onLoadMore={loadMorePosts}
-          canManage={canManagePosts}
-          onEdit={canManagePosts ? handleEditPost : undefined}
-          onDelete={canManagePosts ? handleDeletePost : undefined}
-          readOnly={readOnly}
-          profile={profile}
-        />
       </div>
     );
   } else if (activeTab === 'acerca') {
@@ -369,7 +387,6 @@ export default function CompanyProfileView({
       />
 
       {tabPanel}
-      {deleteConfirmModal}
     </div>
   );
 }

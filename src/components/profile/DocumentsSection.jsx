@@ -5,7 +5,7 @@ import FileUpload from '../ui/FileUpload';
 import Textarea from '../ui/Textarea';
 import Button from '../ui/Button';
 import AppIcon from '../common/AppIcon';
-import { FileText, ICON_SIZES } from '../../constants/icons';
+import { FileText, Lock, ICON_SIZES } from '../../constants/icons';
 import { FILE_HINTS } from '../../utils/validateFile';
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
@@ -91,8 +91,17 @@ export default function DocumentsSection({
       <div className="space-y-5">
         <div>
           <p className="mb-1 text-sm font-semibold text-app-text">Curriculum Vitae</p>
-          <p className="mb-3 text-sm text-app-muted">
-            Sube tu CV en formato PDF para compartirlo con empresas.
+          <p className="mb-3 flex items-start gap-space-sm text-caption leading-relaxed text-app-subtle">
+            <AppIcon
+              icon={Lock}
+              size={ICON_SIZES.sm}
+              className="mt-0.5 shrink-0 text-app-subtle"
+              aria-hidden
+            />
+            <span>
+              Tu CV es privado. Solo se compartirá con una empresa u organización cuando tú
+              decidas utilizarlo para postularte a una oferta de empleo.
+            </span>
           </p>
           <p className="mb-4 text-sm text-app-muted">{cvName || 'No especificado'}</p>
 

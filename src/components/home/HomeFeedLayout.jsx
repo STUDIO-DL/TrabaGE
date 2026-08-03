@@ -4,8 +4,13 @@ import ParaTiPanel from './ParaTiPanel';
 import DiscoverHub from '../discover/DiscoverHub';
 import FeedDesktopAside from './FeedDesktopAside';
 
-export default function HomeFeedLayout({ header }) {
+/**
+ * Home feed. Pass optional `authorId` to reuse the same surface filtered to one author
+ * (profile → Publicaciones). Tabs/Discover are hidden in author mode.
+ */
+export default function HomeFeedLayout({ header, authorId = null, emptyDescription, bottomNav }) {
   const { activeTab, setActiveTab } = useFeedTab();
+  const isAuthorFeed = Boolean(authorId);
 
   return (
     <PageContainer
@@ -13,9 +18,16 @@ export default function HomeFeedLayout({ header }) {
       width="feed"
       aside={<FeedDesktopAside />}
       contentClassName="motion-page"
+      bottomNav={bottomNav}
     >
-      <FeedTabs activeTab={activeTab} onTabChange={setActiveTab} />
-      {activeTab === FEED_TABS.FOR_YOU ? <ParaTiPanel /> : <DiscoverHub />}
+      {isAuthorFeed ? (
+        <ParaTiPanel authorId={authorId} emptyDescription={emptyDescription} />
+      ) : (
+        <>
+          <FeedTabs activeTab={activeTab} onTabChange={setActiveTab} />
+          {activeTab === FEED_TABS.FOR_YOU ? <ParaTiPanel /> : <DiscoverHub />}
+        </>
+      )}
     </PageContainer>
   );
 }

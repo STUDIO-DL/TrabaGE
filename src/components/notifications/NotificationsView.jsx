@@ -156,6 +156,9 @@ export default function NotificationsView({ role = 'candidate' }) {
     }
 
     const link = getNotificationLink(notification, role);
+    if (notification?.metadata?.message_expired) {
+      showToast('Este mensaje ya no está disponible.', 'info');
+    }
     if (link) navigate(link);
   };
 

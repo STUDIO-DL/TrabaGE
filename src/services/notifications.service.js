@@ -139,7 +139,12 @@ export const notificationsService = {
       ...metadata,
     };
 
-    await sendPushBatch([recipientId], title, body ?? '', pushPayload);
+    await sendPushBatch(
+      [recipientId],
+      title,
+      (body != null && String(body).trim()) || title,
+      pushPayload,
+    );
 
     return { data, error: null };
   },

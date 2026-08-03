@@ -30,6 +30,7 @@ import {
 import { getDisplayName } from '../../utils/displayIdentity';
 import { useAuth } from '../../hooks/useAuth';
 import { profileHeaderAlignClass } from './profileLayoutClasses';
+import ProfessionalPanelTeaser from '../../features/professional-panel/ui/ProfessionalPanelTeaser';
 
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 
@@ -226,6 +227,8 @@ export default function CandidateProfileHeader({
                 {locationText}
               </p>
             ) : null}
+
+            {isOwn ? <ProfessionalPanelTeaser /> : null}
 
             {showYearsBadge && formatYearsLabel(profile?.years_experience) ? (
               <ul className="mt-space-sm flex flex-wrap gap-space-sm">
