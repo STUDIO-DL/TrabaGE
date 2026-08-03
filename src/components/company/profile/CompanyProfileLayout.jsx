@@ -317,6 +317,7 @@ export default function CompanyProfileLayout({
     refetch,
     uploadLogo,
     uploadCover,
+    removeCover,
     addCompanyService,
     deleteCompanyService,
     updateCompanyProfile,
@@ -412,6 +413,26 @@ export default function CompanyProfileLayout({
     }
 
     showToast(type === 'logo' ? 'Logo actualizado.' : 'Portada actualizada.', 'success');
+  };
+
+  const handleRemoveCover = async () => {
+    if (isPreviewMode) {
+      onPreviewAction?.('remove-cover');
+      return;
+    }
+
+    if (!userId) return;
+
+    setCoverLoading(true);
+    const { error } = await removeCover();
+    setCoverLoading(false);
+
+    if (error) {
+      showToast(error.message, 'error');
+      return;
+    }
+
+    showToast('Portada eliminada.', 'success');
   };
 
   const handleAddService = async (name) => {
@@ -544,6 +565,7 @@ export default function CompanyProfileLayout({
         onEditDetails={readOnly ? undefined : () => openEdit('details')}
         onUploadLogo={readOnly ? undefined : (file) => uploadImage(file, 'logo')}
         onUploadCover={readOnly ? undefined : (file) => uploadImage(file, 'cover')}
+        onRemoveCover={readOnly ? undefined : handleRemoveCover}
         onAddService={readOnly ? undefined : handleAddService}
         onDeleteService={readOnly ? undefined : handleDeleteService}
         logoLoading={logoLoading}

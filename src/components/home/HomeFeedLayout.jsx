@@ -18,6 +18,7 @@ export default function HomeFeedLayout({ header, authorId = null, emptyDescripti
       width="feed"
       aside={<FeedDesktopAside />}
       contentClassName="motion-page"
+      className="bg-app-surface"
       bottomNav={bottomNav}
     >
       {isAuthorFeed ? (

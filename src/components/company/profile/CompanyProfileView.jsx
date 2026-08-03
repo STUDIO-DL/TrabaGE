@@ -61,6 +61,7 @@ export default function CompanyProfileView({
   onEditDetails,
   onUploadLogo,
   onUploadCover,
+  onRemoveCover,
   onAddService,
   onDeleteService,
   logoLoading = false,
@@ -162,7 +163,9 @@ export default function CompanyProfileView({
       ? postsCount === 1
         ? '1 publicación'
         : `${postsCount} publicaciones`
-      : 'Aún no hay publicaciones.';
+      : isOwn
+        ? 'Aún no has publicado nada.'
+        : 'Aún no hay publicaciones.';
 
   let tabPanel = null;
 
@@ -356,6 +359,7 @@ export default function CompanyProfileView({
         onEditIntro={onEditIntro}
         onUploadLogo={onUploadLogo}
         onUploadCover={onUploadCover}
+        onRemoveCover={onRemoveCover}
         logoLoading={logoLoading}
         logoPhase={logoPhase}
         coverLoading={coverLoading}

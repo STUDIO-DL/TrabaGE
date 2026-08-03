@@ -11,6 +11,7 @@ import {
   FileText,
   Mail,
   MessageSquare,
+  Repeat2,
   Share2,
   Users,
   X,
@@ -371,7 +372,20 @@ export default function CompanyAnalytics() {
                   <MetricCard icon={Eye} label="Visualizaciones" value={data.posts?.views} />
                   <MetricCard icon={Check} label="Likes" value={data.posts?.likes} />
                   <MetricCard icon={MessageSquare} label="Comentarios" value={data.posts?.comments} />
-                  <MetricCard icon={Share2} label="Compartidos" value={data.posts?.shares} />
+                  <MetricCard icon={Share2} label="Compartidos externos" value={data.posts?.shares} />
+                  <MetricCard icon={Repeat2} label="Reposts" value={data.posts?.reposts} />
+                  <MetricCard
+                    icon={Users}
+                    label="Alcance por reposts"
+                    value={data.posts?.repost_reach}
+                    hint="Seguidores de quienes compartieron"
+                  />
+                  <MetricCard
+                    icon={Eye}
+                    label="Vistas por reposts"
+                    value={data.posts?.views_from_reposts}
+                    hint="Visualizaciones generadas al ver un repost"
+                  />
                   <MetricCard icon={Bookmark} label="Guardados" value={data.posts?.saves} />
                   <MetricCard icon={FileText} label="Publicadas (período)" value={data.posts?.published} />
                 </div>

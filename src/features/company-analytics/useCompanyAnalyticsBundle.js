@@ -52,7 +52,21 @@ export function useCompanyAnalyticsBundle({
         });
         setError(mapped.message);
       } else {
-        setData(result.data);
+        const repostResult = await companyAnalyticsService.getRepostStats({
+          from: range.from,
+          to: range.to,
+        });
+        const repostStats = repostResult.data ?? {};
+        const bundle = result.data ?? {};
+        setData({
+          ...bundle,
+          posts: {
+            ...(bundle.posts ?? {}),
+            reposts: Number(repostStats.reposts) || 0,
+            repost_reach: Number(repostStats.reach) || 0,
+            views_from_reposts: Number(repostStats.views_from_reposts) || 0,
+          },
+        });
         hasDataRef.current = true;
       }
       setLoading(false);

@@ -610,6 +610,23 @@
     }
   }
 
+  /**
+   * Feed publication card — independent LinkedIn-like block.
+   * Soft border + radius; no strong shadow. Spacing between cards
+   * comes from the list gap (space-base / space-lg), never from dividers.
+   */
+  .feed-post-card {
+    @apply min-w-0 max-w-full overflow-hidden rounded-radius-lg border border-app-border bg-app-card p-space-base text-app-text sm:p-space-lg;
+    box-shadow: none;
+    transition:
+      border-color var(--motion-fast) var(--ease-out),
+      background-color var(--motion-fast) var(--ease-out);
+  }
+
+  .dark .feed-post-card {
+    box-shadow: none;
+  }
+
   .surface-inset {
     @apply min-w-0 max-w-full overflow-hidden rounded-radius-md border border-app-border/80 bg-app-surface text-app-text;
     box-shadow: none;
@@ -629,7 +646,8 @@
 
   .dark .surface-card,
   .dark .surface-flat,
-  .dark .surface-inset {
+  .dark .surface-inset,
+  .dark .feed-post-card {
     box-shadow: none;
   }
 
@@ -1058,6 +1076,27 @@
   }
 }
 
+@keyframes heartLikePop {
+  0% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  40% {
+    transform: scale(1.28);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-heart-like {
+  animation: heartLikePop 220ms var(--ease-out);
+  transform-origin: center;
+  will-change: transform, opacity;
+}
+
 @keyframes notificationRipple {
   from {
     transform: scale(0);
@@ -1088,7 +1127,8 @@
   .search-screen-enter,
   .motion-page,
   .motion-list > *,
-  .notification-ripple {
+  .notification-ripple,
+  .animate-heart-like {
     animation: none !important;
   }
 

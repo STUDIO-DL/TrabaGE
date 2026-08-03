@@ -7,7 +7,6 @@ import { ROLES } from '../../constants/roles';
 import {
   Camera,
   Pencil,
-  Trash2,
   ICON_SIZES,
 } from '../../constants/icons';
 import {
@@ -31,21 +30,8 @@ import { getDisplayName } from '../../utils/displayIdentity';
 import { useAuth } from '../../hooks/useAuth';
 import { profileHeaderAlignClass } from './profileLayoutClasses';
 import ProfessionalPanelTeaser from '../../features/professional-panel/ui/ProfessionalPanelTeaser';
-
+import CoverEditControl from './CoverEditControl';
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
-
-function CoverUploadButton({ label, loading, uploadPhase, inputId, className = '' }) {
-  const statusLabel = loading ? getUploadPhaseLabel(uploadPhase) || 'Subiendo…' : label;
-  return (
-    <label
-      htmlFor={inputId}
-      className={`inline-flex min-h-touch cursor-pointer items-center gap-space-xs rounded-radius-full bg-white/15 px-space-md py-space-xs text-caption font-semibold text-white shadow-elevation-1 ring-1 ring-inset ring-white/40 backdrop-blur transition-colors duration-fast hover:bg-white/25 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 ${className}`}
-    >
-      <AppIcon icon={Camera} size={ICON_SIZES.sm} className="text-white" />
-      {statusLabel}
-    </label>
-  );
-}
 
 export default function CandidateProfileHeader({
   profile,
@@ -62,7 +48,6 @@ export default function CandidateProfileHeader({
 }) {
   const { role } = useAuth();
   const avatarInputRef = useRef(null);
-  const coverInputId = 'candidate-cover-input';
 
   const displayName = getDisplayName(profile, role ?? ROLES.PERSONAL, {
     context: 'candidate_profile_header',
@@ -95,40 +80,13 @@ export default function CandidateProfileHeader({
         <div className={profileCoverOverlayClass} aria-hidden />
 
         {isOwn && onCoverChange ? (
-          <>
-            <input
-              id={coverInputId}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              disabled={coverLoading}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) onCoverChange(file);
-                e.target.value = '';
-              }}
-            />
-            <div className="absolute bottom-space-sm right-space-base z-20 flex items-center gap-space-xs">
-              {coverSrc && onCoverRemove ? (
-                <button
-                  type="button"
-                  disabled={coverLoading}
-                  onClick={onCoverRemove}
-                  className="inline-flex min-h-touch items-center gap-space-xs rounded-radius-full bg-white/15 px-space-md py-space-xs text-caption font-semibold text-white shadow-elevation-1 ring-1 ring-inset ring-white/40 backdrop-blur transition-colors hover:bg-white/25 disabled:opacity-60"
-                  aria-label="Eliminar portada"
-                >
-                  <AppIcon icon={Trash2} size={ICON_SIZES.sm} className="text-white" />
-                  {coverLoading ? '…' : 'Quitar'}
-                </button>
-              ) : null}
-              <CoverUploadButton
-                label={coverSrc ? 'Cambiar portada' : 'Añadir portada'}
-                inputId={coverInputId}
-                loading={coverLoading}
-                uploadPhase={coverPhase}
-              />
-            </div>
-          </>
+          <CoverEditControl
+            hasCover={Boolean(coverSrc)}
+            loading={coverLoading}
+            uploadPhase={coverPhase}
+            onReplace={onCoverChange}
+            onRemove={onCoverRemove}
+          />
         ) : null}
       </div>
 

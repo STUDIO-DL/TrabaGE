@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import AppIcon from '../../../components/common/AppIcon';
 import {
   Heart,
@@ -33,6 +34,47 @@ function ActionButton({ icon: Icon, label, count, active, activeClass, onClick, 
   );
 }
 
+/** Instagram-style filled heart with a short scale pop on like. */
+function LikeButton({ liked, count, onClick }) {
+  const [popping, setPopping] = useState(false);
+  const prevLikedRef = useRef(liked);
+  const countLabel = formatEngagementCount(count);
+
+  useEffect(() => {
+    const wasLiked = prevLikedRef.current;
+    prevLikedRef.current = liked;
+    if (!liked || wasLiked) return undefined;
+
+    setPopping(true);
+    const timer = window.setTimeout(() => setPopping(false), 220);
+    return () => window.clearTimeout(timer);
+  }, [liked]);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`${BTN} ${liked ? 'text-error-600' : ''}`}
+      aria-label="Me gusta"
+      aria-pressed={Boolean(liked)}
+    >
+      <AppIcon
+        icon={Heart}
+        size={ICON_SIZES.md}
+        fill={liked ? 'currentColor' : 'none'}
+        strokeWidth={liked ? 1.75 : 2}
+        className={[
+          liked ? 'text-error-600' : 'text-app-subtle',
+          popping ? 'animate-heart-like' : '',
+        ]
+          .filter(Boolean)
+          .join(' ')}
+      />
+      {countLabel ? <span>{countLabel}</span> : null}
+    </button>
+  );
+}
+
 export default function PostActionsBar({
   engagement,
   onLike,
@@ -44,13 +86,9 @@ export default function PostActionsBar({
   return (
     <div className="mt-space-md border-t border-app-divider pt-space-xs">
       <div className="flex items-stretch gap-0.5">
-        <ActionButton
-          icon={Heart}
-          label="Me gusta"
+        <LikeButton
+          liked={Boolean(engagement?.liked_by_me)}
           count={engagement?.likes_count}
-          active={engagement?.liked_by_me}
-          activeClass="text-error-600"
-          ariaPressed={Boolean(engagement?.liked_by_me)}
           onClick={onLike}
         />
         <ActionButton

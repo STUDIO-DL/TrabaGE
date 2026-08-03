@@ -135,6 +135,14 @@ export const storageService = {
     return { error };
   },
 
+  deleteCompanyCover: async (companyId, oldPath) => {
+    const paths = [oldPath, companyCoverPath(companyId)].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.COMPANY_LOGOS).remove(unique);
+    return { error };
+  },
+
   uploadCandidateCover: async (userId, file, oldPath, options = {}) => {
     const path = candidateCoverPath(userId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(

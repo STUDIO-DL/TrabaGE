@@ -4,20 +4,20 @@ import { rankApplicantsByJob } from '../utils/jobMatching';
 
 const STATUS_NOTIFICATION_COPY = {
   viewed: {
-    title: 'Tu aplicacion fue vista',
-    body: (jobTitle) => `La empresa reviso tu aplicacion para "${jobTitle}".`,
+    title: 'Tu aplicación fue vista',
+    body: (jobTitle) => `La empresa revisó tu aplicación para "${jobTitle}".`,
   },
   contacted: {
     title: 'La empresa quiere contactarte',
-    body: (jobTitle) => `Tu aplicacion para "${jobTitle}" avanzo a contacto.`,
+    body: (jobTitle) => `Tu aplicación para "${jobTitle}" avanzó a contacto.`,
   },
   accepted: {
-    title: 'Aplicacion aceptada',
-    body: (jobTitle) => `Buenas noticias. Tu aplicacion para "${jobTitle}" fue aceptada.`,
+    title: 'Aplicación aceptada',
+    body: (jobTitle) => `Buenas noticias. Tu aplicación para "${jobTitle}" fue aceptada.`,
   },
   rejected: {
-    title: 'Aplicacion no seleccionada',
-    body: (jobTitle) => `Tu aplicacion para "${jobTitle}" no fue seleccionada esta vez.`,
+    title: 'Aplicación no seleccionada',
+    body: (jobTitle) => `Tu aplicación para "${jobTitle}" no fue seleccionada esta vez.`,
   },
 };
 
@@ -31,10 +31,10 @@ function mapApplicationError(error) {
   }
 
   if (message.includes('violates row-level security')) {
-    return { ...error, message: 'No tienes permisos para realizar esta accion.' };
+    return { ...error, message: 'No tienes permisos para realizar esta acción.' };
   }
 
-  return { ...error, message: 'No se pudo completar la accion. Intentalo de nuevo.' };
+  return { ...error, message: 'No se pudo completar la acción. Inténtalo de nuevo.' };
 }
 
 export const applicationsService = {

@@ -52,10 +52,7 @@ export function JobListSkeleton({ count = 3 }) {
 
 export function PostCardSkeleton() {
   return (
-    <article
-      className="mb-space-base rounded-radius-lg border border-app-border bg-app-card p-space-base shadow-elevation-1"
-      aria-hidden="true"
-    >
+    <article className="feed-post-card" aria-hidden="true">
       <div className="mb-space-md flex items-center gap-space-md">
         <Skeleton className="h-10 w-10 shrink-0 rounded-radius-circular" />
         <div className="min-w-0 flex-1 space-y-space-sm">
@@ -70,7 +67,11 @@ export function PostCardSkeleton() {
 
 export function PostListSkeleton({ count = 3 }) {
   return (
-    <div aria-busy="true" aria-label="Cargando publicaciones">
+    <div
+      className="space-y-space-lg"
+      aria-busy="true"
+      aria-label="Cargando publicaciones"
+    >
       {Array.from({ length: count }, (_, i) => (
         <PostCardSkeleton key={i} />
       ))}

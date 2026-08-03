@@ -119,7 +119,7 @@ export default function ParaTiPanel({ authorId = null, emptyDescription }) {
 
   return (
     <PostEngagementProvider postIds={postIds}>
-      <div className="space-y-space-sm px-space-base pt-space-base pb-0">
+      <div className="space-y-space-lg px-space-base pt-space-base pb-space-base">
         {error && items.length > 0 ? (
           <div
             className="mb-space-md rounded-radius-lg border border-error-100 bg-error-50 px-space-base py-space-md text-body-small text-error-800"

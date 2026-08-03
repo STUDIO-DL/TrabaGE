@@ -261,6 +261,7 @@ export const postEngagementService = {
     authorType = 'personal',
     actorId,
     postAuthorId,
+    postAuthorType = null,
     actorLabel,
   }) => {
     const { data, error } = await supabase.rpc('create_post_repost', {
@@ -275,11 +276,28 @@ export const postEngagementService = {
       void notifyEngagement({
         recipientId: postAuthorId,
         type: POST_ENGAGEMENT_TYPES.REPOST,
-        title: `${name} compartió tu publicación`,
+        title: `${name} compartió tu publicación.`,
         body: commentary ? String(commentary).trim().slice(0, 120) : null,
         postId,
         actorId,
       });
+    }
+
+    // In-app repost analytics for employer authors (distinct from external share).
+    if (
+      postAuthorId &&
+      actorId &&
+      postAuthorId !== actorId &&
+      isEmployerAuthor(postAuthorType)
+    ) {
+      void import('../../company-analytics/companyAnalytics.service').then(
+        ({ companyAnalyticsService }) => {
+          void companyAnalyticsService.trackPostRepost(postAuthorId, postId, {
+            actor_id: actorId,
+            source: 'in_app_repost',
+          });
+        },
+      );
     }
     return { data, error: null };
   },

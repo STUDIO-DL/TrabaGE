@@ -20,6 +20,7 @@ import {
   Heart,
   MessageSquare,
   Repeat2,
+  Users,
   ICON_SIZES,
 } from '../../constants/icons';
 import { useAuth } from '../../hooks/useAuth';
@@ -183,6 +184,16 @@ export default function ProfessionalPanel() {
                     icon={Repeat2}
                     label="Reposts recibidos"
                     value={summary?.reposts}
+                  />
+                  <MetricCard
+                    icon={Users}
+                    label="Alcance por reposts"
+                    value={summary?.repost_reach}
+                  />
+                  <MetricCard
+                    icon={Eye}
+                    label="Vistas por reposts"
+                    value={summary?.views_from_reposts}
                   />
                   <MetricCard
                     icon={ChartColumn}

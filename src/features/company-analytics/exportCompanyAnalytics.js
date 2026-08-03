@@ -95,6 +95,9 @@ function ReportDocument({ data, companyName, generatedAt, periodLabel }) {
       createElement(MetricLine, { label: 'Likes', value: posts.likes }),
       createElement(MetricLine, { label: 'Comentarios', value: posts.comments }),
       createElement(MetricLine, { label: 'Compartidos', value: posts.shares }),
+      createElement(MetricLine, { label: 'Reposts', value: posts.reposts }),
+      createElement(MetricLine, { label: 'Alcance por reposts', value: posts.repost_reach }),
+      createElement(MetricLine, { label: 'Vistas por reposts', value: posts.views_from_reposts }),
       createElement(MetricLine, { label: 'Guardados', value: posts.saves }),
       createElement(Text, { style: styles.sectionTitle }, 'Top ofertas'),
       ...(topJobs.length
@@ -144,6 +147,9 @@ export function exportCompanyAnalyticsCsv(data, { periodLabel = '' } = {}) {
       { seccion: 'posts', metrica: 'likes', valor: posts.likes, periodo: periodLabel },
       { seccion: 'posts', metrica: 'comentarios', valor: posts.comments, periodo: periodLabel },
       { seccion: 'posts', metrica: 'compartidos', valor: posts.shares, periodo: periodLabel },
+      { seccion: 'posts', metrica: 'reposts', valor: posts.reposts, periodo: periodLabel },
+      { seccion: 'posts', metrica: 'alcance_reposts', valor: posts.repost_reach, periodo: periodLabel },
+      { seccion: 'posts', metrica: 'vistas_por_reposts', valor: posts.views_from_reposts, periodo: periodLabel },
       { seccion: 'posts', metrica: 'guardados', valor: posts.saves, periodo: periodLabel },
       ...jobs.map((job) => ({
         seccion: 'oferta',

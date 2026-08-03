@@ -47,6 +47,7 @@ export default function Profile() {
     uploadCV,
     uploadCover,
     removeCover,
+    removeCV,
     saveCoverLetter,
     addExperience,
     updateExperience,
@@ -90,6 +91,7 @@ export default function Profile() {
   const [coverPhase, setCoverPhase] = useState(null);
   const [cvLoading, setCvLoading] = useState(false);
   const [cvPhase, setCvPhase] = useState(null);
+  const [cvDeleting, setCvDeleting] = useState(false);
   const [coverLoading, setCoverLoading] = useState(false);
 
   const canEdit = !isPreviewMode;
@@ -154,6 +156,14 @@ export default function Profile() {
     setCvLoading(false);
     setCvPhase(null);
     showToast(error ? error.message : 'CV subido correctamente.', error ? 'error' : 'success');
+    return { error };
+  };
+
+  const handleDeleteCV = async () => {
+    setCvDeleting(true);
+    const { error } = await removeCV();
+    setCvDeleting(false);
+    showToast(error ? error.message : 'CV eliminado.', error ? 'error' : 'success');
     return { error };
   };
 
@@ -434,8 +444,10 @@ export default function Profile() {
             isOwn={canEdit}
             cvLoading={cvLoading}
             cvPhase={cvPhase}
+            cvDeleting={cvDeleting}
             coverSaving={coverLoading}
             onUploadCV={handleUploadCV}
+            onDeleteCV={handleDeleteCV}
             onSaveCoverLetter={handleSaveCoverLetter}
             onRefetchProfile={async () => {
               const result = await refetch();

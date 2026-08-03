@@ -23,6 +23,49 @@ function pickCopy(map, viewer) {
   return map[viewer] ?? map[VIEWER.OTHER_BUSINESS] ?? '';
 }
 
+/** True when both ids refer to the authenticated user. */
+export function isSameUser(viewerId, subjectId) {
+  return Boolean(viewerId && subjectId && String(viewerId) === String(subjectId));
+}
+
+/**
+ * Display name for in-app UI: "Tú" for the viewer’s own content, otherwise the real name.
+ * Never use this for outbound notifications to other users (they need the real name).
+ */
+export function getSelfAwareName(name, { isSelf = false, fallback = 'Usuario' } = {}) {
+  if (isSelf) return 'Tú';
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  return trimmed || fallback;
+}
+
+/** Repost banner above a post card (repost author's card). */
+export function getRepostBannerCopy(name, { isSelf = false } = {}) {
+  if (isSelf) return 'Has compartido esta publicación.';
+  const who = typeof name === 'string' && name.trim() ? name.trim() : 'Alguien';
+  return `${who} ha compartido esta publicación.`;
+}
+
+/** Enriched original when a followed account shared it (collapse attribution). */
+export function getSharedByBannerCopy(name, { isSelf = false } = {}) {
+  if (isSelf) return 'Has compartido esta publicación.';
+  const who = typeof name === 'string' && name.trim() ? name.trim() : 'Alguien';
+  return `Compartido por ${who}`;
+}
+
+/** “Respondiendo a …” in the comments composer. */
+export function getReplyToLabel(name, { isSelf = false } = {}) {
+  if (isSelf) return 'Respondiendo a ti';
+  const who = typeof name === 'string' && name.trim() ? name.trim() : 'comentario';
+  return `Respondiendo a ${who}`;
+}
+
+/** External / native share title for a post. */
+export function getPostShareTitle(name, { isSelf = false } = {}) {
+  if (isSelf) return 'Mi publicación en TrabaGE';
+  const who = typeof name === 'string' && name.trim() ? name.trim() : 'Publicación';
+  return `${who} en TrabaGE`;
+}
+
 const EMPTY_POSTS = {
   [VIEWER.OWN]: 'No has publicado nada todavía.',
   [VIEWER.OTHER_PERSON]: 'Esta persona todavía no ha publicado nada.',

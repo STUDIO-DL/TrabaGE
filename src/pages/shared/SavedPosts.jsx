@@ -101,7 +101,7 @@ export default function SavedPosts() {
   };
 
   return (
-    <PageContainer bottomNav={false}>
+    <PageContainer bottomNav={false} className="bg-app-surface">
       <header className={topBarOuterClass}>
         <div className={topBarInnerClass}>
           <button
@@ -119,7 +119,7 @@ export default function SavedPosts() {
       </header>
 
       <PostEngagementProvider postIds={postIds}>
-        <div className="space-y-space-sm px-space-base pt-space-base pb-space-xl">
+        <div className="space-y-space-lg px-space-base pt-space-base pb-space-xl">
           {loading ? (
             <PostListSkeleton count={3} />
           ) : error ? (

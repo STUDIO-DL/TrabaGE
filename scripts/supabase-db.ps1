@@ -9,7 +9,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ProjectRef = "jqzbpdojwzopwuaapqgl"
-$PoolerHost = "aws-0-eu-west-2.pooler.supabase.com"
+$PoolerHost = "aws-1-eu-west-2.pooler.supabase.com"
 $PoolerPort = if ($PoolerMode -eq "session") { 5432 } else { 6543 }
 $SupabaseExe = "C:\Tools\supabase\supabase.exe"
 

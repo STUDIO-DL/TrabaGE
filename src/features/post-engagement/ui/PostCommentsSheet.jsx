@@ -10,6 +10,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useNotificationContext } from '../../../context/NotificationContext';
 import { notifyGuestBlocked } from '../../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
+import { getReplyToLabel, isSameUser } from '../../../utils/copyLabels';
 
 export default function PostCommentsSheet({
   post,
@@ -264,7 +265,9 @@ export default function PostCommentsSheet({
           {replyTo ? (
             <div className="mb-space-xs flex items-center justify-between gap-space-sm text-caption text-app-muted">
               <span className="truncate">
-                Respondiendo a {replyTo.author_name || 'comentario'}
+                {getReplyToLabel(replyTo.author_name, {
+                  isSelf: isSameUser(user?.id, replyTo.author_id),
+                })}
               </span>
               <button
                 type="button"

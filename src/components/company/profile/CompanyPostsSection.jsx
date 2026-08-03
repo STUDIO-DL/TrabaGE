@@ -76,7 +76,7 @@ export default function CompanyPostsSection({
   }
 
   const feed = (
-    <div className="space-y-space-base">
+    <div className="space-y-space-lg">
       {visiblePosts.map((post) =>
         renderPostCard(post, { canManage, onEdit, onDelete, currentUserId }),
       )}

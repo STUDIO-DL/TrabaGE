@@ -171,6 +171,16 @@ export function useCompanyProfile() {
     [profile?.cover_path, profile?.cover_url, updateCompanyProfile, userId],
   );
 
+  const removeCover = useCallback(async () => {
+    const oldPath = profile?.cover_path ?? profile?.cover_url;
+    if (!oldPath) return { error: null };
+
+    const { error: deleteError } = await storageService.deleteCompanyCover(userId, oldPath);
+    if (deleteError) return { error: friendlyCompanyError(deleteError) };
+
+    return updateCompanyProfile({ cover_path: null });
+  }, [profile?.cover_path, profile?.cover_url, updateCompanyProfile, userId]);
+
   const addCompanyService = useCallback(
     async (name) =>
       runMutation({
@@ -203,6 +213,7 @@ export function useCompanyProfile() {
     updateCompanyProfile,
     uploadLogo,
     uploadCover,
+    removeCover,
     addCompanyService,
     deleteCompanyService,
   };

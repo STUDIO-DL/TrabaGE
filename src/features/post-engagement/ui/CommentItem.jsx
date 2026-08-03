@@ -4,6 +4,8 @@ import TimeAgo from '../../../components/common/TimeAgo';
 import { Heart, ICON_SIZES } from '../../../constants/icons';
 import { AvatarType } from '../../../constants/avatarDefaults';
 import { isEmployerAuthor } from '../../../constants/authorTypes';
+import { useAuth } from '../../../hooks/useAuth';
+import { getSelfAwareName, isSameUser } from '../../../utils/copyLabels';
 import { formatEngagementCount } from './formatEngagementCount';
 
 export default function CommentItem({
@@ -18,6 +20,9 @@ export default function CommentItem({
   hasMoreReplies = false,
   loadingMoreReplies = false,
 }) {
+  const { user } = useAuth();
+  const isOwnComment = isSameUser(user?.id, comment.author_id);
+  const displayName = getSelfAwareName(comment.author_name, { isSelf: isOwnComment });
   const avatarType = isEmployerAuthor(comment.author_type)
     ? AvatarType.BUSINESS
     : AvatarType.PERSONAL;
@@ -31,12 +36,12 @@ export default function CommentItem({
         <AppAvatar
           type={avatarType}
           src={comment.author_avatar}
-          name={comment.author_name}
+          name={displayName}
           size="sm"
         />
         <div className="min-w-0 flex-1">
           <div className="rounded-radius-md bg-app-surface px-space-sm py-space-sm">
-            <p className="text-label font-semibold text-app-text">{comment.author_name || 'Usuario'}</p>
+            <p className="text-label font-semibold text-app-text">{displayName}</p>
             <p className="mt-0.5 whitespace-pre-wrap text-body-small text-app-text">{comment.body}</p>
           </div>
           <div className="mt-space-xs flex flex-wrap items-center gap-space-sm px-space-xs">
@@ -49,7 +54,13 @@ export default function CommentItem({
               }`}
               aria-pressed={Boolean(comment.liked_by_me)}
             >
-              <AppIcon icon={Heart} size={ICON_SIZES.sm} />
+              <AppIcon
+                icon={Heart}
+                size={ICON_SIZES.sm}
+                fill={comment.liked_by_me ? 'currentColor' : 'none'}
+                strokeWidth={comment.liked_by_me ? 1.75 : 2}
+                className={comment.liked_by_me ? 'text-error-600' : undefined}
+              />
               {likesLabel || 'Me gusta'}
             </button>
             {canNest ? (

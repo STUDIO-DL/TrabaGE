@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import UserProfileLink from '../../../components/common/UserProfileLink';
 import ExpandableText from '../../../components/common/ExpandableText';
 import TimeAgo from '../../../components/common/TimeAgo';
@@ -8,12 +8,22 @@ import { postEngagementService } from '../data/postEngagement.service';
 import { resolvePostImageUrl } from '../../../utils/storagePaths';
 import { isCompanyVerified } from '../../../utils/companyVerification';
 import { isEmployerAuthor } from '../../../constants/authorTypes';
+import { useAuth } from '../../../hooks/useAuth';
+import { getSelfAwareName, isSameUser } from '../../../utils/copyLabels';
+import { companyAnalyticsService } from '../../company-analytics/companyAnalytics.service';
+import { professionalPanelService } from '../../professional-panel/data/professionalPanel.service';
 
 /**
  * Nested preview of the original publication inside a repost.
  */
-export default function OriginalPostEmbed({ originalPostId, originalPost: provided }) {
+export default function OriginalPostEmbed({
+  originalPostId,
+  originalPost: provided,
+  trackViaRepost = false,
+}) {
+  const { user } = useAuth();
   const [original, setOriginal] = useState(provided ?? null);
+  const trackedRef = useRef(false);
 
   useEffect(() => {
     if (provided || !originalPostId) return undefined;
@@ -28,6 +38,25 @@ export default function OriginalPostEmbed({ originalPostId, originalPost: provid
     };
   }, [originalPostId, provided]);
 
+  useEffect(() => {
+    if (!trackViaRepost || !original?.id || !original.author_id || trackedRef.current) return;
+    if (isSameUser(user?.id, original.author_id)) return;
+    trackedRef.current = true;
+
+    if (isEmployerAuthor(original.author_type)) {
+      void companyAnalyticsService.trackPostView(original.author_id, original.id, {
+        via_repost: true,
+        source: 'feed_repost',
+      });
+      return;
+    }
+
+    void professionalPanelService.trackPostView(original.author_id, original.id, {
+      via_repost: true,
+      source: 'feed_repost',
+    });
+  }, [original, trackViaRepost, user?.id]);
+
   if (!original && !originalPostId) return null;
 
   if (!original) {
@@ -40,6 +69,8 @@ export default function OriginalPostEmbed({ originalPostId, originalPost: provid
 
   const imageSrc = resolvePostImageUrl(original.post_image_path);
   const hasText = Boolean(original.content?.trim());
+  const isOwnOriginal = isSameUser(user?.id, original.author_id);
+  const displayAuthorName = getSelfAwareName(original.author_name, { isSelf: isOwnOriginal });
 
   return (
     <div className="mt-space-sm overflow-hidden rounded-radius-md border border-app-border bg-app-surface/40 p-space-md">
@@ -47,7 +78,7 @@ export default function OriginalPostEmbed({ originalPostId, originalPost: provid
         <UserProfileLink
           userId={original.author_id}
           userType={original.author_type}
-          name={original.author_name}
+          name={displayAuthorName}
           avatar={original.author_avatar}
           size="sm"
           layout="avatar"
@@ -57,7 +88,7 @@ export default function OriginalPostEmbed({ originalPostId, originalPost: provid
             <UserProfileLink
               userId={original.author_id}
               userType={original.author_type}
-              name={original.author_name}
+              name={displayAuthorName}
               layout="name"
             />
             {isEmployerAuthor(original.author_type) &&

@@ -164,6 +164,7 @@ export function usePostsEngagement(postIds = []) {
         authorType: authorTypeFromRole(role),
         actorId: user.id,
         postAuthorId: post.author_id,
+        postAuthorType: post.author_type,
         actorLabel,
       });
 

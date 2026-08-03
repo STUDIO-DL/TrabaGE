@@ -22,6 +22,14 @@ import RepostModal from '../../features/post-engagement/ui/RepostModal';
 import OriginalPostEmbed from '../../features/post-engagement/ui/OriginalPostEmbed';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { companyAnalyticsService } from '../../features/company-analytics/companyAnalytics.service';
+import { useAuth } from '../../hooks/useAuth';
+import {
+  getPostShareTitle,
+  getRepostBannerCopy,
+  getSharedByBannerCopy,
+  getSelfAwareName,
+  isSameUser,
+} from '../../utils/copyLabels';
 
 function PostCard({
   post,
@@ -37,6 +45,7 @@ function PostCard({
   onHidden,
   defaultTextExpanded = false,
 }) {
+  const { user } = useAuth();
   const { showToast } = useNotificationContext();
   const engagementApi = usePostEngagementOrLocal(post);
   const engagement = resolveEngagement(engagementApi, post);
@@ -46,14 +55,19 @@ function PostCard({
 
   if (engagement.hidden_by_me) return null;
 
+  const isOwnPost = isSameUser(user?.id, authorId);
+  const displayAuthorName = getSelfAwareName(authorName, { isSelf: isOwnPost });
   const postImageSrc = resolvePostImageUrl(post.post_image_path);
   const authorPath = post.author_path;
   const hasText = Boolean(post.content?.trim());
   const shareUrl = generatePostUrl(post.id);
-  const shareTitle = `${authorName} en TrabaGE`;
+  const shareTitle = getPostShareTitle(authorName, { isSelf: isOwnPost });
   const shareText = (post.content || '').slice(0, 120) || getShareDescription('post');
   const isRepost = Boolean(post.repost_of_id);
-  const actorLabel = authorName;
+  const sharedBy = post.shared_by;
+  const isSharedBySelf = isSameUser(user?.id, sharedBy?.id);
+  // Outbound notifications to others must keep the real name (never "Tú").
+  const actorLabel = authorName?.trim() || undefined;
 
   const trackShare = () => {
     if (isEmployerAuthor(authorType) && authorId) {
@@ -85,19 +99,23 @@ function PostCard({
     return result;
   };
 
+  const attributionBanner = isRepost
+    ? getRepostBannerCopy(authorName, { isSelf: isOwnPost })
+    : sharedBy
+      ? getSharedByBannerCopy(sharedBy.name, { isSelf: isSharedBySelf })
+      : null;
+
   return (
-    <article className="surface-flat min-w-0 max-w-full py-space-base last:border-b-0 sm:py-space-lg">
-      {isRepost ? (
-        <p className="mb-space-sm text-caption font-medium text-app-muted">
-          {authorName} compartió una publicación
-        </p>
+    <article className="feed-post-card">
+      {attributionBanner ? (
+        <p className="mb-space-sm text-caption font-medium text-app-muted">{attributionBanner}</p>
       ) : null}
 
       <div className="mb-space-md flex items-start gap-space-md">
         <UserProfileLink
           userId={authorId}
           userType={authorType}
-          name={authorName}
+          name={displayAuthorName}
           avatar={authorAvatar}
           path={authorPath}
           size="md"
@@ -108,7 +126,7 @@ function PostCard({
             <UserProfileLink
               userId={authorId}
               userType={authorType}
-              name={authorName}
+              name={displayAuthorName}
               path={authorPath}
               layout="name"
             />
@@ -141,7 +159,7 @@ function PostCard({
       {hasText ? <ExpandableText text={post.content} defaultExpanded={defaultTextExpanded} /> : null}
 
       {isRepost ? (
-        <OriginalPostEmbed originalPostId={post.repost_of_id} />
+        <OriginalPostEmbed originalPostId={post.repost_of_id} trackViaRepost />
       ) : (
         <PostImage src={postImageSrc} />
       )}

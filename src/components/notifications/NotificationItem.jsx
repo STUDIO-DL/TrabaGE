@@ -5,7 +5,9 @@ import TimeAgo from '../common/TimeAgo';
 import UserProfileLink from '../common/UserProfileLink';
 import { Trash2, Briefcase, Newspaper, ICON_SIZES } from '../../constants/icons';
 import { AvatarType, avatarTypeFromUserType } from '../../constants/avatarDefaults';
+import { useAuth } from '../../hooks/useAuth';
 import { getNotificationCategory, NOTIFICATION_CATEGORY } from '../../utils/notificationCategories';
+import { getSelfAwareName, isSameUser } from '../../utils/copyLabels';
 
 const CATEGORY_BADGE = {
   [NOTIFICATION_CATEGORY.JOBS]: { icon: Briefcase, className: 'bg-primary-600' },
@@ -32,6 +34,7 @@ export default function NotificationItem({
   actorAvatar,
   actorName,
 }) {
+  const { user } = useAuth();
   const rowRef = useRef(null);
   const [ripples, setRipples] = useState([]);
 
@@ -41,8 +44,13 @@ export default function NotificationItem({
     typeof rawAvatar === 'string' && rawAvatar.trim() && !/^(null|undefined|none)$/i.test(rawAvatar.trim())
       ? rawAvatar.trim()
       : null;
-  const avatarAlt = actorName ?? metadata.actor_name ?? notification.title;
   const actorId = metadata.actor_id;
+  const isOwnActor = isSameUser(user?.id, actorId);
+  const rawActorLabel = actorName ?? metadata.actor_name ?? null;
+  const avatarAlt = getSelfAwareName(rawActorLabel || notification.title, {
+    isSelf: isOwnActor,
+    fallback: notification.title || 'Usuario',
+  });
   const actorType = resolveActorType(metadata);
   const isUnread = !notification.read;
 

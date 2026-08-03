@@ -85,6 +85,14 @@ export const companyAnalyticsService = {
       metadata,
     }),
 
+  trackPostRepost: (companyId, postId, metadata = {}) =>
+    companyAnalyticsService.trackEvent({
+      companyId,
+      eventType: 'post_repost',
+      postId,
+      metadata,
+    }),
+
   trackPostView: (companyId, postId, metadata = {}) =>
     companyAnalyticsService.trackEvent({
       companyId,
@@ -92,4 +100,16 @@ export const companyAnalyticsService = {
       postId,
       metadata,
     }),
+
+  /**
+   * Owner-only repost performance metrics (count, reach, views via repost).
+   */
+  getRepostStats: async ({ from = null, to = null } = {}) => {
+    const { data, error } = await supabase.rpc('get_company_repost_analytics', {
+      p_from: from,
+      p_to: to,
+    });
+    if (error) return { data: null, error };
+    return { data, error: null };
+  },
 };

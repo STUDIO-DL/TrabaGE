@@ -28,7 +28,7 @@ export default function DiscoverSectionPage({
       ) : isEmpty ? (
         <EmptyPublicationsState icon={emptyIcon} sectionKey={sectionKey} />
       ) : (
-        <div className="space-y-space-md p-space-base">{children}</div>
+        <div className="space-y-space-lg p-space-base">{children}</div>
       )}
     </PageContainer>
   );

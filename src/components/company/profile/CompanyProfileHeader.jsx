@@ -24,6 +24,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { getUploadPhaseLabel } from '../../../constants/uploadPhases';
 import { ROLES } from '../../../constants/roles';
 import CompanyProfileActionBar from './CompanyProfileActionBar';
+import CoverEditControl from '../../profile/CoverEditControl';
 import {
   profileBannerGradientClass,
   profileCompanyCoverHeightClass,
@@ -55,18 +56,6 @@ function BannerSkyline() {
   );
 }
 
-function MediaUploadButton({ label, loading, uploadPhase, inputId, className = '' }) {
-  return (
-    <label
-      htmlFor={inputId}
-      className={`inline-flex min-h-touch cursor-pointer items-center gap-space-xs rounded-radius-full bg-white/15 px-space-md py-space-xs text-caption font-semibold text-white shadow-elevation-1 ring-1 ring-inset ring-white/40 backdrop-blur transition-colors duration-fast hover:bg-white/25 has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-60 ${className}`}
-    >
-      <AppIcon icon={Camera} size={ICON_SIZES.sm} className="text-white" />
-      {loading ? getUploadPhaseLabel(uploadPhase) || 'Subiendo…' : label}
-    </label>
-  );
-}
-
 function formatEmployeeCount(size) {
   const trimmed = size?.trim();
   if (!trimmed) return null;
@@ -93,6 +82,7 @@ export default function CompanyProfileHeader({
   onEditIntro,
   onUploadLogo,
   onUploadCover,
+  onRemoveCover,
   logoLoading = false,
   logoPhase = null,
   coverLoading = false,
@@ -116,7 +106,6 @@ export default function CompanyProfileHeader({
   const { role, user, getHomePath } = useAuth();
   const logoInputRef = useRef(null);
   const [logoOwnershipOpen, setLogoOwnershipOpen] = useState(false);
-  const coverInputId = 'company-cover-input';
 
   const name = resolveCompanyHeaderName(profile, { user, role, readOnly });
   const introText = getCompanyIntroText(profile);
@@ -127,12 +116,6 @@ export default function CompanyProfileHeader({
   const handleLogoChange = (event) => {
     const file = event.target.files?.[0];
     if (file) onUploadLogo?.(file);
-    event.target.value = '';
-  };
-
-  const handleCoverChange = (event) => {
-    const file = event.target.files?.[0];
-    if (file) onUploadCover?.(file);
     event.target.value = '';
   };
 
@@ -187,25 +170,15 @@ export default function CompanyProfileHeader({
           </button>
         )}
 
-        {!readOnly && (
-          <>
-            <input
-              id={coverInputId}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              className="sr-only"
-              disabled={coverLoading}
-              onChange={handleCoverChange}
-            />
-            <MediaUploadButton
-              label={coverSrc ? 'Cambiar portada' : 'Añadir portada'}
-              inputId={coverInputId}
-              loading={coverLoading}
-              uploadPhase={coverPhase}
-              className="absolute bottom-space-sm right-space-base z-20"
-            />
-          </>
-        )}
+        {!readOnly && onUploadCover ? (
+          <CoverEditControl
+            hasCover={Boolean(coverSrc)}
+            loading={coverLoading}
+            uploadPhase={coverPhase}
+            onReplace={onUploadCover}
+            onRemove={onRemoveCover}
+          />
+        ) : null}
       </div>
 
       <div className={profileHeaderContentClass}>

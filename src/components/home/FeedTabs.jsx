@@ -30,7 +30,7 @@ export function useFeedTab() {
 export default function FeedTabs({ activeTab, onTabChange }) {
   return (
     <nav
-      className="flex border-b border-app-border px-space-base"
+      className="flex border-b border-app-border bg-app-card px-space-base"
       role="tablist"
       aria-label="Secciones del inicio"
     >

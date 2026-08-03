@@ -178,8 +178,10 @@ export function useIntelligentFeed({ authorId } = {}) {
     if (!postId) return;
     setItems((prev) =>
       prev.filter((item) => {
-        const payloadId = item?.payload?.id;
+        const payload = item?.payload;
+        const payloadId = payload?.id;
         if (payloadId && payloadId === postId) return false;
+        if (payload?.repost_of_id && payload.repost_of_id === postId) return false;
         const key = String(item?.item_key ?? item?.id ?? '');
         return key !== `post:${postId}`;
       }),

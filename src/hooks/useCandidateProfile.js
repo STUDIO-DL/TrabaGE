@@ -162,6 +162,19 @@ export function useCandidateProfile() {
     [userId, profile?.cv_path, updateBasicInfo],
   );
 
+  const removeCV = useCallback(async () => {
+    const path = String(profile?.cv_path ?? '').trim();
+    const name = String(profile?.cv_name ?? '').trim();
+    if (!path && !name) return { error: null };
+
+    if (path || userId) {
+      const { error: deleteError } = await storageService.deleteOldCV(userId, path || null);
+      if (deleteError) return { error: friendlyProfileError(deleteError) };
+    }
+
+    return updateBasicInfo({ cv_path: null, cv_name: null });
+  }, [profile?.cv_name, profile?.cv_path, updateBasicInfo, userId]);
+
   const saveCoverLetter = useCallback(
     async (text) => updateBasicInfo({ cover_letter: text?.trim() || null }),
     [updateBasicInfo],
@@ -504,6 +517,7 @@ export function useCandidateProfile() {
     updateBasicInfo,
     uploadAvatar,
     uploadCV,
+    removeCV,
     uploadCover,
     removeCover,
     saveCoverLetter,

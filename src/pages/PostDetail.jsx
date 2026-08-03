@@ -108,7 +108,7 @@ export default function PostDetail() {
   }, [post, user?.id]);
 
   return (
-    <PageContainer backButton bottomNav={false}>
+    <PageContainer backButton bottomNav={false} className="bg-app-surface">
       <div className="p-space-base">
         {loading ? (
           <PostCardSkeleton />

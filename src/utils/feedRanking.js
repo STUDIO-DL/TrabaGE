@@ -28,6 +28,16 @@ function recencyScore(createdAt) {
   return 2;
 }
 
+/** Engagement lift — logarithmic so viral posts rise without drowning affinity. */
+function engagementBoost(post) {
+  const likes = Math.max(0, Number(post?.likes_count) || 0);
+  const comments = Math.max(0, Number(post?.comments_count) || 0);
+  const reposts = Math.max(0, Number(post?.reposts_count) || 0);
+  const raw =
+    Math.log1p(likes) * 4.5 + Math.log1p(comments) * 6.5 + Math.log1p(reposts) * 11;
+  return Math.min(36, Math.round(raw));
+}
+
 function countTrailingSameType(items, contentType) {
   let count = 0;
   for (let i = items.length - 1; i >= 0; i -= 1) {
@@ -35,6 +45,29 @@ function countTrailingSameType(items, contentType) {
     count += 1;
   }
   return count;
+}
+
+function followedAuthorIds(context = {}) {
+  return new Set(
+    [
+      ...(context.followedCompanyIds ?? []),
+      ...(context.followedInstitutionIds ?? []),
+      ...(context.followedUserIds ?? []),
+    ].filter(Boolean),
+  );
+}
+
+function isPostFeedItem(item) {
+  return (
+    item?.content_type === FEED_CONTENT_TYPES.POST ||
+    item?.content_type === FEED_CONTENT_TYPES.ADVICE
+  );
+}
+
+/** Canonical id for original vs its reposts (collapse key). */
+export function canonicalFeedPostId(post) {
+  if (!post?.id) return null;
+  return post.repost_of_id || post.id;
 }
 
 /**
@@ -63,9 +96,23 @@ export function scoreFeedItem(item, context = {}) {
     case FEED_CONTENT_TYPES.POST:
     case FEED_CONTENT_TYPES.ADVICE: {
       const post = item.payload;
-      if (isEmployerAuthor(post?.author_type) && followedCompanyIds.includes(post?.author_id)) {
+      const followed = followedAuthorIds(context);
+      if (followed.has(post?.author_id)) {
+        score += 35;
+      } else if (
+        isEmployerAuthor(post?.author_type) &&
+        followedCompanyIds.includes(post?.author_id)
+      ) {
         score += 35;
       }
+
+      // Repost from a followed account distributes the original into the viewer’s feed.
+      if (post?.repost_of_id && followed.has(post?.author_id)) {
+        score += 18;
+      }
+
+      score += engagementBoost(post);
+
       if (profile) {
         const userKeywords = new Set([
           ...extractUserKeywords(profile),
@@ -165,13 +212,87 @@ export function scoreFeedItem(item, context = {}) {
 }
 
 /**
+ * Collapse original + reposts of the same post into one enriched card.
+ * Prefer a followed account’s repost; otherwise keep the best-scored version
+ * and attach `shared_by` when a followed account also shared it.
+ */
+export function collapseRepostDuplicates(items, context = {}) {
+  const followed = followedAuthorIds(context);
+  const groups = new Map();
+  const passthrough = [];
+
+  for (const item of items ?? []) {
+    if (!isPostFeedItem(item) || !item.payload?.id) {
+      passthrough.push(item);
+      continue;
+    }
+    const key = String(canonicalFeedPostId(item.payload));
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(item);
+  }
+
+  const collapsed = [];
+  for (const group of groups.values()) {
+    if (group.length === 1) {
+      collapsed.push(group[0]);
+      continue;
+    }
+
+    const followedReposts = group.filter(
+      (item) => item.payload?.repost_of_id && followed.has(item.payload?.author_id),
+    );
+
+    let chosen;
+    if (followedReposts.length) {
+      chosen = [...followedReposts].sort(
+        (a, b) =>
+          (b._score ?? 0) - (a._score ?? 0) ||
+          String(b.sort_at).localeCompare(String(a.sort_at)),
+      )[0];
+    } else {
+      chosen = [...group].sort(
+        (a, b) =>
+          (b._score ?? 0) - (a._score ?? 0) ||
+          String(b.sort_at).localeCompare(String(a.sort_at)),
+      )[0];
+    }
+
+    const maxScore = Math.max(...group.map((g) => g._score ?? 0));
+
+    // Enrich an original with “Compartido por …” when a followed account also reposted.
+    if (chosen && !chosen.payload?.repost_of_id && followedReposts.length) {
+      const sharer = followedReposts[0].payload;
+      chosen = {
+        ...chosen,
+        payload: {
+          ...chosen.payload,
+          shared_by: {
+            id: sharer.author_id,
+            name: sharer.author_name,
+          },
+        },
+        _score: Math.max(chosen._score ?? 0, maxScore),
+      };
+    } else if (chosen) {
+      chosen = { ...chosen, _score: Math.max(chosen._score ?? 0, maxScore) };
+    }
+
+    collapsed.push(chosen);
+  }
+
+  return [...passthrough, ...collapsed];
+}
+
+/**
  * Greedy diversity interleaving — max N consecutive items of the same content_type.
  */
 export function interleaveFeedItems(
   scoredItems,
   { maxConsecutive = FEED_MAX_CONSECUTIVE_SAME_TYPE, limit } = {},
 ) {
-  const pool = [...scoredItems].sort((a, b) => b._score - a._score || String(b.sort_at).localeCompare(String(a.sort_at)));
+  const pool = [...scoredItems].sort(
+    (a, b) => b._score - a._score || String(b.sort_at).localeCompare(String(a.sort_at)),
+  );
   const result = [];
   const used = new Set();
 
@@ -205,7 +326,8 @@ export function interleaveFeedItems(
 
 export function rankAndInterleaveFeed(items, context = {}, options = {}) {
   const scored = items.map((item) => scoreFeedItem(item, context));
-  const filtered = filterRelevantFeedItems(scored, context);
+  const collapsed = collapseRepostDuplicates(scored, context);
+  const filtered = filterRelevantFeedItems(collapsed, context);
   return interleaveFeedItems(filtered, options);
 }
 
@@ -215,10 +337,7 @@ function isFollowedPost(item, context) {
   const post = item.payload;
   const authorId = post?.author_id;
   if (!authorId) return false;
-  return (
-    context.followedCompanyIds?.includes(authorId) ||
-    context.followedInstitutionIds?.includes(authorId)
-  );
+  return followedAuthorIds(context).has(authorId);
 }
 
 /** Drop posts with no personalization signal when the user has a profile. */
@@ -229,10 +348,15 @@ export function filterRelevantFeedItems(items, context = {}) {
   if (!hasProfile && !hasEmployerContext) return items;
 
   const relevant = items.filter((item) => {
-    if (item.content_type !== FEED_CONTENT_TYPES.POST && item.content_type !== FEED_CONTENT_TYPES.ADVICE) {
+    if (
+      item.content_type !== FEED_CONTENT_TYPES.POST &&
+      item.content_type !== FEED_CONTENT_TYPES.ADVICE
+    ) {
       return true;
     }
     if (isFollowedPost(item, context)) return true;
+    // High-engagement posts stay visible even without affinity.
+    if (engagementBoost(item.payload) >= 12) return true;
     return (item._score ?? 0) >= MIN_RELEVANCE_SCORE;
   });
 
@@ -241,10 +365,17 @@ export function filterRelevantFeedItems(items, context = {}) {
 
 export function dedupeFeedItems(items) {
   const seen = new Set();
+  const byCanonical = new Set();
   return items.filter((item) => {
     const key = item.item_key ?? item.id;
     if (!key || seen.has(key)) return false;
     seen.add(key);
+
+    if (isPostFeedItem(item) && item.payload?.id) {
+      const canonical = String(canonicalFeedPostId(item.payload));
+      if (byCanonical.has(canonical)) return false;
+      byCanonical.add(canonical);
+    }
     return true;
   });
 }
