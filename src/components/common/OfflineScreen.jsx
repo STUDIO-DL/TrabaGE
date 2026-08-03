@@ -31,12 +31,10 @@ export default function OfflineScreen() {
     }
   }, []);
 
-  if (!state.offline && !state.isSlow) return null;
+  if (!state.offline) return null;
 
   const isOffline = state.offline;
-  const message = isOffline
-    ? 'Sin conexión. Sigues viendo el contenido guardado; se sincronizará al volver.'
-    : 'Conexión lenta. Mostramos contenido guardado para ahorrar datos.';
+  const message = 'Sin conexión. Sigues viendo el contenido guardado; se sincronizará al volver.';
 
   return (
     <div

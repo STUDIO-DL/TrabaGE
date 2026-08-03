@@ -40,7 +40,6 @@ export function useFormDraft({
 
     if (justEnabled) {
       hydratedRef.current = false;
-      restoredNotifiedRef.current = false;
       setWasRestored(false);
     }
 
