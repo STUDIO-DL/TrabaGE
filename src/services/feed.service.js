@@ -104,7 +104,7 @@ async function enrichPosts(posts, user) {
           logoPath: company?.logo_path,
           companyType: company?.company_type,
           profile: company,
-        }) ?? post.author_avatar,
+        }),
         author_company: company ?? null,
         author_path: isOwner && isEmployerRole(user?.role) ? rolePath(user.role, '/profile') : `/companies/${post.author_id}`,
       });
@@ -118,7 +118,7 @@ async function enrichPosts(posts, user) {
       author_headline: candidate?.headline ?? post.author_headline,
       author_avatar: resolveAuthorAvatar(post.author_type, {
         avatarPath: candidate?.avatar_path,
-      }) ?? post.author_avatar,
+      }),
       author_path: isOwner && user?.role === ROLES.PERSONAL ? '/personal/profile' : `/profile/${post.author_id}`,
     });
   });

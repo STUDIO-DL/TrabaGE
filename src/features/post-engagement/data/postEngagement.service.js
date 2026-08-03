@@ -8,6 +8,7 @@ import { resolveAuthorAvatar } from '../../../constants/avatarDefaults';
 import { resolvePostAuthorName } from '../../../utils/displayIdentity';
 import { isEmployerAuthor } from '../../../constants/authorTypes';
 import { ROLES } from '../../../constants/roles';
+import { reportError } from '../../../utils/logger';
 import { POST_ENGAGEMENT_TYPES, COMMENTS_PAGE_SIZE, REPLIES_PAGE_SIZE } from '../domain/constants';
 
 const POST_SELECT = `*, ${topicsService.POST_TOPICS_EMBED}`;
@@ -133,7 +134,10 @@ export const postEngagementService = {
 
   toggleLike: async (postId, { actorId, postAuthorId, actorLabel } = {}) => {
     const { data, error } = await supabase.rpc('toggle_post_like', { p_post_id: postId });
-    if (error) return { data: null, error };
+    if (error) {
+      reportError(error, { area: 'postEngagement.toggleLike', postId });
+      return { data: null, error };
+    }
 
     if (data?.liked && postAuthorId && actorId) {
       const name = actorLabel || (await resolveActorLabel(actorId));
@@ -153,7 +157,10 @@ export const postEngagementService = {
     const { data, error } = await supabase.rpc('toggle_comment_like', {
       p_comment_id: commentId,
     });
-    if (error) return { data: null, error };
+    if (error) {
+      reportError(error, { area: 'postEngagement.toggleCommentLike', commentId, postId });
+      return { data: null, error };
+    }
 
     if (data?.liked && commentAuthorId && actorId && postId) {
       const name = actorLabel || (await resolveActorLabel(actorId));
@@ -194,7 +201,10 @@ export const postEngagementService = {
       p_body: body,
       p_parent_id: parentId,
     });
-    if (error) return { data: null, error };
+    if (error) {
+      reportError(error, { area: 'postEngagement.createComment', postId, parentId });
+      return { data: null, error };
+    }
 
     const [enriched] = await enrichCommentAuthors([data]);
     const name = actorLabel || (await resolveActorLabel(actorId));

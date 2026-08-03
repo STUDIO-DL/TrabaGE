@@ -5,6 +5,7 @@ import { useAuth } from '../../../hooks/useAuth';
 import { useNotificationContext } from '../../../context/NotificationContext';
 import { notifyGuestBlocked } from '../../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
+import { reportError } from '../../../utils/logger';
 import { authorTypeFromRole } from '../../../constants/authorTypes';
 
 function mergeEngagement(base, patch) {
@@ -84,6 +85,10 @@ export function usePostsEngagement(postIds = []) {
 
       if (error) {
         patch(postId, prev);
+        reportError(error, { area: 'toggle_post_like', postId });
+        if (import.meta.env.DEV) {
+          console.error('[toggleLike]', error);
+        }
         showToast(getSupabaseErrorMessage(error, 'No se pudo actualizar el Me gusta.'), 'error');
         return;
       }

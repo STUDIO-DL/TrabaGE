@@ -36,7 +36,11 @@ export default function NotificationItem({
   const [ripples, setRipples] = useState([]);
 
   const metadata = notification.metadata ?? {};
-  const avatarSrc = actorAvatar ?? metadata.avatar_path ?? metadata.avatar_url;
+  const rawAvatar = actorAvatar ?? metadata.avatar_path ?? metadata.avatar_url;
+  const avatarSrc =
+    typeof rawAvatar === 'string' && rawAvatar.trim() && !/^(null|undefined|none)$/i.test(rawAvatar.trim())
+      ? rawAvatar.trim()
+      : null;
   const avatarAlt = actorName ?? metadata.actor_name ?? notification.title;
   const actorId = metadata.actor_id;
   const actorType = resolveActorType(metadata);

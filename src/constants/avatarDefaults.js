@@ -45,6 +45,8 @@ function isValidImagePath(value) {
   const trimmed = value.trim();
   if (!trimmed) return false;
   if (INVALID_PATH_PATTERN.test(trimmed)) return false;
+  // Reject obvious non-image junk that would produce a broken <img>.
+  if (/^(true|false|0|1|\{\}|\[\]|nan)$/i.test(trimmed)) return false;
   return true;
 }
 
@@ -136,6 +138,10 @@ export function resolveAvatarImageSrc(type = AvatarType.PERSONAL, imagePath) {
     if (isBundledAvatarAsset(trimmed)) {
       return { src: null, isDefault: true };
     }
+    // Guard against incomplete storage public URLs that always 404.
+    if (/\/storage\/v1\/object\/public\/[^/]+\/?\s*$/i.test(trimmed)) {
+      return { src: null, isDefault: true };
+    }
     return { src: trimmed, isDefault: false };
   }
 
@@ -161,11 +167,15 @@ export function resolveAvatarSrc(type, imagePath) {
 }
 
 /**
- * Path or remote URL for AppAvatar — never a bundled default URL.
+ * Raw path or remote URL for AppAvatar — never a bundled default, never a
+ * pre-built storage URL. AppAvatar is the only place that resolves storage paths.
  */
 export function resolveAuthorAvatar(authorType, { avatarPath, logoPath, companyType, profile } = {}) {
   const type = avatarTypeFromAuthorType(authorType, { companyType, profile });
   const path = isPersonalAuthor(authorType) ? avatarPath : logoPath;
   const resolved = resolveAvatarImageSrc(type, path);
-  return resolved.isDefault ? null : resolved.src;
+  if (resolved.isDefault) return null;
+  // Prefer the original input so AppAvatar remains the single resolver.
+  if (typeof path === 'string' && path.trim()) return path.trim();
+  return resolved.src;
 }

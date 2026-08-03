@@ -18,10 +18,15 @@ const VARIANTS = {
   rounded: 'rounded-radius-md',
 };
 
+const IMAGE_CLASS =
+  'absolute inset-0 block h-full w-full object-cover object-center';
+
 /**
  * Unique avatar entry point for the whole app.
- * Valid photo → show it. Missing / invalid / onError → official TrabaGE default.
- * Never shows broken icons, initials, or empty circles.
+ *
+ * Always paints the official TrabaGE default underneath.
+ * A remote photo (if any) stacks on top and is removed on any load failure
+ * (404, network, invalid URL, blocked hotlink). Broken-image icons never show.
  */
 export default function AppAvatar({
   type = AvatarType.PERSONAL,
@@ -47,21 +52,21 @@ export default function AppAvatar({
   const defaultSrc = getDefaultAvatarSrc(type);
   const remoteSrc = resolved.isDefault ? null : resolved.src;
   const remoteFailed = Boolean(remoteSrc) && failedRemoteSrc === remoteSrc;
-  const showDefault = !remoteSrc || remoteFailed;
-  const displaySrc = showDefault ? defaultSrc : remoteSrc;
+  const showRemote = Boolean(remoteSrc) && !remoteFailed;
 
   useEffect(() => {
     setFailedRemoteSrc(null);
-  }, [type, src]);
+  }, [remoteSrc]);
 
-  const handleError = useCallback(() => {
-    if (!remoteSrc || showDefault) return;
+  const handleRemoteError = useCallback(() => {
+    if (!remoteSrc) return;
     setFailedRemoteSrc(remoteSrc);
-  }, [remoteSrc, showDefault]);
+  }, [remoteSrc]);
 
   const { box, px } = SIZES[size] ?? SIZES.md;
   const shapeClass = VARIANTS[variant] ?? VARIANTS.circular;
   const altText = alt?.trim() || name?.trim() || 'Avatar';
+  const stackedClass = [IMAGE_CLASS, imageClassName].filter(Boolean).join(' ');
 
   return (
     <div
@@ -76,23 +81,34 @@ export default function AppAvatar({
         .filter(Boolean)
         .join(' ')}
     >
+      {/* Base layer — always present so the slot is never empty or broken */}
       <img
-        key={displaySrc}
-        src={displaySrc}
+        src={defaultSrc}
         alt=""
-        loading="lazy"
-        decoding="async"
         width={px}
         height={px}
         draggable={false}
-        onError={handleError}
-        className={[
-          'absolute inset-0 block h-full w-full object-cover object-center',
-          imageClassName,
-        ]
-          .filter(Boolean)
-          .join(' ')}
+        decoding="async"
+        aria-hidden="true"
+        className={stackedClass}
       />
+
+      {showRemote ? (
+        <img
+          key={remoteSrc}
+          src={remoteSrc}
+          alt=""
+          width={px}
+          height={px}
+          loading="lazy"
+          decoding="async"
+          draggable={false}
+          referrerPolicy="no-referrer"
+          onError={handleRemoteError}
+          aria-hidden="true"
+          className={stackedClass}
+        />
+      ) : null}
     </div>
   );
 }

@@ -219,19 +219,17 @@ export default function MessageBubble({
         .join(' ')}
       onContextMenu={onContextMenu}
     >
-      {!isOwn && showAvatar && avatar ? (
+      {!isOwn && showAvatar ? (
         <div className="mr-space-sm shrink-0">
           <AppAvatar
-            type={avatar.avatarType}
-            src={avatar.avatarSrc}
-            name={avatar.name}
-            alt={avatar.name}
+            type={avatar?.avatarType ?? 'personal'}
+            src={avatar?.avatarSrc}
+            name={avatar?.name}
+            alt={avatar?.name}
             size="sm"
-            variant={avatar.avatarVariant ?? 'circular'}
+            variant={avatar?.avatarVariant ?? 'circular'}
           />
         </div>
-      ) : !isOwn && showAvatar ? (
-        <div className="mr-space-sm w-7 shrink-0" aria-hidden />
       ) : null}
 
       <div className="relative min-w-0 max-w-[75%]">
