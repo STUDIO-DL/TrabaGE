@@ -146,7 +146,9 @@ export default function Jobs() {
 
   const handleSaveToggle = async (jobId) => {
     const result = await toggleSavedJob(jobId);
-    showToast(result.message, result.ok ? 'success' : 'error');
+    if (!result.ok) {
+      showToast(result.message, 'error');
+    }
   };
 
   useEffect(() => {

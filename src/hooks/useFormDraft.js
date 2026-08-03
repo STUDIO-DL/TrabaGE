@@ -7,7 +7,6 @@ import {
 } from '../utils/formDraftStorage';
 
 const AUTOSAVE_DELAY_MS = 400;
-export const DRAFT_RESTORED_MESSAGE = 'Se ha restaurado tu borrador.';
 
 /**
  * Keeps form state in memory and mirrors it to localStorage while editing.
@@ -19,7 +18,6 @@ export function useFormDraft({
   initialValues,
   enabled = true,
   autosaveDelay = AUTOSAVE_DELAY_MS,
-  onRestored,
 }) {
   const [values, setValuesState] = useState(initialValues);
   const [wasRestored, setWasRestored] = useState(false);
@@ -29,12 +27,9 @@ export function useFormDraft({
   const initialRef = useRef(initialValues);
   const pendingSaveTimerRef = useRef(null);
   const valuesRef = useRef(values);
-  const onRestoredRef = useRef(onRestored);
-  const restoredNotifiedRef = useRef(false);
 
   initialRef.current = initialValues;
   valuesRef.current = values;
-  onRestoredRef.current = onRestored;
 
   // Hydrate when enabled (e.g. modal opens). Re-hydrates each time enabled flips true.
   useEffect(() => {
@@ -63,10 +58,6 @@ export function useFormDraft({
     if (draft?.data && typeof draft.data === 'object') {
       setValuesState({ ...initialRef.current, ...draft.data });
       setWasRestored(true);
-      if (!restoredNotifiedRef.current) {
-        restoredNotifiedRef.current = true;
-        onRestoredRef.current?.(DRAFT_RESTORED_MESSAGE);
-      }
     } else {
       setValuesState(initialRef.current);
       setWasRestored(false);

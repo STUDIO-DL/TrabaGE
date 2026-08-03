@@ -19,7 +19,9 @@ export default function SavedJobs() {
 
   const handleRemove = async (jobId) => {
     const result = await toggleSavedJob(jobId);
-    showToast(result.message, result.ok ? 'success' : 'error');
+    if (!result.ok) {
+      showToast(result.message, 'error');
+    }
   };
 
   return (

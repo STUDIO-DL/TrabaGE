@@ -13,7 +13,7 @@ import { useKeyboard } from '../../hooks/useKeyboard';
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 import TopicSelector from './TopicSelector';
 import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
-import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import { clearDraftBlob, loadDraftBlob, saveDraftBlob } from '../../utils/draftBlobStore';
 import { topicsService } from '../../services/topics.service';
 import { useNotificationContext } from '../../context/NotificationContext';
@@ -43,7 +43,6 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
     userId: user?.id,
     initialValues: emptyDraft,
     enabled: Boolean(user?.id),
-    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
   });
 
   const content = draft.content ?? '';

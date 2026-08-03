@@ -4,7 +4,7 @@ import AppIcon from '../common/AppIcon';
 import { X, ICON_SIZES } from '../../constants/icons';
 import { MESSAGE_MAX_LENGTH } from '../../services/messages.service';
 import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
-import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 
@@ -44,7 +44,6 @@ export default function MessageComposer({
     userId: user?.id,
     initialValues: { text: '' },
     enabled: Boolean(user?.id && conversationId),
-    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
   });
   const value = draft.text ?? '';
   const textareaRef = useRef(null);

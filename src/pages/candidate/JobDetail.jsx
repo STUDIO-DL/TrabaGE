@@ -161,7 +161,9 @@ export default function JobDetail() {
       return;
     }
     const result = await toggleSavedJob(id);
-    showToast(result.message, result.ok ? 'success' : 'error');
+    if (!result.ok) {
+      showToast(result.message, 'error');
+    }
   };
 
   const hasActiveApplication = application && application.status !== 'withdrawn';

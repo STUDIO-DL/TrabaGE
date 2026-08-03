@@ -24,7 +24,7 @@ import ApplyPreviewCard from '../../components/apply/ApplyPreviewCard';
 import ApplySuccessState from '../../components/apply/ApplySuccessState';
 import ApplyCustomQuestions from '../../components/apply/ApplyCustomQuestions';
 import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
-import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import { useNotificationContext } from '../../context/NotificationContext';
 
 function parseCustomQuestions(raw) {
@@ -57,7 +57,6 @@ export default function ApplyJob() {
     userId: user?.id,
     initialValues: { coverLetter: '', answers: {} },
     enabled: Boolean(user?.id && jobId),
-    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
   });
   const coverLetter = applyDraft.coverLetter ?? '';
   const setCoverLetter = (next) =>

@@ -117,7 +117,6 @@ export function usePostsEngagement(postIds = []) {
         return;
       }
       patch(postId, { saved_by_me: Boolean(data?.saved) });
-      showToast(data?.saved ? 'Publicación guardada.' : 'Publicación eliminada de Guardados.', 'success');
     },
     [map, patch, requireAuth, showToast],
   );
@@ -131,7 +130,6 @@ export function usePostsEngagement(postIds = []) {
         return false;
       }
       patch(post.id, { hidden_by_me: true });
-      showToast('Publicación ocultada.', 'success');
       return true;
     },
     [patch, requireAuth, showToast],
@@ -177,7 +175,6 @@ export function usePostsEngagement(postIds = []) {
       if (data?.reposts_count != null) {
         patch(postId, { reposts_count: data.reposts_count, reposted_by_me: true });
       }
-      showToast('Publicación compartida en TrabaGE.', 'success');
       return { ok: true, data };
     },
     [map, patch, requireAuth, role, showToast, user],

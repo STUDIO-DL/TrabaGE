@@ -5,6 +5,7 @@ import {
   looksTechnical,
   toUserFacingError,
 } from '../utils/userFacingError';
+import { shouldDisplayToast } from '../utils/toastPolicy';
 
 const NotificationContext = createContext(null);
 
@@ -12,6 +13,10 @@ export function NotificationProvider({ children }) {
   const [toasts, setToasts] = useState([]);
 
   const showToast = useCallback((message, type = 'info') => {
+    if (!shouldDisplayToast(type)) {
+      return;
+    }
+
     const id = crypto.randomUUID();
     let safeMessage = typeof message === 'string' ? message : String(message ?? '');
 

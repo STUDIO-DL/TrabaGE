@@ -15,7 +15,7 @@ import { GraduationCap } from '../../constants/icons';
 import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
 import { useAuth } from '../../hooks/useAuth';
 import { useCandidateProfile } from '../../hooks/useCandidateProfile';
-import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { formatDateRange } from '../../utils/formatDate';
@@ -104,7 +104,6 @@ export default function EditIntro() {
     userId: user?.id,
     initialValues: initialForm,
     enabled: draftEnabled,
-    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
   });
 
   const educationModalShowInIntro = Boolean(

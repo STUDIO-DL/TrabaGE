@@ -12,7 +12,7 @@ import { notifyGuestBlocked } from '../../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
 import { getReplyToLabel, isSameUser } from '../../../utils/copyLabels';
 import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
-import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../../hooks/useFormDraft';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 
 export default function PostCommentsSheet({
   post,
@@ -35,7 +35,6 @@ export default function PostCommentsSheet({
     userId: user?.id,
     initialValues: { body: '', replyToId: null, replyToAuthorId: null, replyToName: null },
     enabled: Boolean(isOpen && user?.id && post?.id),
-    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
   });
   const body = commentDraft.body ?? '';
   const setBody = (next) =>

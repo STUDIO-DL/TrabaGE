@@ -6,7 +6,7 @@ import { Save, X, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
 import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
-import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useFormDraft } from '../../hooks/useFormDraft';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationContext } from '../../context/NotificationContext';
 
@@ -26,7 +26,6 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
     userId: user?.id,
     initialValues: { text: about || '', editing: false },
     enabled: Boolean(user?.id && isOwn),
-    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
   });
 
   const editing = Boolean(aboutDraft.editing);

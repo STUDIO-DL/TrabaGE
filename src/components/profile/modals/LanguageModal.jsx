@@ -8,7 +8,7 @@ import { Save, ICON_SIZES } from '../../../constants/icons';
 import { LANGUAGE_LEVELS } from '../../../constants/languageLevels';
 import { PROFILE_LANGUAGE_OPTIONS } from '../../../constants/languages';
 import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
-import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../../hooks/useFormDraft';
+import { useFormDraft } from '../../../hooks/useFormDraft';
 import { useNotificationContext } from '../../../context/NotificationContext';
 import { useAuth } from '../../../hooks/useAuth';
 
@@ -37,7 +37,6 @@ export default function LanguageModal({
     userId: user?.id,
     initialValues: initialForm,
     enabled: isOpen && Boolean(user?.id),
-    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
   });
   const [error, setError] = useState('');
 
