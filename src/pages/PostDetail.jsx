@@ -1,6 +1,6 @@
 import { AUTHOR_TYPES, isEmployerAuthor } from '../constants/authorTypes';
 import { useCallback, useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
 import EmptyState from '../components/common/EmptyState';
 import FetchErrorBanner from '../components/common/FetchErrorBanner';
@@ -16,6 +16,7 @@ import { usePostMutations } from '../hooks/usePostMutations';
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 import { PostEngagementProvider } from '../features/post-engagement/ui/PostEngagementContext';
 import { professionalPanelService } from '../features/professional-panel/data/professionalPanel.service';
+import { navigateBack, resolveBackFallback } from '../utils/safeNavigation';
 
 async function enrichPost(post) {
   if (!post) return post;
@@ -58,6 +59,7 @@ async function enrichPost(post) {
 export default function PostDetail() {
   const { postId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ export default function PostDetail() {
   const { handleEdit, handleDelete, deleteConfirmModal } = usePostMutations({
     onSuccess: (deletedPost) => {
       if (deletedPost) {
-        navigate(-1);
+        navigateBack(navigate, { fallback: resolveBackFallback(location) });
         return;
       }
       fetchPost();

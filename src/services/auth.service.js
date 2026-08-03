@@ -1177,16 +1177,45 @@ export const authService = {
     return result;
   },
 
-  signupWithGoogle: async () => {
-    // Google must never create TrabaGE accounts. Registration is email/password only;
-    // existing accounts may use loginWithGoogle to sign in.
-    return {
-      data: null,
-      error: {
-        message:
-          'El registro con Google no está disponible. Crea tu cuenta eligiendo el tipo (personal o empresa) y luego podrás iniciar sesión con Google si tu correo ya está registrado.',
+  signupWithGoogle: async (accountKind = ROLES.PERSONAL) => {
+    if (!isSupabaseConfigured) {
+      return configError();
+    }
+
+    const normalizedRole = normalizeAccountType(accountKind);
+    if (normalizedRole !== ROLES.PERSONAL) {
+      return {
+        data: null,
+        error: {
+          message: 'El registro con Google solo está disponible para cuentas personales.',
+        },
+      };
+    }
+
+    savePendingAccountType(ROLES.PERSONAL);
+    saveOAuthIntent(OAUTH_INTENTS.SIGNUP);
+
+    const result = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: getOAuthCallbackRedirectUrl(),
+        queryParams: {
+          prompt: 'select_account',
+        },
       },
-    };
+    });
+
+    if (result.error) {
+      consumePendingAccountType();
+      sessionStorage.removeItem(OAUTH_INTENT_KEY);
+      try {
+        localStorage.removeItem(OAUTH_INTENT_KEY);
+      } catch {
+        // Ignore.
+      }
+    }
+
+    return result;
   },
 
   loginWithApple: () => {

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { navigateBack, resolveBackFallback } from '../../../utils/safeNavigation';
 import AppIcon from '../../common/AppIcon';
 import BrandLogoOwnershipModal from '../BrandLogoOwnershipModal';
 import {
@@ -103,6 +104,7 @@ export default function CompanyProfileHeader({
   messageLoading = false,
 }) {
   const navigate = useNavigate();
+  const routeLocation = useLocation();
   const { role, user, getHomePath } = useAuth();
   const logoInputRef = useRef(null);
   const [logoOwnershipOpen, setLogoOwnershipOpen] = useState(false);
@@ -120,12 +122,9 @@ export default function CompanyProfileHeader({
   };
 
   const handleBack = () => {
-    const idx = window.history.state?.idx;
-    if (typeof idx === 'number' && idx > 0) {
-      navigate(-1);
-      return;
-    }
-    navigate(getHomePath?.() || '/explore', { replace: true });
+    navigateBack(navigate, {
+      fallback: resolveBackFallback(routeLocation, getHomePath?.() || '/explore'),
+    });
   };
 
   // Avoid overflow-hidden on the section — it clips the ⋯ ActionMenu portal fallback / absolute menus.

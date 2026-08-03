@@ -148,10 +148,14 @@ async function testRegisterAccountTypes(page, results) {
       await page.getByText(accountCase.expectedField, { exact: true }).waitFor({ timeout: 5000 });
       await page.getByRole('button', { name: 'Crear cuenta' }).waitFor({ timeout: 5000 });
 
-      const googleButton = page.getByRole('button', { name: 'Continuar con Google' });
-      // Google must never create accounts — no Google signup on Register for any type.
-      if (await googleButton.count()) {
-        throw new Error('Google signup must not appear on Register');
+      const googleButton = page.getByRole('button', { name: /Crear cuenta con Google|Continuar con Google/i });
+      // Google signup is personal-only — business/org must use email/password.
+      if (accountCase.id === 'personal') {
+        if ((await googleButton.count()) === 0) {
+          throw new Error('Google signup must appear on personal Register');
+        }
+      } else if (await googleButton.count()) {
+        throw new Error(`Google signup must not appear on ${accountCase.id} Register`);
       }
 
       record(results, name, 'pass');

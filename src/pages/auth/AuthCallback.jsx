@@ -13,6 +13,7 @@ import {
   OAUTH_INTENTS,
 } from '../../services/auth.service';
 import { completePostAuthFlow } from '../../services/authFlow';
+import { queueWelcomeEmailOnRegistrationComplete } from '../../services/welcomeEmail.service';
 import { mapAuthError, isExpiredVerificationUserMessage, isOAuthCancelledError } from '../../utils/errors';
 import { getErrorMessage } from '../../utils/i18n';
 import { extractGoogleProfile, isGoogleUser } from '../../utils/googleProfile';
@@ -126,27 +127,20 @@ export default function AuthCallback() {
 
           const oauthIntent = consumeOAuthIntent();
           const usedGoogle = isGoogleUser(session.user);
+          const isGoogleSignup = oauthIntent === OAUTH_INTENTS.SIGNUP;
+          const isGoogleLogin =
+            oauthIntent === OAUTH_INTENTS.LOGIN || (usedGoogle && !isGoogleSignup);
 
-          // Google never creates TrabaGE accounts (login-only for pre-registered emails).
-          if (usedGoogle) {
-            // Legacy signup intent / Register Google path — reject and send to register.
-            if (oauthIntent === OAUTH_INTENTS.SIGNUP) {
-              const missing = await rejectUnregisteredGoogleLogin(
-                session,
-                clearAuthAfterOAuthRejection,
-              );
-              if (cancelled) return true;
-              setGoogleMissing(missing);
-              return true;
-            }
-
+          // Google LOGIN: require a pre-registered TrabaGE account (reject orphans).
+          // Google SIGNUP (personal Register): create/bind via pending account type.
+          if (usedGoogle && !isGoogleSignup) {
             let registered = false;
             try {
               registered = await isRegisteredTrabaGEAccount(session.user, {
-                loginIntent: oauthIntent === OAUTH_INTENTS.LOGIN || !oauthIntent,
+                loginIntent: isGoogleLogin,
               });
             } catch (checkError) {
-              // Fail closed: never admit Google users when the registry check fails.
+              // Fail closed: never admit Google LOGIN users when the registry check fails.
               reportCheckFailure(checkError);
               const missing = await rejectUnregisteredGoogleLogin(
                 session,
@@ -174,7 +168,7 @@ export default function AuthCallback() {
             role: flowRole,
             redirectTo,
           } = await completePostAuthFlow(session.user, {
-            preferProfile: false,
+            preferProfile: isGoogleSignup,
             // Returning Google LOGIN: skip bootstrap; hydrate finishes in background.
             fastLogin: usedGoogle && oauthIntent === OAUTH_INTENTS.LOGIN,
           });
@@ -189,7 +183,7 @@ export default function AuthCallback() {
 
           if (needsAccountTypeSelection) {
             if (cancelled) return true;
-            if (usedGoogle) {
+            if (usedGoogle && !isGoogleSignup) {
               const missing = await rejectUnregisteredGoogleLogin(
                 session,
                 clearAuthAfterOAuthRejection,
@@ -202,7 +196,10 @@ export default function AuthCallback() {
             return true;
           }
 
-          // Never queue welcome email from Google OAuth — registration is email/password only.
+          // Welcome email ONLY after Google SIGNUP — never block navigation.
+          if (isGoogleSignup) {
+            void queueWelcomeEmailOnRegistrationComplete();
+          }
 
           // Seed auth + navigate immediately; full hydrate runs in background.
           acceptSession(session, { role: flowRole, redirectTo });

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import { ArrowLeft, Share2, ICON_SIZES } from '../../constants/icons';
 import ProfileSettingsButton from './ProfileSettingsButton';
@@ -6,6 +6,7 @@ import ContentActionMenu from '../common/ContentActionMenu';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { topBarInnerClass, topBarOuterClass } from '../layout/TopBar';
 import { useAuth } from '../../hooks/useAuth';
+import { navigateBack, resolveBackFallback } from '../../utils/safeNavigation';
 
 function profileBackFallback(getHomePath) {
   return getHomePath?.() || '/explore';
@@ -24,18 +25,16 @@ export default function ProfilePageShell({
   children,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { getHomePath } = useAuth();
   // Public profiles: always expose ⋯ with Compartir + Reportar when we have a
   // share URL and/or a report target (ContentActionMenu falls back for either).
   const showOverflowMenu = !isOwn && Boolean(shareUrl || reportTargetId);
 
   const handleBack = () => {
-    const idx = window.history.state?.idx;
-    if (typeof idx === 'number' && idx > 0) {
-      navigate(-1);
-      return;
-    }
-    navigate(profileBackFallback(getHomePath), { replace: true });
+    navigateBack(navigate, {
+      fallback: resolveBackFallback(location, profileBackFallback(getHomePath)),
+    });
   };
 
   return (
