@@ -11,6 +11,8 @@ import { useNotificationContext } from '../../../context/NotificationContext';
 import { notifyGuestBlocked } from '../../../utils/guestMode';
 import { getSupabaseErrorMessage } from '../../../utils/supabaseErrors';
 import { getReplyToLabel, isSameUser } from '../../../utils/copyLabels';
+import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
+import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../../hooks/useFormDraft';
 
 export default function PostCommentsSheet({
   post,
@@ -24,8 +26,47 @@ export default function PostCommentsSheet({
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-  const [body, setBody] = useState('');
-  const [replyTo, setReplyTo] = useState(null);
+  const {
+    values: commentDraft,
+    setValues: setCommentDraft,
+    clearDraft: clearCommentDraft,
+  } = useFormDraft({
+    draftKey: FORM_DRAFT_KEYS.commentComposer(post?.id),
+    userId: user?.id,
+    initialValues: { body: '', replyToId: null, replyToAuthorId: null, replyToName: null },
+    enabled: Boolean(isOpen && user?.id && post?.id),
+    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
+  });
+  const body = commentDraft.body ?? '';
+  const setBody = (next) =>
+    setCommentDraft((prev) => ({
+      ...prev,
+      body: typeof next === 'function' ? next(prev.body ?? '') : next,
+    }));
+  const replyTo = commentDraft.replyToId
+    ? {
+        id: commentDraft.replyToId,
+        author_id: commentDraft.replyToAuthorId ?? null,
+        author_name: commentDraft.replyToName,
+      }
+    : null;
+  const setReplyTo = (next) => {
+    if (!next) {
+      setCommentDraft((prev) => ({
+        ...prev,
+        replyToId: null,
+        replyToAuthorId: null,
+        replyToName: null,
+      }));
+      return;
+    }
+    setCommentDraft((prev) => ({
+      ...prev,
+      replyToId: next.id,
+      replyToAuthorId: next.author_id ?? null,
+      replyToName: next.author_name || next.authorName || null,
+    }));
+  };
   const [submitting, setSubmitting] = useState(false);
   const [repliesMap, setRepliesMap] = useState({});
   const [repliesLoading, setRepliesLoading] = useState({});
@@ -61,12 +102,11 @@ export default function PostCommentsSheet({
     if (!isOpen || !post?.id) return;
     setComments([]);
     setHasMore(true);
-    setReplyTo(null);
-    setBody('');
     setRepliesMap({});
     setRepliesHasMore({});
     setRepliesLoadingMore({});
     void loadComments({ append: false });
+    // Keep composer draft (body / reply target) across open/close and process kills.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, post?.id]);
 
@@ -110,8 +150,13 @@ export default function PostCommentsSheet({
       setComments((prev) => [...prev, data]);
     }
 
-    setBody('');
-    setReplyTo(null);
+    clearCommentDraft();
+    setCommentDraft({
+      body: '',
+      replyToId: null,
+      replyToAuthorId: null,
+      replyToName: null,
+    });
     onCommentsChange?.(1);
   };
 

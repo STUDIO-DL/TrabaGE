@@ -16,6 +16,7 @@ import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import { TOAST } from '../utils/copyLabels';
 import { DEEP_LINK_PATHS } from '../utils/deepLinks';
+import { getConnectivityState } from '../utils/connectivity';
 
 export function useCreatePost() {
   const { user, isPreviewMode, role } = useAuth();
@@ -27,6 +28,14 @@ export function useCreatePost() {
     if (isPreviewMode) {
       showToast(GUEST_MODE_MESSAGE, 'info');
       return { ok: false };
+    }
+
+    if (getConnectivityState().offline) {
+      showToast(
+        'Sin conexión. Tu borrador se ha guardado; publícalo cuando vuelva Internet.',
+        'info',
+      );
+      return { ok: false, offline: true };
     }
 
     const trimmedContent = content?.trim?.() ?? '';

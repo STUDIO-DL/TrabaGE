@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../ui/Button';
 import AppIcon from '../common/AppIcon';
@@ -12,19 +12,41 @@ import { isEmployerRole } from '../../constants/roles';
 import { useKeyboard } from '../../hooks/useKeyboard';
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 import TopicSelector from './TopicSelector';
+import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
+import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { clearDraftBlob, loadDraftBlob, saveDraftBlob } from '../../utils/draftBlobStore';
+import { topicsService } from '../../services/topics.service';
+import { useNotificationContext } from '../../context/NotificationContext';
+
+const emptyDraft = { content: '', topicIds: [] };
 
 export default function PostComposer({ onSubmit, loading = false, uploadPhase = null, onClose }) {
   const navigate = useNavigate();
-  const { role } = useAuth();
+  const { user, role } = useAuth();
   const { profile } = useProfile();
+  const { showToast } = useNotificationContext();
   const avatarType = avatarTypeFromRole(role, { profile });
   const fileInputRef = useRef(null);
-  const [content, setContent] = useState('');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadError, setUploadError] = useState('');
   const [selectedTopics, setSelectedTopics] = useState([]);
+  const topicsHydratedRef = useRef(false);
 
+  const {
+    values: draft,
+    setValues: setDraft,
+    clearDraft,
+    isHydrated,
+  } = useFormDraft({
+    draftKey: FORM_DRAFT_KEYS.publishPost,
+    userId: user?.id,
+    initialValues: emptyDraft,
+    enabled: Boolean(user?.id),
+    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
+  });
+
+  const content = draft.content ?? '';
   const isCompany = isEmployerRole(role);
   const trimmedContent = content.trim();
   const hasText = Boolean(trimmedContent);
@@ -33,6 +55,58 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
   const canPublish = (hasText || hasImage) && hasTopics;
   const handleClose = onClose ?? (() => navigate(-1));
   const { footerPaddingBottom } = useKeyboard();
+
+  // Restore topic objects from saved ids once the catalog is available.
+  useEffect(() => {
+    if (!isHydrated || topicsHydratedRef.current) return;
+    const ids = Array.isArray(draft.topicIds) ? draft.topicIds.filter(Boolean) : [];
+    if (ids.length === 0) {
+      topicsHydratedRef.current = true;
+      return;
+    }
+
+    let cancelled = false;
+    topicsService.listActive().then(({ data }) => {
+      if (cancelled) return;
+      const catalog = data ?? [];
+      const restored = ids
+        .map((id) => catalog.find((topic) => topic.id === id))
+        .filter(Boolean);
+      setSelectedTopics(restored);
+      topicsHydratedRef.current = true;
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [draft.topicIds, isHydrated]);
+
+  // Restore image blob from IndexedDB.
+  useEffect(() => {
+    if (!user?.id || !isHydrated) return undefined;
+    let cancelled = false;
+    let objectUrl = null;
+
+    loadDraftBlob(user.id, FORM_DRAFT_KEYS.publishPost).then((file) => {
+      if (cancelled || !file) return;
+      objectUrl = URL.createObjectURL(file);
+      setImageFile(file);
+      setImagePreview(objectUrl);
+    });
+
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [user?.id, isHydrated]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview?.startsWith('blob:')) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const handleImageSelect = (file) => {
     if (!file) return;
@@ -46,6 +120,9 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
     setUploadError('');
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
+    if (user?.id) {
+      void saveDraftBlob(user.id, FORM_DRAFT_KEYS.publishPost, file);
+    }
   };
 
   const handleFileInputChange = (e) => {
@@ -62,6 +139,18 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
     setImageFile(null);
     setImagePreview(null);
     setUploadError('');
+    if (user?.id) {
+      void clearDraftBlob(user.id, FORM_DRAFT_KEYS.publishPost);
+    }
+  };
+
+  const handleTopicsChange = (next) => {
+    const topics = typeof next === 'function' ? next(selectedTopics) : next;
+    setSelectedTopics(topics);
+    setDraft((prev) => ({
+      ...prev,
+      topicIds: (topics ?? []).map((topic) => topic.id).filter(Boolean),
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -73,9 +162,11 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
       topicIds: selectedTopics.map((topic) => topic.id),
     });
     if (result?.ok !== true) return;
-    setContent('');
+    clearDraft();
+    setDraft(emptyDraft);
     setSelectedTopics([]);
     clearImage();
+    topicsHydratedRef.current = true;
   };
 
   return (
@@ -120,7 +211,7 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
         <div className="mx-auto flex w-full max-w-xl min-h-0 flex-1 flex-col px-space-base pt-space-md pb-space-base sm:px-space-lg sm:pt-space-lg">
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => setDraft((prev) => ({ ...prev, content: e.target.value }))}
             placeholder="Comparte tus ideas…"
             rows={6}
             autoFocus
@@ -152,7 +243,7 @@ export default function PostComposer({ onSubmit, loading = false, uploadPhase = 
           <div className="mt-space-lg shrink-0 pt-space-sm sm:mt-auto sm:pt-space-md">
             <TopicSelector
               selected={selectedTopics}
-              onChange={setSelectedTopics}
+              onChange={handleTopicsChange}
               disabled={loading}
             />
           </div>

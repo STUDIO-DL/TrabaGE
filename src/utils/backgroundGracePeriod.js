@@ -1,5 +1,9 @@
-/** Minimum time in background before any automatic foreground refresh is allowed. */
-export const BACKGROUND_GRACE_MS = 5 * 60 * 1000;
+/**
+ * Automatic refetch on resume is disabled for UX: leaving/returning the app
+ * must not reload feeds, lists, or counters. Users refresh via pull-to-refresh
+ * or explicit actions. Kept for optional callers that pass an explicit threshold.
+ */
+export const BACKGROUND_GRACE_MS = Number.POSITIVE_INFINITY;
 
 /** Window in which visibility + focus events from the same resume are treated as one. */
 const RESUME_WINDOW_MS = 500;
@@ -32,8 +36,13 @@ export function getRecentBackgroundMs() {
   return recentBackgroundMs;
 }
 
-/** True only when the app just returned from background for longer than the grace threshold. */
+/**
+ * True only when the app just returned from a long background AND the caller
+ * opted into resume refresh with a finite threshold.
+ * Default (Infinity) → never auto-refresh on resume.
+ */
 export function shouldAllowForegroundRefresh(thresholdMs = BACKGROUND_GRACE_MS) {
+  if (!Number.isFinite(thresholdMs)) return false;
   const bgMs = getRecentBackgroundMs();
   if (bgMs === 0) return false;
   return bgMs >= thresholdMs;

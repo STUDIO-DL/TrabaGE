@@ -601,6 +601,7 @@ export default function ConversationView({ conversationId, role: _role, embedded
           <KeyboardAwareFooter fixed={!embedded} as="div">
             <div ref={composeRef}>
               <MessageComposer
+                conversationId={conversationId}
                 onSend={handleSend}
                 sending={sending}
                 disabled={loading || Boolean(error) || !canSend}

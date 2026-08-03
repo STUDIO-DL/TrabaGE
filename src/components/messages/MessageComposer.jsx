@@ -1,8 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import Button from '../ui/Button';
 import AppIcon from '../common/AppIcon';
 import { X, ICON_SIZES } from '../../constants/icons';
 import { MESSAGE_MAX_LENGTH } from '../../services/messages.service';
+import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
+import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useAuth } from '../../hooks/useAuth';
+import { useNotificationContext } from '../../context/NotificationContext';
 
 const TEXTAREA_MAX_HEIGHT = 160;
 
@@ -20,6 +24,7 @@ function previewText(content) {
 }
 
 export default function MessageComposer({
+  conversationId = null,
   onSend,
   sending = false,
   disabled = false,
@@ -27,7 +32,21 @@ export default function MessageComposer({
   replyTarget = null,
   onCancelReply,
 }) {
-  const [value, setValue] = useState('');
+  const { user } = useAuth();
+  const { showToast } = useNotificationContext();
+  const draftKey = FORM_DRAFT_KEYS.messageComposer(conversationId);
+  const {
+    values: draft,
+    setValues: setDraft,
+    clearDraft,
+  } = useFormDraft({
+    draftKey,
+    userId: user?.id,
+    initialValues: { text: '' },
+    enabled: Boolean(user?.id && conversationId),
+    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
+  });
+  const value = draft.text ?? '';
   const textareaRef = useRef(null);
   const isFinePointer = useFinePointer();
   const isBlocked = Boolean(blockedReason);
@@ -68,8 +87,9 @@ export default function MessageComposer({
           }
         : null,
     });
-    if (!result?.error) {
-      setValue('');
+    if (!result?.error || result?.pending) {
+      clearDraft();
+      setDraft({ text: '' });
       onCancelReply?.();
       requestAnimationFrame(() => {
         adjustHeight();
@@ -79,7 +99,7 @@ export default function MessageComposer({
   };
 
   const handleChange = (event) => {
-    setValue(event.target.value);
+    setDraft({ text: event.target.value });
   };
 
   const handleKeyDown = (event) => {

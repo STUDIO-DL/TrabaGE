@@ -17,6 +17,9 @@ import { storageService } from '../../services/storage.service';
 import { resolveCvBucket } from '../../utils/storagePaths';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
+import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useAuth } from '../../hooks/useAuth';
 
 const CvGeneratorModal = lazy(async () => {
   const Component = await loadCvGeneratorModal();
@@ -29,18 +32,31 @@ function hasStoredCv(profile, cvName) {
   return Boolean(path || name);
 }
 
-function CoverLetterEditor({ initialValue, saving, onSave }) {
-  const [value, setValue] = useState(initialValue ?? '');
+function CoverLetterEditor({ initialValue, saving, onSave, userId }) {
+  const { showToast } = useNotificationContext();
+  const {
+    values: letterDraft,
+    setValues: setLetterDraft,
+    clearDraft,
+  } = useFormDraft({
+    draftKey: FORM_DRAFT_KEYS.coverLetter,
+    userId,
+    initialValues: { text: initialValue ?? '' },
+    enabled: Boolean(userId),
+    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
+  });
+  const value = letterDraft.text ?? '';
 
   useEffect(() => {
-    setValue(initialValue ?? '');
-  }, [initialValue]);
+    if ((letterDraft.text ?? '').trim()) return;
+    setLetterDraft({ text: initialValue ?? '' });
+  }, [initialValue, letterDraft.text, setLetterDraft]);
 
   return (
     <div className="space-y-3">
       <Textarea
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => setLetterDraft({ text: e.target.value })}
         rows={5}
         placeholder="Escribe tu carta de presentación..."
       />
@@ -49,7 +65,10 @@ function CoverLetterEditor({ initialValue, saving, onSave }) {
         variant="secondary"
         size="sm"
         loading={saving}
-        onClick={() => onSave?.(value)}
+        onClick={async () => {
+          const result = await onSave?.(value);
+          if (!result?.error) clearDraft();
+        }}
       >
         Guardar carta
       </Button>
@@ -73,6 +92,7 @@ export default function DocumentsSection({
   coverSaving = false,
 }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { showToast } = useNotificationContext();
   const [cvModalOpen, setCvModalOpen] = useState(false);
   const [incompleteOpen, setIncompleteOpen] = useState(false);
@@ -245,6 +265,7 @@ export default function DocumentsSection({
             initialValue={coverLetter}
             saving={coverSaving}
             onSave={onSaveCoverLetter}
+            userId={user?.id}
           />
         </div>
       </div>

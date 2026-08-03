@@ -1,6 +1,7 @@
-/** Tracks app background/foreground and last route for 5-minute resume. */
+/** Tracks app background/foreground and last route for soft resume after process kill. */
 
-const GRACE_MS = 5 * 60 * 1000;
+/** Keep soft-resume (skip splash remount) for 30 minutes after leaving the app. */
+const GRACE_MS = 30 * 60 * 1000;
 const LAST_PATH_KEY = 'trabage_last_path';
 const LAST_ACTIVE_KEY = 'trabage_last_active_at';
 const BACKGROUND_AT_KEY = 'trabage_background_at';
@@ -122,7 +123,7 @@ export function installNativeFilePickGuards() {
 export function markAppBackground() {
   backgroundAt = Date.now();
   writeStore(BACKGROUND_AT_KEY, String(backgroundAt));
-  // File picker also backgrounds the page — keep the same 5-minute no-refresh window.
+  // File picker also backgrounds the page — keep the same soft-resume window.
   extendResumeDeadline(backgroundAt);
   if (typeof window !== 'undefined') {
     rememberLastPath(window.location.pathname + window.location.search + window.location.hash);

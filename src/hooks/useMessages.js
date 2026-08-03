@@ -6,6 +6,7 @@ import { messagesService, MESSAGES_PAGE_SIZE } from '../services/messages.servic
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 import { emitConversationRead } from '../utils/conversationUnreadEvents';
 import { computeMessageExpiresAt, isMessageActive } from '../constants/messageTtl';
+import { getConnectivityState, isNetworkLikeError, subscribeConnectivity } from '../utils/connectivity';
 
 function sortMessagesAscending(messages) {
   return [...messages].sort(
@@ -244,6 +245,19 @@ export function useMessages(conversationId) {
       }
 
       if (sendError) {
+        // Keep the optimistic bubble as pending on network failures so the text is not lost.
+        if (isNetworkLikeError(sendError) || getConnectivityState().offline) {
+          setMessages((prev) =>
+            prev.map((item) =>
+              item.id === optimisticId
+                ? { ...item, pending: true, optimistic: true, send_error: true }
+                : item,
+            ),
+          );
+          sendingLockRef.current = false;
+          setSending(false);
+          return { error: sendError, pending: true };
+        }
         setMessages((prev) => prev.filter((item) => item.id !== optimisticId));
         sendingLockRef.current = false;
         setSending(false);
@@ -431,6 +445,58 @@ export function useMessages(conversationId) {
   useForegroundResumeRefresh(() => {
     void fetchMessages();
   }, [fetchMessages]);
+
+  // Auto-retry pending optimistic messages when connectivity returns.
+  useEffect(() => {
+    if (!conversationId || isPreviewMode || !user?.id) return undefined;
+
+    const flushPending = async () => {
+      if (getConnectivityState().offline || sendingLockRef.current) return;
+      const pending = messagesRef.current.filter((item) => item.pending && item.optimistic);
+      if (!pending.length) return;
+
+      for (const item of pending) {
+        if (activeConversationRef.current !== conversationId) return;
+        sendingLockRef.current = true;
+        setSending(true);
+        const { data, error: sendError } = await messagesService.sendMessage(
+          conversationId,
+          item.content,
+          { replyToMessageId: item.reply_to_message_id || null },
+        );
+
+        if (activeConversationRef.current !== conversationId) {
+          sendingLockRef.current = false;
+          setSending(false);
+          return;
+        }
+
+        if (sendError) {
+          sendingLockRef.current = false;
+          setSending(false);
+          if (!isNetworkLikeError(sendError) && !getConnectivityState().offline) {
+            setMessages((prev) => prev.filter((row) => row.id !== item.id));
+          }
+          break;
+        }
+
+        setMessages((prev) => {
+          const withoutOptimistic = prev.filter((row) => row.id !== item.id);
+          if (withoutOptimistic.some((row) => row.id === data?.id)) {
+            return sortMessagesAscending(withoutOptimistic);
+          }
+          return sortMessagesAscending([...withoutOptimistic, data]);
+        });
+        sendingLockRef.current = false;
+        setSending(false);
+      }
+      void syncSendState();
+    };
+
+    return subscribeConnectivity((next) => {
+      if (!next.offline) void flushPending();
+    });
+  }, [conversationId, isPreviewMode, syncSendState, user?.id]);
 
   // Prune locally when TTL elapses (no DB UPDATE fires at expires_at).
   useEffect(() => {

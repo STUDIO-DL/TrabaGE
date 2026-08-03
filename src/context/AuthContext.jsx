@@ -44,6 +44,8 @@ import {
   isAccountDeleted,
   markAccountDeleted,
 } from '../utils/accountDeletion';
+import { clearAllFormDrafts } from '../utils/formDraftStorage';
+import { clearScrollPositions } from '../utils/scrollPositionStore';
 import {
   hasCandidateSections,
   mergeCandidateProfileRow,
@@ -126,7 +128,7 @@ export function AuthProvider({ children }) {
     () => Boolean(initialCacheRef.current?.setupComplete),
   );
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  // Within 5-minute grace with cached identity: stay interactive (no AuthLoadingScreen remount).
+  // Within soft-resume grace with cached identity: stay interactive (no AuthLoadingScreen remount).
   const [loading, setLoading] = useState(() => !optimisticSessionRef.current);
   /** True while role/profile hydrate runs after session is known — prevents Register flash. */
   const [hydrating, setHydrating] = useState(false);
@@ -761,6 +763,8 @@ export function AuthProvider({ children }) {
   }, []);
 
   const logout = useCallback(async () => {
+    const previousUserId = userIdRef.current;
+
     if (isPreviewMode || getPreviewMode()) {
       clearPreviewMode();
       setIsPreviewMode(false);
@@ -778,6 +782,10 @@ export function AuthProvider({ children }) {
     queryClient.clear();
     clearAuthResumeCache();
     clearSentryUser();
+    if (previousUserId) {
+      clearAllFormDrafts(previousUserId);
+    }
+    clearScrollPositions();
     setSession(null);
     setUser(null);
     setRole(null);

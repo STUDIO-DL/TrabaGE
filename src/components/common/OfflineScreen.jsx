@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Button from '../ui/Button';
 import AppIcon from './AppIcon';
-import TrabaGEWordmark from '../branding/TrabaGEWordmark';
 import { WifiOff, ICON_SIZES } from '../../constants/icons';
 import {
   getConnectivityState,
@@ -11,16 +10,16 @@ import {
 } from '../../utils/connectivity';
 
 /**
- * Full-screen offline / unreachable experience.
- * Triggered by navigator.onLine OR real network/fetch failures.
+ * Non-blocking connectivity banner (Offline First).
+ * Cached screens stay usable; we only hint that sync may be delayed.
  */
 export default function OfflineScreen() {
-  const [offline, setOffline] = useState(() => getConnectivityState().offline);
+  const [state, setState] = useState(() => getConnectivityState());
   const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     initConnectivityListeners();
-    return subscribeConnectivity((next) => setOffline(next.offline));
+    return subscribeConnectivity((next) => setState(next));
   }, []);
 
   const handleRetry = useCallback(async () => {
@@ -32,30 +31,37 @@ export default function OfflineScreen() {
     }
   }, []);
 
-  if (!offline) return null;
+  if (!state.offline && !state.isSlow) return null;
+
+  const isOffline = state.offline;
+  const message = isOffline
+    ? 'Sin conexión. Sigues viendo el contenido guardado; se sincronizará al volver.'
+    : 'Conexión lenta. Mostramos contenido guardado para ahorrar datos.';
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex flex-col items-center justify-center bg-app-bg px-space-lg text-center"
-      role="alert"
-      aria-live="assertive"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[110] flex justify-center px-space-sm pt-[max(0.5rem,env(safe-area-inset-top,0px))]"
+      role="status"
+      aria-live="polite"
     >
-      <TrabaGEWordmark size="lg" className="mb-space-lg" />
-      <span className="mb-space-lg flex h-16 w-16 items-center justify-center rounded-radius-circular bg-amber-50 ring-1 ring-inset ring-amber-200">
-        <AppIcon icon={WifiOff} size={ICON_SIZES.lg} className="text-amber-700" />
-      </span>
-      <h1 className="text-title font-semibold text-app-text">Sin conexión a Internet</h1>
-      <p className="mt-space-sm max-w-sm text-body text-app-muted">
-        Revisa tu conexión y vuelve a intentarlo.
-      </p>
-      <Button
-        type="button"
-        className="mt-space-xl"
-        loading={retrying}
-        onClick={handleRetry}
-      >
-        Reintentar
-      </Button>
+      <div className="pointer-events-auto flex max-w-lg items-center gap-space-sm rounded-radius-lg border border-amber-200 bg-amber-50 px-space-md py-space-sm shadow-elevation-1 dark:border-amber-900/50 dark:bg-amber-950/90">
+        <AppIcon icon={WifiOff} size={ICON_SIZES.sm} className="shrink-0 text-amber-700 dark:text-amber-300" />
+        <p className="min-w-0 flex-1 text-caption leading-snug text-amber-950 dark:text-amber-100">
+          {message}
+        </p>
+        {isOffline ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            className="!min-h-0 shrink-0 !px-2 !py-1 text-caption text-amber-900 dark:text-amber-100"
+            loading={retrying}
+            onClick={handleRetry}
+          >
+            Reintentar
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 }

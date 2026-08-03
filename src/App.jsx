@@ -28,6 +28,7 @@ import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
 import SplashScreen from './pages/SplashScreen';
 import { ROLES } from './constants/roles';
 import { markAppBackground, markAppForeground, rememberLastPath, installNativeFilePickGuards } from './utils/appLifecycle';
+import { ScrollRestoration } from './hooks/useScrollRestoration';
 const OnboardingFlow = lazy(() => import('./pages/onboarding/OnboardingFlow'));
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 const AuthConfirm = lazy(() => import('./pages/auth/AuthConfirm'));
@@ -118,7 +119,7 @@ function AppToasts() {
   return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
 }
 
-/** Controlled logout after 5 minutes of real inactivity; form drafts stay in localStorage. */
+/** Controlled logout after 5 minutes of real inactivity; form drafts are cleared on logout. */
 function SessionManager() {
   const { isAuthenticated, isPreviewMode, logout } = useAuth();
 
@@ -228,6 +229,7 @@ function AppRoutes() {
   return (
     <>
       <GuestBar />
+      <ScrollRestoration />
       <PwaUpdatePrompt />
       <InstallPrompt />
       <PushPermissionPrompt />

@@ -15,7 +15,7 @@ import { WORK_MODES } from '../../constants/workModes';
 import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
 import { useAuth } from '../../hooks/useAuth';
 import { useProfile } from '../../hooks/useProfile';
-import { useFormDraft } from '../../hooks/useFormDraft';
+import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
 import { ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
@@ -117,6 +117,7 @@ export default function PublishJob() {
     userId: user?.id,
     initialValues: EMPTY_JOB_FORM,
     enabled: Boolean(user?.id) && !jobId && !profileCheckPending,
+    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
   });
   const form = jobId ? editForm : draftForm;
   const setForm = jobId ? setEditForm : setDraftForm;

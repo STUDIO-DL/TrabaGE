@@ -1,3 +1,5 @@
+import { clearAllDraftBlobsForUser, clearDraftBlob } from './draftBlobStore';
+
 const DRAFT_PREFIX = 'trabage_form_draft_';
 const DRAFT_INDEX_PREFIX = 'trabage_form_draft_index_';
 /** Drafts expire after 7 days. */
@@ -31,14 +33,32 @@ function buildStorageKey(userId, draftKey) {
   return `${DRAFT_PREFIX}${userId}_${draftKey}`;
 }
 
+export function isMeaningfulDraftData(value, depth = 0) {
+  if (depth > 12 || value == null) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (typeof value === 'number' || typeof value === 'boolean') return true;
+  if (Array.isArray(value)) return value.some((item) => isMeaningfulDraftData(item, depth + 1));
+  if (typeof value === 'object') {
+    if (value.__fileMeta) return true;
+    return Object.values(value).some((nested) => isMeaningfulDraftData(nested, depth + 1));
+  }
+  return false;
+}
+
 /**
  * Persist serializable form values to localStorage.
  * File objects and DOM nodes are stripped automatically.
+ * Empty drafts are cleared instead of stored.
  */
 export function saveFormDraft(userId, draftKey, data) {
   if (!userId || !draftKey) return;
+  const sanitized = sanitizeForStorage(data);
+  if (!isMeaningfulDraftData(sanitized)) {
+    clearFormDraft(userId, draftKey);
+    return;
+  }
   const payload = {
-    data: sanitizeForStorage(data),
+    data: sanitized,
     savedAt: Date.now(),
     draftKey,
   };
@@ -61,6 +81,10 @@ export function loadFormDraft(userId, draftKey) {
     clearFormDraft(userId, draftKey);
     return null;
   }
+  if (!isMeaningfulDraftData(parsed.data)) {
+    clearFormDraft(userId, draftKey);
+    return null;
+  }
   return parsed;
 }
 
@@ -72,6 +96,25 @@ export function clearFormDraft(userId, draftKey) {
   } catch {
     // Ignore.
   }
+  void clearDraftBlob(userId, draftKey);
+}
+
+export function clearAllFormDrafts(userId) {
+  if (!userId) return;
+  const keys = readIndex(userId);
+  keys.forEach((draftKey) => {
+    try {
+      localStorage.removeItem(buildStorageKey(userId, draftKey));
+    } catch {
+      // Ignore.
+    }
+  });
+  try {
+    localStorage.removeItem(`${DRAFT_INDEX_PREFIX}${userId}`);
+  } catch {
+    // Ignore.
+  }
+  void clearAllDraftBlobsForUser(userId);
 }
 
 export function listFormDrafts(userId) {

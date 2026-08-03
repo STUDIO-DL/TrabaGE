@@ -23,6 +23,9 @@ import ApplyCoverLetter from '../../components/apply/ApplyCoverLetter';
 import ApplyPreviewCard from '../../components/apply/ApplyPreviewCard';
 import ApplySuccessState from '../../components/apply/ApplySuccessState';
 import ApplyCustomQuestions from '../../components/apply/ApplyCustomQuestions';
+import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
+import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useNotificationContext } from '../../context/NotificationContext';
 
 function parseCustomQuestions(raw) {
   if (!raw) return [];
@@ -42,10 +45,32 @@ export default function ApplyJob() {
   const { profile } = useProfile();
   const { uploadCV } = useCandidateProfile();
   const { job, loading: jobLoading } = useJob(jobId);
+  const { showToast } = useNotificationContext();
 
   const [cvFile, setCvFile] = useState(null);
-  const [coverLetter, setCoverLetter] = useState('');
-  const [answers, setAnswers] = useState({});
+  const {
+    values: applyDraft,
+    setValues: setApplyDraft,
+    clearDraft: clearApplyDraft,
+  } = useFormDraft({
+    draftKey: FORM_DRAFT_KEYS.applyJob(jobId),
+    userId: user?.id,
+    initialValues: { coverLetter: '', answers: {} },
+    enabled: Boolean(user?.id && jobId),
+    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
+  });
+  const coverLetter = applyDraft.coverLetter ?? '';
+  const setCoverLetter = (next) =>
+    setApplyDraft((prev) => ({
+      ...prev,
+      coverLetter: typeof next === 'function' ? next(prev.coverLetter ?? '') : next,
+    }));
+  const answers = applyDraft.answers ?? {};
+  const setAnswers = (next) =>
+    setApplyDraft((prev) => ({
+      ...prev,
+      answers: typeof next === 'function' ? next(prev.answers ?? {}) : next,
+    }));
   const [loading, setLoading] = useState(false);
   const [cvUploading, setCvUploading] = useState(false);
   const [error, setError] = useState('');
@@ -83,10 +108,14 @@ export default function ApplyJob() {
 
   useEffect(() => {
     if (coverLetterSeededRef.current) return;
+    if ((applyDraft.coverLetter ?? '').trim()) {
+      coverLetterSeededRef.current = true;
+      return;
+    }
     if (!profile?.cover_letter) return;
-    setCoverLetter(profile.cover_letter);
+    setApplyDraft((prev) => ({ ...prev, coverLetter: profile.cover_letter }));
     coverLetterSeededRef.current = true;
-  }, [profile?.cover_letter]);
+  }, [applyDraft.coverLetter, profile?.cover_letter, setApplyDraft]);
 
   const resolveCvForSubmit = async () => {
     if (cvFile) {
@@ -208,6 +237,7 @@ export default function ApplyJob() {
       }
 
       setSubmitted(true);
+      clearApplyDraft();
     } catch (submitError) {
       setError(getUserErrorMessage(submitError, ERROR_ACTION.apply_job));
     } finally {

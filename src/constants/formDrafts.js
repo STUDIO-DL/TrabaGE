@@ -4,6 +4,7 @@ export const FORM_DRAFT_KEYS = {
   candidateSetup: 'setup-candidate',
   companySetup: 'setup-company',
   publishJob: (jobId) => (jobId ? `publish-job-${jobId}` : 'publish-job-new'),
+  publishPost: 'publish-post',
   verification: 'company-verification',
   experienceModal: (id) => (id ? `experience-${id}` : 'experience-new'),
   educationModal: (id) => (id ? `education-${id}` : 'education-new'),
@@ -11,4 +12,10 @@ export const FORM_DRAFT_KEYS = {
   projectModal: (id) => (id ? `project-${id}` : 'project-new'),
   languageModal: (id) => (id ? `language-${id}` : 'language-new'),
   companyEdit: (mode) => `company-edit-${mode}`,
+  aboutSection: 'profile-about',
+  coverLetter: 'profile-cover-letter',
+  applyJob: (jobId) => (jobId ? `apply-job-${jobId}` : 'apply-job'),
+  commentComposer: (postId) => (postId ? `comment-${postId}` : 'comment'),
+  messageComposer: (conversationId) =>
+    conversationId ? `message-${conversationId}` : 'message',
 };

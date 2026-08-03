@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   clearFormDraft,
+  isMeaningfulDraftData,
   loadFormDraft,
   saveFormDraft,
 } from '../utils/formDraftStorage';
 
 const AUTOSAVE_DELAY_MS = 400;
+export const DRAFT_RESTORED_MESSAGE = 'Se ha restaurado tu borrador.';
 
 /**
  * Keeps form state in memory and mirrors it to localStorage while editing.
@@ -17,17 +19,22 @@ export function useFormDraft({
   initialValues,
   enabled = true,
   autosaveDelay = AUTOSAVE_DELAY_MS,
+  onRestored,
 }) {
   const [values, setValuesState] = useState(initialValues);
+  const [wasRestored, setWasRestored] = useState(false);
   const hydratedRef = useRef(false);
   const prevEnabledRef = useRef(false);
   const skipSaveRef = useRef(false);
   const initialRef = useRef(initialValues);
   const pendingSaveTimerRef = useRef(null);
   const valuesRef = useRef(values);
+  const onRestoredRef = useRef(onRestored);
+  const restoredNotifiedRef = useRef(false);
 
   initialRef.current = initialValues;
   valuesRef.current = values;
+  onRestoredRef.current = onRestored;
 
   // Hydrate when enabled (e.g. modal opens). Re-hydrates each time enabled flips true.
   useEffect(() => {
@@ -38,6 +45,8 @@ export function useFormDraft({
 
     if (justEnabled) {
       hydratedRef.current = false;
+      restoredNotifiedRef.current = false;
+      setWasRestored(false);
     }
 
     if (!userId || !draftKey) {
@@ -53,8 +62,14 @@ export function useFormDraft({
     const draft = loadFormDraft(userId, draftKey);
     if (draft?.data && typeof draft.data === 'object') {
       setValuesState({ ...initialRef.current, ...draft.data });
+      setWasRestored(true);
+      if (!restoredNotifiedRef.current) {
+        restoredNotifiedRef.current = true;
+        onRestoredRef.current?.(DRAFT_RESTORED_MESSAGE);
+      }
     } else {
       setValuesState(initialRef.current);
+      setWasRestored(false);
     }
     hydratedRef.current = true;
   }, [draftKey, userId, enabled]);
@@ -114,6 +129,31 @@ export function useFormDraft({
     };
   }, [userId, draftKey]);
 
+  // Flush on background / tab hide so a process kill does not lose the last keystrokes.
+  useEffect(() => {
+    if (!enabled || !userId || !draftKey) return undefined;
+
+    const flush = () => {
+      if (!hydratedRef.current || skipSaveRef.current) return;
+      if (pendingSaveTimerRef.current) {
+        window.clearTimeout(pendingSaveTimerRef.current);
+        pendingSaveTimerRef.current = null;
+      }
+      saveFormDraft(userId, draftKey, valuesRef.current);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flush);
+    };
+  }, [enabled, userId, draftKey]);
+
   const setValues = useCallback((updater) => {
     setValuesState((prev) => (typeof updater === 'function' ? updater(prev) : updater));
   }, []);
@@ -126,6 +166,7 @@ export function useFormDraft({
       }
       skipSaveRef.current = true;
       clearFormDraft(userId, draftKey);
+      setWasRestored(false);
     }
   }, [userId, draftKey]);
 
@@ -137,6 +178,7 @@ export function useFormDraft({
     skipSaveRef.current = true;
     const base = nextInitial ?? initialRef.current;
     setValuesState(base);
+    setWasRestored(false);
   }, []);
 
   return {
@@ -144,6 +186,8 @@ export function useFormDraft({
     setValues,
     clearDraft,
     resetToInitial,
+    wasRestored,
+    hasDraft: isMeaningfulDraftData(values),
     isHydrated: hydratedRef.current,
   };
 }

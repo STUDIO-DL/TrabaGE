@@ -26,7 +26,13 @@ export default function HomeFeedLayout({ header, authorId = null, emptyDescripti
       ) : (
         <>
           <FeedTabs activeTab={activeTab} onTabChange={setActiveTab} />
-          {activeTab === FEED_TABS.FOR_YOU ? <ParaTiPanel /> : <DiscoverHub />}
+          {/* Keep both mounted so the feed does not remount/refetch when switching tabs. */}
+          <div className={activeTab === FEED_TABS.FOR_YOU ? 'contents' : 'hidden'} aria-hidden={activeTab !== FEED_TABS.FOR_YOU}>
+            <ParaTiPanel />
+          </div>
+          <div className={activeTab === FEED_TABS.DISCOVER ? 'contents' : 'hidden'} aria-hidden={activeTab !== FEED_TABS.DISCOVER}>
+            <DiscoverHub />
+          </div>
         </>
       )}
     </PageContainer>

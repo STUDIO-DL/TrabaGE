@@ -1,49 +1,88 @@
 import { isEmployerAuthor } from '../constants/authorTypes';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { feedService } from '../services/feed.service';
 import { useAuth } from './useAuth';
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
 import { FEED_CONTENT_TYPES, FEED_PAGE_SIZE, isHomeFeedPostItem } from '../constants/feedContentTypes';
 import { getPreviewPosts } from '../constants/preview';
 import { rankAndInterleaveFeed, dedupeFeedItems } from '../utils/feedRanking';
+import {
+  buildFeedCacheKey,
+  patchFeedCacheItems,
+  readFeedCache,
+  writeFeedCache,
+} from '../utils/feedCacheStore';
+import { getConnectivityState, isNetworkLikeError } from '../utils/connectivity';
 
 const MAX_AUTO_RETRIES = 2;
 
 export function useIntelligentFeed({ authorId } = {}) {
   const { user, isPreviewMode, role } = useAuth();
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const cacheKey = useMemo(
+    () => buildFeedCacheKey({ userId: user?.id, role, authorId }),
+    [authorId, role, user?.id],
+  );
+
+  const cached = useMemo(() => readFeedCache(cacheKey), [cacheKey]);
+  const [items, setItems] = useState(() => cached?.items ?? []);
+  const [loading, setLoading] = useState(() => !(cached?.items?.length > 0));
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
+  const [hasMore, setHasMore] = useState(() => Boolean(cached?.hasMore));
   const [error, setError] = useState(null);
-  const itemsRef = useRef([]);
-  const offsetRef = useRef(0);
+  const itemsRef = useRef(items);
+  const offsetRef = useRef(cached?.offset ?? 0);
   const contextRef = useRef(null);
   const retryCountRef = useRef(0);
   const fetchFeedRef = useRef(null);
+  const cacheKeyRef = useRef(cacheKey);
 
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
 
   useEffect(() => {
+    cacheKeyRef.current = cacheKey;
+    const nextCached = readFeedCache(cacheKey);
     contextRef.current = null;
-    offsetRef.current = 0;
     retryCountRef.current = 0;
-  }, [user?.id, role, authorId]);
+    if (nextCached?.items?.length) {
+      itemsRef.current = nextCached.items;
+      offsetRef.current = nextCached.offset ?? 0;
+      setItems(nextCached.items);
+      setHasMore(Boolean(nextCached.hasMore));
+      setLoading(false);
+      setError(null);
+    } else {
+      offsetRef.current = 0;
+      setItems([]);
+      setHasMore(false);
+      setLoading(true);
+    }
+  }, [cacheKey]);
 
   const scheduleRetry = useCallback(() => {
     const attempt = retryCountRef.current;
     const delay = Math.min(400 * 2 ** attempt, 4000);
     window.setTimeout(() => {
-      void fetchFeedRef.current?.({ append: false });
+      void fetchFeedRef.current?.({ append: false, soft: true });
     }, delay);
   }, []);
 
+  const persistCache = useCallback((nextItems, nextHasMore, nextOffset) => {
+    writeFeedCache(cacheKeyRef.current, {
+      items: nextItems,
+      hasMore: nextHasMore,
+      offset: nextOffset,
+    });
+  }, []);
+
   const fetchFeed = useCallback(
-    async ({ append = false } = {}) => {
+    async ({ append = false, soft = false } = {}) => {
+      const hasCachedItems = itemsRef.current.length > 0;
+      const softRefresh = soft || (!append && hasCachedItems);
+
       if (authorId) {
-        setLoading(!append);
+        if (!softRefresh) setLoading(!append);
         setLoadingMore(append);
         const { postsService } = await import('../services/posts.service');
         const offset = append ? itemsRef.current.length : 0;
@@ -54,13 +93,15 @@ export function useIntelligentFeed({ authorId } = {}) {
           includeHidden,
         });
         if (fetchError) {
-          if (!append && retryCountRef.current < MAX_AUTO_RETRIES) {
+          if (!append && retryCountRef.current < MAX_AUTO_RETRIES && !isNetworkLikeError(fetchError)) {
             retryCountRef.current += 1;
             scheduleRetry();
             return;
           }
-          if (!append) setItems([]);
-          setError(getUserErrorMessage(fetchError, ERROR_ACTION.discover));
+          if (!append && !hasCachedItems) setItems([]);
+          if (!hasCachedItems) {
+            setError(getUserErrorMessage(fetchError, ERROR_ACTION.discover));
+          }
           setLoading(false);
           setLoadingMore(false);
           return;
@@ -77,20 +118,22 @@ export function useIntelligentFeed({ authorId } = {}) {
         const nextItems = append
           ? dedupeFeedItems([...itemsRef.current, ...enriched])
           : enriched;
+        const nextHasMore = (data ?? []).length === FEED_PAGE_SIZE;
         setItems(nextItems);
-        setHasMore((data ?? []).length === FEED_PAGE_SIZE);
+        setHasMore(nextHasMore);
         setError(null);
         setLoading(false);
         setLoadingMore(false);
+        persistCache(nextItems, nextHasMore, nextItems.length);
         return;
       }
 
       if (append) setLoadingMore(true);
-      else {
+      else if (!softRefresh) {
         setLoading(true);
         offsetRef.current = 0;
       }
-      setError(null);
+      if (!softRefresh) setError(null);
 
       if (isPreviewMode) {
         const previewPosts = getPreviewPosts(null, role).map((post) => ({
@@ -113,6 +156,13 @@ export function useIntelligentFeed({ authorId } = {}) {
         return;
       }
 
+      // Offline with cache: skip network and keep showing local feed.
+      if (getConnectivityState().offline && hasCachedItems && !append) {
+        setLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+
       const offset = append ? offsetRef.current : 0;
       const context = contextRef.current ?? (await feedService.buildFeedContext(user?.id, role));
       if (!append) contextRef.current = context;
@@ -123,13 +173,15 @@ export function useIntelligentFeed({ authorId } = {}) {
       });
 
       if (fetchError) {
-        if (!append && retryCountRef.current < MAX_AUTO_RETRIES) {
+        if (!append && retryCountRef.current < MAX_AUTO_RETRIES && !isNetworkLikeError(fetchError)) {
           retryCountRef.current += 1;
           scheduleRetry();
           return;
         }
-        if (!append) setItems([]);
-        setError(getUserErrorMessage(fetchError, ERROR_ACTION.discover));
+        if (!append && !hasCachedItems) setItems([]);
+        if (!hasCachedItems) {
+          setError(getUserErrorMessage(fetchError, ERROR_ACTION.discover));
+        }
         setLoading(false);
         setLoadingMore(false);
         return;
@@ -147,19 +199,22 @@ export function useIntelligentFeed({ authorId } = {}) {
         : dedupeFeedItems(ranked);
 
       offsetRef.current = offset + FEED_PAGE_SIZE;
+      const nextHasMore = (pool ?? []).length >= FEED_PAGE_SIZE;
       setItems(nextItems);
-      setHasMore((pool ?? []).length >= FEED_PAGE_SIZE);
+      setHasMore(nextHasMore);
       setError(null);
       setLoading(false);
       setLoadingMore(false);
+      persistCache(nextItems, nextHasMore, offsetRef.current);
     },
-    [authorId, isPreviewMode, role, scheduleRetry, user],
+    [authorId, isPreviewMode, persistCache, role, scheduleRetry, user],
   );
 
   fetchFeedRef.current = fetchFeed;
 
   useEffect(() => {
-    fetchFeed();
+    // Soft refresh when we already painted from cache; full fetch otherwise.
+    void fetchFeed({ append: false, soft: itemsRef.current.length > 0 });
   }, [fetchFeed]);
 
   const loadMore = useCallback(() => {
@@ -171,21 +226,23 @@ export function useIntelligentFeed({ authorId } = {}) {
     contextRef.current = null;
     offsetRef.current = 0;
     retryCountRef.current = 0;
-    fetchFeed({ append: false });
+    fetchFeed({ append: false, soft: itemsRef.current.length > 0 });
   }, [fetchFeed]);
 
   const removePost = useCallback((postId) => {
     if (!postId) return;
-    setItems((prev) =>
-      prev.filter((item) => {
+    setItems((prev) => {
+      const next = prev.filter((item) => {
         const payload = item?.payload;
         const payloadId = payload?.id;
         if (payloadId && payloadId === postId) return false;
         if (payload?.repost_of_id && payload.repost_of_id === postId) return false;
         const key = String(item?.item_key ?? item?.id ?? '');
         return key !== `post:${postId}`;
-      }),
-    );
+      });
+      patchFeedCacheItems(cacheKeyRef.current, () => next);
+      return next;
+    });
   }, []);
 
   return { items, loading, loadingMore, hasMore, error, refetch, loadMore, removePost };

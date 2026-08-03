@@ -5,38 +5,57 @@ import AppIcon from '../common/AppIcon';
 import { Save, X, ICON_SIZES } from '../../constants/icons';
 import { PROFILE_SECTION_ICONS } from './ProfileIcons';
 import { getProfileSectionEmptyCopy } from '../../utils/copyLabels';
+import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
+import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../hooks/useFormDraft';
+import { useAuth } from '../../hooks/useAuth';
+import { useNotificationContext } from '../../context/NotificationContext';
 
 const PREVIEW_LENGTH = 180;
 
 export default function AboutSection({ about, isOwn, onSave, saving = false }) {
+  const { user } = useAuth();
+  const { showToast } = useNotificationContext();
   const [expanded, setExpanded] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(about || '');
+  const {
+    values: aboutDraft,
+    setValues: setAboutDraft,
+    clearDraft,
+    wasRestored,
+  } = useFormDraft({
+    draftKey: FORM_DRAFT_KEYS.aboutSection,
+    userId: user?.id,
+    initialValues: { text: about || '', editing: false },
+    enabled: Boolean(user?.id && isOwn),
+    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
+  });
+
+  const editing = Boolean(aboutDraft.editing);
+  const draft = aboutDraft.text ?? '';
 
   useEffect(() => {
-    if (!editing) {
-      setDraft(about || '');
-    }
-  }, [about, editing]);
+    if (editing || wasRestored) return;
+    setAboutDraft((prev) => ({ ...prev, text: about || '', editing: false }));
+  }, [about, editing, setAboutDraft, wasRestored]);
 
   const hasContent = Boolean(about?.trim());
   const needsExpand = hasContent && about.length > PREVIEW_LENGTH;
-  const displayText = hasContent && !expanded && needsExpand ? `${about.slice(0, PREVIEW_LENGTH)}…` : about;
+  const displayText =
+    hasContent && !expanded && needsExpand ? `${about.slice(0, PREVIEW_LENGTH)}…` : about;
 
   const startEdit = () => {
-    setDraft(about || '');
-    setEditing(true);
+    setAboutDraft({ text: about || '', editing: true });
   };
 
   const cancelEdit = () => {
-    setDraft(about || '');
-    setEditing(false);
+    clearDraft();
+    setAboutDraft({ text: about || '', editing: false });
   };
 
   const saveEdit = async () => {
     const result = await onSave?.(draft.trim());
     if (result?.error) return;
-    setEditing(false);
+    clearDraft();
+    setAboutDraft({ text: draft.trim(), editing: false });
   };
 
   return (
@@ -55,7 +74,7 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
         <div className="space-y-3">
           <textarea
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => setAboutDraft((prev) => ({ ...prev, text: e.target.value, editing: true }))}
             rows={5}
             className="w-full resize-y rounded-xl border border-gray-200 px-4 py-3 text-base text-gray-700 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
             placeholder="Cuéntanos sobre ti…"
@@ -74,7 +93,9 @@ export default function AboutSection({ about, isOwn, onSave, saving = false }) {
       ) : (
         <>
           {hasContent && (
-            <p className="text-user-content whitespace-pre-wrap text-sm leading-relaxed text-gray-600">{displayText}</p>
+            <p className="text-user-content whitespace-pre-wrap text-sm leading-relaxed text-gray-600">
+              {displayText}
+            </p>
           )}
           {needsExpand && (
             <button

@@ -11,6 +11,7 @@ function PostImage({ src, alt = 'Imagen de la publicación', className = '' }) {
       alt={alt}
       loading="lazy"
       decoding="async"
+      fetchPriority="low"
       onError={() => setFailed(true)}
       className={`mt-space-md w-full rounded-radius-md object-cover ${className}`.trim()}
     />

@@ -46,6 +46,8 @@ export function usePwaUpdate() {
   const hiddenAtRef = useRef(null);
   const pendingRefreshRef = useRef(false);
   const refreshingRef = useRef(false);
+  /** Only reload after the user taps "Actualizar" — never on background/foreground alone. */
+  const userRequestedUpdateRef = useRef(false);
 
   useEffect(() => {
     if (!import.meta.env.PROD || !('serviceWorker' in navigator)) {
@@ -56,6 +58,7 @@ export function usePwaUpdate() {
     clearChunkReloadGuard();
 
     const onControllerChange = () => {
+      if (!userRequestedUpdateRef.current) return;
       if (refreshingRef.current) return;
       refreshingRef.current = true;
       window.location.reload();
@@ -144,10 +147,12 @@ export function usePwaUpdate() {
 
     setIsUpdating(true);
     clearDismissUntil();
+    userRequestedUpdateRef.current = true;
     refreshingRef.current = false;
     try {
       await updateSW(true);
     } catch {
+      userRequestedUpdateRef.current = false;
       setIsUpdating(false);
     }
   }, []);

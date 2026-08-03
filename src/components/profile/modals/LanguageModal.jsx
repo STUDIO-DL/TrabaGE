@@ -7,11 +7,38 @@ import AppIcon from '../../common/AppIcon';
 import { Save, ICON_SIZES } from '../../../constants/icons';
 import { LANGUAGE_LEVELS } from '../../../constants/languageLevels';
 import { PROFILE_LANGUAGE_OPTIONS } from '../../../constants/languages';
+import { FORM_DRAFT_KEYS } from '../../../constants/formDrafts';
+import { DRAFT_RESTORED_MESSAGE, useFormDraft } from '../../../hooks/useFormDraft';
+import { useNotificationContext } from '../../../context/NotificationContext';
+import { useAuth } from '../../../hooks/useAuth';
 
 const empty = { language: '', level: '' };
 
-export default function LanguageModal({ isOpen, onClose, initial, onSave, loading, existingLanguages = [] }) {
-  const [form, setForm] = useState(empty);
+export default function LanguageModal({
+  isOpen,
+  onClose,
+  initial,
+  onSave,
+  loading,
+  existingLanguages = [],
+}) {
+  const { user } = useAuth();
+  const { showToast } = useNotificationContext();
+  const draftKey = FORM_DRAFT_KEYS.languageModal(initial?.id);
+  const initialForm = initial
+    ? { language: initial.language || '', level: initial.level || '' }
+    : empty;
+  const {
+    values: form,
+    setValues: setForm,
+    clearDraft,
+  } = useFormDraft({
+    draftKey,
+    userId: user?.id,
+    initialValues: initialForm,
+    enabled: isOpen && Boolean(user?.id),
+    onRestored: (message) => showToast(message || DRAFT_RESTORED_MESSAGE, 'info'),
+  });
   const [error, setError] = useState('');
 
   const usedLanguages = useMemo(
@@ -34,15 +61,8 @@ export default function LanguageModal({ isOpen, onClose, initial, onSave, loadin
   );
 
   useEffect(() => {
-    if (isOpen) {
-      setForm(
-        initial
-          ? { language: initial.language || '', level: initial.level || '' }
-          : empty,
-      );
-      setError('');
-    }
-  }, [isOpen, initial]);
+    if (isOpen) setError('');
+  }, [isOpen, draftKey]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -59,6 +79,7 @@ export default function LanguageModal({ isOpen, onClose, initial, onSave, loadin
       setError(getUserErrorMessage(saveError, ERROR_ACTION.save_language));
       return;
     }
+    clearDraft();
     onClose();
   };
 
@@ -78,9 +99,9 @@ export default function LanguageModal({ isOpen, onClose, initial, onSave, loadin
           onChange={(e) => setForm({ ...form, level: e.target.value })}
           options={[{ value: '', label: 'Seleccionar' }, ...LANGUAGE_LEVELS]}
         />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <Button type="submit" fullWidth loading={loading} className="gap-2">
-          <AppIcon icon={Save} size={ICON_SIZES.default} className="text-white" />
+        {error ? <p className="text-sm text-error-600">{error}</p> : null}
+        <Button type="submit" loading={loading} className="w-full gap-1.5">
+          <AppIcon icon={Save} size={ICON_SIZES.sm} className="text-white" />
           Guardar
         </Button>
       </form>

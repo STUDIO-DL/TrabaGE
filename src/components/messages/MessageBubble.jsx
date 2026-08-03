@@ -301,7 +301,8 @@ export default function MessageBubble({
               ].join(' ')}
             >
               <span>{formatMessageTime(message.created_at)}</span>
-              {isOwn && isRead ? <span aria-label="Leído">Leído</span> : null}
+              {isOwn && message?.pending ? <span aria-label="Pendiente de envío">Pendiente</span> : null}
+              {isOwn && isRead && !message?.pending ? <span aria-label="Leído">Leído</span> : null}
             </div>
           </div>
         </div>

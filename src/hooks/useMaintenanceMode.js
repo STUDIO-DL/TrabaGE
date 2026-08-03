@@ -53,15 +53,9 @@ export function useMaintenanceMode() {
       void refresh();
     }, POLL_MS);
 
-    const onVisibility = () => {
-      if (document.visibilityState === 'visible') void refresh();
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-
     return () => {
       unsubscribe();
       window.clearInterval(intervalId);
-      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [refresh]);
 

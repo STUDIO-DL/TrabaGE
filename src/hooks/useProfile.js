@@ -6,6 +6,8 @@ import { ROLES, isEmployerRole } from '../constants/roles';
 import { getPreviewApplicantProfile, getPreviewProfile, PREVIEW_USER } from '../constants/preview';
 import { getProfileQueryKey } from '../constants/profileQueryKeys';
 import { isAccountDeleted } from '../utils/accountDeletion';
+import { hasCandidateSections } from '../utils/candidateProfileSections';
+import { queryClient } from '../config/queryClient';
 
 async function fetchProfileForKey(targetId, { role, userId, currentUserId }) {
   const isCandidate = userId ? true : !isEmployerRole(role);
@@ -26,6 +28,17 @@ async function fetchProfileForKey(targetId, { role, userId, currentUserId }) {
   return result.data ?? null;
 }
 
+function shouldRefetchProfileOnMount(queryKey, { isOwnCandidate }) {
+  if (!queryKey) return false;
+  const cached = queryClient.getQueryData(queryKey);
+  // Own candidate: never treat base-only cache as fresh (education would disappear).
+  if (isOwnCandidate && cached && !hasCandidateSections(cached)) {
+    return 'always';
+  }
+  // Otherwise only refetch when stale — show cached profile instantly.
+  return true;
+}
+
 export function useProfile(userId) {
   const { user, role, isPreviewMode } = useAuth();
   const targetId = userId || user?.id;
@@ -33,6 +46,7 @@ export function useProfile(userId) {
   const isCandidate = userId ? true : !isEmployerRole(role);
   const viewingOtherCandidate = viewingOther && isCandidate;
   const viewingOtherCompany = viewingOther && !isCandidate;
+  const isOwnCandidate = Boolean(targetId) && !viewingOther && isCandidate;
 
   const queryKey = getProfileQueryKey(targetId, {
     role,
@@ -44,9 +58,9 @@ export function useProfile(userId) {
   const query = useQuery({
     queryKey: queryKey ?? ['profile', 'disabled'],
     enabled: Boolean(queryKey) && Boolean(targetId) && !isPreviewMode && !isAccountDeleted(),
-    // Always re-read full profile (with education/experience/…) on mount so a
-    // base-only cache entry from auth hydrate cannot hide persisted sections.
-    refetchOnMount: 'always',
+    staleTime: 3 * 60_000,
+    gcTime: 45 * 60_000,
+    refetchOnMount: shouldRefetchProfileOnMount(queryKey, { isOwnCandidate }),
     queryFn: () =>
       fetchProfileForKey(targetId, {
         role,
@@ -98,7 +112,8 @@ export function useProfile(userId) {
 
   return {
     profile: query.data ?? null,
-    loading: query.isLoading,
+    // Prefer cached data — only block UI when we have nothing to show yet.
+    loading: query.isLoading && !query.data,
     isFetched: query.isFetched,
     error: query.error?.message ?? null,
     refetch: query.refetch,

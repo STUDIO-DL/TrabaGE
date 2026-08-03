@@ -15,7 +15,7 @@ const ACTIVITY_EVENTS = [
 /**
  * Signs the user out after prolonged inactivity. Background time does not count —
  * the timer pauses while the document is hidden so returning within 5 minutes never
- * triggers logout. Form drafts in localStorage are preserved on timeout logout.
+ * triggers logout. Explicit logout (including inactivity) clears form drafts.
  */
 export function useInactivityLogout({ enabled, onTimeout, timeoutMs = INACTIVITY_TIMEOUT_MS }) {
   const timerRef = useRef(null);
