@@ -66,8 +66,10 @@ const files = [
   'src/services/pushSubscriptions.service.js',
   'src/services/notificationPreferences.service.js',
   'public/firebase-messaging-sw.js',
+  'netlify/functions/firebase-config.js',
   'supabase/functions/send_push/index.ts',
   'vite.config.js',
+  'netlify.toml',
 ];
 
 for (const relativePath of files) {
@@ -85,8 +87,15 @@ const sw = fileExists('public/firebase-messaging-sw.js')
   ? readRelative('public/firebase-messaging-sw.js')
   : '';
 const vite = fileExists('vite.config.js') ? readRelative('vite.config.js') : '';
+const netlify = fileExists('netlify.toml') ? readRelative('netlify.toml') : '';
 const sendPush = fileExists('supabase/functions/send_push/index.ts')
   ? readRelative('supabase/functions/send_push/index.ts')
+  : '';
+const firebaseConfig = fileExists('src/config/firebase.js')
+  ? readRelative('src/config/firebase.js')
+  : '';
+const netlifyFirebaseConfig = fileExists('netlify/functions/firebase-config.js')
+  ? readRelative('netlify/functions/firebase-config.js')
   : '';
 
 addCheck(
@@ -106,6 +115,13 @@ addCheck(
   'client obtains FCM token',
   /getToken\(messaging/.test(fcm) && /VITE_FIREBASE_VAPID_KEY/.test(fcm),
   'getToken uses the web push VAPID key',
+);
+addCheck(
+  'client loads Firebase config at runtime',
+  /\/firebase-config\.json/.test(firebaseConfig) &&
+    /fetch\(/.test(firebaseConfig) &&
+    /await getFirebaseApp\(\)/.test(fcm),
+  'Firebase app config is fetched at runtime instead of embedded in Vite output',
 );
 addCheck(
   'client registers service worker for FCM',
@@ -132,8 +148,15 @@ addCheck(
 );
 addCheck(
   'background service worker displays push',
-  /onBackgroundMessage/.test(sw) && /showNotification/.test(sw),
-  'background FCM payload creates an OS notification',
+  /addEventListener\(['"]push['"]/.test(sw) && /showNotification/.test(sw),
+  'background FCM Web Push payload creates an OS notification',
+);
+addCheck(
+  'messaging service worker has no Firebase API key',
+  !/AIza[0-9A-Za-z_-]{20,}/.test(sw) &&
+    !/firebase\.initializeApp/.test(sw) &&
+    !/firebase-app-compat/.test(sw),
+  'no hardcoded Firebase config or compat SDK bootstrap in public/firebase-messaging-sw.js',
 );
 addCheck(
   'notification click opens the app',
@@ -145,6 +168,14 @@ addCheck(
   /importScripts:\s*\[['"]\/firebase-messaging-sw\.js['"]\]/.test(vite) &&
     /globIgnores:\s*\[['"]\*\*\/firebase-messaging-sw\.js['"]\]/.test(vite),
   'Workbox imports the FCM worker and keeps it out of precache',
+);
+addCheck(
+  'Netlify serves Firebase config from runtime env',
+  /from\s*=\s*"\/firebase-config\.json"/.test(netlify) &&
+    /to\s*=\s*"\/\.netlify\/functions\/firebase-config"/.test(netlify) &&
+    /VITE_FIREBASE_API_KEY/.test(netlifyFirebaseConfig) &&
+    /process\.env/.test(netlifyFirebaseConfig),
+  'runtime Function reads existing VITE_FIREBASE_* variables without committing values',
 );
 addCheck(
   'send_push can read active subscriptions',

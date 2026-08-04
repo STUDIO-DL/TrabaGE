@@ -2,11 +2,12 @@
 
 TrabaGE uses **Firebase Cloud Messaging (FCM)** as the sole push transport for native OS notifications. Push works for installed PWAs and, where the browser allows it (notably Chrome on Android / desktop), for users who have not installed the app.
 
-Architecture: **PWA → Firebase Messaging SDK → Supabase `push_subscriptions` → Edge `send_push` → FCM HTTP v1 → Device**
+Architecture: **PWA -> Firebase Messaging SDK -> Supabase `push_subscriptions` -> Edge `send_push` -> FCM HTTP v1 -> Device**
 
 | Layer | Location |
 |-------|----------|
 | Client SDK | `src/config/firebase.js`, `src/config/fcm.js`, `firebase` |
+| Runtime Firebase config | `/firebase-config.json` -> Netlify Function `netlify/functions/firebase-config.js` |
 | Device registry | `push_subscriptions.fcm_token` + RPCs |
 | Preferences | `notification_preferences` + `filter_push_recipients` |
 | Sender | Edge function `send_push` (FCM HTTP v1) |
@@ -14,14 +15,15 @@ Architecture: **PWA → Firebase Messaging SDK → Supabase `push_subscriptions`
 
 ## 1. Firebase Console setup
 
-1. Go to [Firebase Console](https://console.firebase.google.com) → project **trabage-b2ea9** (or your project)
-2. Add a **Web** app and copy `firebaseConfig` into Netlify / `.env.local` as `VITE_FIREBASE_*`
-3. **Project settings → Cloud Messaging → Web Push certificates → Generate key pair** → `VITE_FIREBASE_VAPID_KEY`
-4. **Project settings → Service accounts → Generate new private key** → store as Supabase secrets only:
+1. Go to Firebase Console -> project **trabage-b2ea9** (or your project).
+2. Add a **Web** app and copy `firebaseConfig` into Netlify / `.env.local` as `VITE_FIREBASE_*`.
+3. Project settings -> Cloud Messaging -> Web Push certificates -> Generate key pair -> `VITE_FIREBASE_VAPID_KEY`.
+4. Project settings -> Service accounts -> Generate new private key -> store as Supabase secrets only:
    - `FIREBASE_PROJECT_ID`
    - `FIREBASE_CLIENT_EMAIL`
    - `FIREBASE_PRIVATE_KEY`
 5. Confirm service worker URL in production: `https://trabage.org/sw.js` (Workbox + `/firebase-messaging-sw.js` via `importScripts`). Dev uses `/firebase-messaging-sw.js` directly.
+6. Confirm runtime config URL: `https://trabage.org/firebase-config.json`. It must return the public Firebase Web config from Netlify environment variables.
 
 ## 2. Environment variables
 
@@ -37,6 +39,8 @@ VITE_FIREBASE_APP_ID=1:...:web:...
 VITE_FIREBASE_VAPID_KEY=...
 VITE_APP_URL=https://trabage.org
 ```
+
+If your Netlify plan uses scoped environment variables, make sure these public Firebase Web variables are available to **Builds** and **Functions** so `/firebase-config.json` can read them at runtime.
 
 ### Supabase Edge Function secrets (`send_push`)
 
@@ -70,12 +74,13 @@ Set Netlify `VITE_FIREBASE_*` and redeploy the frontend.
 
 ## 5. Device flow
 
-1. User logs in → `initFcm()` at boot (`main.jsx`)
-2. After permission grant → `getToken({ vapidKey, serviceWorkerRegistration })`
-3. Token upserted via `upsert_push_subscription(p_fcm_token)`
-4. Logout / disable → `deleteToken` + `deactivate_push_subscription`
-5. Sends load active tokens with `get_push_subscriptions_for_users` and call FCM HTTP v1 **per token**
-6. Invalid tokens (`UNREGISTERED`, etc.) are deactivated
+1. User logs in -> `initFcm()` at boot (`main.jsx`).
+2. Client fetches `/firebase-config.json` and initializes Firebase in the app bundle.
+3. After permission grant -> `getToken({ vapidKey, serviceWorkerRegistration })`.
+4. Token is upserted via `upsert_push_subscription(p_fcm_token)`.
+5. Logout / disable -> `deleteToken` + `deactivate_push_subscription`.
+6. Sends load active tokens with `get_push_subscriptions_for_users` and call FCM HTTP v1 **per token**.
+7. Invalid tokens (`UNREGISTERED`, etc.) are deactivated.
 
 ## 6. Service workers
 
@@ -84,13 +89,15 @@ Set Netlify `VITE_FIREBASE_*` and redeploy the frontend.
 | Production | `/sw.js` (VitePWA Workbox + `importScripts('/firebase-messaging-sw.js')`) |
 | Development | `/firebase-messaging-sw.js` (VitePWA disabled in DEV) |
 
+`public/firebase-messaging-sw.js` intentionally contains no `firebase.initializeApp(...)`, Firebase API key, or Firebase compat import. The app passes the active service worker registration to `getToken(...)`; the worker handles background FCM Web Push payloads through the native `push` event and displays the OS notification.
+
 ## 7. Verification
 
-1. Login on Chrome (desktop or Android PWA)
-2. Enable push in settings / accept the soft prompt
-3. Confirm `push_subscriptions` has `fcm_token` for your user
-4. Run `npm run test-fcm-push` or use the DEV test button in notification settings
-5. Expect an **OS-level** notification (not only in-app bell)
+1. Login on Chrome (desktop or Android PWA).
+2. Enable push in settings / accept the soft prompt.
+3. Confirm `push_subscriptions` has `fcm_token` for your user.
+4. Run `npm run test-fcm-push` or use the DEV test button in notification settings.
+5. Expect an **OS-level** notification (not only in-app bell).
 
 ## 8. Preference filtering
 

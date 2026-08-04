@@ -1,8 +1,44 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+/* global process */
+
+function buildFirebaseRuntimeConfig(env) {
+  return {
+    apiKey: env.VITE_FIREBASE_API_KEY?.trim() ?? '',
+    authDomain: env.VITE_FIREBASE_AUTH_DOMAIN?.trim() ?? '',
+    projectId: env.VITE_FIREBASE_PROJECT_ID?.trim() ?? '',
+    storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET?.trim() ?? '',
+    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID?.trim() ?? '',
+    appId: env.VITE_FIREBASE_APP_ID?.trim() ?? '',
+  };
+}
+
+function firebaseRuntimeConfigPlugin(mode) {
+  const env = loadEnv(mode, process.cwd(), 'VITE_FIREBASE_');
+
+  return {
+    name: 'trabage-firebase-runtime-config',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/firebase-config.json', (request, response, next) => {
+        if (!['GET', 'HEAD'].includes(request.method ?? 'GET')) {
+          next();
+          return;
+        }
+
+        const body = JSON.stringify(buildFirebaseRuntimeConfig(env));
+        response.statusCode = 200;
+        response.setHeader('Content-Type', 'application/json; charset=utf-8');
+        response.setHeader('Cache-Control', 'no-store');
+        response.end(request.method === 'HEAD' ? undefined : body);
+      });
+    },
+  };
+}
+
+export default defineConfig(({ mode }) => ({
   server: {
     port: 5173,
     strictPort: false,
@@ -23,6 +59,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    firebaseRuntimeConfigPlugin(mode),
     react(),
     VitePWA({
       registerType: 'prompt',
@@ -84,4 +121,4 @@ export default defineConfig({
       },
     }),
   ],
-});
+}));

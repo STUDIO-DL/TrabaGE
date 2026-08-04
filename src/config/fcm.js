@@ -6,7 +6,7 @@ import {
   onMessage,
 } from 'firebase/messaging';
 import { pushSubscriptionsService } from '../services/pushSubscriptions.service';
-import { getFirebaseApp, getFirebaseWebConfig, isFirebaseConfigured } from './firebase';
+import { getFirebaseApp } from './firebase';
 import { readViteEnv } from './env';
 import { reportError } from '../utils/logger';
 import { resolvePushNavigationTarget } from '../utils/pushNavigation';
@@ -39,7 +39,7 @@ export function onPushPermissionChange(listener) {
 }
 
 export const isFcmConfigured = () =>
-  Boolean(isFirebaseConfigured() && readViteEnv(import.meta.env.VITE_FIREBASE_VAPID_KEY));
+  Boolean(readViteEnv(import.meta.env.VITE_FIREBASE_VAPID_KEY));
 
 function isLocalhost() {
   if (typeof window === 'undefined') return false;
@@ -149,7 +149,7 @@ export const initFcm = async () => {
         return null;
       }
 
-      const app = getFirebaseApp();
+      const app = await getFirebaseApp();
       if (!app) return null;
 
       messaging = getMessaging(app);
@@ -158,6 +158,7 @@ export const initFcm = async () => {
       return messaging;
     } catch (error) {
       reportError(error, { area: 'fcm_init' });
+      initPromise = null;
       return null;
     }
   })();
@@ -297,7 +298,3 @@ export const attachNotificationClickHandler = () => {
   // Foreground clicks: onMessage handler. Background: SW notificationclick.
 };
 
-/** Expose public config for the messaging service worker bootstrap if needed. */
-export function getPublicFirebaseConfigForSw() {
-  return getFirebaseWebConfig();
-}

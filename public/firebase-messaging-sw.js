@@ -1,8 +1,74 @@
-/* Firebase Cloud Messaging service worker (compat).
+/* Firebase Cloud Messaging Web Push service worker.
  * Production: imported into Workbox /sw.js via vite-plugin-pwa importScripts.
  * Development: registered directly as /firebase-messaging-sw.js.
+ *
+ * Firebase Messaging token creation stays in the Vite app bundle. This worker is
+ * intentionally config-free so no Firebase API key is written to static assets.
  */
-/* eslint-disable no-undef */
+
+const DEFAULT_NOTIFICATION_TITLE = 'TrabaGE';
+const DEFAULT_NOTIFICATION_ICON = '/icons/icon-192.png';
+
+function safeJsonParse(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+function readPushPayload(event) {
+  if (!event.data) return {};
+
+  try {
+    return event.data.json();
+  } catch {
+    const text = event.data.text();
+    return safeJsonParse(text) ?? { data: { body: text } };
+  }
+}
+
+function asRecord(value) {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function normalizePayload(rawPayload) {
+  const payload = asRecord(rawPayload);
+  const data = { ...asRecord(payload.data) };
+  const notification = {
+    ...asRecord(payload.notification),
+    ...asRecord(payload.webpush?.notification),
+  };
+
+  const link =
+    data.link ||
+    data.url ||
+    payload.fcmOptions?.link ||
+    payload.fcm_options?.link ||
+    payload.webpush?.fcm_options?.link ||
+    notification.click_action ||
+    notification.link ||
+    '/';
+
+  return {
+    title:
+      data.title ||
+      notification.title ||
+      payload.title ||
+      DEFAULT_NOTIFICATION_TITLE,
+    body: data.body || notification.body || payload.body || '',
+    data: {
+      ...data,
+      link,
+    },
+    options: {
+      icon: DEFAULT_NOTIFICATION_ICON,
+      badge: DEFAULT_NOTIFICATION_ICON,
+      tag: data.tag || data.notification_id || data.message_id || undefined,
+      renotify: false,
+    },
+  };
+}
 
 function resolveLink(data) {
   if (!data || typeof data !== 'object') return '/';
@@ -21,6 +87,20 @@ function resolveLink(data) {
   }
   return raw.startsWith('/') ? raw : `/${raw}`;
 }
+
+self.addEventListener('push', (event) => {
+  event.waitUntil(
+    (async () => {
+      const notification = normalizePayload(readPushPayload(event));
+
+      await self.registration.showNotification(notification.title, {
+        body: notification.body,
+        data: notification.data,
+        ...notification.options,
+      });
+    })(),
+  );
+});
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
@@ -49,32 +129,4 @@ self.addEventListener('notificationclick', (event) => {
       }
     })(),
   );
-});
-
-importScripts('https://www.gstatic.com/firebasejs/11.10.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/11.10.0/firebase-messaging-compat.js');
-
-firebase.initializeApp({
-  apiKey: 'AIzaSyAOFA8VT5qQ7CgLZcQBq4yR1dWPT-Gh2Ms',
-  authDomain: 'trabage-b2ea9.firebaseapp.com',
-  projectId: 'trabage-b2ea9',
-  storageBucket: 'trabage-b2ea9.firebasestorage.app',
-  messagingSenderId: '916583708507',
-  appId: '1:916583708507:web:e8aa79fdc486b1d5274c7e',
-});
-
-const messaging = firebase.messaging();
-
-messaging.onBackgroundMessage((payload) => {
-  // Data-only FCM messages: always display from SW (title/body live in data).
-  const title = payload?.data?.title || payload?.notification?.title || 'TrabaGE';
-  const body = payload?.data?.body || payload?.notification?.body || '';
-  const data = payload?.data || {};
-
-  return self.registration.showNotification(title, {
-    body,
-    data,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-  });
 });
