@@ -1,6 +1,7 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import { ArrowLeft, ICON_SIZES } from '../../constants/icons';
+import { navigateBack, resolveBackFallback } from '../../utils/safeNavigation';
 
 export const topBarOuterClass =
   'sticky top-0 z-30 border-b border-app-border bg-white pt-safe dark:bg-app-card';
@@ -29,12 +30,21 @@ function BackButton({ onClick }) {
   );
 }
 
-export default function TopBar({ title, backButton = false, actions, leading, center }) {
+export default function TopBar({ title, backButton = false, actions, leading, center, onBack }) {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleBack = () => {
+    if (typeof onBack === 'function') {
+      onBack();
+      return;
+    }
+    navigateBack(navigate, { fallback: resolveBackFallback(location) });
+  };
 
   return (
     <TopBarShell>
-      {backButton ? <BackButton onClick={() => navigate(-1)} /> : null}
+      {backButton ? <BackButton onClick={handleBack} /> : null}
       {leading}
       {title ? (
         <h1 className="min-w-0 flex-1 truncate text-subtitle font-semibold text-app-text">{title}</h1>

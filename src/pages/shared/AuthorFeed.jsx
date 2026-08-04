@@ -5,6 +5,7 @@ import { ArrowLeft, ICON_SIZES } from '../../constants/icons';
 import HomeFeedLayout from '../../components/home/HomeFeedLayout';
 import { useAuth } from '../../hooks/useAuth';
 import { topBarInnerClass, topBarOuterClass } from '../../components/layout/TopBar';
+import { navigateBack, resolveBackFallback } from '../../utils/safeNavigation';
 
 /**
  * Filtered author feed — reuses HomeFeedLayout / ParaTiPanel / PostCard.
@@ -29,17 +30,7 @@ export default function AuthorFeed() {
     location.state?.emptyDescription || 'Aún no hay publicaciones.';
 
   const handleBack = () => {
-    const idx = window.history.state?.idx;
-    if (typeof idx === 'number' && idx > 0) {
-      navigate(-1);
-      return;
-    }
-    const fallback = location.state?.from || location.state?.backTo;
-    if (fallback) {
-      navigate(fallback, { replace: true });
-      return;
-    }
-    navigate(-1);
+    navigateBack(navigate, { fallback: resolveBackFallback(location) });
   };
 
   const header = (

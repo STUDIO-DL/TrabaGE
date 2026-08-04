@@ -1,5 +1,6 @@
 import { isEmployerAuthor } from '../../constants/authorTypes';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
@@ -23,6 +24,7 @@ const EMPTY_NEWS_FORM = {
 };
 
 export default function AdminPosts() {
+  const navigate = useNavigate();
   const { showToast } = useNotificationContext();
   const [activeTab, setActiveTab] = useState('posts');
   const [posts, setPosts] = useState([]);
@@ -229,7 +231,9 @@ export default function AdminPosts() {
             <Button
               size="sm"
               variant="secondary"
-              onClick={() => window.open(`/feed/post/${row.id}`, '_blank', 'noopener,noreferrer')}
+              onClick={() =>
+                navigate(`/feed/post/${row.id}`, { state: { from: '/admin/posts' } })
+              }
             >
               Ver
             </Button>
@@ -253,7 +257,7 @@ export default function AdminPosts() {
         ),
       },
     ],
-    [actionId, handleDelete, handleToggleHidden],
+    [actionId, handleDelete, handleToggleHidden, navigate],
   );
 
   const newsColumns = useMemo(

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AdminTable from './AdminTable';
 import AdminStatusBadge from './AdminStatusBadge';
 import AdminConfirmModal from './AdminConfirmModal';
@@ -17,6 +17,7 @@ import { Eye, ShieldCheck, Trash2, ICON_SIZES } from '../../constants/icons';
 
 export default function AdminEmployerList({ accountRole, title, description }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useNotificationContext();
   const [employers, setEmployers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -113,8 +114,10 @@ export default function AdminEmployerList({ accountRole, title, description }) {
   }, [loadEmployers, showToast]);
 
   const openProfile = useCallback((employer) => {
-    navigate(`/companies/${employer.user_id}`);
-  }, [navigate]);
+    navigate(`/companies/${employer.user_id}`, {
+      state: { from: location.pathname },
+    });
+  }, [location.pathname, navigate]);
 
   const columns = useMemo(
     () => [

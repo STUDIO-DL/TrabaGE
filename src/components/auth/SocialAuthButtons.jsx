@@ -9,11 +9,11 @@ function SocialAuthButton({ icon, label, onClick, comingSoon = false, disabled =
       aria-disabled={isDisabled}
       aria-busy={loading}
       title={comingSoon ? 'Próximamente' : undefined}
-      className="flex h-[2.75rem] w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-800 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70"
+      className="flex h-[2.75rem] w-full items-center justify-center gap-3 rounded-xl border border-app-border bg-app-card px-4 text-sm font-medium text-app-text shadow-sm transition hover:border-primary-200 hover:bg-app-surface active:scale-[0.99] active:bg-app-disabled focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:border-app-border disabled:hover:bg-app-card disabled:active:scale-100"
     >
       {loading ? (
         <span
-          className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-primary-600"
+          className="h-5 w-5 animate-spin rounded-full border-2 border-app-border border-t-primary-600"
           aria-hidden
         />
       ) : (

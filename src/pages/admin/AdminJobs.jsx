@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminTable from '../../components/admin/AdminTable';
 import AdminStatusBadge from '../../components/admin/AdminStatusBadge';
 import Button from '../../components/ui/Button';
@@ -14,6 +15,7 @@ function getJobDisplayStatus(job) {
 }
 
 export default function AdminJobs() {
+  const navigate = useNavigate();
   const { showToast } = useNotificationContext();
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -116,7 +118,7 @@ export default function AdminJobs() {
               size="sm"
               variant="secondary"
               onClick={() =>
-                window.open(`/jobs/${row.id}`, '_blank', 'noopener,noreferrer')
+                navigate(`/jobs/${row.id}`, { state: { from: '/admin/jobs' } })
               }
             >
               Ver
@@ -141,7 +143,7 @@ export default function AdminJobs() {
         ),
       },
     ],
-    [actionId, handleDelete, handleToggleHidden],
+    [actionId, handleDelete, handleToggleHidden, navigate],
   );
 
   return (

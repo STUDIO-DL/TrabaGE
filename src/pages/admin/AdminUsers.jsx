@@ -75,7 +75,7 @@ export default function AdminUsers() {
     const path = isEmployerRole(user.role)
       ? `/companies/${user.user_id}`
       : `/profile/${user.user_id}`;
-    navigate(path);
+    navigate(path, { state: { from: '/admin/users' } });
   }, [navigate]);
 
   const handleToggleActive = useCallback(async (targetUser) => {

@@ -15,6 +15,7 @@ import { usePostMutations } from '../../hooks/usePostMutations';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { topBarInnerClass, topBarOuterClass } from '../../components/layout/TopBar';
+import { navigateBack, resolveBackFallback } from '../../utils/safeNavigation';
 
 const PAGE_SIZE = 20;
 
@@ -83,17 +84,7 @@ export default function SavedPosts() {
   const postIds = useMemo(() => posts.map((p) => p.id).filter(Boolean), [posts]);
 
   const handleBack = () => {
-    const idx = window.history.state?.idx;
-    if (typeof idx === 'number' && idx > 0) {
-      navigate(-1);
-      return;
-    }
-    const fallback = location.state?.from;
-    if (fallback) {
-      navigate(fallback, { replace: true });
-      return;
-    }
-    navigate(-1);
+    navigateBack(navigate, { fallback: resolveBackFallback(location) });
   };
 
   const handleHidden = (post) => {

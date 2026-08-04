@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
@@ -26,6 +26,7 @@ function DetailRow({ label, value }) {
 
 export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -92,7 +93,7 @@ export default function AdminUserDetailModal({ user, isOpen, onClose, onUpdated 
   const openFullProfile = () => {
     const path = isCompany ? `/companies/${user.user_id}` : `/profile/${user.user_id}`;
     onClose();
-    navigate(path);
+    navigate(path, { state: { from: location.pathname } });
   };
 
   const saveProfile = async () => {
