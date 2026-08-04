@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import ZarrelCredit from '../components/branding/ZarrelCredit';
 import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import EquatorialGuineaMap from '../components/splash/EquatorialGuineaMap';
+import TrabaGEIconMark from '../components/splash/TrabaGEIconMark';
 import TrabaGEWordmark from '../components/splash/TrabaGEWordmark';
 import { getOnboardingComplete } from '../context/AuthContext';
 import { useAuth } from '../hooks/useAuth';
@@ -17,7 +18,9 @@ import { getResumePathWithinGrace, touchLastActive } from '../utils/appLifecycle
 const ROLE_WAIT_MS = 20000;
 
 function resolveGuestDestination() {
-  return getOnboardingComplete() ? '/login' : '/onboarding';
+  // Original: completed onboarding → login.
+  // Only change: first visit goes to App Homepage, then Continuar → original onboarding.
+  return getOnboardingComplete() ? '/login' : '/welcome';
 }
 
 export default function SplashScreen() {
@@ -168,8 +171,24 @@ export default function SplashScreen() {
     user?.id,
   ]);
 
-  if (!isFullSplash) {
+  // Soft-resume: skip visual splash remount; navigation still runs with 0 ms min.
+  if (splashMode.resumePath) {
     return null;
+  }
+
+  // Returning / installed cold open: white + “T” mark (~3 s).
+  if (!isFullSplash) {
+    return (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-white pt-safe pb-safe"
+        aria-busy="true"
+        aria-live="polite"
+        role="status"
+        aria-label="TrabaGE"
+      >
+        <TrabaGEIconMark className="h-24 w-24" />
+      </div>
+    );
   }
 
   return (

@@ -10,6 +10,7 @@ export const THEMES = {
 /** Routes that always render light while the user is logged out (auth/onboarding funnel). */
 export const PUBLIC_AUTH_ROUTES = [
   '/',
+  '/welcome',
   '/onboarding',
   '/login',
   '/register',

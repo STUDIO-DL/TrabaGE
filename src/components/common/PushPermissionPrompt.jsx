@@ -4,7 +4,7 @@ import AppIcon from './AppIcon';
 import Button from '../ui/Button';
 import { Bell, X, ICON_SIZES } from '../../constants/icons';
 import { NOTIFICATION_PERMISSION_STATUS } from '../../constants/notificationPreferences';
-import { initOneSignal, isOneSignalConfigured } from '../../config/onesignal';
+import { isOneSignalConfigured } from '../../config/onesignal';
 import { useAuth } from '../../hooks/useAuth';
 import { isPwaInstalled } from '../../hooks/useInstallPrompt';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
@@ -35,6 +35,7 @@ function shouldHideOnRoute(pathname) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/register') ||
     pathname.startsWith('/auth/') ||
+    pathname.startsWith('/welcome') ||
     pathname.startsWith('/onboarding') ||
     pathname.startsWith('/setup') ||
     pathname.startsWith('/admin')
@@ -51,12 +52,6 @@ export default function PushPermissionPrompt() {
   const [visible, setVisible] = useState(false);
   const [activating, setActivating] = useState(false);
   const needsIosInstallHint = iosNeedsHomeScreenForPush();
-
-  useEffect(() => {
-    if (visible) {
-      void initOneSignal();
-    }
-  }, [visible]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

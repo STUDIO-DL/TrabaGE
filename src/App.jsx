@@ -29,6 +29,7 @@ import SplashScreen from './pages/SplashScreen';
 import { ROLES } from './constants/roles';
 import { markAppBackground, markAppForeground, rememberLastPath, installNativeFilePickGuards } from './utils/appLifecycle';
 import { ScrollRestoration } from './hooks/useScrollRestoration';
+const Welcome = lazy(() => import('./pages/Welcome'));
 const OnboardingFlow = lazy(() => import('./pages/onboarding/OnboardingFlow'));
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 const AuthConfirm = lazy(() => import('./pages/auth/AuthConfirm'));
@@ -238,6 +239,7 @@ function AppRoutes() {
         <Routes>
             <Route element={<RouteSectionLayout />}>
               <Route path="/" element={<SplashScreen />} />
+              <Route path="/welcome" element={<Welcome />} />
               <Route path="/onboarding" element={<OnboardingFlow />} />
 
               <Route element={<GuestOnlyRoute />}>

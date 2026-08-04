@@ -5,10 +5,41 @@ import { readViteEnv } from './env';
 import { reportError } from '../utils/logger';
 import { resolvePushNavigationTarget } from '../utils/pushNavigation';
 
+const PRODUCTION_ORIGIN = 'https://trabage.org';
+const DEV_ORIGINS_HINT = 'http://localhost:5173 y http://127.0.0.1:5173';
+
 let initPromise = null;
 let initialized = false;
+/** Set when init cannot succeed on this origin (e.g. Dashboard domain restriction). */
+let initUnavailableReason = null;
+let domainRestrictionWarned = false;
 
 const permissionChangeListeners = new Set();
+
+function getCurrentOrigin() {
+  if (typeof window === 'undefined') return null;
+  return window.location.origin;
+}
+
+function isDomainRestrictionError(error) {
+  const parts = [
+    error?.message,
+    error?.reason,
+    typeof error === 'string' ? error : null,
+    error != null ? String(error) : null,
+  ];
+  return parts.some((part) => part && /can only be used on/i.test(part));
+}
+
+function warnDomainRestrictionOnce(origin) {
+  if (domainRestrictionWarned) return;
+  domainRestrictionWarned = true;
+  console.warn(
+    `[TrabaGE] OneSignal no se inicializa en ${origin || 'este origen'}. ` +
+      `En OneSignal Dashboard → Settings → Platforms → Web → Allowed Origins, ` +
+      `añade ${DEV_ORIGINS_HINT}, o prueba en ${PRODUCTION_ORIGIN}.`,
+  );
+}
 
 function notifyPermissionChangeListeners() {
   permissionChangeListeners.forEach((listener) => {
@@ -103,6 +134,7 @@ export const initOneSignal = async () => {
   const appId = readViteEnv(import.meta.env.VITE_ONESIGNAL_APP_ID);
   if (!appId) return;
 
+  if (initialized || initUnavailableReason) return;
   if (initPromise) return initPromise;
 
   initPromise = (async () => {
@@ -143,6 +175,13 @@ export const initOneSignal = async () => {
       initialized = true;
       attachOneSignalListeners();
     } catch (error) {
+      if (isDomainRestrictionError(error)) {
+        initUnavailableReason = 'domain_restriction';
+        warnDomainRestrictionOnce(getCurrentOrigin());
+        return;
+      }
+      // Keep initPromise settled so callers do not retry/spam; unexpected failures still report once.
+      initUnavailableReason = 'init_failed';
       reportError(error, { area: 'onesignal_init' });
     }
   })();

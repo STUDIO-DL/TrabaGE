@@ -92,11 +92,23 @@ async function resetGuestState(context, { onboardingComplete = false } = {}) {
   }, { key: ONBOARDING_KEY, complete: onboardingComplete });
 }
 
-async function testSplashToOnboarding(page, results) {
-  const name = 'Splash → Onboarding (first visit)';
+async function testSplashToWelcome(page, results) {
+  const name = 'Splash → Welcome (first visit)';
   try {
     await page.goto(`${BASE_URL}/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForURL(/\/onboarding/, { timeout: 15000 });
+    await page.waitForURL(/\/welcome/, { timeout: 15000 });
+    await page.getByRole('heading', { name: 'Bienvenido a TrabaGE' }).waitFor({ timeout: 5000 });
+    record(results, name, 'pass');
+  } catch (err) {
+    record(results, name, 'fail', err.message);
+  }
+}
+
+async function testWelcomeContinueToOnboarding(page, results) {
+  const name = 'Welcome Continuar → Onboarding';
+  try {
+    await page.getByRole('button', { name: 'Continuar' }).click();
+    await page.waitForURL(/\/onboarding/, { timeout: 10000 });
     await page.getByRole('button', { name: 'Saltar' }).waitFor({ timeout: 5000 });
     record(results, name, 'pass');
   } catch (err) {
@@ -284,7 +296,8 @@ function printManualChecklist() {
   const steps = [
     'Abrir TrabaGE por primera vez.',
     'Ver Splash Screen.',
-    'Ver Onboarding.',
+    'Ver App Homepage (Welcome).',
+    'Continuar al Onboarding.',
     'Acceder a Login/Registro.',
     'Crear cuenta (Email y Google).',
     'Verificar correo (si aplica).',
@@ -323,7 +336,8 @@ async function main() {
   await resetGuestState(freshContext, { onboardingComplete: false });
   const freshPage = await freshContext.newPage();
 
-  await testSplashToOnboarding(freshPage, results);
+  await testSplashToWelcome(freshPage, results);
+  await testWelcomeContinueToOnboarding(freshPage, results);
   await testOnboardingSkip(freshPage, results);
   await freshContext.close();
 

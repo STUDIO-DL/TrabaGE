@@ -6,6 +6,7 @@ import { notificationPreferencesService } from '../services/notificationPreferen
 
 const ROUTE_PREFETCH = {
   '/login': () => import('../pages/auth/Login'),
+  '/welcome': () => import('../pages/Welcome'),
   '/onboarding': () => import('../pages/onboarding/OnboardingFlow'),
   '/personal/feed': () => import('../pages/candidate/Feed'),
   '/business/dashboard': () => import('../pages/company/Dashboard'),
@@ -38,7 +39,7 @@ function preloadAuthenticatedResources(userId) {
 
 /**
  * Silently warm session-adjacent data and the next route chunk while the
- * quick “T” splash is visible.
+ * quick white + “T” splash (~3 s) is visible.
  */
 export function runStartupPreload({ destination, userId }) {
   const tasks = [prefetchRoute(destination)];

@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <!--
-      Viewport: responsive + PWA safe-areas.
-      Accidental zoom is handled via 16px form controls + touch-action +
-      maximum-scale only on touch/standalone (desktop keeps full zoom for a11y).
+      Viewport locked at scale 1 for native-like PWA (no pinch / double-tap zoom).
+      Desktop fine-pointer unlocks zoom below for accessibility.
+      Form controls stay ≥16px (CSS) so iOS never auto-zooms on focus.
     -->
     <meta
       id="trabage-viewport"
       name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <meta name="theme-color" content="#2563EB" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -63,19 +63,22 @@
           const meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', theme === 'dark' ? '#0F172A' : '#2563EB');
 
-          // App-like scale on touch / installed PWA. Desktop keeps pinch-zoom.
+          // Meta is locked by default. Unlock zoom only on real desktop (a11y).
           const standalone =
             window.matchMedia('(display-mode: standalone)').matches ||
+            window.matchMedia('(display-mode: fullscreen)').matches ||
             window.navigator.standalone === true;
           const coarseTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-          if (standalone || coarseTouch) {
+          const desktopFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+          if (desktopFine && !standalone && !coarseTouch) {
             const viewport = document.getElementById('trabage-viewport');
             if (viewport) {
               viewport.setAttribute(
                 'content',
-                'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
+                'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
               );
             }
+          } else {
             document.documentElement.dataset.appShell = '1';
           }
         } catch {

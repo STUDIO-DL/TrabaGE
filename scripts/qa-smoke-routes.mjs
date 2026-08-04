@@ -9,6 +9,7 @@ const BASE_URL = process.argv[2] || 'http://localhost:5176';
 
 const PUBLIC_ROUTES = [
   { path: '/', name: 'Splash' },
+  { path: '/welcome', name: 'Welcome' },
   { path: '/onboarding', name: 'Onboarding' },
   { path: '/login', name: 'Login' },
   { path: '/register', name: 'Register' },

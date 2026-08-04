@@ -95,6 +95,7 @@ export async function requestOsPushPermission(userId, profileTags = {}) {
 export function usePushPermission() {
   const { user, role } = useAuth();
 
+  // Idempotent: shares initPromise with main.jsx boot call; safe to await from push flows.
   useEffect(() => {
     void initOneSignal();
     attachNotificationClickHandler();

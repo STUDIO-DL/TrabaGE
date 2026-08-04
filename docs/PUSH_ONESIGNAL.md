@@ -16,7 +16,10 @@ Architecture: **PWA → OneSignal SDK → Supabase → Edge Functions → OneSig
 
 1. Go to [OneSignal Dashboard](https://onesignal.com) → Web app **TrabaGE**
 2. **Site URL:** `https://trabage.org`
-3. **Allowed origins:** `https://trabage.org`, `http://localhost:5173`
+3. **Allowed Origins** (required for local DEV — without these, the SDK throws `Can only be used on: https://trabage.org` and soft-skips init):
+   - `https://trabage.org`
+   - `http://localhost:5173`
+   - `http://127.0.0.1:5173`
 4. Copy **OneSignal App ID** → Netlify `VITE_ONESIGNAL_APP_ID` + Supabase secret `ONESIGNAL_APP_ID`
 5. Copy **REST API Key** → Supabase secret `ONESIGNAL_REST_API_KEY` only (never frontend)
 6. (Optional) Safari Web ID → `VITE_ONESIGNAL_SAFARI_WEB_ID`
@@ -132,7 +135,7 @@ curl -X POST "$SUPABASE_URL/functions/v1/send_push" \
 | | Localhost (`npm run dev`) | Production (`trabage.org`) |
 |--|---------------------------|----------------------------|
 | Site URL (OneSignal) | Keep `https://trabage.org` | `https://trabage.org` |
-| Allowed origins (OneSignal) | Must include `http://localhost:5173` | `https://trabage.org` |
+| Allowed origins (OneSignal) | Must include `http://localhost:5173` **and** `http://127.0.0.1:5173` | `https://trabage.org` |
 | Service worker | `/OneSignalSDKWorker.js` | `/sw.js` (Workbox + OneSignal) |
 | `allowLocalhostAsSecureOrigin` | `true` (DEV) | `false` |
 | CORS on `send_push` | Reflects `http://localhost:5173` / `127.0.0.1:5173` if present | Reflects `https://trabage.org` |
@@ -213,6 +216,7 @@ Do **not** mark push as ✅ until you see the **system** notification (OS tray /
 
 | Symptom | Fix |
 |---------|-----|
+| Console: `Can only be used on: https://trabage.org` | OneSignal Allowed Origins missing your DEV origin. Add `http://localhost:5173` and `http://127.0.0.1:5173` (Dashboard → Platforms → Web). App soft-skips init with one warning; real push needs those origins or use production. |
 | No permission prompt | Check `VITE_ONESIGNAL_APP_ID` in `.env.local` / Netlify + restart/redeploy |
 | Subscription not in DB | Login + grant permission; check browser console / `getPushDiagnostics` |
 | `OneSignal no configurado` | Set Supabase secrets on `send_push` |

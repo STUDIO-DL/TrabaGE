@@ -78,6 +78,7 @@ function shouldHideOnRoute(pathname) {
     pathname.startsWith('/login') ||
     pathname.startsWith('/register') ||
     pathname.startsWith('/auth/') ||
+    pathname.startsWith('/welcome') ||
     pathname.startsWith('/onboarding') ||
     pathname.startsWith('/setup') ||
     pathname.startsWith('/admin')

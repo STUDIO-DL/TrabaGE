@@ -16,6 +16,7 @@ const THEME_KEY = 'trabage_theme';
 
 const PUBLIC_AUTH_ROUTES = [
   '/',
+  '/welcome',
   '/onboarding',
   '/login',
   '/register',
@@ -34,6 +35,7 @@ function isPublicAuthRoute(pathname) {
 
 const PUBLIC_PAGES = [
   { path: '/', label: 'Splash' },
+  { path: '/welcome', label: 'Welcome' },
   { path: '/onboarding', label: 'Onboarding' },
   { path: '/login', label: 'Login' },
   { path: '/register', label: 'Register' },

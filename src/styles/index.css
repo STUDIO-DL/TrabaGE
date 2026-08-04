@@ -110,7 +110,7 @@
     width: 100%;
     overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
-    /* Double-tap zoom off; pinch still available where viewport allows it */
+    /* Complements viewport lock: removes double-tap zoom delay / gesture */
     touch-action: manipulation;
     transition: background-color var(--motion-normal) var(--ease-standard),
       color var(--motion-normal) var(--ease-standard);

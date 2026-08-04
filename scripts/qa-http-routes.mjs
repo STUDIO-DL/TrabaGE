@@ -7,6 +7,7 @@ const BASE_URL = process.argv[2] || 'http://localhost:5176';
 
 const ROUTES = [
   '/',
+  '/welcome',
   '/onboarding',
   '/login',
   '/register',

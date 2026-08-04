@@ -19,6 +19,7 @@ const VIEWPORTS = [
 
 const GUEST_ROUTES = [
   { path: '/', label: 'splash' },
+  { path: '/welcome', label: 'welcome' },
   { path: '/onboarding', label: 'onboarding' },
   { path: '/login', label: 'login' },
   { path: '/register', label: 'register' },

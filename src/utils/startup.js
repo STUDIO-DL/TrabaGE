@@ -8,8 +8,8 @@ const THEME_STORAGE_KEY = 'trabage_theme';
 /** Full branded splash — first browser visit only (2–3 s). */
 export const FULL_SPLASH_MS = 2500;
 
-/** Minimal “T” transition for returning / installed users. */
-export const QUICK_SPLASH_MS = 350;
+/** White + “T” mark for returning / installed cold opens (~3 s). */
+export const QUICK_SPLASH_MS = 3000;
 
 function readStorage(key) {
   if (typeof window === 'undefined') return null;
