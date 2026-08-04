@@ -13,6 +13,7 @@ import {
   writeFeedCache,
 } from '../utils/feedCacheStore';
 import { getConnectivityState, isNetworkLikeError } from '../utils/connectivity';
+import { subscribeProfileMediaChanged } from '../utils/profileMediaSync';
 
 const MAX_AUTO_RETRIES = 2;
 
@@ -59,6 +60,29 @@ export function useIntelligentFeed({ authorId } = {}) {
       setLoading(true);
     }
   }, [cacheKey]);
+
+  useEffect(() => {
+    return subscribeProfileMediaChanged(({ userId: mediaUserId, authorAvatar }) => {
+      if (!mediaUserId) return;
+      setItems((current) => {
+        let changed = false;
+        const next = current.map((item) => {
+          if (item?.author_id !== mediaUserId) return item;
+          changed = true;
+          return { ...item, author_avatar: authorAvatar ?? null };
+        });
+        if (!changed) return current;
+        itemsRef.current = next;
+        const cached = readFeedCache(cacheKeyRef.current);
+        writeFeedCache(cacheKeyRef.current, {
+          items: next,
+          hasMore: cached?.hasMore ?? true,
+          offset: offsetRef.current,
+        });
+        return next;
+      });
+    });
+  }, []);
 
   const scheduleRetry = useCallback(() => {
     const attempt = retryCountRef.current;

@@ -4,17 +4,17 @@ import BottomSheet from '../ui/BottomSheet';
 import { Camera, Pencil, Trash2, ICON_SIZES } from '../../constants/icons';
 import { getUploadPhaseLabel } from '../../constants/uploadPhases';
 
-const COVER_ACCEPT = 'image/jpeg,image/png,image/webp';
+const AVATAR_ACCEPT = 'image/jpeg,image/png,image/webp';
 
 const sheetItemClass =
   'flex w-full min-h-touch items-center gap-space-md rounded-radius-md px-space-sm py-space-sm text-left text-body-small font-medium text-app-text transition-colors duration-fast hover:bg-app-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 disabled:cursor-not-allowed disabled:opacity-60';
 
 /**
- * Discreet cover edit control: circular pencil over the banner + bottom sheet actions.
+ * Discreet avatar edit control: circular camera over the photo + bottom sheet actions.
  * Only render for the profile owner (caller must gate visibility).
  */
-export default function CoverEditControl({
-  hasCover = false,
+export default function AvatarEditControl({
+  hasPhoto = false,
   loading = false,
   uploadPhase = null,
   onReplace,
@@ -22,7 +22,7 @@ export default function CoverEditControl({
   className = '',
 }) {
   const reactId = useId();
-  const inputId = `cover-edit-input-${reactId}`;
+  const inputId = `avatar-edit-input-${reactId}`;
   const inputRef = useRef(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -32,8 +32,7 @@ export default function CoverEditControl({
   };
 
   const handleReplace = () => {
-    // Open the picker in the same user-gesture turn. Closing the sheet first
-    // (or deferring with rAF) causes Chromium/WebView to ignore input.click().
+    // Keep the OS picker inside the same user-gesture turn.
     inputRef.current?.click();
     setSheetOpen(false);
   };
@@ -51,7 +50,7 @@ export default function CoverEditControl({
 
   const statusLabel = loading
     ? getUploadPhaseLabel(uploadPhase) || 'Subiendo…'
-    : 'Editar portada';
+    : 'Editar foto de perfil';
 
   return (
     <>
@@ -59,7 +58,7 @@ export default function CoverEditControl({
         ref={inputRef}
         id={inputId}
         type="file"
-        accept={COVER_ACCEPT}
+        accept={AVATAR_ACCEPT}
         className="sr-only"
         disabled={loading}
         onChange={handleFileChange}
@@ -72,10 +71,10 @@ export default function CoverEditControl({
         aria-label={statusLabel}
         title={statusLabel}
         className={[
-          'absolute bottom-space-sm right-space-base z-20 flex h-9 w-9 items-center justify-center',
-          'rounded-radius-circular bg-primary-600 text-white shadow-elevation-2',
-          'ring-2 ring-white/90 transition-colors duration-fast',
-          'hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
+          'absolute bottom-0 right-0 z-20 flex h-9 w-9 items-center justify-center',
+          'rounded-radius-circular bg-primary-600 text-white shadow-elevation-1',
+          'ring-2 ring-app-card transition-colors duration-fast',
+          'hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
           'disabled:cursor-not-allowed disabled:opacity-70',
           className,
         ]
@@ -87,11 +86,11 @@ export default function CoverEditControl({
             …
           </span>
         ) : (
-          <AppIcon icon={Pencil} size={ICON_SIZES.sm} className="text-white" aria-hidden />
+          <AppIcon icon={hasPhoto ? Pencil : Camera} size={ICON_SIZES.sm} className="text-white" aria-hidden />
         )}
       </button>
 
-      <BottomSheet isOpen={sheetOpen} onClose={closeSheet} title="Portada">
+      <BottomSheet isOpen={sheetOpen} onClose={closeSheet} title="Foto de perfil">
         <div className="flex flex-col gap-space-xs" role="menu">
           <button
             type="button"
@@ -104,14 +103,14 @@ export default function CoverEditControl({
               <AppIcon icon={Camera} size={ICON_SIZES.md} aria-hidden />
             </span>
             <span className="min-w-0">
-              <span className="block">{hasCover ? 'Reemplazar portada' : 'Añadir portada'}</span>
+              <span className="block">{hasPhoto ? 'Reemplazar foto' : 'Añadir foto'}</span>
               <span className="mt-0.5 block text-caption font-normal text-app-muted">
                 Elige una imagen de la galería o la cámara
               </span>
             </span>
           </button>
 
-          {hasCover && onRemove ? (
+          {hasPhoto && onRemove ? (
             <button
               type="button"
               role="menuitem"
@@ -123,9 +122,9 @@ export default function CoverEditControl({
                 <AppIcon icon={Trash2} size={ICON_SIZES.md} aria-hidden />
               </span>
               <span className="min-w-0">
-                <span className="block">Eliminar portada</span>
+                <span className="block">Eliminar foto</span>
                 <span className="mt-0.5 block text-caption font-normal text-app-muted">
-                  Restaura la portada predeterminada de TrabaGE
+                  Restaura el avatar predeterminado de TrabaGE
                 </span>
               </span>
             </button>

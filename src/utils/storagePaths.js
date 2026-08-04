@@ -17,10 +17,41 @@ export function extractStoragePath(value, _bucket) {
   return trimmed.split('?')[0];
 }
 
+/** Cache-bust token stored as `path?v=…` or on a public URL query string. */
+export function extractStorageVersion(value) {
+  if (!value || typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    if (trimmed.startsWith('http')) {
+      return new URL(trimmed).searchParams.get('v');
+    }
+    const qIndex = trimmed.indexOf('?');
+    if (qIndex === -1) return null;
+    return new URLSearchParams(trimmed.slice(qIndex + 1)).get('v');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Stable storage object key + a new `?v=` so browsers / PWA CacheFirst
+ * fetch the replaced bytes instead of serving a stale object at the same path.
+ */
+export function versionedStoragePath(pathOrUrl, bucket) {
+  const path = extractStoragePath(pathOrUrl, bucket);
+  if (!path) return null;
+  return `${path}?v=${Date.now()}`;
+}
+
 export function resolvePublicStorageUrl(bucket, pathOrUrl) {
   const path = extractStoragePath(pathOrUrl, bucket);
   if (!path) return null;
-  return `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`;
+  const base = `${supabaseUrl}/storage/v1/object/public/${bucket}/${path}`;
+  const version = extractStorageVersion(pathOrUrl);
+  if (!version) return base;
+  return `${base}?v=${encodeURIComponent(version)}`;
 }
 
 export function resolveAvatarUrl(avatarPath) {

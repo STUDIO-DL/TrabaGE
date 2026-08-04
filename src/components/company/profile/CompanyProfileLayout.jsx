@@ -411,8 +411,6 @@ export default function CompanyProfileLayout({
       showToast(error.message, 'error');
       return;
     }
-
-    showToast(type === 'logo' ? 'Logo actualizado.' : 'Portada actualizada.', 'success');
   };
 
   const handleRemoveCover = async () => {
@@ -429,10 +427,7 @@ export default function CompanyProfileLayout({
 
     if (error) {
       showToast(error.message, 'error');
-      return;
     }
-
-    showToast('Portada eliminada.', 'success');
   };
 
   const handleAddService = async (name) => {

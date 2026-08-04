@@ -110,7 +110,7 @@ export default function CompanyProfileHeader({
   const name = resolveCompanyHeaderName(profile, { user, role, readOnly });
   const introText = getCompanyIntroText(profile);
   const avatarType = avatarTypeFromCompanyProfile(profile);
-  const coverSrc = getCompanyCoverUrl(profile?.cover_url);
+  const coverSrc = getCompanyCoverUrl(profile?.cover_path ?? profile?.cover_url);
   const metaTexts = buildHeaderMetaTexts(profile);
 
   const handleLogoChange = (event) => {
@@ -135,6 +135,7 @@ export default function CompanyProfileHeader({
       <div className={`relative ${profileCompanyCoverHeightClass} overflow-hidden`}>
         {coverSrc ? (
           <img
+            key={coverSrc}
             src={coverSrc}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"

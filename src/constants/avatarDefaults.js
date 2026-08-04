@@ -142,7 +142,10 @@ export function resolveAvatarImageSrc(type = AvatarType.PERSONAL, imagePath) {
     if (/\/storage\/v1\/object\/public\/[^/]+\/?\s*$/i.test(trimmed)) {
       return { src: null, isDefault: true };
     }
-    return { src: trimmed, isDefault: false };
+    // Rebuild storage URLs so ?v= cache-bust tokens survive consistently.
+    const rebuilt =
+      type === AvatarType.PERSONAL ? resolveAvatarUrl(trimmed) : resolveLogoUrl(trimmed);
+    return { src: rebuilt || trimmed, isDefault: false };
   }
 
   // Absolute site paths are never storage keys

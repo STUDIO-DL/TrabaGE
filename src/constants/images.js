@@ -27,13 +27,20 @@ export function getCompanyLogoUrl(logoPath, options = {}) {
 
 export function getCompanyCoverUrl(coverPath) {
   if (!coverPath?.trim()) return null;
-  if (coverPath.trim().startsWith('http')) return coverPath.trim();
+  if (coverPath.trim().startsWith('http')) {
+    // Prefer rebuilding from storage path so ?v= cache-bust is applied consistently.
+    const resolved = resolveCompanyCoverUrl(coverPath);
+    return resolved || coverPath.trim();
+  }
   return resolveCompanyCoverUrl(coverPath) || coverPath;
 }
 
 export function getCandidateCoverUrl(coverPath) {
   if (!coverPath?.trim()) return null;
-  if (coverPath.trim().startsWith('http')) return coverPath.trim();
+  if (coverPath.trim().startsWith('http')) {
+    const resolved = resolveCandidateCoverUrl(coverPath);
+    return resolved || coverPath.trim();
+  }
   return resolveCandidateCoverUrl(coverPath) || coverPath;
 }
 

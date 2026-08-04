@@ -59,10 +59,11 @@ export default defineConfig({
             },
           },
           {
-            // Supabase Storage images/avatars/post media — avoid re-downloading on slow links.
+            // Supabase Storage media. StaleWhileRevalidate so replaced avatar/cover
+            // paths (same object key) refresh; cache-bust ?v= still creates unique URLs.
             urlPattern: ({ url }) =>
               url.hostname.endsWith('supabase.co') && url.pathname.includes('/storage/v1/object/'),
-            handler: 'CacheFirst',
+            handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'trabage-supabase-media',
               expiration: { maxEntries: 120, maxAgeSeconds: 60 * 60 * 24 * 14 },

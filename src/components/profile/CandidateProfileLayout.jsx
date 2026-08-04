@@ -16,6 +16,7 @@ export default function CandidateProfileLayout({
   email,
   isOwn = false,
   onAvatarChange,
+  onAvatarRemove,
   avatarLoading,
   avatarPhase,
   onCoverChange,
@@ -52,6 +53,7 @@ export default function CandidateProfileLayout({
         profile={profile}
         isOwn={isOwn}
         onAvatarChange={onAvatarChange}
+        onAvatarRemove={onAvatarRemove}
         avatarLoading={avatarLoading}
         avatarPhase={avatarPhase}
         onCoverChange={onCoverChange}

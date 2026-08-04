@@ -16,6 +16,7 @@ import {
 } from '../constants/storage';
 import { UPLOAD_COMPRESSION_TYPES } from '../constants/compressionPresets';
 import { UPLOAD_PHASES } from '../constants/uploadPhases';
+import { extractStoragePath } from '../utils/storagePaths';
 import { storageCompressionService } from './storageCompression.service';
 
 const WEBP_CONTENT_TYPE = 'image/webp';
@@ -31,7 +32,14 @@ async function uploadReplace(bucket, path, file, contentType) {
 
 /** Remove legacy paths only after a successful upload — never delete-before-upload. */
 async function cleanupLegacyPaths(bucket, newPath, legacyPaths = []) {
-  const unique = [...new Set(legacyPaths.filter((p) => p && p !== newPath))];
+  const normalizedNew = extractStoragePath(newPath, bucket) || newPath;
+  const unique = [
+    ...new Set(
+      legacyPaths
+        .map((p) => extractStoragePath(p, bucket) || p)
+        .filter((p) => p && p !== normalizedNew),
+    ),
+  ];
   if (!unique.length) return;
   await supabase.storage.from(bucket).remove(unique);
 }
@@ -127,8 +135,22 @@ export const storageService = {
     return result;
   },
 
+  deleteAvatar: async (userId, oldPath) => {
+    const paths = [
+      extractStoragePath(oldPath, STORAGE_BUCKETS.CANDIDATE_AVATARS),
+      avatarPath(userId),
+    ].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.CANDIDATE_AVATARS).remove(unique);
+    return { error };
+  },
+
   deleteCandidateCover: async (userId, oldPath) => {
-    const paths = [oldPath, candidateCoverPath(userId)].filter(Boolean);
+    const paths = [
+      extractStoragePath(oldPath, STORAGE_BUCKETS.CANDIDATE_AVATARS),
+      candidateCoverPath(userId),
+    ].filter(Boolean);
     const unique = [...new Set(paths)];
     if (!unique.length) return { error: null };
     const { error } = await supabase.storage.from(STORAGE_BUCKETS.CANDIDATE_AVATARS).remove(unique);
@@ -136,7 +158,21 @@ export const storageService = {
   },
 
   deleteCompanyCover: async (companyId, oldPath) => {
-    const paths = [oldPath, companyCoverPath(companyId)].filter(Boolean);
+    const paths = [
+      extractStoragePath(oldPath, STORAGE_BUCKETS.COMPANY_LOGOS),
+      companyCoverPath(companyId),
+    ].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.COMPANY_LOGOS).remove(unique);
+    return { error };
+  },
+
+  deleteCompanyLogo: async (companyId, oldPath) => {
+    const paths = [
+      extractStoragePath(oldPath, STORAGE_BUCKETS.COMPANY_LOGOS),
+      logoPath(companyId),
+    ].filter(Boolean);
     const unique = [...new Set(paths)];
     if (!unique.length) return { error: null };
     const { error } = await supabase.storage.from(STORAGE_BUCKETS.COMPANY_LOGOS).remove(unique);
@@ -371,18 +407,21 @@ export const storageService = {
   },
 
   uploadCertificationImage: async (userId, certificationId, file, oldPath, options = {}) => {
-    if (oldPath) await removeIfExists(STORAGE_BUCKETS.CANDIDATE_CERTIFICATIONS, oldPath);
     const path = certificationImagePath(userId, certificationId);
     const { file: preparedFile, contentType } = await prepareCompressedUpload(
       file,
       UPLOAD_COMPRESSION_TYPES.CERTIFICATION_IMAGE,
       options,
     );
-    return uploadReplace(
+    const result = await uploadReplace(
       STORAGE_BUCKETS.CANDIDATE_CERTIFICATIONS,
       path,
       preparedFile,
       contentType || WEBP_CONTENT_TYPE,
     );
+    if (!result.error) {
+      await cleanupLegacyPaths(STORAGE_BUCKETS.CANDIDATE_CERTIFICATIONS, path, [oldPath]);
+    }
+    return result;
   },
 };

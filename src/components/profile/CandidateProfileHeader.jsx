@@ -1,14 +1,9 @@
-import { useRef } from 'react';
 import AppAvatar from '../common/AppAvatar';
 import AppIcon from '../common/AppIcon';
 import { AvatarType } from '../../constants/avatarDefaults';
 import { getCandidateCoverUrl } from '../../constants/images';
 import { ROLES } from '../../constants/roles';
-import {
-  Camera,
-  Pencil,
-  ICON_SIZES,
-} from '../../constants/icons';
+import { Pencil, ICON_SIZES } from '../../constants/icons';
 import {
   profileBannerGradientClass,
   profileCoverHeightClass,
@@ -31,12 +26,13 @@ import { useAuth } from '../../hooks/useAuth';
 import { profileHeaderAlignClass } from './profileLayoutClasses';
 import ProfessionalPanelTeaser from '../../features/professional-panel/ui/ProfessionalPanelTeaser';
 import CoverEditControl from './CoverEditControl';
-import { getUploadPhaseLabel } from '../../constants/uploadPhases';
+import AvatarEditControl from './AvatarEditControl';
 
 export default function CandidateProfileHeader({
   profile,
   isOwn = false,
   onAvatarChange,
+  onAvatarRemove,
   avatarLoading = false,
   avatarPhase = null,
   onCoverChange,
@@ -47,7 +43,6 @@ export default function CandidateProfileHeader({
   onEditIntro,
 }) {
   const { role } = useAuth();
-  const avatarInputRef = useRef(null);
 
   const displayName = getDisplayName(profile, role ?? ROLES.PERSONAL, {
     context: 'candidate_profile_header',
@@ -61,12 +56,14 @@ export default function CandidateProfileHeader({
   const headline = profile?.headline?.trim();
 
   const coverSrc = coverSrcProp ?? getCandidateCoverUrl(profile?.cover_path);
+  const hasAvatar = Boolean(String(profile?.avatar_path || '').trim());
 
   return (
     <section className="overflow-hidden border-b border-app-border bg-app-card">
       <div className={`relative ${profileCoverHeightClass} overflow-hidden`}>
         {coverSrc ? (
           <img
+            key={coverSrc}
             src={coverSrc}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
@@ -105,35 +102,15 @@ export default function CandidateProfileHeader({
               />
             </div>
 
-            {isOwn && onAvatarChange && (
-              <>
-                <input
-                  ref={avatarInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) onAvatarChange(file);
-                    e.target.value = '';
-                  }}
-                />
-                <button
-                  type="button"
-                  disabled={avatarLoading}
-                  onClick={() => avatarInputRef.current?.click()}
-                  aria-label={avatarLoading ? getUploadPhaseLabel(avatarPhase) || 'Subiendo foto' : 'Cambiar foto de perfil'}
-                  title={avatarLoading ? getUploadPhaseLabel(avatarPhase) || 'Subiendo…' : undefined}
-                  className="absolute bottom-0 right-0 flex h-9 w-9 items-center justify-center rounded-radius-circular bg-primary-600 text-white shadow-elevation-1 ring-2 ring-app-card transition-colors duration-fast hover:bg-primary-700 disabled:opacity-60"
-                >
-                  {avatarLoading ? (
-                    <span className="text-xs font-medium">…</span>
-                  ) : (
-                    <AppIcon icon={Camera} size={ICON_SIZES.default} className="text-white" />
-                  )}
-                </button>
-              </>
-            )}
+            {isOwn && onAvatarChange ? (
+              <AvatarEditControl
+                hasPhoto={hasAvatar}
+                loading={avatarLoading}
+                uploadPhase={avatarPhase}
+                onReplace={onAvatarChange}
+                onRemove={onAvatarRemove}
+              />
+            ) : null}
           </div>
 
           <div className={profileHeaderInfoClass}>

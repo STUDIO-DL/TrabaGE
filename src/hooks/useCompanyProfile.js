@@ -9,7 +9,9 @@ import { asUserFacingError, ERROR_ACTION } from '../utils/userFacingError';
 import { syncAuthIdentityMetadata, readIdentityFromUser } from '../utils/displayIdentity';
 import { getOwnCompanyProfileKey, getProfileQueryKey } from '../constants/profileQueryKeys';
 import { withSetupComplete } from '../utils/profilePersistence';
-import { logoPath, companyCoverPath } from '../constants/storage';
+import { logoPath, companyCoverPath, STORAGE_BUCKETS } from '../constants/storage';
+import { versionedStoragePath } from '../utils/storagePaths';
+import { notifyProfileMediaChanged } from '../utils/profileMediaSync';
 
 function friendlyCompanyError(error, action = ERROR_ACTION.save_profile) {
   if (!error) return null;
@@ -19,7 +21,11 @@ function friendlyCompanyError(error, action = ERROR_ACTION.save_profile) {
 function mergeBaseProfileRow(current, row) {
   if (!row) return current ?? null;
   if (!current) return row;
-  return { ...current, ...row };
+  const merged = { ...current, ...row };
+  if ('cover_path' in row) {
+    merged.cover_url = row.cover_url ?? row.cover_path ?? null;
+  }
+  return merged;
 }
 
 export function useCompanyProfile() {
@@ -138,10 +144,15 @@ export function useCompanyProfile() {
         const companyNameFallback =
           profile?.company_name?.trim() || readIdentityFromUser(user).company_name || undefined;
 
-        return updateCompanyProfile(
-          { logo_path: logoPath(userId) },
+        const nextLogo = versionedStoragePath(logoPath(userId), STORAGE_BUCKETS.COMPANY_LOGOS);
+        const result = await updateCompanyProfile(
+          { logo_path: nextLogo },
           { companyNameFallback },
         );
+        if (!result.error) {
+          notifyProfileMediaChanged({ userId, authorAvatar: nextLogo });
+        }
+        return result;
       } catch (uploadError) {
         return { error: { message: uploadError.message || 'No se pudo subir el logo.' } };
       }
@@ -163,7 +174,12 @@ export function useCompanyProfile() {
         );
         if (uploadError) return { error: friendlyCompanyError(uploadError) };
 
-        return updateCompanyProfile({ cover_path: companyCoverPath(userId) });
+        return updateCompanyProfile({
+          cover_path: versionedStoragePath(
+            companyCoverPath(userId),
+            STORAGE_BUCKETS.COMPANY_LOGOS,
+          ),
+        });
       } catch (uploadError) {
         return { error: { message: uploadError.message || 'No se pudo subir la portada.' } };
       }

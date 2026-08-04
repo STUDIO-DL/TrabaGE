@@ -5,7 +5,7 @@ import { useProfile } from './useProfile';
 import { profileService } from '../services/profile.service';
 import { storageService } from '../services/storage.service';
 import { jobMatchesService } from '../services/jobMatches.service';
-import { cvPath, avatarPath, candidateCoverPath } from '../constants/storage';
+import { cvPath, avatarPath, candidateCoverPath, STORAGE_BUCKETS } from '../constants/storage';
 import { validateFile } from '../utils/validateFile';
 import { reportError } from '../utils/logger';
 import { syncAuthIdentityMetadata } from '../utils/displayIdentity';
@@ -14,6 +14,8 @@ import { withSetupComplete } from '../utils/profilePersistence';
 import { mergeCandidateProfileRow } from '../utils/candidateProfileSections';
 
 import { asUserFacingError, ERROR_ACTION } from '../utils/userFacingError';
+import { versionedStoragePath } from '../utils/storagePaths';
+import { notifyProfileMediaChanged } from '../utils/profileMediaSync';
 
 function friendlyProfileError(error, action = ERROR_ACTION.save_profile) {
   if (!error) return null;
@@ -129,13 +131,37 @@ export function useCandidateProfile() {
         );
         if (uploadError) return { error: friendlyProfileError(uploadError) };
 
-        return updateBasicInfo({ avatar_path: avatarPath(userId) });
+        const nextPath = versionedStoragePath(
+          avatarPath(userId),
+          STORAGE_BUCKETS.CANDIDATE_AVATARS,
+        );
+        const result = await updateBasicInfo({ avatar_path: nextPath });
+        if (!result.error) {
+          notifyProfileMediaChanged({ userId, authorAvatar: nextPath });
+        }
+        return result;
       } catch (uploadError) {
         return { error: { message: uploadError.message || 'No se pudo subir la foto.' } };
       }
     },
     [userId, profile?.avatar_path, updateBasicInfo],
   );
+
+  const removeAvatar = useCallback(async () => {
+    if (!profile?.avatar_path && !userId) return { error: null };
+
+    const { error: deleteError } = await storageService.deleteAvatar(
+      userId,
+      profile?.avatar_path,
+    );
+    if (deleteError) return { error: friendlyProfileError(deleteError) };
+
+    const result = await updateBasicInfo({ avatar_path: null });
+    if (!result.error) {
+      notifyProfileMediaChanged({ userId, authorAvatar: null });
+    }
+    return result;
+  }, [profile?.avatar_path, updateBasicInfo, userId]);
 
   const uploadCV = useCallback(
     async (file, { onProgress } = {}) => {
@@ -194,7 +220,12 @@ export function useCandidateProfile() {
         );
         if (uploadError) return { error: friendlyProfileError(uploadError) };
 
-        return updateBasicInfo({ cover_path: candidateCoverPath(userId) });
+        return updateBasicInfo({
+          cover_path: versionedStoragePath(
+            candidateCoverPath(userId),
+            STORAGE_BUCKETS.CANDIDATE_AVATARS,
+          ),
+        });
       } catch (uploadError) {
         return { error: { message: uploadError.message || 'No se pudo subir la portada.' } };
       }
@@ -516,6 +547,7 @@ export function useCandidateProfile() {
     refetch,
     updateBasicInfo,
     uploadAvatar,
+    removeAvatar,
     uploadCV,
     removeCV,
     uploadCover,

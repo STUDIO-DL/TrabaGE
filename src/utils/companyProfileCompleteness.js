@@ -44,7 +44,7 @@ export function getCompanyCompletenessDetails(profile) {
     hasText(profile?.sector),
     hasText(profile?.city),
     hasText(profile?.logo_path),
-    hasText(profile?.cover_url),
+    hasText(profile?.cover_path || profile?.cover_url),
     hasText(profile?.website),
     socialLinks.length > 0,
     hasText(profile?.company_size),

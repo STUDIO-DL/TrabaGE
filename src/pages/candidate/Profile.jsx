@@ -44,6 +44,7 @@ export default function Profile() {
     refetch,
     updateBasicInfo,
     uploadAvatar,
+    removeAvatar,
     uploadCV,
     uploadCover,
     removeCover,
@@ -123,7 +124,14 @@ export default function Profile() {
     const { error } = await uploadAvatar(file, { onProgress: ({ phase }) => setAvatarPhase(phase) });
     setAvatarLoading(false);
     setAvatarPhase(null);
-    showToast(error ? error.message : 'Foto actualizada.', error ? 'error' : 'success');
+    if (error) showToast(error.message, 'error');
+  };
+
+  const handleRemoveAvatar = async () => {
+    setAvatarLoading(true);
+    const { error } = await removeAvatar();
+    setAvatarLoading(false);
+    if (error) showToast(error.message, 'error');
   };
 
   const handleCoverPhoto = async (file) => {
@@ -136,14 +144,14 @@ export default function Profile() {
     const { error } = await uploadCover(file, { onProgress: ({ phase }) => setCoverPhase(phase) });
     setCoverPhotoLoading(false);
     setCoverPhase(null);
-    showToast(error ? error.message : 'Portada actualizada.', error ? 'error' : 'success');
+    if (error) showToast(error.message, 'error');
   };
 
   const handleRemoveCoverPhoto = async () => {
     setCoverPhotoLoading(true);
     const { error } = await removeCover();
     setCoverPhotoLoading(false);
-    showToast(error ? error.message : 'Portada eliminada.', error ? 'error' : 'success');
+    if (error) showToast(error.message, 'error');
   };
 
   const handleUploadCV = async (file, errorMsg) => {
@@ -295,6 +303,7 @@ export default function Profile() {
         email={user?.email}
         isOwn={canEdit}
         onAvatarChange={canEdit ? handleAvatar : undefined}
+        onAvatarRemove={canEdit ? handleRemoveAvatar : undefined}
         avatarLoading={avatarLoading}
         avatarPhase={avatarPhase}
         onCoverChange={canEdit ? handleCoverPhoto : undefined}

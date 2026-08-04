@@ -46,14 +46,33 @@ const TYPE_ALIASES = {
   document: 'cv',
 };
 
+const EXT_MIME = {
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.pdf': 'application/pdf',
+};
+
+/** Some mobile browsers leave `file.type` empty — infer from the extension. */
+function resolveFileMime(file) {
+  const declared = String(file?.type || '').trim().toLowerCase();
+  if (declared) return declared === 'image/jpg' ? 'image/jpeg' : declared;
+  const name = String(file?.name || '').toLowerCase();
+  const dot = name.lastIndexOf('.');
+  if (dot === -1) return '';
+  return EXT_MIME[name.slice(dot)] || '';
+}
+
 export const validateFile = (file, type = 'document') => {
   if (!file) return { valid: false, error: 'No se seleccionó ningún archivo.' };
 
   const resolvedType = TYPE_ALIASES[type] || type;
   const allowed = ALLOWED_TYPES[resolvedType] || ALLOWED_TYPES.document;
   const maxSize = MAX_SIZES[resolvedType] || MAX_SIZES.document;
+  const mime = resolveFileMime(file);
 
-  if (!allowed.includes(file.type)) {
+  if (!allowed.includes(mime) && !(mime === 'image/jpeg' && allowed.includes('image/jpg'))) {
     if (resolvedType === 'cv' || resolvedType === 'document') {
       return { valid: false, error: 'Solo se permiten archivos PDF.' };
     }
