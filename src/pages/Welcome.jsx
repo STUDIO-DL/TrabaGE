@@ -184,22 +184,33 @@ export default function Welcome() {
           </Button>
         </section>
 
-        {/* Qué es / para quién */}
+        {/* Propósito — explícito para revisión Google OAuth / App Homepage */}
         <section
           className="border-t border-app-border/70 py-space-2xl lg:py-space-3xl"
-          aria-labelledby="welcome-about-heading"
+          aria-labelledby="welcome-purpose-heading"
         >
           <h2
-            id="welcome-about-heading"
+            id="welcome-purpose-heading"
             className="text-title font-semibold tracking-tight text-app-text"
           >
-            Qué es TrabaGE
+            Propósito de TrabaGE
           </h2>
-          <p className="mt-space-sm max-w-2xl text-body-small leading-relaxed text-app-muted sm:text-body">
-            Marketplace laboral digital: perfiles, ofertas, postulaciones, feed profesional y
-            follows. Conectamos personas con empresas e instituciones sin intervenir en la
-            contratación final.
-          </p>
+          <div className="mt-space-sm max-w-2xl space-y-space-sm text-body-small leading-relaxed text-app-muted sm:text-body">
+            <p>
+              El propósito de TrabaGE es conectar talento con empleo y oportunidades profesionales
+              en Guinea Ecuatorial: un marketplace laboral digital donde personas, Business y
+              Organizaciones se encuentran.
+            </p>
+            <p>
+              Las personas usan TrabaGE para crear un perfil profesional, buscar y guardar ofertas,
+              postularse con su CV y hacer networking. Las empresas y organizaciones lo usan para
+              publicar ofertas, gestionar postulaciones y conectar con candidatos.
+            </p>
+            <p>
+              TrabaGE facilita perfiles, ofertas, postulaciones, feed profesional y follows; no
+              interviene en la contratación final.
+            </p>
+          </div>
 
           <div className="mt-space-xl grid grid-cols-1 gap-space-base sm:grid-cols-2 sm:gap-space-lg">
             {AUDIENCES.map(({ icon: Icon, title, description }) => (
