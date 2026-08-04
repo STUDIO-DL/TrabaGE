@@ -4,7 +4,6 @@
     <meta charset="UTF-8" />
     <!--
       Viewport locked at scale 1 for native-like PWA (no pinch / double-tap zoom).
-      Desktop fine-pointer unlocks zoom below for accessibility.
       Form controls stay ≥16px (CSS) so iOS never auto-zooms on focus.
     -->
     <meta
@@ -63,24 +62,22 @@
           const meta = document.querySelector('meta[name="theme-color"]');
           if (meta) meta.setAttribute('content', theme === 'dark' ? '#0F172A' : '#2563EB');
 
-          // Meta is locked by default. Unlock zoom only on real desktop (a11y).
           const standalone =
             window.matchMedia('(display-mode: standalone)').matches ||
             window.matchMedia('(display-mode: fullscreen)').matches ||
             window.navigator.standalone === true;
           const coarseTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
-          const desktopFine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-          if (desktopFine && !standalone && !coarseTouch) {
-            const viewport = document.getElementById('trabage-viewport');
-            if (viewport) {
-              viewport.setAttribute(
-                'content',
-                'width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content',
-              );
-            }
-          } else {
+          if (standalone || coarseTouch) {
             document.documentElement.dataset.appShell = '1';
           }
+
+          const preventBrowserZoom = (event) => {
+            event.preventDefault();
+          };
+
+          window.addEventListener('gesturestart', preventBrowserZoom, { passive: false });
+          window.addEventListener('gesturechange', preventBrowserZoom, { passive: false });
+          window.addEventListener('gestureend', preventBrowserZoom, { passive: false });
         } catch {
           document.documentElement.dataset.theme = 'light';
         }

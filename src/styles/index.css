@@ -110,8 +110,8 @@
     width: 100%;
     overscroll-behavior-x: none;
     overscroll-behavior-y: auto;
-    /* Complements viewport lock: removes double-tap zoom delay / gesture */
-    touch-action: manipulation;
+    /* Complements viewport lock: allow native panning but never browser zoom gestures. */
+    touch-action: pan-x pan-y;
     transition: background-color var(--motion-normal) var(--ease-standard),
       color var(--motion-normal) var(--ease-standard);
   }
