@@ -180,7 +180,7 @@ export default function Welcome() {
             onClick={handleContinue}
             className="mt-space-xl min-w-[10.5rem] px-space-2xl sm:mt-space-2xl"
           >
-            Continuar
+            Comenzar
           </Button>
         </section>
 

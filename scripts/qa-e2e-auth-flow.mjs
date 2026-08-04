@@ -105,9 +105,9 @@ async function testSplashToWelcome(page, results) {
 }
 
 async function testWelcomeContinueToOnboarding(page, results) {
-  const name = 'Welcome Continuar → Onboarding';
+  const name = 'Welcome Comenzar → Onboarding';
   try {
-    await page.getByRole('button', { name: 'Continuar' }).click();
+    await page.getByRole('button', { name: 'Comenzar' }).click();
     await page.waitForURL(/\/onboarding/, { timeout: 10000 });
     await page.getByRole('button', { name: 'Saltar' }).waitFor({ timeout: 5000 });
     record(results, name, 'pass');

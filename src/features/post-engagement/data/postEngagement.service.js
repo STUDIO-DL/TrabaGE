@@ -6,8 +6,9 @@ import { normalizePostTopics, normalizePostsTopics } from '../../../utils/normal
 import { DEEP_LINK_PATHS } from '../../../utils/deepLinks';
 import { resolveAuthorAvatar } from '../../../constants/avatarDefaults';
 import { resolvePostAuthorName } from '../../../utils/displayIdentity';
-import { isEmployerAuthor } from '../../../constants/authorTypes';
-import { ROLES } from '../../../constants/roles';
+import { AUTHOR_TYPES, isEmployerAuthor } from '../../../constants/authorTypes';
+import { isOrganizationCompanyType, ROLES } from '../../../constants/roles';
+import { isOrganizationProfile } from '../../../utils/orgLabels';
 import { reportError } from '../../../utils/logger';
 import { POST_ENGAGEMENT_TYPES, COMMENTS_PAGE_SIZE, REPLIES_PAGE_SIZE } from '../domain/constants';
 
@@ -91,12 +92,19 @@ async function enrichCommentAuthors(comments) {
     const company = companyMap.get(comment.author_id);
     const candidate = candidateMap.get(comment.author_id);
     if (company) {
+      const isOrg =
+        isOrganizationProfile(company) || isOrganizationCompanyType(company.company_type);
+      const authorType = isOrg ? AUTHOR_TYPES.ORGANIZATION : AUTHOR_TYPES.BUSINESS;
       return {
         ...comment,
-        author_name: resolvePostAuthorName(comment, company, ROLES.BUSINESS),
+        author_name: resolvePostAuthorName(
+          comment,
+          company,
+          isOrg ? ROLES.ORGANIZATION : ROLES.BUSINESS,
+        ),
         author_headline: '',
-        author_type: 'business',
-        author_avatar: resolveAuthorAvatar('business', {
+        author_type: authorType,
+        author_avatar: resolveAuthorAvatar(authorType, {
           logoPath: company.logo_path,
           companyType: company.company_type,
           profile: company,
@@ -107,8 +115,8 @@ async function enrichCommentAuthors(comments) {
       ...comment,
       author_name: resolvePostAuthorName(comment, candidate, ROLES.PERSONAL),
       author_headline: candidate?.headline ?? '',
-      author_type: 'personal',
-      author_avatar: resolveAuthorAvatar('personal', {
+      author_type: AUTHOR_TYPES.PERSONAL,
+      author_avatar: resolveAuthorAvatar(AUTHOR_TYPES.PERSONAL, {
         avatarPath: candidate?.avatar_path,
       }),
     };

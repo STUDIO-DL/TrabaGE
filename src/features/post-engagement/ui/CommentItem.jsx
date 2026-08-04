@@ -1,9 +1,7 @@
-import AppAvatar from '../../../components/common/AppAvatar';
 import AppIcon from '../../../components/common/AppIcon';
+import UserProfileLink from '../../../components/common/UserProfileLink';
 import TimeAgo from '../../../components/common/TimeAgo';
 import { Heart, ICON_SIZES } from '../../../constants/icons';
-import { AvatarType } from '../../../constants/avatarDefaults';
-import { isEmployerAuthor } from '../../../constants/authorTypes';
 import { useAuth } from '../../../hooks/useAuth';
 import { getSelfAwareName, isSameUser } from '../../../utils/copyLabels';
 import { formatEngagementCount } from './formatEngagementCount';
@@ -23,9 +21,6 @@ export default function CommentItem({
   const { user } = useAuth();
   const isOwnComment = isSameUser(user?.id, comment.author_id);
   const displayName = getSelfAwareName(comment.author_name, { isSelf: isOwnComment });
-  const avatarType = isEmployerAuthor(comment.author_type)
-    ? AvatarType.BUSINESS
-    : AvatarType.PERSONAL;
   const likesLabel = formatEngagementCount(comment.likes_count);
   const canNest = depth < 1;
   const remaining = Math.max(0, (comment.replies_count || 0) - replies.length);
@@ -33,15 +28,23 @@ export default function CommentItem({
   return (
     <div className={depth > 0 ? 'ml-space-lg border-l border-app-divider pl-space-md' : ''}>
       <div className="flex gap-space-sm py-space-sm">
-        <AppAvatar
-          type={avatarType}
-          src={comment.author_avatar}
+        <UserProfileLink
+          userId={comment.author_id}
+          userType={comment.author_type}
           name={displayName}
+          avatar={comment.author_avatar}
           size="sm"
+          layout="avatar"
         />
         <div className="min-w-0 flex-1">
           <div className="rounded-radius-md bg-app-surface px-space-sm py-space-sm">
-            <p className="text-label font-semibold text-app-text">{displayName}</p>
+            <UserProfileLink
+              userId={comment.author_id}
+              userType={comment.author_type}
+              name={displayName}
+              layout="name"
+              nameClassName="text-label font-semibold text-app-text transition-colors hover:text-primary-700"
+            />
             <p className="mt-0.5 whitespace-pre-wrap text-body-small text-app-text">{comment.body}</p>
           </div>
           <div className="mt-space-xs flex flex-wrap items-center gap-space-sm px-space-xs">
