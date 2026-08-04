@@ -4,7 +4,7 @@ import AppIcon from './AppIcon';
 import Button from '../ui/Button';
 import { Bell, Download, X, ICON_SIZES } from '../../constants/icons';
 import { NOTIFICATION_PERMISSION_STATUS } from '../../constants/notificationPreferences';
-import { isOneSignalConfigured } from '../../config/onesignal';
+import { isFcmConfigured } from '../../config/fcm';
 import { useAuth } from '../../hooks/useAuth';
 import { isPwaInstalled, useInstallPrompt } from '../../hooks/useInstallPrompt';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
@@ -56,7 +56,7 @@ function isPushPromptLikelyVisible({
     !userId ||
     role === ROLES.ADMIN ||
     !setupComplete ||
-    !isOneSignalConfigured() ||
+    !isFcmConfigured() ||
     isOsPushPermissionDenied() ||
     prefsLoading ||
     pushEnabled ||

@@ -66,6 +66,10 @@ export function resolvePostImageUrl(postImagePath) {
   return resolvePublicStorageUrl(STORAGE_BUCKETS.POST_IMAGES, postImagePath);
 }
 
+export function resolveJobOpportunityImageUrl(imagePath) {
+  return resolvePublicStorageUrl(STORAGE_BUCKETS.POST_IMAGES, imagePath);
+}
+
 export function resolveProjectImageUrl(imagePath) {
   return resolvePublicStorageUrl(STORAGE_BUCKETS.PROFILE_PROJECTS, imagePath);
 }

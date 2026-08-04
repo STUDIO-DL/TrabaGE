@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase';
+import { isSupabaseConfigured, supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
 
 function detectPlatform() {
@@ -20,9 +20,13 @@ function detectBrowser() {
 }
 
 export const pushSubscriptionsService = {
-  upsert: async (subscriptionId) => {
+  upsert: async (fcmToken) => {
+    if (!isSupabaseConfigured) {
+      return { data: null, error: null };
+    }
+
     const { data, error } = await supabase.rpc('upsert_push_subscription', {
-      p_onesignal_subscription_id: subscriptionId,
+      p_fcm_token: fcmToken,
       p_platform: detectPlatform(),
       p_browser: detectBrowser(),
       p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
@@ -35,9 +39,13 @@ export const pushSubscriptionsService = {
     return { data, error };
   },
 
-  deactivate: async (subscriptionId = null) => {
+  deactivate: async (fcmToken = null) => {
+    if (!isSupabaseConfigured) {
+      return { data: null, error: null };
+    }
+
     const { data, error } = await supabase.rpc('deactivate_push_subscription', {
-      p_onesignal_subscription_id: subscriptionId,
+      p_fcm_token: fcmToken,
     });
 
     if (error) {

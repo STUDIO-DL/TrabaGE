@@ -183,7 +183,7 @@ async function main() {
   if (inAppOk && pushOk) {
     console.log('\n🎉 Entrega dual confirmada. Revisa la bandeja in-app y la notificación del sistema.');
   } else if (inAppOk && !pushOk) {
-    console.log('\n⚠️  Solo in-app OK. Revisa permisos push, suscripciones OneSignal o secrets de send_push.');
+    console.log('\n⚠️  Solo in-app OK. Revisa permisos push, tokens FCM o secrets FIREBASE_* de send_push.');
   } else {
     console.log('\n❌ Entrega incompleta.');
     process.exit(1);

@@ -5,7 +5,7 @@ import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
 import '@fontsource/inter/700.css';
 import { initSentry } from './config/sentry';
-import { initOneSignal } from './config/onesignal';
+import { initFcm } from './config/fcm';
 import { AppErrorBoundary } from './components/ui/ErrorBoundary';
 import { initConnectivityListeners } from './utils/connectivity';
 import { reportError } from './utils/logger';
@@ -13,7 +13,7 @@ import App from './App';
 import './styles/index.css';
 
 initSentry();
-initOneSignal();
+initFcm();
 initConnectivityListeners();
 
 if (typeof window !== 'undefined') {

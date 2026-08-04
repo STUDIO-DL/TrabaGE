@@ -20,7 +20,7 @@ Capas:
 | Domain | Tipos, audiencias, comportamientos, payload mappers |
 | Data | Persistencia vía RPCs SECURITY DEFINER |
 | Application UI | Admin list/form/stats; host global de usuario |
-| Presentation | Reutiliza `Modal`, `BottomSheet`, `AdminTable`, OneSignal push |
+| Presentation | Reutiliza `Modal`, `BottomSheet`, `AdminTable`, FCM push |
 
 ## Base de datos
 

@@ -45,6 +45,7 @@ const CompanySetup = lazy(() => import('./pages/setup/CompanySetup'));
 const CandidateFeed = lazy(() => import('./pages/candidate/Feed'));
 const CandidateJobs = lazy(() => import('./pages/candidate/Jobs'));
 const CandidatePublish = lazy(() => import('./pages/candidate/Publish'));
+const PublishSharedOpportunity = lazy(() => import('./pages/candidate/PublishSharedOpportunity'));
 const JobDetail = lazy(() => import('./pages/candidate/JobDetail'));
 const ApplyJob = lazy(() => import('./pages/candidate/ApplyJob'));
 const CandidateApplications = lazy(() => import('./pages/candidate/Applications'));
@@ -265,6 +266,7 @@ function AppRoutes() {
                   <Route path="/setup/personal" element={<CandidateSetup />} />
                   <Route path="/personal/feed" element={<CandidateFeed />} />
                   <Route path="/personal/jobs" element={<CandidateJobs />} />
+                  <Route path="/personal/opportunities/create" element={<PublishSharedOpportunity />} />
                   <Route path="/personal/publish" element={<CandidatePublish />} />
                   <Route path="/personal/jobs/:id/apply" element={<ApplyJob />} />
                   <Route path="/personal/saved-jobs" element={<CandidateSavedJobs />} />

@@ -8,7 +8,7 @@ test('resolves a notification target from app metadata', () => {
     metadata: { conversation_id: 'abc123', link: '/messages/abc123' },
   }, 'https://trabage.org');
 
-  assert.equal(target, 'https://trabage.org/messages/abc123');
+  assert.equal(target, '/messages/abc123');
 });
 
 test('prefers the canonical post route over legacy company links', () => {
@@ -20,14 +20,23 @@ test('prefers the canonical post route over legacy company links', () => {
     },
   }, 'https://trabage.org');
 
-  assert.equal(target, 'https://trabage.org/post/post-7');
+  assert.equal(target, '/post/post-7');
 });
 
-test('returns absolute urls unchanged', () => {
+test('blocks external absolute urls', () => {
   const target = resolvePushNavigationTarget({
     type: 'system_update',
     metadata: { link: 'https://example.com/hello' },
   }, 'https://trabage.org');
 
-  assert.equal(target, 'https://example.com/hello');
+  assert.equal(target, null);
+});
+
+test('accepts same-origin absolute urls as internal targets', () => {
+  const target = resolvePushNavigationTarget({
+    type: 'system_update',
+    metadata: { link: 'https://trabage.org/personal/notifications' },
+  }, 'https://trabage.org');
+
+  assert.equal(target, '/personal/notifications');
 });

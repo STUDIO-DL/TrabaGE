@@ -62,28 +62,24 @@ function ensureChannel(userId) {
   const channelName = `notifications-unread-${userId}`;
   const existing = (supabase.getChannels?.() || []).filter((c) => c.topic === `realtime:${channelName}`);
 
-  try {
-    sharedChannel = supabase
-      .channel(channelName)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'notifications', filter },
-        refetch,
-      )
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'notifications', filter },
-        refetch,
-      )
-      .on(
-        'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'notifications', filter },
-        refetch,
-      )
-      .subscribe();
-  } catch (err) {
-    throw err;
-  }
+  sharedChannel = supabase
+    .channel(channelName)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter },
+      refetch,
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'notifications', filter },
+      refetch,
+    )
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'notifications', filter },
+      refetch,
+    )
+    .subscribe();
 }
 
 function subscribeShared(userId, onChange) {

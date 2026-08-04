@@ -4,6 +4,7 @@ import { CITIES } from '../../constants/cities';
 import { JOB_TYPES } from '../../constants/jobTypes';
 import { WORK_MODES } from '../../constants/workModes';
 import { SECTORS } from '../../constants/sectors';
+import { JOB_SOURCE } from '../../constants/jobSource';
 
 export default function JobsFilterPanel({ filters = {}, onChange, open = false }) {
   if (!open) return null;
@@ -12,6 +13,11 @@ export default function JobsFilterPanel({ filters = {}, onChange, open = false }
   const typeOptions = [{ value: '', label: 'Todos los tipos' }, ...JOB_TYPES];
   const workModeOptions = [{ value: '', label: 'Todas las modalidades' }, ...WORK_MODES];
   const sectorOptions = [{ value: '', label: 'Todos los sectores' }, ...SECTORS.map((s) => ({ value: s, label: s }))];
+  const sourceOptions = [
+    { value: '', label: 'Todos los orígenes' },
+    { value: JOB_SOURCE.COMPANY, label: 'Oferta oficial' },
+    { value: JOB_SOURCE.USER, label: 'Oportunidad compartida' },
+  ];
 
   return (
     <div className="border-b border-app-divider pb-space-md pt-space-sm">
@@ -39,6 +45,12 @@ export default function JobsFilterPanel({ filters = {}, onChange, open = false }
           value={filters.sector || ''}
           onChange={(e) => onChange?.({ ...filters, sector: e.target.value || undefined })}
           options={sectorOptions}
+        />
+        <Select
+          label="Origen"
+          value={filters.sourceType || ''}
+          onChange={(e) => onChange?.({ ...filters, sourceType: e.target.value || undefined })}
+          options={sourceOptions}
         />
         <Input
           label="Salario mínimo"

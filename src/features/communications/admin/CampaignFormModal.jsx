@@ -299,7 +299,7 @@ export default function CampaignFormModal({
             checked={form.send_push}
             onChange={(e) => setForm((p) => ({ ...p, send_push: e.target.checked }))}
           />
-          Enviar notificación push (OneSignal)
+          Enviar notificación push (FCM)
         </label>
 
         <label className="flex items-center gap-2 text-sm text-app-text">

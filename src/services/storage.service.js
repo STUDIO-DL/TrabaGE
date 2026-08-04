@@ -8,6 +8,7 @@ import {
   logoPath,
   postImagePath,
   projectImagePath,
+  jobOpportunityImagePath,
   companyVerificationDocPath,
   representativeVerificationDocPath,
   verificationDocPath,
@@ -280,6 +281,33 @@ export const storageService = {
       ]);
     }
     return result;
+  },
+
+  uploadJobOpportunityImage: async (userId, jobId, file, oldPath, options = {}) => {
+    const path = jobOpportunityImagePath(userId, jobId);
+    const { file: preparedFile, contentType } = await prepareCompressedUpload(
+      file,
+      UPLOAD_COMPRESSION_TYPES.POST_IMAGE,
+      options,
+    );
+    const result = await uploadReplace(
+      STORAGE_BUCKETS.POST_IMAGES,
+      path,
+      preparedFile,
+      contentType || WEBP_CONTENT_TYPE,
+    );
+    if (!result.error) {
+      await cleanupLegacyPaths(STORAGE_BUCKETS.POST_IMAGES, path, [oldPath]);
+    }
+    return result;
+  },
+
+  deleteJobOpportunityImage: async (userId, jobId, oldPath) => {
+    const paths = [oldPath, jobOpportunityImagePath(userId, jobId)].filter(Boolean);
+    const unique = [...new Set(paths)];
+    if (!unique.length) return { error: null };
+    const { error } = await supabase.storage.from(STORAGE_BUCKETS.POST_IMAGES).remove(unique);
+    return { error };
   },
 
   uploadVerificationDoc: async (companyId, file, oldPath, options = {}) => {

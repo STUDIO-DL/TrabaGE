@@ -17,7 +17,7 @@
     # WebAssembly.instantiate without enabling JS eval()/new Function() ('unsafe-eval').
     # connect-src data: — Yoga embeds its WASM as a data: URI.
     # frame-src blob: — CV preview iframe uses URL.createObjectURL(pdfBlob).
-    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'wasm-unsafe-eval' https://cdn.onesignal.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self' data:; connect-src 'self' data: https://*.supabase.co wss://*.supabase.co https://onesignal.com https://*.onesignal.com https://api.onesignal.com https://sentry.io https://*.sentry.io https://*.ingest.sentry.io https://formspree.io https://*.formspree.io; worker-src 'self' blob: https://cdn.onesignal.com; frame-src 'self' blob:; manifest-src 'self'; form-action 'self' https://formspree.io https://*.formspree.io"
+    Content-Security-Policy = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; script-src 'self' 'wasm-unsafe-eval' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self' data:; connect-src 'self' data: https://*.supabase.co wss://*.supabase.co https://*.googleapis.com https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com https://fcm.googleapis.com https://sentry.io https://*.sentry.io https://*.ingest.sentry.io https://formspree.io https://*.formspree.io; worker-src 'self' blob:; frame-src 'self' blob:; manifest-src 'self'; form-action 'self' https://formspree.io https://*.formspree.io"
 
 [[redirects]]
   from = "/*"
@@ -47,12 +47,7 @@
     Cache-Control = "no-cache, no-store, must-revalidate"
 
 [[headers]]
-  for = "/OneSignalSDKWorker.js"
-  [headers.values]
-    Cache-Control = "no-cache, no-store, must-revalidate"
-
-[[headers]]
-  for = "/OneSignalSDKUpdaterWorker.js"
+  for = "/firebase-messaging-sw.js"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
 

@@ -31,6 +31,7 @@ import { applicationsService } from '../../services/applications.service';
 import { useSavedJobs } from '../../hooks/useSavedJobs';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { FOLLOWS_TARGET, followsService } from '../../services/follows.service';
+import { getSharedPublisherName, isOfficialJob } from '../../constants/jobSource';
 
 function extractSalary(value) {
   const numbers = String(value ?? '')
@@ -40,25 +41,55 @@ function extractSalary(value) {
   return numbers?.length ? Math.max(...numbers) : 0;
 }
 
+function officialPriority(job) {
+  return isOfficialJob(job) ? 1 : 0;
+}
+
 function sortJobs(jobs, sort, scoreByJobId = {}) {
   const list = [...jobs];
   if (sort === 'salary_desc') {
-    return list.sort((a, b) => extractSalary(b.salary) - extractSalary(a.salary));
+    return list.sort(
+      (a, b) =>
+        extractSalary(b.salary) - extractSalary(a.salary) ||
+        officialPriority(b) - officialPriority(a),
+    );
   }
   if (sort === 'salary_asc') {
-    return list.sort((a, b) => extractSalary(a.salary) - extractSalary(b.salary));
+    return list.sort(
+      (a, b) =>
+        extractSalary(a.salary) - extractSalary(b.salary) ||
+        officialPriority(b) - officialPriority(a),
+    );
   }
   if (sort === 'match') {
     return list.sort(
       (a, b) =>
         (scoreByJobId[b.id] ?? 0) - (scoreByJobId[a.id] ?? 0) ||
+        officialPriority(b) - officialPriority(a) ||
         new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0),
     );
   }
   if (sort === 'title') {
-    return list.sort((a, b) => String(a.title ?? '').localeCompare(String(b.title ?? '')));
+    return list.sort(
+      (a, b) =>
+        String(a.title ?? '').localeCompare(String(b.title ?? '')) ||
+        officialPriority(b) - officialPriority(a),
+    );
   }
-  return list.sort((a, b) => new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0));
+  return list.sort(
+    (a, b) =>
+      officialPriority(b) - officialPriority(a) ||
+      new Date(b.created_at ?? 0) - new Date(a.created_at ?? 0),
+  );
+}
+
+function sortScoredJobs(items) {
+  return [...items].sort(
+    (a, b) =>
+      (b.score ?? 0) - (a.score ?? 0) ||
+      officialPriority(b.job) - officialPriority(a.job) ||
+      new Date(b.job?.created_at ?? 0) - new Date(a.job?.created_at ?? 0),
+  );
 }
 
 export default function Jobs() {
@@ -86,7 +117,12 @@ export default function Jobs() {
   const queryFilteredJobs = normalizedQuery
     ? jobs.filter((job) => {
         const matchedCity = matchCityFromQuery(query);
-        const haystack = [job.title, job.city, job.company_profiles?.company_name]
+        const haystack = [
+          job.title,
+          job.city,
+          job.company_profiles?.company_name,
+          getSharedPublisherName(job),
+        ]
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
@@ -134,7 +170,7 @@ export default function Jobs() {
   );
 
   const recommendedJobs = useMemo(
-    () => scoredJobs.filter(({ score }) => score > 0),
+    () => sortScoredJobs(scoredJobs.filter(({ score }) => score > 0)),
     [scoredJobs],
   );
 

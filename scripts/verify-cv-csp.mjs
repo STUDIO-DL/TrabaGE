@@ -11,7 +11,8 @@ const csp = match[1];
 const checks = [
   ['wasm-unsafe-eval present', csp.includes("'wasm-unsafe-eval'")],
   ['full unsafe-eval NOT present', !csp.includes("'unsafe-eval'")],
-  ['OneSignal CDN kept', csp.includes('https://cdn.onesignal.com')],
+  ['Firebase gstatic SDK allowed', csp.includes('https://www.gstatic.com')],
+  ['FCM connect-src allowed', csp.includes('https://fcm.googleapis.com') || csp.includes('https://*.googleapis.com')],
   ['connect-src allows data:', /connect-src[^;]*\bdata:/.test(csp)],
   ['frame-src allows blob:', /frame-src[^;]*\bblob:/.test(csp)],
 ];

@@ -26,6 +26,7 @@ import ApplyCustomQuestions from '../../components/apply/ApplyCustomQuestions';
 import { FORM_DRAFT_KEYS } from '../../constants/formDrafts';
 import { useFormDraft } from '../../hooks/useFormDraft';
 import { useNotificationContext } from '../../context/NotificationContext';
+import { isSharedOpportunity } from '../../constants/jobSource';
 
 function parseCustomQuestions(raw) {
   if (!raw) return [];
@@ -152,6 +153,11 @@ export default function ApplyJob() {
       return;
     }
 
+    if (isSharedOpportunity(job)) {
+      setError('Las oportunidades compartidas no admiten postulación formal. Usa el contacto indicado en la publicación.');
+      return;
+    }
+
     if (hasActiveApplication) {
       setError('Ya has enviado una solicitud para esta oferta.');
       return;
@@ -258,6 +264,27 @@ export default function ApplyJob() {
         <p className="p-space-base text-body-small text-app-muted">
           Oferta no encontrada o no disponible.
         </p>
+      </PageContainer>
+    );
+  }
+
+  if (isSharedOpportunity(job)) {
+    return (
+      <PageContainer title="Enviar solicitud" backButton bottomNav={false}>
+        <div className="space-y-space-md p-space-base">
+          <p className="text-body-small text-app-muted">
+            Las oportunidades compartidas no admiten postulación formal. Usa el método de
+            contacto indicado en la publicación.
+          </p>
+          <Button
+            type="button"
+            fullWidth
+            className="btn-primary-mobile !rounded-btn-primary !py-0"
+            onClick={() => navigate(`/personal/jobs/${jobId}`)}
+          >
+            Volver a la oportunidad
+          </Button>
+        </div>
       </PageContainer>
     );
   }

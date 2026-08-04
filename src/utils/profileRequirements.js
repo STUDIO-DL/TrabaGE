@@ -74,6 +74,23 @@ export function isCompanyRequiredComplete(profile) {
 }
 
 /**
+ * Minimum profile fields a personal user needs before publishing
+ * shared job opportunities ("Oportunidades compartidas").
+ */
+export function getSharedOpportunityProfileMissing(profile) {
+  if (!profile) return ['avatar_path', 'full_name', 'about'];
+  const missing = [];
+  if (!hasText(profile.avatar_path)) missing.push('avatar_path');
+  if (!hasText(profile.full_name)) missing.push('full_name');
+  if (!hasText(profile.about)) missing.push('about');
+  return missing;
+}
+
+export function isSharedOpportunityProfileComplete(profile) {
+  return getSharedOpportunityProfileMissing(profile).length === 0;
+}
+
+/**
  * Gates app access (RoleRoute, getHomePath). True when bootstrap identity exists
  * or the profile was explicitly marked complete by an older setup flow.
  */

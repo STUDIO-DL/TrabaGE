@@ -15,6 +15,8 @@ export const candidateCoverPath = (userId) => `${userId}/cover.webp`;
 export const logoPath = (companyId) => `${companyId}/logo.webp`;
 export const companyCoverPath = (companyId) => `${companyId}/cover.webp`;
 export const postImagePath = (userId, postId) => `${userId}/${postId}.webp`;
+export const jobOpportunityImagePath = (userId, jobId) =>
+  `${userId}/opportunities/${jobId}.webp`;
 export const companyVerificationDocPath = (companyId) => `${companyId}/company-document.pdf`;
 export const representativeVerificationDocPath = (companyId) =>
   `${companyId}/representative-document.pdf`;

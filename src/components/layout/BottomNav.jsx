@@ -128,7 +128,7 @@ export default function BottomNav() {
                 ].join(' ')
               }
             >
-              {({ isActive }) => (
+              {() => (
                 <>
                   <span className="relative inline-flex items-center justify-center px-2 py-1">
                     <NavIcon name={icon} />

@@ -22,7 +22,7 @@ const ROUTES = [
   '/favicon.ico',
   '/icons/trabage-icon-192.png',
   '/icons/apple-touch-icon.png',
-  '/OneSignalSDKWorker.js',
+  '/firebase-messaging-sw.js',
   '/personal/feed',
   '/business/feed',
   '/admin',

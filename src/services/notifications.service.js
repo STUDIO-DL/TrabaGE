@@ -150,7 +150,7 @@ export const notificationsService = {
   },
 
   /**
-   * Notify all followers of a company/institution (in-app + OneSignal-ready push).
+   * Notify all followers of a company/institution (in-app + FCM-ready push).
    */
   notifyFollowers: async ({
     targetType,

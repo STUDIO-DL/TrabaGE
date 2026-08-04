@@ -40,7 +40,8 @@ function isNoise(text) {
   return (
     text.includes('Download the React DevTools') ||
     text.includes('[vite]') ||
-    text.includes('OneSignal') && text.includes('already initialized') ||
+    text.includes('Firebase') && text.includes('already initialized') ||
+    text.includes('messaging/') && text.includes('unsupported') ||
     text.includes('Failed to load resource') && text.includes('favicon')
   );
 }

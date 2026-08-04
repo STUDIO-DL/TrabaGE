@@ -7,6 +7,7 @@ import ContentActionMenu from '../../components/common/ContentActionMenu';
 import { isCompanyVerified } from '../../utils/companyVerification';
 import Button from '../../components/ui/Button';
 import AppIcon from '../../components/common/AppIcon';
+import AppAvatar from '../../components/common/AppAvatar';
 import FetchErrorBanner from '../../components/common/FetchErrorBanner';
 import { JobDetailSkeleton } from '../../components/common/Skeleton';
 import TimeAgo from '../../components/common/TimeAgo';
@@ -28,6 +29,13 @@ import { GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { useSavedJobs } from '../../hooks/useSavedJobs';
 import { useSimilarJobAlerts } from '../../hooks/useSimilarJobAlerts';
 import { ROLES } from '../../constants/roles';
+import {
+  getSharedPublisherAvatar,
+  getSharedPublisherName,
+  isSharedOpportunity,
+} from '../../constants/jobSource';
+import { AvatarType } from '../../constants/avatarDefaults';
+import { resolveJobOpportunityImageUrl } from '../../utils/storagePaths';
 
 function JobSection({ title, children }) {
   if (!children) return null;
@@ -116,6 +124,8 @@ export default function JobDetail() {
   const [applicationCount, setApplicationCount] = useState(0);
   const [application, setApplication] = useState(null);
   const company = job?.company_profiles;
+  const shared = isSharedOpportunity(job);
+  const publisherName = getSharedPublisherName(job);
 
   useEffect(() => {
     if (!id || loading || !job) return;
@@ -123,13 +133,13 @@ export default function JobDetail() {
       analyticsService.trackJobViewed(user.id, id, { source: 'job_detail' });
     }
     const companyId = job.company_id || job.company_profiles?.user_id;
-    if (companyId && user?.id !== companyId) {
+    if (companyId && !shared && user?.id !== companyId) {
       void companyAnalyticsService.trackJobView(companyId, id, { source: 'job_detail' });
     }
-  }, [user?.id, id, loading, job]);
+  }, [user?.id, id, loading, job, shared]);
 
   useEffect(() => {
-    if (!id || loading || !job) return;
+    if (!id || loading || !job || shared) return;
 
     jobsService.getApplicationCount(id).then(({ count }) => {
       setApplicationCount(count ?? 0);
@@ -140,9 +150,13 @@ export default function JobDetail() {
         setApplication(data);
       });
     }
-  }, [id, isPreviewMode, job, loading, user?.id]);
+  }, [id, isPreviewMode, job, loading, user?.id, shared]);
 
   const handleApply = () => {
+    if (shared) {
+      showToast('Esta es una oportunidad compartida. Usa el método de contacto indicado.', 'info');
+      return;
+    }
     if (isPreviewMode || !user?.id) {
       showToast(GUEST_MODE_MESSAGE, 'info');
       navigate('/login');
@@ -168,6 +182,10 @@ export default function JobDetail() {
 
   const hasActiveApplication = application && application.status !== 'withdrawn';
   const canUseCandidateActions = role === ROLES.PERSONAL;
+  const opportunityImage = job?.image_path ? resolveJobOpportunityImageUrl(job.image_path) : null;
+  const shareTitle = shared
+    ? (publisherName ? `${job?.title} - ${publisherName}` : job?.title)
+    : (company?.company_name ? `${job?.title} - ${company.company_name}` : job?.title);
 
   if (loading) {
     return (
@@ -206,7 +224,7 @@ export default function JobDetail() {
       actions={
         <ContentActionMenu
           shareUrl={generateJobUrl(id)}
-          shareTitle={company?.company_name ? `${job.title} - ${company.company_name}` : job.title}
+          shareTitle={shareTitle}
           shareText="Encontré esta oferta de empleo en TrabaGE."
           targetType={REPORT_TARGET_TYPES.JOB}
           targetId={id}
@@ -214,14 +232,20 @@ export default function JobDetail() {
       }
       footer={
         <div className="flex items-center gap-space-sm">
-          <Button
-            fullWidth
-            className="btn-primary-mobile !inline-flex !rounded-btn-primary !py-0"
-            onClick={handleApply}
-            disabled={canUseCandidateActions && hasActiveApplication}
-          >
-            {canUseCandidateActions && hasActiveApplication ? 'Ya aplicaste' : 'Aplicar'}
-          </Button>
+          {shared ? (
+            <div className="min-w-0 flex-1 rounded-radius-md border border-app-border bg-app-surface px-space-base py-space-sm text-caption text-app-muted">
+              Oportunidad compartida — no admite postulación formal
+            </div>
+          ) : (
+            <Button
+              fullWidth
+              className="btn-primary-mobile !inline-flex !rounded-btn-primary !py-0"
+              onClick={handleApply}
+              disabled={canUseCandidateActions && hasActiveApplication}
+            >
+              {canUseCandidateActions && hasActiveApplication ? 'Ya aplicaste' : 'Aplicar'}
+            </Button>
+          )}
           {canUseCandidateActions && (
             <Button
               type="button"
@@ -239,37 +263,77 @@ export default function JobDetail() {
     >
       <div className="space-y-space-lg p-space-base pb-space-xl">
         <header className="space-y-space-sm">
+          <p className="text-caption text-app-muted">
+            {shared ? (
+              <>
+                <span aria-hidden="true">👤 </span>
+                <span className="font-medium text-app-text">Oportunidad compartida</span>
+                {publisherName ? (
+                  <span>{` · publicada por '${publisherName}'`}</span>
+                ) : null}
+              </>
+            ) : (
+              <>
+                <span aria-hidden="true">🏢 </span>
+                <span className="font-medium text-app-text">Oferta oficial</span>
+              </>
+            )}
+          </p>
           <h1 className="text-user-content text-title font-semibold tracking-tight text-app-text">
             {job.title}
           </h1>
-          <CompanyNameWithBadge
-            company={company}
-            userId={job.company_id}
-            nameClassName="text-body-small text-app-muted"
-            showUnverifiedLabel
-          />
-          <ApplicationsCounter count={applicationCount} />
+          {shared ? (
+            <div className="flex items-center gap-space-sm">
+              <AppAvatar
+                type={AvatarType.PERSONAL}
+                src={getSharedPublisherAvatar(job)}
+                name={publisherName}
+                size="sm"
+              />
+              {publisherName ? (
+                <p className="text-body-small text-app-muted">{publisherName}</p>
+              ) : null}
+            </div>
+          ) : (
+            <CompanyNameWithBadge
+              company={company}
+              userId={job.company_id}
+              nameClassName="text-body-small text-app-muted"
+              showUnverifiedLabel
+            />
+          )}
+          {!shared ? <ApplicationsCounter count={applicationCount} /> : null}
         </header>
 
-        {!isCompanyVerified(company) && (
+        {!shared && !isCompanyVerified(company) && (
           <p className="text-body-small text-warning-800">
             Esta empresa aún no ha completado el proceso de verificación.
           </p>
         )}
+
+        {opportunityImage ? (
+          <img
+            src={opportunityImage}
+            alt=""
+            className="max-h-72 w-full rounded-radius-md object-cover"
+          />
+        ) : null}
 
         <section className="space-y-space-sm">
           <h2 className="text-body font-semibold text-app-text">Sobre el empleo</h2>
           <div className="space-y-space-xs">
             {locationLine ? <JobMetadataLine>{locationLine}</JobMetadataLine> : null}
             {job.job_type ? <JobMetadataLine>{getJobTypeLabel(job.job_type)}</JobMetadataLine> : null}
-            <JobMetadataLine>{formatSalary(job.salary, job.salary_negotiable)}</JobMetadataLine>
+            {!shared ? (
+              <JobMetadataLine>{formatSalary(job.salary, job.salary_negotiable)}</JobMetadataLine>
+            ) : null}
             {job.created_at ? (
               <p className="flex items-center gap-space-xs text-body-small text-app-muted">
                 <AppIcon icon={Clock} size={ICON_SIZES.sm} className="shrink-0" />
                 Publicado <TimeAgo date={job.created_at} />
               </p>
             ) : null}
-            {job.application_deadline ? (
+            {!shared && job.application_deadline ? (
               <JobMetadataLine>
                 Fecha límite: {job.application_deadline}
               </JobMetadataLine>
@@ -277,7 +341,13 @@ export default function JobDetail() {
           </div>
         </section>
 
-        {company?.description ? (
+        {shared && job.contact_method ? (
+          <JobSection title="Contacto">
+            <p className="whitespace-pre-line">{job.contact_method}</p>
+          </JobSection>
+        ) : null}
+
+        {!shared && company?.description ? (
           <JobSection title="Sobre la empresa">
             <p className="whitespace-pre-line">{company.description}</p>
           </JobSection>
@@ -295,24 +365,26 @@ export default function JobDetail() {
           </JobSection>
         ) : null}
 
-        {requirements.length > 0 ? (
+        {!shared && requirements.length > 0 ? (
           <JobSection title="Requisitos">
             <JobBulletList items={requirements} />
           </JobSection>
         ) : null}
 
-        {benefits.length > 0 ? (
+        {!shared && benefits.length > 0 ? (
           <JobSection title="Beneficios">
             <JobBulletList items={benefits} />
           </JobSection>
         ) : null}
 
-        <SimilarJobAlertToggle
-          userId={user?.id}
-          job={job}
-          canUseCandidateActions={canUseCandidateActions}
-          showToast={showToast}
-        />
+        {!shared ? (
+          <SimilarJobAlertToggle
+            userId={user?.id}
+            job={job}
+            canUseCandidateActions={canUseCandidateActions}
+            showToast={showToast}
+          />
+        ) : null}
       </div>
     </FormPageLayout>
   );

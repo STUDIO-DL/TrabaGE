@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import {
-  setOneSignalPushEnabled,
-  syncOneSignalNotificationTags,
-} from '../config/onesignal';
+  setFcmPushEnabled,
+} from '../config/fcm';
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   NOTIFICATION_PERMISSION_STATUS,
@@ -85,7 +84,6 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
         (normalized.permission_status === NOTIFICATION_PERMISSION_STATUS.GRANTED || isPermissionGranted())
       ) {
         await refreshToken();
-        void syncOneSignalNotificationTags(normalized);
       }
 
       return { data: normalized, error: null };
@@ -101,8 +99,7 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
 
     if (osStatus === NOTIFICATION_PERMISSION_STATUS.GRANTED) {
       if (preferences.push_enabled) {
-        await setOneSignalPushEnabled(true);
-        void syncOneSignalNotificationTags(preferences);
+        await setFcmPushEnabled(true, userId);
         if (preferences.permission_status !== NOTIFICATION_PERMISSION_STATUS.GRANTED) {
           await savePatch({
             permission_status: NOTIFICATION_PERMISSION_STATUS.GRANTED,
@@ -154,7 +151,6 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
         setPreferences(normalized);
         if (normalized.push_enabled && isPermissionGranted()) {
           void refreshToken();
-          void syncOneSignalNotificationTags(normalized);
         }
       })
       .catch((loadError) => {
@@ -197,7 +193,7 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
       }
 
       if (osStatus === NOTIFICATION_PERMISSION_STATUS.GRANTED) {
-        await setOneSignalPushEnabled(true);
+        await setFcmPushEnabled(true, userId);
         const result = await savePatch({
           push_enabled: true,
           permission_status: NOTIFICATION_PERMISSION_STATUS.GRANTED,
@@ -205,7 +201,6 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
         }, 'push_enabled');
         if (!result.error) {
           setPermissionMessage('granted');
-          void syncOneSignalNotificationTags({ ...preferences, push_enabled: true });
           if (isPersonalRole(role)) {
             void syncCandidateJobAlerts(userId, true);
           }
@@ -239,7 +234,6 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
 
       if (!result.error) {
         setPermissionMessage('granted');
-        void syncOneSignalNotificationTags({ ...preferences, push_enabled: true });
         if (isPersonalRole(role)) {
           void syncCandidateJobAlerts(userId, true);
         }

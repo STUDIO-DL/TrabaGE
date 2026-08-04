@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { jobsService } from '../services/jobs.service';
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
+import { isSharedOpportunity } from '../constants/jobSource';
 
 export function useJobs(filters = {}) {
   const [jobs, setJobs] = useState([]);
@@ -41,8 +42,11 @@ export function useJob(jobId, { viewerId = null } = {}) {
     if (!jobId) return;
     setLoading(true);
     jobsService.getJobById(jobId).then(({ data, error: fetchError }) => {
-      const visible =
-        data && (data.status === 'active' || (viewerId && data.company_id === viewerId));
+      const isOwner =
+        viewerId &&
+        (data?.company_id === viewerId ||
+          (isSharedOpportunity(data) && data?.shared_by_user_id === viewerId));
+      const visible = data && (data.status === 'active' || isOwner);
       setJob(visible ? data : null);
       setError(fetchError ? getUserErrorMessage(fetchError, ERROR_ACTION.load_jobs) : null);
       setLoading(false);

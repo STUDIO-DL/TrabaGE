@@ -110,7 +110,8 @@ async function recalculateForCandidate(supabase: ReturnType<typeof createClient>
     supabase
       .from('jobs')
       .select('*, company_profiles(sector, country)')
-      .eq('status', 'active'),
+      .eq('status', 'active')
+      .eq('admin_hidden', false),
   ]);
 
   if (profileResult.error) return { error: profileResult.error };
@@ -150,23 +151,28 @@ async function recalculateForJob(supabase: ReturnType<typeof createClient>, jobI
   if (candidatesResult.error) return { error: candidatesResult.error };
 
   const job = jobResult.data;
-  const jobMatches = (candidatesResult.data ?? [])
+  const scoredCandidates = (candidatesResult.data ?? [])
     .map((candidate) => ({
       user_id: candidate.user_id,
       job_id: jobId,
       score: scoreJob(candidate, job),
-    }))
-    .filter((item) => item.score >= MATCH_THRESHOLD);
+    }));
+
+  const jobMatches = scoredCandidates.filter((item) => item.score >= MATCH_THRESHOLD);
 
   if (jobMatches.length) {
     await supabase.rpc('upsert_job_matches', { p_matches: jobMatches });
   }
 
+  if (job.source_type === 'user' || !job.company_id) {
+    return { error: null };
+  }
+
   const candidateMatches = (candidatesResult.data ?? [])
-    .map((candidate) => ({
+    .map((candidate, index) => ({
       job_id: jobId,
       candidate_id: candidate.user_id,
-      score: scoreJob(candidate, job),
+      score: scoredCandidates[index]?.score ?? 0,
     }))
     .filter((item) => item.score > 0);
 

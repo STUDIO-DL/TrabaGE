@@ -7,7 +7,7 @@ PWA de empleo para Guinea Ecuatorial — "Donde las oportunidades te encuentran"
 - React 19 + Vite
 - Tailwind CSS
 - Supabase (Auth, DB, Storage)
-- OneSignal (push) · Sentry (errors)
+- Firebase Cloud Messaging (push) · Sentry (errors)
 
 ## Setup
 

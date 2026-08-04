@@ -3,7 +3,6 @@ import { normalizeSkillName } from '../utils/normalizeSkill';
 import { executeDelete, executeWrite } from '../utils/supabaseMutation';
 import { reportError } from '../utils/logger';
 
-/** Never request onesignal_player_id — column is revoked for clients. */
 export const CANDIDATE_PROFILE_COLUMNS = [
   'user_id',
   'full_name',
@@ -160,7 +159,7 @@ export const profileService = {
       .eq('user_id', userId)
       .maybeSingle(),
 
-  /** Public directory read — no OneSignal, CV paths, or private internals. */
+  /** Public directory read — no push tokens, CV paths, or private internals. */
   getPublicCandidateProfile: (userId) =>
     supabase
       .from('candidate_profiles_public')
@@ -168,21 +167,17 @@ export const profileService = {
       .eq('user_id', userId)
       .maybeSingle(),
 
-  upsertCandidateProfile: (data) => {
-    const safeData = { ...(data ?? {}) };
-    delete safeData.onesignal_player_id;
-    return executeWrite(
+  upsertCandidateProfile: (data) =>
+    executeWrite(
       supabase
         .from('candidate_profiles')
-        .upsert(safeData, { onConflict: 'user_id' })
+        .upsert(data ?? {}, { onConflict: 'user_id' })
         .select(CANDIDATE_PROFILE_COLUMNS)
         .maybeSingle(),
-    );
-  },
+    ),
 
   updateCandidateProfile: (userId, data) => {
     const safeData = { ...(data ?? {}) };
-    delete safeData.onesignal_player_id;
     delete safeData.user_id;
     return executeWrite(
       supabase
@@ -193,9 +188,6 @@ export const profileService = {
         .maybeSingle(),
     );
   },
-
-  updateOneSignalPlayerId: async (_userId, playerId) =>
-    supabase.rpc('set_onesignal_player_id', { p_player_id: playerId ?? '' }),
 
   /** Avoid nested embeds: intro_education_id FK makes education(*) ambiguous (PGRST201). */
   getCandidateFullProfile: async (userId) => {

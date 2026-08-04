@@ -37,6 +37,7 @@ function rankSearchResults(jobs, userProfile, query) {
       job.description,
       job.city,
       job.company_profiles?.company_name,
+      job.publisher?.full_name,
       ...(job.required_skills ?? []),
     ]
       .filter(Boolean)

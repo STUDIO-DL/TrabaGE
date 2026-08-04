@@ -1,14 +1,14 @@
 /**
- * Send a test OneSignal push to the logged-in user via send_push edge function.
+ * Send a test FCM push to the logged-in user via send_push edge function.
  *
  * Usage:
- *   npm run test-onesignal-push
- *   TEST_LOGIN_EMAIL=user@example.com TEST_LOGIN_PASSWORD=secret npm run test-onesignal-push
+ *   npm run test-fcm-push
+ *   TEST_LOGIN_EMAIL=user@example.com TEST_LOGIN_PASSWORD=secret npm run test-fcm-push
  *
  * Prerequisites:
- * - .env.local with VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
- * - OneSignal secrets deployed on send_push edge function
- * - User has granted push permission and has push_subscriptions row
+ * - .env.local with VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY + VITE_FIREBASE_*
+ * - Firebase service account secrets deployed on send_push edge function
+ * - User has granted push permission and has push_subscriptions.fcm_token row
  * - For browser invoke from localhost: send_push CORS allowlist includes localhost:5173
  */
 
@@ -93,7 +93,7 @@ async function main() {
 
   const { data: subscriptions, error: subsError } = await supabase
     .from('push_subscriptions')
-    .select('id, onesignal_subscription_id, is_active, platform, updated_at')
+    .select('id, fcm_token, is_active, platform, updated_at')
     .eq('user_id', userId)
     .eq('is_active', true)
     .order('updated_at', { ascending: false })
@@ -105,13 +105,12 @@ async function main() {
     console.warn('⚠️  Sin filas activas en push_subscriptions para este usuario.');
     console.log('   1. Abre http://localhost:5173 (o la PWA) e inicia sesión');
     console.log('   2. Concede permiso de notificaciones del sistema');
-    console.log('   3. Confirma fila en push_subscriptions y vuelve a ejecutar');
+    console.log('   3. Confirma fila con fcm_token en push_subscriptions y vuelve a ejecutar');
   } else {
     console.log('📱 Suscripciones activas:', subscriptions.length);
     for (const row of subscriptions) {
-      console.log(
-        `   - ${row.platform ?? 'web'} · ${String(row.onesignal_subscription_id).slice(0, 8)}… · ${row.updated_at}`,
-      );
+      const tokenPreview = row.fcm_token ? `${String(row.fcm_token).slice(0, 12)}…` : '(sin token)';
+      console.log(`   - ${row.platform ?? 'web'} · ${tokenPreview} · ${row.updated_at}`);
     }
   }
 
@@ -122,7 +121,7 @@ async function main() {
 
   if (preflightError) {
     console.error('❌ RPC send_test_push_notification:', preflightError.message);
-    console.log('\nAsegúrate de haber aplicado la migración 090 y de tener push activado en el dispositivo.');
+    console.log('\nAsegúrate de haber aplicado la migración 133 y de tener push activado en el dispositivo.');
     process.exit(1);
   }
 
@@ -162,12 +161,8 @@ async function main() {
 
   console.log('✅ Resultado send_push:', JSON.stringify(pushResult, null, 2));
 
-  if (pushResult?.onesignal?.id || pushResult?.id) {
-    console.log('✅ OneSignal aceptó el envío (id presente en respuesta).');
-  }
-
   if (pushResult?.sent > 0) {
-    console.log('\n🎉 Push enviado a OneSignal.');
+    console.log('\n🎉 Push enviado vía FCM.');
     console.log('   Criterio ✅: debes ver el banner del SO (no solo toast/campana in-app).');
     console.log('   Prueba: foreground, background, pestaña cerrada, dispositivo bloqueado si aplica.');
   } else if (pushResult?.skipped > 0) {
@@ -175,7 +170,7 @@ async function main() {
   } else if (pushResult?.deduped > 0) {
     console.log('\nℹ️  Push deduplicado — espera 10 minutos o cambia el payload.');
   } else {
-    console.log('\n⚠️  No se envió ningún push — revisa suscripciones OneSignal y secrets en Supabase.');
+    console.log('\n⚠️  No se envió ningún push — revisa tokens FCM y secrets FIREBASE_* en Supabase.');
   }
 
   await supabase.auth.signOut();

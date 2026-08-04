@@ -6,6 +6,7 @@ import { followsService, FOLLOWS_TARGET } from './follows.service';
 import { applicationsService } from './applications.service';
 import { reportError } from '../utils/logger';
 import { isPreviewUserId } from '../constants/preview';
+import { isOfficialJob } from '../constants/jobSource';
 
 async function buildCandidateProfile(userId) {
   const [profileResult, followsResult, applicationsResult] = await Promise.all([
@@ -42,7 +43,7 @@ export const jobMatchesService = {
   getUserMatches: (userId, { minScore = 1, limit = 50 } = {}) =>
     supabase
       .from('job_matches')
-      .select('job_id, score, created_at, jobs(*, company_profiles(company_name, logo_path, verified_status, is_verified, verification_status, sector))')
+      .select('job_id, score, created_at, jobs(*, company_profiles(company_name, logo_path, verified_status, is_verified, verification_status, sector), publisher:candidate_profiles!jobs_shared_by_user_id_fkey(full_name, avatar_path))')
       .eq('user_id', userId)
       .gte('score', minScore)
       .order('score', { ascending: false })
@@ -79,6 +80,8 @@ export const jobMatchesService = {
   },
 
   cacheJobCandidateScores: async (job, candidates) => {
+    if (!isOfficialJob(job)) return { data: [], error: null };
+
     const matches = candidates
       .map((candidate) => ({
         job_id: job.id,

@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase';
 import { authService, isEmailVerified } from '../services/auth.service';
 import { isAuthConfirmPath } from '../constants/authUrls';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
-import { clearOneSignalUserId, bindOneSignalUser, isOneSignalConfigured } from '../config/onesignal';
+import { clearFcmUser, bindFcmUser, isFcmConfigured } from '../config/fcm';
 import { notificationPreferencesService } from '../services/notificationPreferences.service';
 import {
   ROLE_HOME,
@@ -210,7 +210,7 @@ export function AuthProvider({ children }) {
       setSetupComplete(false);
       clearAuthResumeCache();
       clearSentryUser();
-      void clearOneSignalUserId();
+      void clearFcmUser();
       if (gen === hydrateGenRef.current) setHydrating(false);
       return;
     }
@@ -227,7 +227,7 @@ export function AuthProvider({ children }) {
       setRole(null);
       setSetupComplete(false);
       clearSentryUser();
-      void clearOneSignalUserId();
+      void clearFcmUser();
       if (gen === hydrateGenRef.current) setHydrating(false);
 
       if (!onConfirmRoute) {
@@ -377,8 +377,8 @@ export function AuthProvider({ children }) {
 
       void notificationPreferencesService.getOrCreate(currentUser.id);
 
-      if (isOneSignalConfigured()) {
-        void bindOneSignalUser(currentUser.id, {
+      if (isFcmConfigured()) {
+        void bindFcmUser(currentUser.id, {
           role: userRole,
           city: candidateResult?.data?.city ?? companyResult?.data?.city ?? null,
           sector: candidateResult?.data?.sector ?? companyResult?.data?.sector ?? null,
@@ -399,7 +399,7 @@ export function AuthProvider({ children }) {
           setSetupComplete(false);
           clearAuthResumeCache();
           clearSentryUser();
-          void clearOneSignalUserId();
+          void clearFcmUser();
           await supabase.auth.signOut({ scope: 'local' });
           return;
         }
@@ -476,11 +476,10 @@ export function AuthProvider({ children }) {
       hydratePreview();
       setLoading(false);
     } else {
-      authService
-        .getSession()
-        .then(({ data }) => {
+      Promise.resolve(authService.getSession())
+        .then(({ data } = {}) => {
           if (!mounted) return;
-          return hydrateUser(data.session);
+          return hydrateUser(data?.session ?? null);
         })
         .catch((err) => {
           reportError(err, { area: 'auth_initial_session' });
@@ -794,9 +793,9 @@ export function AuthProvider({ children }) {
     setLoading(false);
 
     // Deactivate push while the auth session still exists in the client.
-    if (isOneSignalConfigured()) {
+    if (isFcmConfigured()) {
       try {
-        await clearOneSignalUserId();
+        await clearFcmUser();
       } catch {
         // Logout must continue even if push cleanup fails.
       }

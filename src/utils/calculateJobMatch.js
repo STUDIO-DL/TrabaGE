@@ -7,8 +7,12 @@ import {
 } from '../constants/matchingEquivalences';
 import { normalizeText, tokenize, uniqueTokens } from './matchingTokens';
 import { parseRequirements } from './jobParsing';
+import { getSharedPublisherName, isOfficialJob } from '../constants/jobSource';
 
 export { MATCH_THRESHOLD };
+
+/** Keeps official company offers ahead of shared opportunities when scores are close. */
+const OFFICIAL_OFFER_PRIORITY_BOOST = 4;
 
 const EXPERIENCE_KEYWORDS = {
   none: ['sin experiencia', 'no experience', 'entry level', 'primer empleo'],
@@ -25,6 +29,7 @@ function buildJobHaystack(job) {
     Array.isArray(requirements) ? requirements.join(' ') : job.requirements,
     job.company_profiles?.sector,
     job.company_profiles?.company_name,
+    getSharedPublisherName(job),
   ]
     .filter(Boolean)
     .join(' ')
@@ -374,7 +379,15 @@ export function calculateJobMatch(user, job) {
   score += recentActivityScore(user, job);
   score += profileCompletenessBoost(user);
 
+  if (isOfficialJob(job)) {
+    score += OFFICIAL_OFFER_PRIORITY_BOOST;
+  }
+
   return Math.min(100, Math.max(0, score));
+}
+
+function officialPriority(job) {
+  return isOfficialJob(job) ? 1 : 0;
 }
 
 export function rankItemsByMatchScore(items, userProfile, getJobFromItem = (item) => item) {
@@ -387,6 +400,7 @@ export function rankItemsByMatchScore(items, userProfile, getJobFromItem = (item
     .sort(
       (a, b) =>
         b.score - a.score ||
+        officialPriority(getJobFromItem(b.item)) - officialPriority(getJobFromItem(a.item)) ||
         new Date(getJobFromItem(b.item)?.created_at ?? 0) -
           new Date(getJobFromItem(a.item)?.created_at ?? 0),
     );

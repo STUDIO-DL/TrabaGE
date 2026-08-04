@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase';
+import { isSupabaseConfigured, supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
 
 const DEFAULT_MESSAGE =
@@ -30,6 +30,10 @@ export const maintenanceService = {
   DEFAULT_MESSAGE,
 
   getStatus: async () => {
+    if (!isSupabaseConfigured) {
+      return { data: normalizeStatus(null), error: null };
+    }
+
     const { data, error } = await supabase.rpc('get_maintenance_status');
     if (error) {
       reportError(error, { area: 'maintenance_get_status' });
@@ -77,6 +81,10 @@ export const maintenanceService = {
   },
 
   subscribe: (onChange) => {
+    if (!isSupabaseConfigured) {
+      return () => {};
+    }
+
     const channel = supabase
       .channel('maintenance_settings_live')
       .on(

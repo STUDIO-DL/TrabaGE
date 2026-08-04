@@ -1,6 +1,6 @@
 # TrabaGE — Runbook OPS pre-lanzamiento (beta)
 
-Referencia operativa para **Netlify**, **Supabase**, **Resend**, **OneSignal** y **Sentry**.  
+Referencia operativa para **Netlify**, **Supabase**, **Resend**, **Firebase Cloud Messaging** y **Sentry**.  
 Proyecto Supabase: `jqzbpdojwzopwuaapqgl` · Netlify: `trabage` · Dominio: `https://trabage.org`
 
 > **Regla:** nunca commitear secretos. Los valores van solo en dashboards o `supabase secrets set`.
@@ -17,8 +17,13 @@ Proyecto Supabase: `jqzbpdojwzopwuaapqgl` · Netlify: `trabage` · Dominio: `htt
 | `VITE_SUPABASE_ANON_KEY` | Sí | Supabase → API → anon / publishable key (`sb_publishable_...`) |
 | `VITE_APP_URL` | Sí | `https://trabage.org` |
 | `VITE_APP_ENV` | Sí | `production` (también en `netlify.toml` → `[build.environment]`) |
-| `VITE_ONESIGNAL_APP_ID` | Sí (push) | OneSignal → Settings → Keys & IDs → OneSignal App ID |
-| `VITE_ONESIGNAL_SAFARI_WEB_ID` | No | OneSignal → Safari Web ID (solo Safari/macOS) |
+| `VITE_FIREBASE_API_KEY` | Sí (push) | Firebase Console → Project settings → Web app config |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Sí (push) | Firebase web config |
+| `VITE_FIREBASE_PROJECT_ID` | Sí (push) | Firebase web config |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Sí (push) | Firebase web config |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Sí (push) | Firebase web config |
+| `VITE_FIREBASE_APP_ID` | Sí (push) | Firebase web config |
+| `VITE_FIREBASE_VAPID_KEY` | Sí (push) | Firebase → Cloud Messaging → Web Push certificates |
 | `VITE_SENTRY_DSN` | Recomendada | Sentry → Project → Client Keys (DSN) |
 
 **Pasos Netlify**
@@ -51,8 +56,9 @@ npx netlify-cli env:list --json
 | `SEND_EMAIL_HOOK_SECRET` | `send_auth_email` | Generado en Auth Hook (ver §2.1) |
 | `WELCOME_WEBHOOK_SECRET` | `send_welcome_email` | String aleatorio; mismo valor en Database Webhook |
 | `TRABAGE_ALLOWED_ORIGIN` | CORS en varias | `https://trabage.org` |
-| `ONESIGNAL_APP_ID` | `send_push` | Mismo App ID que frontend |
-| `ONESIGNAL_REST_API_KEY` | `send_push` | OneSignal → REST API Key (**nunca** en Netlify) |
+| `FIREBASE_PROJECT_ID` | `send_push` | Mismo project id que frontend |
+| `FIREBASE_CLIENT_EMAIL` | `send_push` | Service account email (**nunca** en Netlify) |
+| `FIREBASE_PRIVATE_KEY` | `send_push` | Service account private key (**nunca** en Netlify) |
 | `APP_URL` | welcome (CTA links) | Opcional; default `https://trabage.org` |
 | `MATCHING_RECALC_SECRET` | `process_matching_recalc` | **Pendiente** — generar y configurar cron |
 
@@ -180,14 +186,13 @@ Verificar buckets y políticas: `candidate-avatars`, `company-logos`, `post-imag
 
 ---
 
-## 4. OneSignal
+## 4. Firebase Cloud Messaging
 
-1. [OneSignal Dashboard](https://onesignal.com) → App web TrabaGE
-2. **Site URL:** `https://trabage.org`
-3. **Allowed origins:** `https://trabage.org`, `http://localhost:5173`
-4. Copiar **App ID** → Netlify `VITE_ONESIGNAL_APP_ID` + secret `ONESIGNAL_APP_ID`
-5. **REST API Key** → solo Supabase `ONESIGNAL_REST_API_KEY`
-6. (Opcional) Safari Web ID → `VITE_ONESIGNAL_SAFARI_WEB_ID`
+1. [Firebase Console](https://console.firebase.google.com) → proyecto web TrabaGE
+2. Copiar `firebaseConfig` → Netlify `VITE_FIREBASE_*`
+3. Cloud Messaging → Web Push certificates → VAPID → `VITE_FIREBASE_VAPID_KEY`
+4. Service account private key → solo Supabase `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
+5. Ver `docs/PUSH_FCM.md`
 
 ---
 
@@ -231,14 +236,14 @@ supabase db push          # solo si Remote va retrasado
 |---|------|--------|
 | 1 | Migraciones 001–073 aplicadas en remoto | Verificar con CLI |
 | 2 | Edge functions desplegadas (5) | Verificar con CLI |
-| 3 | Secrets Supabase (Resend, hooks, OneSignal) | Dashboard / `secrets list` |
+| 3 | Secrets Supabase (Resend, hooks, FCM) | Dashboard / `secrets list` |
 | 4 | Auth Send Email hook activo + secreto alineado | Dashboard |
 | 5 | Webhook `welcome_email_outbox` | Dashboard |
 | 6 | Resend dominio verificado | Resend Dashboard |
 | 7 | Netlify env Production completo | Netlify Dashboard |
 | 8 | Redeploy Netlify tras env | Manual |
 | 9 | Google OAuth producción | Supabase + Google Cloud |
-| 10 | OneSignal origins + keys | OneSignal + secrets |
+| 10 | Firebase FCM config + service account secrets | Firebase + secrets |
 | 11 | Sentry DSN en Netlify | Netlify |
 | 12 | Cron `process_matching_recalc` + `MATCHING_RECALC_SECRET` | Dashboard |
 | 13 | Smoke: registro, confirm, welcome, reset password | Manual |

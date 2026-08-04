@@ -1,18 +1,22 @@
-import OneSignal from 'react-onesignal';
-import { isOneSignalConfigured, initOneSignal } from '../config/onesignal';
+import {
+  getCurrentFcmToken,
+  getBoundFcmUserId,
+  isFcmConfigured,
+  initFcm,
+} from '../config/fcm';
 import { reportError } from './logger';
 
 /**
- * DEV / ops diagnostic snapshot for real Web Push (OneSignal).
+ * DEV / ops diagnostic snapshot for real Web Push (FCM).
  * Never throw; never expose secrets. Safe to show human summaries in UI.
  *
  * @returns {Promise<{
  *   configured: boolean,
  *   permission: string,
  *   permissionGranted: boolean,
- *   subscriptionId: string|null,
- *   externalId: string|null,
- *   optedIn: boolean|null,
+ *   fcmToken: string|null,
+ *   boundUserId: string|null,
+ *   pushActive: boolean|null,
  *   serviceWorkerActive: boolean,
  *   serviceWorkerScript: string|null,
  *   secureContext: boolean,
@@ -23,21 +27,21 @@ import { reportError } from './logger';
  */
 export async function getPushDiagnostics() {
   const blockers = [];
-  const configured = isOneSignalConfigured();
+  const configured = isFcmConfigured();
   const secureContext = typeof window !== 'undefined' ? window.isSecureContext : false;
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
 
   let permission = 'unsupported';
   let permissionGranted = false;
-  let subscriptionId = null;
-  let externalId = null;
-  let optedIn = null;
+  let fcmToken = null;
+  let boundUserId = null;
+  let pushActive = null;
   let serviceWorkerActive = false;
   let serviceWorkerScript = null;
 
   if (!configured) {
-    blockers.push('OneSignal no está configurado (falta VITE_ONESIGNAL_APP_ID).');
+    blockers.push('FCM no está configurado (faltan VITE_FIREBASE_* o VITE_FIREBASE_VAPID_KEY).');
   }
 
   if (typeof window !== 'undefined' && !secureContext && !isLocalhost) {
@@ -74,45 +78,41 @@ export async function getPushDiagnostics() {
 
   if (configured) {
     try {
-      await initOneSignal();
-      subscriptionId =
-        OneSignal.User?.PushSubscription?.id ??
-        OneSignal.User?.pushSubscription?.id ??
-        null;
-      externalId = OneSignal.User?.externalId ?? null;
-      const subscription = OneSignal.User?.PushSubscription ?? OneSignal.User?.pushSubscription;
-      optedIn = typeof subscription?.optedIn === 'boolean' ? subscription.optedIn : null;
+      await initFcm();
+      fcmToken = getCurrentFcmToken();
+      boundUserId = getBoundFcmUserId();
+      pushActive = permissionGranted && Boolean(fcmToken);
 
-      if (!subscriptionId) {
-        blockers.push('No hay suscripción OneSignal en este dispositivo.');
+      if (!fcmToken) {
+        blockers.push('No hay token FCM en este dispositivo.');
       }
-      if (!externalId) {
-        blockers.push('OneSignal no tiene external_id (inicia sesión de nuevo).');
+      if (!boundUserId) {
+        blockers.push('No hay usuario vinculado al token FCM (inicia sesión de nuevo).');
       }
-      if (optedIn === false) {
-        blockers.push('La suscripción push no está opted-in.');
+      if (pushActive === false) {
+        blockers.push('La suscripción push no está activa.');
       }
     } catch (error) {
-      reportError(error, { area: 'push_diagnostics_onesignal' });
-      blockers.push('No se pudo leer el estado de OneSignal.');
+      reportError(error, { area: 'push_diagnostics_fcm' });
+      blockers.push('No se pudo leer el estado de FCM.');
     }
   }
 
   const readyForTestPush =
     configured &&
     permissionGranted &&
-    Boolean(subscriptionId) &&
-    Boolean(externalId) &&
-    optedIn !== false &&
+    Boolean(fcmToken) &&
+    Boolean(boundUserId) &&
+    pushActive !== false &&
     blockers.length === 0;
 
   return {
     configured,
     permission,
     permissionGranted,
-    subscriptionId,
-    externalId,
-    optedIn,
+    fcmToken,
+    boundUserId,
+    pushActive,
     serviceWorkerActive,
     serviceWorkerScript,
     secureContext,

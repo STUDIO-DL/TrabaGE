@@ -9,7 +9,7 @@ import {
   NOTIFICATION_SAVED_COPY,
 } from '../../constants/notificationPreferences';
 import { useNotificationContext } from '../../context/NotificationContext';
-import { isOneSignalConfigured } from '../../config/onesignal';
+import { isFcmConfigured } from '../../config/fcm';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { rolePath } from '../../constants/roles';
@@ -208,9 +208,9 @@ export default function NotificationPreferencesPanel({ accountType }) {
       if (import.meta.env.DEV) {
         console.info('[TrabaGE] push diagnostics', {
           permission: diagnostics.permission,
-          subscriptionId: diagnostics.subscriptionId,
-          externalId: diagnostics.externalId,
-          optedIn: diagnostics.optedIn,
+          fcmToken: diagnostics.fcmToken ? `${String(diagnostics.fcmToken).slice(0, 12)}…` : null,
+          boundUserId: diagnostics.boundUserId,
+          pushActive: diagnostics.pushActive,
           serviceWorkerActive: diagnostics.serviceWorkerActive,
           serviceWorkerScript: diagnostics.serviceWorkerScript,
           blockers: diagnostics.blockers,
@@ -227,7 +227,7 @@ export default function NotificationPreferencesPanel({ accountType }) {
       const link = getNotificationsInboxPath(rolePath(activeRole, ''));
 
       // Self notifyUser is blocked by create_notification (no self in-app).
-      // Use send_push self-path (same as scripts/test-onesignal-push.mjs).
+      // Use send_push self-path (same as scripts/test-fcm-push.mjs).
       const { data: pushResult, error } = await supabase.functions.invoke('send_push', {
         body: {
           recipient_id: user.id,
@@ -312,9 +312,9 @@ export default function NotificationPreferencesPanel({ accountType }) {
           </div>
         ) : null}
 
-        {!isOneSignalConfigured() ? (
+        {!isFcmConfigured() ? (
           <div className="mt-4 rounded-radius-lg border border-amber-100 bg-amber-50 px-4 py-3 text-caption leading-relaxed text-warning-800">
-            Push del sistema no disponible en este entorno. Configura <code className="font-mono">VITE_ONESIGNAL_APP_ID</code> en <code className="font-mono">.env.local</code> y reinicia el servidor. Las notificaciones in-app seguirán funcionando.
+            Push del sistema no disponible en este entorno. Configura <code className="font-mono">VITE_FIREBASE_*</code> y <code className="font-mono">VITE_FIREBASE_VAPID_KEY</code> en <code className="font-mono">.env.local</code> y reinicia el servidor. Las notificaciones in-app seguirán funcionando.
           </div>
         ) : null}
 

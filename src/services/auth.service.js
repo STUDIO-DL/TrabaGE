@@ -22,7 +22,7 @@ import {
   GOOGLE_NO_ACCOUNT_TITLE,
 } from '../constants/googleAuth';
 import { reportError } from '../utils/logger';
-import { clearOneSignalUserId, isOneSignalConfigured } from '../config/onesignal';
+import { clearFcmUser, isFcmConfigured } from '../config/fcm';
 import {
   clearSignupInflight,
   isPendingSignupEmail,
@@ -1234,9 +1234,9 @@ export const authService = {
    * @param {{ reasonCode?: string, reasonOther?: string, rating?: number|null, improvementComment?: string }} [feedback]
    */
   deleteAccount: async (feedback = {}) => {
-    if (isOneSignalConfigured()) {
+    if (isFcmConfigured()) {
       try {
-        await clearOneSignalUserId();
+        await clearFcmUser();
       } catch {
         // Continue — account deletion must not fail on push cleanup.
       }
@@ -1350,7 +1350,7 @@ export const authService = {
     return retry;
   },
 
-  getSession: () => {
+  getSession: async () => {
     if (!isSupabaseConfigured) {
       return configError();
     }

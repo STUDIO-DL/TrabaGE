@@ -24,7 +24,8 @@ const PUBLIC_ROUTES = [
 const CONSOLE_IGNORE = [
   /Download the React DevTools/,
   /Failed to load resource.*favicon/,
-  /OneSignal/,
+  /firebase/,
+  /FCM/,
   /Sentry/,
   /Manifest/,
   /service worker/,

@@ -4,10 +4,15 @@ import ContentActionMenu from '../common/ContentActionMenu';
 import { Bookmark, ICON_SIZES } from '../../constants/icons';
 import AppAvatar from '../common/AppAvatar';
 import CompanyNameWithBadge from '../company/CompanyNameWithBadge';
-import { avatarTypeFromCompanyProfile } from '../../constants/avatarDefaults';
+import { AvatarType, avatarTypeFromCompanyProfile } from '../../constants/avatarDefaults';
 import { REPORT_TARGET_TYPES } from '../../constants/reportReasons';
 import { generateJobUrl } from '../../utils/generateShareUrl';
 import { getWorkModeLabel } from '../../constants/workModes';
+import {
+  getSharedPublisherAvatar,
+  getSharedPublisherName,
+  isSharedOpportunity,
+} from '../../constants/jobSource';
 
 function JobLocationLine({ city, workMode }) {
   if (!city && !workMode) return null;
@@ -25,6 +30,28 @@ function JobLocationLine({ city, workMode }) {
   );
 }
 
+function JobSourceBadge({ job }) {
+  if (isSharedOpportunity(job)) {
+    const publisherName = getSharedPublisherName(job);
+    return (
+      <p className="mb-1.5 text-caption leading-tight text-app-muted">
+        <span aria-hidden="true">👤 </span>
+        <span className="font-medium text-app-text">Oportunidad compartida</span>
+        {publisherName ? (
+          <span className="text-app-subtle">{` · publicada por '${publisherName}'`}</span>
+        ) : null}
+      </p>
+    );
+  }
+
+  return (
+    <p className="mb-1.5 text-caption leading-tight text-app-muted">
+      <span aria-hidden="true">🏢 </span>
+      <span className="font-medium text-app-text">Oferta oficial</span>
+    </p>
+  );
+}
+
 export default function JobCard({
   job,
   saved = false,
@@ -35,9 +62,16 @@ export default function JobCard({
 
   if (!job) return null;
 
+  const shared = isSharedOpportunity(job);
   const company = job.company_profiles;
-  const avatarType = avatarTypeFromCompanyProfile(company);
+  const publisherName = getSharedPublisherName(job);
+  const avatarType = shared ? AvatarType.PERSONAL : avatarTypeFromCompanyProfile(company);
+  const avatarSrc = shared ? getSharedPublisherAvatar(job) : company?.logo_path;
+  const avatarName = shared ? publisherName : company?.company_name;
   const detailPath = `/personal/jobs/${job.id}`;
+  const shareTitle = shared
+    ? (publisherName ? `${job.title} - ${publisherName}` : job.title)
+    : (company?.company_name ? `${job.title} - ${company.company_name}` : job.title);
 
   const openDetails = () => {
     navigate(detailPath);
@@ -74,12 +108,14 @@ export default function JobCard({
         {job.title}
       </Link>
 
+      <JobSourceBadge job={job} />
+
       <div className="flex items-start gap-3">
         <AppAvatar
           type={avatarType}
-          src={company?.logo_path}
-          name={company?.company_name}
-          alt={company?.company_name}
+          src={avatarSrc}
+          name={avatarName}
+          alt={avatarName}
           size="md"
           variant="rounded"
           className="!rounded-radius-sm shrink-0"
@@ -90,13 +126,21 @@ export default function JobCard({
             {job.title}
           </h3>
 
-          <CompanyNameWithBadge
-            company={company}
-            userId={job.company_id}
-            linkToProfile={false}
-            nameClassName="text-caption leading-tight text-app-muted truncate"
-            className="max-w-full"
-          />
+          {shared ? (
+            publisherName ? (
+              <p className="truncate text-caption leading-tight text-app-muted">
+                {publisherName}
+              </p>
+            ) : null
+          ) : (
+            <CompanyNameWithBadge
+              company={company}
+              userId={job.company_id}
+              linkToProfile={false}
+              nameClassName="text-caption leading-tight text-app-muted truncate"
+              className="max-w-full"
+            />
+          )}
 
           <JobLocationLine city={job.city} workMode={job.work_mode} />
         </div>
@@ -108,7 +152,7 @@ export default function JobCard({
         >
           <ContentActionMenu
             shareUrl={generateJobUrl(job.id)}
-            shareTitle={company?.company_name ? `${job.title} - ${company.company_name}` : job.title}
+            shareTitle={shareTitle}
             shareText="Encontré esta oferta de empleo en TrabaGE."
             targetType={REPORT_TARGET_TYPES.JOB}
             targetId={job.id}

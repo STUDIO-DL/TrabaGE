@@ -1,18 +1,12 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
-
-import { isOneSignalConfigured, sendOneSignalNotification } from '../_shared/onesignal.ts';
-
-
-
+import { isFcmConfigured, sendFcmNotification } from '../_shared/fcm.ts';
 /** Production + local Vite origins. Extra origins via TRABAGE_ALLOWED_ORIGIN (comma-separated). */
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://trabage.org',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ];
-
 function resolveAllowedOrigins(): string[] {
   const fromEnv = (Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ?? '')
     .split(',')
@@ -20,7 +14,6 @@ function resolveAllowedOrigins(): string[] {
     .filter(Boolean);
   return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...fromEnv])];
 }
-
 function buildCorsHeaders(requestOrigin: string | null): Record<string, string> {
   const allowed = resolveAllowedOrigins();
   const origin = (requestOrigin ?? '').replace(/\/$/, '');
@@ -31,373 +24,218 @@ function buildCorsHeaders(requestOrigin: string | null): Record<string, string> 
     'Vary': 'Origin',
   };
 }
-
 /** Set at the start of each request so jsonResponse reflects the caller Origin. */
 let activeCorsHeaders = buildCorsHeaders(null);
-
 const DEDUP_WINDOW_MS = 10 * 60 * 1000;
-
 const PUSH_BATCH_SIZE = 2000;
-
 function jsonResponse(body: Record<string, unknown>, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...activeCorsHeaders, 'Content-Type': 'application/json' },
   });
 }
-
-
-
 function buildDedupKey(userId: string, notificationType: string, data: Record<string, unknown> = {}) {
-
   const suffix =
-
     String(data.message_id ?? '') ||
-
     String(data.conversation_id ?? '') ||
-
     String(data.job_id ?? '') ||
-
     String(data.application_id ?? '') ||
-
     String(data.post_id ?? '') ||
-
     String(data.comment_id ?? '') ||
-
     String(data.follower_id ?? '') ||
-
     String(data.target_id ?? '') ||
-
     String(data.request_id ?? '') ||
-
     'general';
-
   return `${notificationType}:${userId}:${suffix}`;
-
+}
+function chunkArray<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    chunks.push(items.slice(i, i + size));
+  }
+  return chunks;
+}
+async function isAdminUser(admin: ReturnType<typeof createClient>, userId: string) {
+  const { data } = await admin
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .maybeSingle();
+  return data?.role === 'admin';
 }
 
+async function loadFcmTokensForUsers(
+  admin: ReturnType<typeof createClient>,
+  userIds: string[],
+): Promise<Array<{ user_id: string; fcm_token: string }>> {
+  if (userIds.length === 0) return [];
+  const { data, error } = await admin.rpc('get_push_subscriptions_for_users', {
+    p_user_ids: userIds,
+  });
+  if (error || !Array.isArray(data)) return [];
+  return data
+    .map((row: { user_id?: string; fcm_token?: string }) => ({
+      user_id: String(row.user_id ?? ''),
+      fcm_token: String(row.fcm_token ?? ''),
+    }))
+    .filter((row) => row.user_id && row.fcm_token);
+}
 
+async function deactivateInvalidTokens(
+  admin: ReturnType<typeof createClient>,
+  tokens: string[],
+) {
+  for (const token of tokens) {
+    await admin.rpc('remove_invalid_push_subscription', { p_fcm_token: token });
+  }
+}
 
-function chunkArray<T>(items: T[], size: number): T[][] {
-
-  const chunks: T[][] = [];
-
-  for (let i = 0; i < items.length; i += size) {
-
-    chunks.push(items.slice(i, i + size));
-
+async function sendFcmToUserIds(
+  admin: ReturnType<typeof createClient>,
+  userIds: string[],
+  title: string,
+  body: string,
+  stringData: Record<string, string>,
+  appUrl: string,
+  options: { iosBadgeCount?: number; link?: string } = {},
+) {
+  const subscriptions = await loadFcmTokensForUsers(admin, userIds);
+  const tokens = subscriptions.map((row) => row.fcm_token);
+  if (tokens.length === 0) {
+    return {
+      ok: false,
+      error: 'No hay tokens FCM activos',
+      recipients: 0,
+      invalidTokens: [] as string[],
+      messageIds: [] as string[],
+    };
   }
 
-  return chunks;
+  const result = await sendFcmNotification({
+    title,
+    body,
+    data: stringData,
+    link: options.link,
+    tokens,
+    iosBadgeCount: options.iosBadgeCount,
+  }, appUrl);
 
+  if (result.invalidTokens?.length) {
+    await deactivateInvalidTokens(admin, result.invalidTokens);
+  }
+
+  if (result.ok) {
+    const touchedUsers = [...new Set(subscriptions.map((row) => row.user_id))];
+    await admin
+      .from('push_subscriptions')
+      .update({ last_used_at: new Date().toISOString() })
+      .in('user_id', touchedUsers)
+      .eq('is_active', true);
+  }
+
+  return result;
 }
-
-
-
-async function isAdminUser(admin: ReturnType<typeof createClient>, userId: string) {
-
-  const { data } = await admin
-
-    .from('user_roles')
-
-    .select('role')
-
-    .eq('user_id', userId)
-
-    .maybeSingle();
-
-  return data?.role === 'admin';
-
-}
-
-
 
 async function sendToRecipients(
-
   admin: ReturnType<typeof createClient>,
-
   recipientIds: string[],
-
   title: string,
-
   body: string,
-
   data: Record<string, unknown>,
-
   appUrl: string,
-
   options: { skipDedup?: boolean; notificationType?: string } = {},
-
 ) {
-
   const notificationType = String(options.notificationType ?? data?.type ?? 'system_update').trim();
-
   const rawLink = data?.link ? String(data.link).trim() : '';
-
   let sent = 0;
-
   let failed = 0;
-
   let deduped = 0;
-
   let skipped = 0;
-
-
-
   const { data: allowedRecipients, error: preferencesError } = await admin.rpc('filter_push_recipients', {
-
     p_recipient_ids: recipientIds,
-
     p_type: notificationType,
-
   });
-
-
-
   if (preferencesError) {
-
     return { error: 'No se pudieron validar las preferencias', sent, failed, deduped, skipped };
-
   }
-
-
-
   const pushRecipients = Array.isArray(allowedRecipients) ? allowedRecipients.map(String) : [];
-
   skipped = recipientIds.length - pushRecipients.length;
-
-
-
   const stringData: Record<string, string> = {};
-
   for (const [key, value] of Object.entries(data ?? {})) {
-
     if (value != null) stringData[key] = String(value);
-
   }
-
-
-
   for (const userId of pushRecipients) {
-
     if (notificationType === 'new_message' && stringData.conversation_id) {
-
       const { data: isViewing, error: viewingError } = await admin.rpc('is_viewing_conversation', {
-
         p_user_id: userId,
-
         p_conversation_id: stringData.conversation_id,
-
       });
-
-
-
       if (!viewingError && isViewing === true) {
-
         skipped += 1;
-
         continue;
-
       }
-
     }
-
-
-
-    let iosBadgeType: 'Increase' | 'Set' | undefined;
-
     let iosBadgeCount: number | undefined;
-
-
-
     if (notificationType === 'new_message') {
-
       const { data: unreadCount } = await admin.rpc('get_total_unread_messages_count', {
-
         p_user_id: userId,
-
       });
-
-      iosBadgeType = 'Set';
-
       iosBadgeCount = Math.max(Number(unreadCount ?? 0), 1);
-
     }
-
-
-
     if (!options.skipDedup) {
-
       const dedupKey = buildDedupKey(userId, notificationType, data);
-
       const { data: existingLog } = await admin
-
         .from('push_send_log')
-
         .select('id')
-
         .eq('dedup_key', dedupKey)
-
         .eq('status', 'sent')
-
         .gte('created_at', new Date(Date.now() - DEDUP_WINDOW_MS).toISOString())
-
         .maybeSingle();
-
-
-
       if (existingLog) {
-
         deduped += 1;
-
         continue;
-
       }
-
-
-
-      // Failed rows must not reuse OneSignal external_id idempotency (would block retries).
-
-      const { data: priorFailed } = await admin
-
-        .from('push_send_log')
-
-        .select('id')
-
-        .eq('dedup_key', dedupKey)
-
-        .eq('status', 'failed')
-
-        .maybeSingle();
-
-
-
-      const onesignalIdempotencyKey = priorFailed
-
-        ? `${dedupKey}:retry:${Date.now()}`
-
-        : dedupKey;
-
-
-
-      const result = await sendOneSignalNotification({
-
+      const result = await sendFcmToUserIds(
+        admin,
+        [userId],
         title,
-
         body,
-
-        data: stringData,
-
-        link: rawLink || undefined,
-
-        externalIds: [userId],
-
-        idempotencyKey: onesignalIdempotencyKey,
-
-        iosBadgeType,
-
-        iosBadgeCount,
-
-      }, appUrl);
-
-
-
+        stringData,
+        appUrl,
+        { iosBadgeCount, link: rawLink || undefined },
+      );
       await admin.from('push_send_log').upsert({
-
         dedup_key: dedupKey,
-
         user_id: userId,
-
         notification_type: notificationType,
-
         status: result.ok ? 'sent' : 'failed',
-
         error_message: result.ok ? null : result.error,
-
-        onesignal_notification_id: result.notificationId ?? null,
-
+        fcm_message_id: result.messageIds?.[0] ?? null,
       }, { onConflict: 'dedup_key' });
-
-
-
       if (result.ok) {
-
         sent += 1;
-
-        await admin
-
-          .from('push_subscriptions')
-
-          .update({ last_used_at: new Date().toISOString() })
-
-          .eq('user_id', userId)
-
-          .eq('is_active', true);
-
       } else {
-
         failed += 1;
-
-        if (result.invalidExternalIds?.includes(userId)) {
-
-          await admin
-
-            .from('push_subscriptions')
-
-            .update({ is_active: false, updated_at: new Date().toISOString() })
-
-            .eq('user_id', userId)
-
-            .eq('is_active', true);
-
-        }
-
       }
-
-
-
       continue;
-
     }
-
-
-
-    const result = await sendOneSignalNotification({
-
+    const result = await sendFcmToUserIds(
+      admin,
+      [userId],
       title,
-
       body,
-
-      data: stringData,
-
-      link: rawLink || undefined,
-
-      externalIds: [userId],
-
-    }, appUrl);
-
-
-
+      stringData,
+      appUrl,
+      { iosBadgeCount, link: rawLink || undefined },
+    );
     if (result.ok) {
-
       sent += 1;
-
     } else {
-
       failed += 1;
-
     }
-
   }
-
-
-
   return { sent, failed, deduped, skipped };
-
 }
-
-
-
 async function sendAdminBroadcast(
   admin: ReturnType<typeof createClient>,
   userClient: ReturnType<typeof createClient>,
@@ -405,939 +243,396 @@ async function sendAdminBroadcast(
   payload: Record<string, unknown>,
   appUrl: string,
 ) {
-
   const title = String(payload.title ?? '').trim();
-
   const body = String(payload.body ?? '').trim();
-
   const audienceFilter = (payload.audience_filter ?? payload.audience ?? {}) as Record<string, unknown>;
-
   const data = (payload.data ?? {}) as Record<string, unknown>;
-
   const scheduledAtRaw = payload.scheduled_at ? String(payload.scheduled_at) : null;
-
   const scheduledAt = scheduledAtRaw ? new Date(scheduledAtRaw) : null;
-
-
-
   if (!title || !body) {
-
     return jsonResponse({ error: 'title and body required' }, 400);
-
   }
-
-
-
   const notificationData = {
-
     type: String(data.type ?? 'admin_broadcast'),
-
     link: data.link ? String(data.link) : '/personal/notifications',
-
     ...data,
-
   };
-
-
-
   if (scheduledAt && scheduledAt.getTime() > Date.now() + 30_000) {
-
     const { data: scheduledRow, error } = await userClient.rpc('admin_schedule_push_notification', {
-
       p_title: title,
-
       p_body: body,
-
       p_payload: notificationData,
-
       p_audience_filter: audienceFilter,
-
       p_scheduled_at: scheduledAt.toISOString(),
-
     });
-
-
-
     if (error) {
-
       return jsonResponse({ error: 'No se pudo programar la notificación' }, 500);
-
     }
-
-
-
     return jsonResponse({
-
       ok: true,
-
       scheduled: true,
-
       scheduled_id: scheduledRow?.id ?? null,
-
       scheduled_at: scheduledAt.toISOString(),
-
     });
-
   }
-
-
-
   const { data: audienceIds, error: audienceError } = await userClient.rpc('admin_resolve_push_audience', {
-
     p_filter: audienceFilter,
-
   });
-
-
-
   if (audienceError) {
-
     return jsonResponse({ error: 'No se pudo resolver la audiencia' }, 500);
-
   }
-
-
-
   const recipientIds = Array.isArray(audienceIds) ? audienceIds.map(String) : [];
-
   if (recipientIds.length === 0) {
-
     return jsonResponse({ ok: true, sent: 0, failed: 0, skipped: 0, recipient_count: 0 });
-
   }
-
-
-
   let sent = 0;
-
   let failed = 0;
-
   let skipped = 0;
-
-
-
   for (const batch of chunkArray(recipientIds, PUSH_BATCH_SIZE)) {
-
     const { data: allowedRecipients, error: preferencesError } = await admin.rpc('filter_push_recipients', {
-
       p_recipient_ids: batch,
-
       p_type: String(notificationData.type),
-
     });
-
-
-
     if (preferencesError) {
-
       return jsonResponse({ error: 'No se pudieron validar las preferencias' }, 500);
-
     }
-
-
-
     const pushRecipients = Array.isArray(allowedRecipients) ? allowedRecipients.map(String) : [];
-
     skipped += batch.length - pushRecipients.length;
-
-
-
     if (pushRecipients.length === 0) continue;
-
-
-
     const stringData: Record<string, string> = {};
-
     for (const [key, value] of Object.entries(notificationData)) {
-
       if (value != null) stringData[key] = String(value);
-
     }
-
-
-
-    const result = await sendOneSignalNotification({
-
-      title,
-
-      body,
-
-      data: stringData,
-
-      link: stringData.link,
-
-      externalIds: pushRecipients,
-
-    }, appUrl);
-
-
-
-    if (result.ok) {
-
-      sent += pushRecipients.length;
-
-      await admin
-
-        .from('push_subscriptions')
-
-        .update({ last_used_at: new Date().toISOString() })
-
-        .in('user_id', pushRecipients)
-
-        .eq('is_active', true);
-
-    } else {
-
-      failed += pushRecipients.length;
-
-    }
-
-  }
-
-
-
-  const { data: logRow, error: logError } = await admin
-
-    .from('admin_push_broadcast_log')
-
-    .insert({
-
-      sent_by: callerId,
-
-      audience_filter: audienceFilter,
-
-      title,
-
-      body,
-
-      payload: notificationData,
-
-      sent_at: new Date().toISOString(),
-
-      status: failed > 0 && sent === 0 ? 'failed' : 'sent',
-
-      recipient_count: sent,
-
-      error: failed > 0 && sent === 0 ? 'OneSignal send failed' : null,
-
-    })
-
-    .select('id')
-
-    .maybeSingle();
-
-
-
-  if (logError) {
-
-    return jsonResponse({ error: 'Envío completado pero no se pudo registrar el historial' }, 500);
-
-  }
-
-
-
-  return jsonResponse({
-
-    ok: true,
-
-    sent,
-
-    failed,
-
-    skipped,
-
-    recipient_count: sent,
-
-    broadcast_log_id: logRow?.id ?? null,
-
-  });
-
-}
-
-
-
-async function processScheduledNotifications(
-
-  admin: ReturnType<typeof createClient>,
-
-  appUrl: string,
-
-) {
-
-  const { data: queued, error: queueError } = await admin.rpc('process_due_scheduled_push_notifications', {
-
-    p_limit: 10,
-
-  });
-
-
-
-  if (queueError) {
-
-    return jsonResponse({ error: 'No se pudieron procesar notificaciones programadas' }, 500);
-
-  }
-
-
-
-  const { data: dueRows, error } = await admin
-
-    .from('scheduled_push_notifications')
-
-    .select('*')
-
-    .eq('status', 'processing')
-
-    .order('scheduled_at', { ascending: true })
-
-    .limit(10);
-
-
-
-  if (error) {
-
-    return jsonResponse({ error: 'No se pudieron leer notificaciones programadas' }, 500);
-
-  }
-
-
-
-  let processed = 0;
-
-  let sentTotal = 0;
-
-
-
-  for (const row of dueRows ?? []) {
-
-    const { data: audienceIds, error: audienceError } = await admin.rpc('admin_resolve_push_audience', {
-
-      p_filter: row.audience_filter ?? {},
-
-    });
-
-
-
-    if (audienceError) {
-
-      await admin
-
-        .from('scheduled_push_notifications')
-
-        .update({ status: 'failed', error: audienceError.message, processed_at: new Date().toISOString() })
-
-        .eq('id', row.id);
-
-      continue;
-
-    }
-
-
-
-    const recipientIds = Array.isArray(audienceIds) ? audienceIds.map(String) : [];
-
-    const notificationData = (row.payload ?? { type: 'admin_broadcast' }) as Record<string, unknown>;
-
-    let sent = 0;
-
-    let failed = 0;
-
-
-
-    for (const batch of chunkArray(recipientIds, PUSH_BATCH_SIZE)) {
-
-      const { data: allowedRecipients } = await admin.rpc('filter_push_recipients', {
-
-        p_recipient_ids: batch,
-
-        p_type: String(notificationData.type ?? 'admin_broadcast'),
-
-      });
-
-
-
-      const pushRecipients = Array.isArray(allowedRecipients) ? allowedRecipients.map(String) : [];
-
-      if (pushRecipients.length === 0) continue;
-
-
-
-      const stringData: Record<string, string> = {};
-
-      for (const [key, value] of Object.entries(notificationData)) {
-
-        if (value != null) stringData[key] = String(value);
-
-      }
-
-
-
-      const result = await sendOneSignalNotification({
-
-        title: row.title,
-
-        body: row.body,
-
-        data: stringData,
-
-        link: stringData.link,
-
-        externalIds: pushRecipients,
-
-      }, appUrl);
-
-
-
-      if (result.ok) sent += pushRecipients.length;
-
-      else failed += pushRecipients.length;
-
-    }
-
-
-
-    await admin
-
-      .from('admin_push_broadcast_log')
-
-      .update({
-
-        sent_at: new Date().toISOString(),
-
-        status: failed > 0 && sent === 0 ? 'failed' : 'sent',
-
-        recipient_count: sent,
-
-        error: failed > 0 && sent === 0 ? 'OneSignal send failed' : null,
-
-      })
-
-      .eq('id', row.broadcast_log_id);
-
-
-
-    await admin
-
-      .from('scheduled_push_notifications')
-
-      .update({
-
-        status: failed > 0 && sent === 0 ? 'failed' : 'sent',
-
-        error: failed > 0 && sent === 0 ? 'OneSignal send failed' : null,
-
-        processed_at: new Date().toISOString(),
-
-      })
-
-      .eq('id', row.id);
-
-
-
-    processed += 1;
-
-    sentTotal += sent;
-
-  }
-
-
-
-  return jsonResponse({
-
-    ok: true,
-
-    queued: queued?.queued ?? 0,
-
-    processed,
-
-    sent: sentTotal,
-
-  });
-
-}
-
-
-
-/** Server-side backup: push for new_message rows that never got a successful send. */
-
-async function processPendingMessagePushes(
-
-  admin: ReturnType<typeof createClient>,
-
-  appUrl: string,
-
-) {
-
-  const { data: pending, error } = await admin.rpc('claim_pending_message_pushes', {
-
-    p_limit: 40,
-
-    p_lookback_minutes: 10,
-
-  });
-
-
-
-  if (error) {
-
-    return {
-
-      error: 'No se pudieron reclamar pushes de mensajes pendientes',
-
-      details: error.message,
-
-    };
-
-  }
-
-
-
-  let sent = 0;
-
-  let failed = 0;
-
-  let deduped = 0;
-
-  let skipped = 0;
-
-
-
-  for (const row of pending ?? []) {
-
-    const messageId = String(row.message_id ?? '');
-
-    if (!messageId || !row.recipient_id) continue;
-
-
-
-    const data: Record<string, unknown> = {
-
-      type: 'new_message',
-
-      message_id: messageId,
-
-      conversation_id: row.conversation_id ?? undefined,
-
-      link: row.link ?? undefined,
-
-      notification_id: row.notification_id ?? undefined,
-
-    };
-
-
-
-    const result = await sendToRecipients(
-
+    const result = await sendFcmToUserIds(
       admin,
-
-      [String(row.recipient_id)],
-
-      String(row.title ?? 'Nuevo mensaje'),
-
-      String(row.body ?? ''),
-
-      data,
-
+      pushRecipients,
+      title,
+      body,
+      stringData,
       appUrl,
-
-      { notificationType: 'new_message' },
-
+      { link: stringData.link },
     );
-
-
-
-    if (result.error) {
-
-      failed += 1;
-
-      continue;
-
+    if (result.ok) {
+      sent += result.recipients ?? pushRecipients.length;
+    } else {
+      failed += pushRecipients.length;
     }
-
-
-
-    sent += result.sent ?? 0;
-
-    failed += result.failed ?? 0;
-
-    deduped += result.deduped ?? 0;
-
-    skipped += result.skipped ?? 0;
-
   }
-
-
-
-  return {
-
+  const { data: logRow, error: logError } = await admin
+    .from('admin_push_broadcast_log')
+    .insert({
+      sent_by: callerId,
+      audience_filter: audienceFilter,
+      title,
+      body,
+      payload: notificationData,
+      sent_at: new Date().toISOString(),
+      status: failed > 0 && sent === 0 ? 'failed' : 'sent',
+      recipient_count: sent,
+      error: failed > 0 && sent === 0 ? 'FCM send failed' : null,
+    })
+    .select('id')
+    .maybeSingle();
+  if (logError) {
+    return jsonResponse({ error: 'Envío completado pero no se pudo registrar el historial' }, 500);
+  }
+  return jsonResponse({
     ok: true,
-
-    pending: Array.isArray(pending) ? pending.length : 0,
-
     sent,
-
     failed,
-
-    deduped,
-
     skipped,
-
-  };
-
+    recipient_count: sent,
+    broadcast_log_id: logRow?.id ?? null,
+  });
 }
-
-
-
+async function processScheduledNotifications(
+  admin: ReturnType<typeof createClient>,
+  appUrl: string,
+) {
+  const { data: queued, error: queueError } = await admin.rpc('process_due_scheduled_push_notifications', {
+    p_limit: 10,
+  });
+  if (queueError) {
+    return jsonResponse({ error: 'No se pudieron procesar notificaciones programadas' }, 500);
+  }
+  const { data: dueRows, error } = await admin
+    .from('scheduled_push_notifications')
+    .select('*')
+    .eq('status', 'processing')
+    .order('scheduled_at', { ascending: true })
+    .limit(10);
+  if (error) {
+    return jsonResponse({ error: 'No se pudieron leer notificaciones programadas' }, 500);
+  }
+  let processed = 0;
+  let sentTotal = 0;
+  for (const row of dueRows ?? []) {
+    const { data: audienceIds, error: audienceError } = await admin.rpc('admin_resolve_push_audience', {
+      p_filter: row.audience_filter ?? {},
+    });
+    if (audienceError) {
+      await admin
+        .from('scheduled_push_notifications')
+        .update({ status: 'failed', error: audienceError.message, processed_at: new Date().toISOString() })
+        .eq('id', row.id);
+      continue;
+    }
+    const recipientIds = Array.isArray(audienceIds) ? audienceIds.map(String) : [];
+    const notificationData = (row.payload ?? { type: 'admin_broadcast' }) as Record<string, unknown>;
+    let sent = 0;
+    let failed = 0;
+    for (const batch of chunkArray(recipientIds, PUSH_BATCH_SIZE)) {
+      const { data: allowedRecipients } = await admin.rpc('filter_push_recipients', {
+        p_recipient_ids: batch,
+        p_type: String(notificationData.type ?? 'admin_broadcast'),
+      });
+      const pushRecipients = Array.isArray(allowedRecipients) ? allowedRecipients.map(String) : [];
+      if (pushRecipients.length === 0) continue;
+      const stringData: Record<string, string> = {};
+      for (const [key, value] of Object.entries(notificationData)) {
+        if (value != null) stringData[key] = String(value);
+      }
+      const result = await sendFcmToUserIds(
+        admin,
+        pushRecipients,
+        row.title,
+        row.body,
+        stringData,
+        appUrl,
+        { link: stringData.link },
+      );
+      if (result.ok) sent += result.recipients ?? pushRecipients.length;
+      else failed += pushRecipients.length;
+    }
+    await admin
+      .from('admin_push_broadcast_log')
+      .update({
+        sent_at: new Date().toISOString(),
+        status: failed > 0 && sent === 0 ? 'failed' : 'sent',
+        recipient_count: sent,
+        error: failed > 0 && sent === 0 ? 'FCM send failed' : null,
+      })
+      .eq('id', row.broadcast_log_id);
+    await admin
+      .from('scheduled_push_notifications')
+      .update({
+        status: failed > 0 && sent === 0 ? 'failed' : 'sent',
+        error: failed > 0 && sent === 0 ? 'FCM send failed' : null,
+        processed_at: new Date().toISOString(),
+      })
+      .eq('id', row.id);
+    processed += 1;
+    sentTotal += sent;
+  }
+  return jsonResponse({
+    ok: true,
+    queued: queued?.queued ?? 0,
+    processed,
+    sent: sentTotal,
+  });
+}
+/** Server-side backup: push for new_message rows that never got a successful send. */
+async function processPendingMessagePushes(
+  admin: ReturnType<typeof createClient>,
+  appUrl: string,
+) {
+  const { data: pending, error } = await admin.rpc('claim_pending_message_pushes', {
+    p_limit: 40,
+    p_lookback_minutes: 10,
+  });
+  if (error) {
+    return {
+      error: 'No se pudieron reclamar pushes de mensajes pendientes',
+      details: error.message,
+    };
+  }
+  let sent = 0;
+  let failed = 0;
+  let deduped = 0;
+  let skipped = 0;
+  for (const row of pending ?? []) {
+    const messageId = String(row.message_id ?? '');
+    if (!messageId || !row.recipient_id) continue;
+    const data: Record<string, unknown> = {
+      type: 'new_message',
+      message_id: messageId,
+      conversation_id: row.conversation_id ?? undefined,
+      link: row.link ?? undefined,
+      notification_id: row.notification_id ?? undefined,
+    };
+    const result = await sendToRecipients(
+      admin,
+      [String(row.recipient_id)],
+      String(row.title ?? 'Nuevo mensaje'),
+      String(row.body ?? ''),
+      data,
+      appUrl,
+      { notificationType: 'new_message' },
+    );
+    if (result.error) {
+      failed += 1;
+      continue;
+    }
+    sent += result.sent ?? 0;
+    failed += result.failed ?? 0;
+    deduped += result.deduped ?? 0;
+    skipped += result.skipped ?? 0;
+  }
+  return {
+    ok: true,
+    pending: Array.isArray(pending) ? pending.length : 0,
+    sent,
+    failed,
+    deduped,
+    skipped,
+  };
+}
 serve(async (req) => {
   activeCorsHeaders = buildCorsHeaders(req.headers.get('Origin'));
-
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: activeCorsHeaders });
   }
-
   if (req.method !== 'POST') {
     return jsonResponse({ error: 'Method not allowed' }, 405);
   }
-
-
-
   const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-
   const authHeader = req.headers.get('Authorization');
-
-
-
   if (!supabaseUrl || !anonKey || !serviceKey) {
-
     return jsonResponse({ error: 'Supabase no configurado' }, 500);
-
   }
-
-
-
-  if (!isOneSignalConfigured()) {
-
-    return jsonResponse({ error: 'OneSignal no configurado' }, 500);
-
+  if (!isFcmConfigured()) {
+    return jsonResponse({ error: 'FCM no configurado' }, 500);
   }
-
-
-
   if (!authHeader) {
-
     return jsonResponse({ error: 'No autorizado' }, 401);
-
   }
-
-
-
   const admin = createClient(supabaseUrl, serviceKey);
-
   const userClient = createClient(supabaseUrl, anonKey, {
-
     global: { headers: { Authorization: authHeader } },
-
   });
-
-
-
   const payloadBody = await req.json();
-
   const appUrl = (
-
     Deno.env.get('APP_URL') ??
-
     Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ??
-
     'https://trabage.org'
-
   ).replace(/\/$/, '');
-
-
-
   const isServiceRole = authHeader.replace('Bearer ', '').trim() === serviceKey;
-
-
-
   if (payloadBody.process_scheduled === true || payloadBody.process_message_pushes === true) {
-
     if (!isServiceRole && !(await isAdminUser(admin, (await userClient.auth.getUser()).data.user?.id ?? ''))) {
-
       return jsonResponse({ error: 'No autorizado' }, 403);
-
     }
-
-
-
     const response: Record<string, unknown> = { ok: true };
-
-
-
     if (payloadBody.process_scheduled === true) {
-
       const scheduledResult = await processScheduledNotifications(admin, appUrl);
-
       const scheduledBody = await scheduledResult.json();
-
       response.scheduled = scheduledBody;
-
       if (!scheduledResult.ok) {
-
         return jsonResponse({ error: scheduledBody.error ?? 'Error procesando programados', ...response }, scheduledResult.status);
-
       }
-
     }
-
-
-
     if (payloadBody.process_message_pushes === true) {
-
       const messageResult = await processPendingMessagePushes(admin, appUrl);
-
       response.message_pushes = messageResult;
-
       if (messageResult.error) {
-
         return jsonResponse({ error: messageResult.error, ...response }, 500);
-
       }
-
     }
-
-
-
     return jsonResponse(response);
-
   }
-
-
-
   const { data: authData, error: authError } = await userClient.auth.getUser();
-
   const callerId = authData.user?.id;
-
-
-
   if (authError || !callerId) {
-
     return jsonResponse({ error: 'No autorizado' }, 403);
-
   }
-
-
-
   if (payloadBody.admin_broadcast === true) {
-
     if (!(await isAdminUser(admin, callerId))) {
-
       return jsonResponse({ error: 'No autorizado' }, 403);
-
     }
-
     return sendAdminBroadcast(admin, userClient, callerId, payloadBody, appUrl);
-
   }
-
-
-
   const {
-
     recipient_id,
-
     recipient_ids,
-
     title,
-
     body,
-
     data = {},
-
   } = payloadBody;
-
-
-
   const externalIds = Array.isArray(recipient_ids)
-
     ? recipient_ids.filter(Boolean)
-
     : recipient_id
-
       ? [recipient_id]
-
       : [];
-
-
-
   if (externalIds.length === 0) {
-
     return jsonResponse({ error: 'No recipients' }, 400);
-
   }
-
-
-
   if (!title) {
-
     return jsonResponse({ error: 'title required' }, 400);
-
   }
-
-  // Likes / reposts often send an empty body; OneSignal still needs contents.
+  // Likes / reposts often send an empty body; FCM still needs notification text.
   const pushBody = String(body ?? '').trim() || String(title);
-
-
-
   const uniqueExternalIds = [...new Set(externalIds.map(String))];
-
   const notificationType = String(data?.type ?? '').trim();
-
   if (!notificationType) {
-
     return jsonResponse({ error: 'No autorizado' }, 403);
-
   }
-
-
-
   const isSelfOnly = uniqueExternalIds.every((id) => id === callerId);
-
   // If the payload claims an actor / follower / sender, it must be the caller.
   const claimedActor = data?.actor_id ?? data?.follower_id ?? data?.sender_id;
   if (claimedActor && String(claimedActor) !== callerId) {
     return jsonResponse({ error: 'No autorizado' }, 403);
   }
-
-
-
   if (!isSelfOnly) {
-
     let notificationQuery = admin
-
       .from('notifications')
-
       .select('recipient_id')
-
       .in('recipient_id', uniqueExternalIds)
-
       .eq('type', notificationType)
-
       .gte('created_at', new Date(Date.now() - DEDUP_WINDOW_MS).toISOString());
-
-
-
     if (data?.job_id) {
-
       notificationQuery = notificationQuery.eq('metadata->>job_id', String(data.job_id));
-
     }
-
-
-
     if (data?.target_id) {
-
       notificationQuery = notificationQuery.eq('metadata->>target_id', String(data.target_id));
-
     }
-
-
-
     if (data?.message_id) {
-
       notificationQuery = notificationQuery.eq('metadata->>message_id', String(data.message_id));
-
     }
-
-
-
     if (data?.post_id) {
-
       notificationQuery = notificationQuery.eq('metadata->>post_id', String(data.post_id));
-
     }
-
-
-
     if (data?.actor_id) {
-
       notificationQuery = notificationQuery.eq('metadata->>actor_id', String(data.actor_id));
-
     }
-
-
-
     const { data: notifications, error } = await notificationQuery;
-
     if (error) {
-
       return jsonResponse({ error: 'No se pudo validar la notificación' }, 500);
-
     }
-
-
-
     const authorizedRecipients = new Set((notifications ?? []).map((item) => item.recipient_id));
-
     if (!uniqueExternalIds.every((id) => authorizedRecipients.has(id))) {
-
       return jsonResponse({ error: 'No autorizado' }, 403);
-
     }
-
   }
-
-
-
   let sent = 0;
-
   let failed = 0;
-
   let deduped = 0;
-
   let skipped = 0;
-
-
-
   for (const batch of chunkArray(uniqueExternalIds, PUSH_BATCH_SIZE)) {
-
     const result = await sendToRecipients(admin, batch, title, pushBody, data, appUrl, { notificationType });
-
     if (result.error) {
-
       return jsonResponse({ error: result.error }, 500);
-
     }
-
     sent += result.sent ?? 0;
-
     failed += result.failed ?? 0;
-
     deduped += result.deduped ?? 0;
-
     skipped += result.skipped ?? 0;
-
   }
-
-
-
   return jsonResponse({
-
     ok: true,
-
     sent,
-
     failed,
-
     deduped,
-
     skipped,
-
   });
-
 });
-
-

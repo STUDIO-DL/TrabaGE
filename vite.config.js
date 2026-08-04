@@ -15,7 +15,7 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           supabase: ['@supabase/supabase-js'],
-          telemetry: ['@sentry/react', 'react-onesignal'],
+          telemetry: ['@sentry/react', 'firebase/app', 'firebase/messaging'],
           icons: ['lucide-react'],
           cvGenerator: ['@react-pdf/renderer'],
         },
@@ -28,7 +28,7 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false,
       devOptions: { enabled: false },
-      // Keep OneSignal workers out of Workbox precache — they must be controlled by OneSignal, not sw.js.
+      // Keep FCM messaging SW out of Workbox precache — it is imported into /sw.js.
       includeAssets: ['robots.txt', 'sitemap.xml', 'favicon.ico', 'icons/*.png', 'manifest.json'],
       manifest: false,
       workbox: {
@@ -37,8 +37,8 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/\.netlify\//],
-        // Single SW architecture: Workbox PWA + OneSignal push handlers in /sw.js
-        importScripts: ['https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js'],
+        // Single SW architecture: Workbox PWA + FCM push handlers in /sw.js
+        importScripts: ['/firebase-messaging-sw.js'],
         globPatterns: [
           'index.html',
           'manifest.json',
@@ -48,7 +48,7 @@ export default defineConfig({
           'assets/*.css',
           'icons/*.png',
         ],
-        globIgnores: ['**/OneSignalSDKWorker.js', '**/OneSignalSDKUpdaterWorker.js'],
+        globIgnores: ['**/firebase-messaging-sw.js'],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/icons/'),

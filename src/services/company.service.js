@@ -2,7 +2,6 @@ import { supabase } from '../config/supabase';
 import { normalizeJobPreferences } from '../constants/jobPreferences';
 import { executeDelete, executeWrite } from '../utils/supabaseMutation';
 
-/** Never request onesignal_player_id — column is revoked for clients. */
 const COMPANY_PROFILE_COLUMNS = [
   'user_id',
   'company_name',
@@ -81,7 +80,6 @@ function normalizeCompanyProfile(data) {
 
 function stripClientForbiddenFields(data) {
   const safeData = { ...(data ?? {}) };
-  delete safeData.onesignal_player_id;
   delete safeData.cover_url;
   if (safeData.cover_path == null && data?.cover_url) {
     safeData.cover_path = data.cover_url;
