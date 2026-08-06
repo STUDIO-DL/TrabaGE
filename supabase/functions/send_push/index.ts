@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { isFcmConfigured, sendFcmNotification } from '../_shared/fcm.ts';
 import {
+  canUseCanonicalNotificationWithoutTextMatch,
   canonicalPushFromNotification,
   matchesRequestedPush,
 } from '../_shared/pushAuthorization.js';
@@ -593,13 +594,17 @@ serve(async (req) => {
     { title: string; body: string; data: Record<string, unknown> }
   >();
   if (!isSelfOnly) {
+    const allowCanonicalWithoutTextMatch =
+      canUseCanonicalNotificationWithoutTextMatch(notificationType, data, callerId);
     let notificationQuery = admin
       .from('notifications')
       .select('id, recipient_id, title, body, metadata, created_at')
       .in('recipient_id', uniqueExternalIds)
       .eq('type', notificationType)
-      .eq('title', requestedTitle)
       .gte('created_at', new Date(Date.now() - DEDUP_WINDOW_MS).toISOString());
+    if (!allowCanonicalWithoutTextMatch) {
+      notificationQuery = notificationQuery.eq('title', requestedTitle);
+    }
     if (data?.notification_id) {
       notificationQuery = notificationQuery.eq('id', String(data.notification_id));
     }
@@ -625,7 +630,10 @@ serve(async (req) => {
     for (const notification of notifications ?? []) {
       if (
         authorizedDeliveries.has(notification.recipient_id) ||
-        !matchesRequestedPush(notification, notificationType, requestedTitle, pushBody)
+        (
+          !allowCanonicalWithoutTextMatch &&
+          !matchesRequestedPush(notification, notificationType, requestedTitle, pushBody)
+        )
       ) {
         continue;
       }

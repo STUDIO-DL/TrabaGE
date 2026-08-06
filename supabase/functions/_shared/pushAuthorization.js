@@ -39,3 +39,20 @@ export function matchesRequestedPush(notification, notificationType, requestedTi
     canonical.body === cleanText(requestedBody)
   );
 }
+
+/**
+ * Some database-triggered notifications are dispatched by the actor without
+ * exposing the recipient's notification row. They may use the persisted row
+ * without a text match only when correlation data binds the actor to the type.
+ */
+export function canUseCanonicalNotificationWithoutTextMatch(notificationType, data, callerId) {
+  const type = cleanText(notificationType);
+  const source = asRecord(data);
+  const caller = cleanText(callerId);
+
+  return (
+    type === 'new_follower' &&
+    caller.length > 0 &&
+    cleanText(source.follower_id) === caller
+  );
+}

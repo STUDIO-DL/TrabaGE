@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolvePushNavigationTarget } from '../src/utils/pushNavigation.js';
 import {
+  canUseCanonicalNotificationWithoutTextMatch,
   canonicalPushFromNotification,
   matchesRequestedPush,
 } from '../supabase/functions/_shared/pushAuthorization.js';
@@ -88,4 +89,25 @@ test('uses persisted notification content and metadata as the canonical push', (
       type: 'post_like',
     },
   });
+});
+
+test('allows only the correlated follower to dispatch trigger-generated canonical content', () => {
+  const data = { type: 'new_follower', follower_id: 'actor-1' };
+
+  assert.equal(
+    canUseCanonicalNotificationWithoutTextMatch('new_follower', data, 'actor-1'),
+    true,
+  );
+  assert.equal(
+    canUseCanonicalNotificationWithoutTextMatch('new_follower', data, 'actor-2'),
+    false,
+  );
+  assert.equal(
+    canUseCanonicalNotificationWithoutTextMatch(
+      'post_comment',
+      { actor_id: 'actor-1' },
+      'actor-1',
+    ),
+    false,
+  );
 });
