@@ -134,9 +134,12 @@ export const notificationsService = {
       return { data: null, error: null, skipped: true };
     }
 
-    const pushPayload = pushData ?? {
-      type,
-      ...metadata,
+    const pushPayload = {
+      ...(pushData ?? {
+        type,
+        ...metadata,
+      }),
+      notification_id: data.id,
     };
 
     await sendPushBatch(

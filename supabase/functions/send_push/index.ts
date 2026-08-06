@@ -1,6 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { isFcmConfigured, sendFcmNotification } from '../_shared/fcm.ts';
+import {
+  canonicalPushFromNotification,
+  matchesRequestedPush,
+} from '../_shared/pushAuthorization.js';
 /** Production + local Vite origins. Extra origins via TRABAGE_ALLOWED_ORIGIN (comma-separated). */
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://trabage.org',
@@ -567,11 +571,12 @@ serve(async (req) => {
   if (externalIds.length === 0) {
     return jsonResponse({ error: 'No recipients' }, 400);
   }
-  if (!title) {
+  const requestedTitle = String(title ?? '').trim();
+  if (!requestedTitle) {
     return jsonResponse({ error: 'title required' }, 400);
   }
   // Likes / reposts often send an empty body; FCM still needs notification text.
-  const pushBody = String(body ?? '').trim() || String(title);
+  const pushBody = String(body ?? '').trim() || requestedTitle;
   const uniqueExternalIds = [...new Set(externalIds.map(String))];
   const notificationType = String(data?.type ?? '').trim();
   if (!notificationType) {
@@ -583,13 +588,21 @@ serve(async (req) => {
   if (claimedActor && String(claimedActor) !== callerId) {
     return jsonResponse({ error: 'No autorizado' }, 403);
   }
+  const authorizedDeliveries = new Map<
+    string,
+    { title: string; body: string; data: Record<string, unknown> }
+  >();
   if (!isSelfOnly) {
     let notificationQuery = admin
       .from('notifications')
-      .select('recipient_id')
+      .select('id, recipient_id, title, body, metadata, created_at')
       .in('recipient_id', uniqueExternalIds)
       .eq('type', notificationType)
+      .eq('title', requestedTitle)
       .gte('created_at', new Date(Date.now() - DEDUP_WINDOW_MS).toISOString());
+    if (data?.notification_id) {
+      notificationQuery = notificationQuery.eq('id', String(data.notification_id));
+    }
     if (data?.job_id) {
       notificationQuery = notificationQuery.eq('metadata->>job_id', String(data.job_id));
     }
@@ -609,8 +622,19 @@ serve(async (req) => {
     if (error) {
       return jsonResponse({ error: 'No se pudo validar la notificación' }, 500);
     }
-    const authorizedRecipients = new Set((notifications ?? []).map((item) => item.recipient_id));
-    if (!uniqueExternalIds.every((id) => authorizedRecipients.has(id))) {
+    for (const notification of notifications ?? []) {
+      if (
+        authorizedDeliveries.has(notification.recipient_id) ||
+        !matchesRequestedPush(notification, notificationType, requestedTitle, pushBody)
+      ) {
+        continue;
+      }
+      const canonical = canonicalPushFromNotification(notification, notificationType);
+      if (canonical) {
+        authorizedDeliveries.set(notification.recipient_id, canonical);
+      }
+    }
+    if (!uniqueExternalIds.every((id) => authorizedDeliveries.has(id))) {
       return jsonResponse({ error: 'No autorizado' }, 403);
     }
   }
@@ -619,14 +643,30 @@ serve(async (req) => {
   let deduped = 0;
   let skipped = 0;
   for (const batch of chunkArray(uniqueExternalIds, PUSH_BATCH_SIZE)) {
-    const result = await sendToRecipients(admin, batch, title, pushBody, data, appUrl, { notificationType });
-    if (result.error) {
-      return jsonResponse({ error: result.error }, 500);
+    const deliveries = isSelfOnly
+      ? [{ recipientIds: batch, title: requestedTitle, body: pushBody, data }]
+      : batch.map((recipientId) => ({
+          recipientIds: [recipientId],
+          ...authorizedDeliveries.get(recipientId)!,
+        }));
+    for (const delivery of deliveries) {
+      const result = await sendToRecipients(
+        admin,
+        delivery.recipientIds,
+        delivery.title,
+        delivery.body,
+        delivery.data,
+        appUrl,
+        { notificationType },
+      );
+      if (result.error) {
+        return jsonResponse({ error: result.error }, 500);
+      }
+      sent += result.sent ?? 0;
+      failed += result.failed ?? 0;
+      deduped += result.deduped ?? 0;
+      skipped += result.skipped ?? 0;
     }
-    sent += result.sent ?? 0;
-    failed += result.failed ?? 0;
-    deduped += result.deduped ?? 0;
-    skipped += result.skipped ?? 0;
   }
   return jsonResponse({
     ok: true,
