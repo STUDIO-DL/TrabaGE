@@ -245,6 +245,8 @@ export const jobsService = {
       title: companyName ? `Nueva oferta de ${companyName}` : 'Nueva oferta publicada',
       message: `${job.title}${citySuffix}`,
       link: `/personal/jobs/${job.id}`,
+      jobId: job.id,
+      actorId: job.company_id,
     });
 
     jobRecommendationsService.processNewJob(job).catch((error) => {
