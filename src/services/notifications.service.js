@@ -1,7 +1,7 @@
 import { supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
 
-const PUSH_FUNCTION = 'send_push';
+const PUSH_FUNCTION = 'send_web_push';
 const PUSH_BATCH_SIZE = 2000;
 
 async function sendPushBatch(recipientIds, title, body, data = {}) {

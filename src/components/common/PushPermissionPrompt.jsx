@@ -4,7 +4,7 @@ import AppIcon from './AppIcon';
 import Button from '../ui/Button';
 import { Bell, X, ICON_SIZES } from '../../constants/icons';
 import { NOTIFICATION_PERMISSION_STATUS } from '../../constants/notificationPreferences';
-import { isFcmConfigured } from '../../config/fcm';
+import { isWebPushConfigured } from '../../config/webPush';
 import { useAuth } from '../../hooks/useAuth';
 import { isPwaInstalled } from '../../hooks/useInstallPrompt';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
@@ -64,7 +64,7 @@ export default function PushPermissionPrompt() {
         !user?.id ||
         role === ROLES.ADMIN ||
         !setupComplete ||
-        !isFcmConfigured() ||
+        !isWebPushConfigured() ||
         isOsPushPermissionDenied() ||
         status.loading ||
         preferences.push_enabled ||

@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase';
 import { authService, isEmailVerified } from '../services/auth.service';
 import { isAuthConfirmPath } from '../constants/authUrls';
 import { clearSentryUser, setSentryUser } from '../config/sentry';
-import { clearFcmUser, bindFcmUser, isFcmConfigured } from '../config/fcm';
+import { clearWebPushUser, bindWebPushUser, isWebPushConfigured } from '../config/webPush';
 import { notificationPreferencesService } from '../services/notificationPreferences.service';
 import {
   ROLE_HOME,
@@ -210,7 +210,7 @@ export function AuthProvider({ children }) {
       setSetupComplete(false);
       clearAuthResumeCache();
       clearSentryUser();
-      void clearFcmUser();
+      void clearWebPushUser();
       if (gen === hydrateGenRef.current) setHydrating(false);
       return;
     }
@@ -227,7 +227,7 @@ export function AuthProvider({ children }) {
       setRole(null);
       setSetupComplete(false);
       clearSentryUser();
-      void clearFcmUser();
+      void clearWebPushUser();
       if (gen === hydrateGenRef.current) setHydrating(false);
 
       if (!onConfirmRoute) {
@@ -377,8 +377,8 @@ export function AuthProvider({ children }) {
 
       void notificationPreferencesService.getOrCreate(currentUser.id);
 
-      if (isFcmConfigured()) {
-        void bindFcmUser(currentUser.id, {
+      if (isWebPushConfigured()) {
+        void bindWebPushUser(currentUser.id, {
           role: userRole,
           city: candidateResult?.data?.city ?? companyResult?.data?.city ?? null,
           sector: candidateResult?.data?.sector ?? companyResult?.data?.sector ?? null,
@@ -399,7 +399,7 @@ export function AuthProvider({ children }) {
           setSetupComplete(false);
           clearAuthResumeCache();
           clearSentryUser();
-          void clearFcmUser();
+          void clearWebPushUser();
           await supabase.auth.signOut({ scope: 'local' });
           return;
         }
@@ -793,9 +793,9 @@ export function AuthProvider({ children }) {
     setLoading(false);
 
     // Deactivate push while the auth session still exists in the client.
-    if (isFcmConfigured()) {
+    if (isWebPushConfigured()) {
       try {
-        await clearFcmUser();
+        await clearWebPushUser();
       } catch {
         // Logout must continue even if push cleanup fails.
       }

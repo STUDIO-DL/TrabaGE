@@ -1,8 +1,9 @@
 param(
+  [Parameter()]
   [ValidateSet("transaction", "session")]
   [string]$PoolerMode = "transaction",
 
-  [Parameter(ValueFromRemainingArguments = $true)]
+  [Parameter(Position = 0, ValueFromRemainingArguments = $true)]
   [string[]]$SupabaseArgs
 )
 

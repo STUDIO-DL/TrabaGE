@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  setFcmPushEnabled,
-} from '../config/fcm';
+import { setWebPushEnabled } from '../config/webPush';
 import {
   DEFAULT_NOTIFICATION_PREFERENCES,
   NOTIFICATION_PERMISSION_STATUS,
@@ -99,7 +97,7 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
 
     if (osStatus === NOTIFICATION_PERMISSION_STATUS.GRANTED) {
       if (preferences.push_enabled) {
-        await setFcmPushEnabled(true, userId);
+        await setWebPushEnabled(true, userId);
         if (preferences.permission_status !== NOTIFICATION_PERMISSION_STATUS.GRANTED) {
           await savePatch({
             permission_status: NOTIFICATION_PERMISSION_STATUS.GRANTED,
@@ -193,7 +191,7 @@ export function useNotificationPreferences(userId, { disabled = false, role = nu
       }
 
       if (osStatus === NOTIFICATION_PERMISSION_STATUS.GRANTED) {
-        await setFcmPushEnabled(true, userId);
+        await setWebPushEnabled(true, userId);
         const result = await savePatch({
           push_enabled: true,
           permission_status: NOTIFICATION_PERMISSION_STATUS.GRANTED,

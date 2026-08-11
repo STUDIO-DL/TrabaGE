@@ -9,7 +9,7 @@ import {
   NOTIFICATION_SAVED_COPY,
 } from '../../constants/notificationPreferences';
 import { useNotificationContext } from '../../context/NotificationContext';
-import { isFcmConfigured } from '../../config/fcm';
+import { isWebPushConfigured } from '../../config/webPush';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import { rolePath } from '../../constants/roles';
@@ -228,7 +228,7 @@ export default function NotificationPreferencesPanel({ accountType }) {
 
       // Self notifyUser is blocked by create_notification (no self in-app).
       // Use send_push self-path (same as scripts/test-fcm-push.mjs).
-      const { data: pushResult, error } = await supabase.functions.invoke('send_push', {
+      const { data: pushResult, error } = await supabase.functions.invoke('send_web_push', {
         body: {
           recipient_id: user.id,
           title: TEST_PUSH_TITLE,
@@ -312,7 +312,7 @@ export default function NotificationPreferencesPanel({ accountType }) {
           </div>
         ) : null}
 
-        {!isFcmConfigured() ? (
+        {!isWebPushConfigured() ? (
           <div className="mt-4 rounded-radius-lg border border-amber-100 bg-amber-50 px-4 py-3 text-caption leading-relaxed text-warning-800">
             Push del sistema no disponible en este entorno. Configura <code className="font-mono">VITE_FIREBASE_*</code> y <code className="font-mono">VITE_FIREBASE_VAPID_KEY</code> en <code className="font-mono">.env.local</code> y reinicia el servidor. Las notificaciones in-app seguirán funcionando.
           </div>

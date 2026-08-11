@@ -1,15 +1,13 @@
 import { useCallback, useEffect } from 'react';
 import {
-  attachNotificationClickHandler,
-  bindFcmUser,
-  clearFcmUser,
+  bindWebPushUser,
+  clearWebPushUser,
   getNotificationPermissionStatus,
-  initFcm,
-  isFcmConfigured,
+  initWebPush,
   onPushPermissionChange,
   requestNotificationPermission,
-  setFcmPushEnabled,
-} from '../config/fcm';
+  setWebPushEnabled,
+} from '../config/webPush';
 import {
   NOTIFICATION_PERMISSION_STATUS,
 } from '../constants/notificationPreferences';
@@ -67,74 +65,54 @@ export function isOsPushPermissionDenied() {
   return getOsPushPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.DENIED;
 }
 
-export async function requestOsPushPermission(userId, profileTags = {}) {
+export async function requestOsPushPermission(userId) {
   if (typeof window === 'undefined') return false;
 
-  if (isFcmConfigured()) {
-    const granted = await requestNotificationPermission();
-    if (granted && userId) {
-      await bindFcmUser(userId, profileTags);
-    }
-    return granted;
-  }
-
-  if (!('Notification' in window)) return false;
-
-  if (Notification.permission === NOTIFICATION_PERMISSION_STATUS.GRANTED) {
-    return true;
-  }
-
-  if (Notification.permission === NOTIFICATION_PERMISSION_STATUS.DENIED) {
-    return false;
-  }
-
-  const result = await Notification.requestPermission();
-  return result === NOTIFICATION_PERMISSION_STATUS.GRANTED;
+  return requestNotificationPermission(userId);
 }
 
 export function usePushPermission() {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
 
   // Idempotent: shares initPromise with main.jsx boot call; safe to await from push flows.
   useEffect(() => {
-    void initFcm();
-    attachNotificationClickHandler();
+    void initWebPush();
   }, []);
 
   useEffect(() => {
     if (user?.id && isOsPushPermissionGranted()) {
-      void bindFcmUser(user.id, { role });
+      void bindWebPushUser(user.id);
     }
-  }, [role, user?.id]);
+  }, [user?.id]);
 }
 
 export function usePushPermissionActions() {
-  const { user, role } = useAuth();
+  const { user } = useAuth();
   usePushPermission();
 
   const requestPermission = useCallback(async () => {
-    const granted = await requestOsPushPermission(user?.id, { role });
+    const granted = await requestOsPushPermission(user?.id);
     if (granted && user?.id) {
-      await setFcmPushEnabled(true, user.id);
+      await setWebPushEnabled(true, user.id);
     }
     return granted;
-  }, [role, user?.id]);
+  }, [user?.id]);
 
   const disablePushSubscription = useCallback(async () => {
-    await setFcmPushEnabled(false);
+    await setWebPushEnabled(false);
   }, []);
 
   const refreshToken = useCallback(async () => {
     if (!user?.id) return null;
-    await bindFcmUser(user.id, { role });
+    await bindWebPushUser(user.id);
     return true;
-  }, [role, user?.id]);
+  }, [user?.id]);
 
   return {
     requestPermission,
     disablePushSubscription,
     refreshToken,
-    clearPushTokens: clearFcmUser,
+    clearPushTokens: clearWebPushUser,
     getPermissionStatus: getOsPushPermissionStatus,
     isPermissionGranted: isOsPushPermissionGranted,
     isPermissionDenied: isOsPushPermissionDenied,

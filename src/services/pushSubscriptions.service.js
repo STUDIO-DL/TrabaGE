@@ -20,13 +20,15 @@ function detectBrowser() {
 }
 
 export const pushSubscriptionsService = {
-  upsert: async (fcmToken) => {
+  upsert: async (subscription) => {
     if (!isSupabaseConfigured) {
       return { data: null, error: null };
     }
 
-    const { data, error } = await supabase.rpc('upsert_push_subscription', {
-      p_fcm_token: fcmToken,
+    const { data, error } = await supabase.rpc('upsert_web_push_subscription', {
+      p_endpoint: subscription?.endpoint,
+      p_p256dh: subscription?.keys?.p256dh,
+      p_auth: subscription?.keys?.auth,
       p_platform: detectPlatform(),
       p_browser: detectBrowser(),
       p_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
@@ -39,13 +41,13 @@ export const pushSubscriptionsService = {
     return { data, error };
   },
 
-  deactivate: async (fcmToken = null) => {
+  deactivate: async (endpoint = null) => {
     if (!isSupabaseConfigured) {
       return { data: null, error: null };
     }
 
-    const { data, error } = await supabase.rpc('deactivate_push_subscription', {
-      p_fcm_token: fcmToken,
+    const { data, error } = await supabase.rpc('deactivate_web_push_subscription', {
+      p_endpoint: endpoint,
     });
 
     if (error) {

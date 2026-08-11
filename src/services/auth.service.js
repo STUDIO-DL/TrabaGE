@@ -22,7 +22,7 @@ import {
   GOOGLE_NO_ACCOUNT_TITLE,
 } from '../constants/googleAuth';
 import { reportError } from '../utils/logger';
-import { clearFcmUser, isFcmConfigured } from '../config/fcm';
+import { clearWebPushUser, isWebPushConfigured } from '../config/webPush';
 import {
   clearSignupInflight,
   isPendingSignupEmail,
@@ -1234,9 +1234,9 @@ export const authService = {
    * @param {{ reasonCode?: string, reasonOther?: string, rating?: number|null, improvementComment?: string }} [feedback]
    */
   deleteAccount: async (feedback = {}) => {
-    if (isFcmConfigured()) {
+    if (isWebPushConfigured()) {
       try {
-        await clearFcmUser();
+        await clearWebPushUser();
       } catch {
         // Continue — account deletion must not fail on push cleanup.
       }

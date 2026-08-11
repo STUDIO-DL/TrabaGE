@@ -5,7 +5,7 @@ import '@fontsource/inter/500.css';
 import '@fontsource/inter/600.css';
 import '@fontsource/inter/700.css';
 import { initSentry } from './config/sentry';
-import { initFcm } from './config/fcm';
+import { initWebPush } from './config/webPush';
 import { AppErrorBoundary } from './components/ui/ErrorBoundary';
 import { initConnectivityListeners } from './utils/connectivity';
 import { reportError } from './utils/logger';
@@ -13,7 +13,7 @@ import App from './App';
 import './styles/index.css';
 
 initSentry();
-initFcm();
+initWebPush();
 initConnectivityListeners();
 
 if (typeof window !== 'undefined') {

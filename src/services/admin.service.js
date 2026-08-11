@@ -471,7 +471,7 @@ export const adminService = {
     audienceFilter = { all: true },
     scheduledAt = null,
   }) => {
-    const { data, error } = await supabase.functions.invoke('send_push', {
+    const { data, error } = await supabase.functions.invoke('send_web_push', {
       body: {
         admin_broadcast: true,
         title,
@@ -491,7 +491,7 @@ export const adminService = {
   },
 
   processScheduledPushNotifications: async () => {
-    const { data, error } = await supabase.functions.invoke('send_push', {
+    const { data, error } = await supabase.functions.invoke('send_web_push', {
       body: {
         process_scheduled: true,
         process_message_pushes: true,
