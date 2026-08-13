@@ -241,7 +241,6 @@ function AppRoutes() {
             <Route element={<RouteSectionLayout />}>
               <Route path="/" element={<SplashScreen />} />
               <Route path="/welcome" element={<Welcome />} />
-              <Route path="/onboarding" element={<OnboardingFlow />} />
 
               <Route element={<GuestOnlyRoute />}>
                 <Route path="/login" element={<Login />} />
@@ -260,6 +259,7 @@ function AppRoutes() {
 
               <Route element={<ProtectedRoute />}>
                 <Route path="/auth/set-password" element={<SetPassword />} />
+                <Route path="/onboarding" element={<OnboardingFlow />} />
                 <Route path="/search" element={<SearchResults />} />
 
                 <Route element={<RoleRoute role={ROLES.PERSONAL} />}>

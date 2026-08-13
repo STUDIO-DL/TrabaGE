@@ -20,6 +20,9 @@ if errorlevel 1 exit /b 1
 call scripts\deploy-send-push-api.cmd
 if errorlevel 1 exit /b 1
 
+call scripts\deploy-send-web-push-api.cmd
+if errorlevel 1 exit /b 1
+
 call scripts\deploy-profile-completion-reminder-api.cmd
 if errorlevel 1 exit /b 1
 

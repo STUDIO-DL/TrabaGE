@@ -48,7 +48,15 @@ export async function completePostAuthFlow(
   const role =
     accountTypeResult?.role ?? resolveSignupRoleFromUser(user) ?? null;
 
-  // Active check + redirect lookup are independent once role is known.
+  if (role && role !== ROLES.ADMIN && !fastLogin) {
+    const { error: bootstrapError } = await bootstrapProfile({ user, role });
+    if (bootstrapError) {
+      return { error: bootstrapError };
+    }
+  }
+
+  // Active check + redirect lookup are independent once role is known and the
+  // base profile has been provisioned.
   const [inactiveError, redirectTo] = await Promise.all([
     ensureAccountIsActive(role),
     role
@@ -58,10 +66,6 @@ export async function completePostAuthFlow(
 
   if (inactiveError) {
     return { error: inactiveError };
-  }
-
-  if (role && role !== ROLES.ADMIN && !fastLogin) {
-    await bootstrapProfile({ user, role });
   }
 
   return { role, redirectTo, error: null };

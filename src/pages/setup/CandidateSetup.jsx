@@ -13,6 +13,7 @@ import { readIdentityFromUser } from '../../utils/displayIdentity';
 import { extractGoogleProfile } from '../../utils/googleProfile';
 import { getCandidateBootstrapMissing } from '../../utils/profileRequirements';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { withDevDiagnostics } from '../../utils/devDiagnostics';
 
 /**
  * Setup assistant for personal accounts — only shown when bootstrap identity
@@ -39,7 +40,7 @@ export default function CandidateSetup() {
       if (!mounted) return;
 
       if (profileError) {
-        setError(getSupabaseErrorMessage(profileError));
+        setError(withDevDiagnostics(getSupabaseErrorMessage(profileError), profileError));
         setInitializing(false);
         return;
       }
@@ -88,7 +89,7 @@ export default function CandidateSetup() {
     });
 
     if (saveError) {
-      setError(getSupabaseErrorMessage(saveError));
+      setError(withDevDiagnostics(getSupabaseErrorMessage(saveError), saveError));
       setLoading(false);
       return;
     }

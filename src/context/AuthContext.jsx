@@ -28,6 +28,7 @@ import { bootstrapProfile } from '../services/profileBootstrap';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
 import { isProfileSetupComplete } from '../utils/profileRequirements';
+import { ONBOARDING_ROUTE, shouldShowCandidateOnboarding } from '../constants/onboarding';
 import { reportError } from '../utils/logger';
 import { queryClient } from '../config/queryClient';
 import {
@@ -52,14 +53,6 @@ import {
 } from '../utils/candidateProfileSections';
 
 const AuthContext = createContext(null);
-
-const ONBOARDING_KEY = 'trabage_onboarding_complete';
-
-export const getOnboardingComplete = () =>
-  localStorage.getItem(ONBOARDING_KEY) === 'true';
-
-export const setOnboardingComplete = () =>
-  localStorage.setItem(ONBOARDING_KEY, 'true');
 
 /**
  * Seed the own-candidate React Query cache with a FULL profile (including education).
@@ -659,7 +652,9 @@ export function AuthProvider({ children }) {
         setRole(role);
         const setupCompleteGuess =
           role === ROLES.ADMIN ||
-          (typeof redirectTo === 'string' && !redirectTo.startsWith('/setup/'));
+          (typeof redirectTo === 'string' &&
+            !redirectTo.startsWith('/setup/') &&
+            redirectTo !== ONBOARDING_ROUTE);
         setSetupComplete(setupCompleteGuess);
         writeAuthResumeCache({
           userId: session.user.id,
@@ -873,18 +868,22 @@ export function AuthProvider({ children }) {
   }, []);
 
   const getHomePath = useCallback(() => {
-    // Bootstrap identity incomplete → setup assistant (edge cases only, e.g.
-    // Google org without a company name). Otherwise → role home (feed/dashboard).
-    // Edit Intro / profile editor collect enrichment; never block app access for
-    // missing headline or company description.
     const previewActive = isPreviewMode || getPreviewMode();
     const activeRole = role ?? (previewActive ? getPreviewRole() : null);
     if (!activeRole) return null;
+
+    if (!previewActive && isPersonalRole(activeRole) && user?.id) {
+      const cached = queryClient.getQueryData(getOwnCandidateProfileKey(user.id));
+      if (shouldShowCandidateOnboarding(cached)) {
+        return ONBOARDING_ROUTE;
+      }
+    }
+
     if (!previewActive && ROLE_SETUP[activeRole] && !setupComplete) {
       return ROLE_SETUP[activeRole];
     }
     return ROLE_HOME[activeRole] || '/login';
-  }, [role, setupComplete, isPreviewMode]);
+  }, [role, setupComplete, isPreviewMode, user?.id]);
 
   const value = useMemo(
     () => {

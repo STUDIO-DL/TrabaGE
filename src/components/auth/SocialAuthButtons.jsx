@@ -1,4 +1,4 @@
-function SocialAuthButton({ icon, label, onClick, comingSoon = false, disabled = false, loading = false }) {
+function SocialAuthButton({ icon, label, onClick, comingSoon = false, disabled = false, loading = false, compact = false }) {
   const isDisabled = comingSoon || disabled || loading;
 
   return (
@@ -9,7 +9,12 @@ function SocialAuthButton({ icon, label, onClick, comingSoon = false, disabled =
       aria-disabled={isDisabled}
       aria-busy={loading}
       title={comingSoon ? 'Próximamente' : undefined}
-      className="flex h-[2.75rem] w-full items-center justify-center gap-3 rounded-xl border border-app-border bg-app-card px-4 text-sm font-medium text-app-text shadow-sm transition hover:border-primary-200 hover:bg-app-surface active:scale-[0.99] active:bg-app-disabled focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:border-app-border disabled:hover:bg-app-card disabled:active:scale-100"
+      className={[
+        'flex w-full items-center justify-center gap-2 rounded-xl border border-[#E2E8F0]/90 bg-white/90 font-medium text-[#0F172A] shadow-sm transition',
+        'hover:border-[#CBD5E1] hover:bg-white active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
+        'disabled:cursor-not-allowed disabled:opacity-70',
+        compact ? 'h-10 px-3 text-sm' : 'h-11 px-4 text-[15px] gap-2.5',
+      ].join(' ')}
     >
       {loading ? (
         <span
@@ -52,14 +57,16 @@ export function GoogleAuthButton({
   label = 'Continuar con Google',
   disabled = false,
   loading = false,
+  compact = false,
 }) {
   return (
     <SocialAuthButton
-      icon={<GoogleIcon />}
+      icon={<GoogleIcon className={compact ? 'h-4 w-4' : 'h-5 w-5'} />}
       label={label}
       onClick={onClick}
       disabled={disabled}
       loading={loading}
+      compact={compact}
     />
   );
 }

@@ -10,6 +10,7 @@ import {
 import { authService } from '../services/auth.service';
 import { profileService } from '../services/profile.service';
 import { companyService } from '../services/company.service';
+import { ONBOARDING_ROUTE, shouldShowCandidateOnboarding } from '../constants/onboarding';
 import { isProfileSetupComplete } from './profileRequirements';
 
 /**
@@ -35,7 +36,9 @@ export async function resolvePostAuthRedirect(userId, knownRole = null, { prefer
   if (isPersonalRole(userRole)) {
     const role = ROLES.PERSONAL;
     const { data } = await profileService.getCandidateProfile(userId);
-    if (!isProfileSetupComplete(role, data)) return ROLE_SETUP[role];
+    if (shouldShowCandidateOnboarding(data)) return ONBOARDING_ROUTE;
+    if (data && !isProfileSetupComplete(role, data)) return ROLE_SETUP[role];
+    if (!data) return ONBOARDING_ROUTE;
     return preferProfile ? ROLE_PROFILE[role] : ROLE_HOME[role];
   }
 
