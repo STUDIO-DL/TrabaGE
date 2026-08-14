@@ -12,16 +12,16 @@ import ProtectedRoute from './components/routing/ProtectedRoute';
 import GuestOnlyRoute from './components/routing/GuestOnlyRoute';
 import RoleRoute from './components/routing/RoleRoute';
 import { RouteSectionLayout } from './components/routing/RouteErrorBoundary';
-import GuestBar from './components/common/GuestBar';
-import InstallPrompt from './components/common/InstallPrompt';
-import PushPermissionPrompt from './components/common/PushPermissionPrompt';
-import NotificationSetupGuide from './components/common/NotificationSetupGuide';
-import PwaUpdatePrompt from './components/common/PwaUpdatePrompt';
-import { ToastContainer } from './components/ui/Toast';
+const GuestBar = lazy(() => import('./components/common/GuestBar'));
+const InstallPrompt = lazy(() => import('./components/common/InstallPrompt'));
+const PushPermissionPrompt = lazy(() => import('./components/common/PushPermissionPrompt'));
+const NotificationSetupGuide = lazy(() => import('./components/common/NotificationSetupGuide'));
+const PwaUpdatePrompt = lazy(() => import('./components/common/PwaUpdatePrompt'));
+const ToastContainer = lazy(() => import('./components/ui/Toast').then(m => ({ default: m.ToastContainer })));
 import OfflineScreen from './components/common/OfflineScreen';
-import DocumentPullToRefresh from './components/layout/DocumentPullToRefresh';
+const DocumentPullToRefresh = lazy(() => import('./components/layout/DocumentPullToRefresh'));
 import MaintenanceGate from './components/routing/MaintenanceGate';
-import { CommunicationsHost } from './features/communications';
+const CommunicationsHost = lazy(() => import('./features/communications').then(m => ({ default: m.CommunicationsHost })));
 import { MaintenanceProvider } from './context/MaintenanceContext';
 import { useNotificationContext } from './context/NotificationContext';
 import AuthLoadingScreen from './components/auth/AuthLoadingScreen';
@@ -121,7 +121,11 @@ const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'));
 
 function AppToasts() {
   const { toasts, dismissToast } = useNotificationContext();
-  return <ToastContainer toasts={toasts} onDismiss={dismissToast} />;
+  return (
+    <Suspense fallback={null}>
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
+    </Suspense>
+  );
 }
 
 /** Controlled logout after 5 minutes of real inactivity; form drafts are cleared on logout. */
@@ -233,12 +237,16 @@ function AppRoutes() {
 
   return (
     <>
-      <GuestBar />
+      <Suspense fallback={null}>
+        <GuestBar />
+      </Suspense>
       <ScrollRestoration />
-      <PwaUpdatePrompt />
-      <InstallPrompt />
-      <PushPermissionPrompt />
-      <NotificationSetupGuide />
+      <Suspense fallback={null}>
+        <PwaUpdatePrompt />
+        <InstallPrompt />
+        <PushPermissionPrompt />
+        <NotificationSetupGuide />
+      </Suspense>
       <Suspense fallback={<AuthLoadingScreen />}>
         <Routes>
             <Route element={<RouteSectionLayout />}>
@@ -389,12 +397,16 @@ export default function App() {
                 <MaintenanceProvider>
                   <OfflineScreen />
                   <AppToasts />
-                  <DocumentPullToRefresh />
+                  <Suspense fallback={null}>
+                    <DocumentPullToRefresh />
+                  </Suspense>
                   <SessionManager />
                   <MaintenanceGate>
                     <AppRoutes />
                   </MaintenanceGate>
-                  <CommunicationsHost />
+                  <Suspense fallback={null}>
+                    <CommunicationsHost />
+                  </Suspense>
                 </MaintenanceProvider>
               </NotificationProvider>
             </KeyboardProvider>

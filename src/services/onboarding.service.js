@@ -193,6 +193,12 @@ export const onboardingService = {
     if (!userId) return;
     void analyticsService.trackOnboardingEvent(userId, eventType, metadata).catch(() => {});
   },
+};
 
-export default { readLocalOnboarding, buildOnboardingPayload, syncOnboardingToProfile, buildOnboardingProfilePatch, ...onboardingService
+export default {
+  readLocalOnboarding,
+  buildOnboardingPayload,
+  syncOnboardingToProfile,
+  buildOnboardingProfilePatch,
+  ...onboardingService,
 };

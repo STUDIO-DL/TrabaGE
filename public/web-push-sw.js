@@ -1,4 +1,5 @@
 /* Standalone development worker. Production imports this file from Workbox's /sw.js. */
+/* global clients */
 function resolveNotificationUrl(payload) {
   const candidates = [payload.url, payload.link, payload.data?.url, payload.data?.link];
   for (const candidate of candidates) {

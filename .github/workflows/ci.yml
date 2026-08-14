@@ -1,0 +1,53 @@
+name: CI — Build & Lint
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: CI / Build & Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Cache npm cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build (production)
+        env:
+          NODE_ENV: production
+          VITE_APP_ENV: production
+          VITE_APP_URL: https://trabage.org
+          # Public placeholders only — do NOT use real secrets here.
+          VITE_SUPABASE_URL: https://your-project-ref.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_dummy
+        run: npm run build
+
+      - name: Verify PWA artifacts
+        run: |
+          if [ -f dist/sw.js ] || ls dist/workbox-*.js >/dev/null 2>&1; then
+            echo "PWA artifacts present"
+            ls -la dist | sed -n '1,200p'
+          else
+            echo "Missing PWA artifacts (dist/sw.js or workbox-*.js)"; exit 1
+          fi

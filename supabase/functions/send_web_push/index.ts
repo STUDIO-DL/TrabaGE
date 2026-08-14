@@ -42,14 +42,24 @@ serve(async (request) => {
   }
 
   const bearer = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ?? '';
-  const admin = createClient(url, serviceRole);
+  const admin = createClient(url, serviceRole, { auth: { persistSession: false } });
   const trusted = bearer === serviceRole;
-  const { data: auth } = trusted ? { data: { user: null } } : await admin.auth.getUser(bearer);
-  if (!trusted && !auth.user) return json({ error: 'unauthorized' }, 401, headers);
+  if (!trusted && !bearer) return json({ error: 'unauthorized' }, 401, headers);
+
+  let auth: any = { user: null };
+  if (!trusted) {
+    try {
+      const res = await admin.auth.getUser(bearer);
+      auth = res.data ?? { user: null };
+    } catch (e) {
+      console.error('[send_web_push] auth_lookup_error', e);
+      return json({ error: 'unauthorized' }, 401, headers);
+    }
+  }
 
   const input = await request.json().catch(() => null);
   const ids = Array.isArray(input?.recipient_ids) ? input.recipient_ids : [input?.recipient_id];
-  const recipients = [...new Set(ids.filter((id: unknown) => typeof id === 'string' && id.length <= 64))];
+  const recipients = [...new Set((ids ?? []).filter((id: unknown) => typeof id === 'string' && id.length <= 64))];
   if (!recipients.length || (!trusted && (recipients.length !== 1 || recipients[0] !== auth.user!.id))) {
     return json({ error: 'forbidden_target' }, 403, headers);
   }

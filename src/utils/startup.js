@@ -5,10 +5,10 @@ const ONBOARDING_KEY = 'trabage_onboarding_complete';
 const AUTH_STORAGE_KEY = 'trabage-auth';
 const THEME_STORAGE_KEY = 'trabage_theme';
 
-/** Full branded splash — first browser visit only (2–3 s). */
-export const FULL_SPLASH_MS = 2500;
+/** Full branded splash — shown as the single splash for all startups (~3 s). */
+export const FULL_SPLASH_MS = 3000;
 
-/** White + “T” mark for returning / installed cold opens (~3 s). */
+/** Quick splash kept for legacy paths but not used as primary startup anymore. */
 export const QUICK_SPLASH_MS = 3000;
 
 function readStorage(key) {
@@ -59,15 +59,17 @@ export function isReturningUser() {
  * Installed PWA and every returning user get the quick “T” transition.
  */
 export function shouldShowFullSplash() {
+  // Always show the full branded splash as the primary splash screen.
+  // Returning users will no longer see the small quick "T" splash as a separate step.
   if (typeof window === 'undefined') return false;
-  return !isReturningUser();
+  return true;
 }
 
 export function resolveStartupSplashMode() {
-  const full = shouldShowFullSplash();
+  // Force full mode to ensure a single unified splash experience.
   return {
-    mode: full ? 'full' : 'quick',
-    minDurationMs: full ? FULL_SPLASH_MS : QUICK_SPLASH_MS,
+    mode: 'full',
+    minDurationMs: FULL_SPLASH_MS,
   };
 }
 

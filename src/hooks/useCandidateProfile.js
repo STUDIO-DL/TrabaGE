@@ -141,10 +141,18 @@ export function useCandidateProfile() {
         );
         if (uploadError) return { error: friendlyProfileError(uploadError) };
 
-        const nextPath = versionedStoragePath(
-          avatarPath(userId),
-          STORAGE_BUCKETS.CANDIDATE_AVATARS,
-        );
+        // If the candidate profile row does not yet exist (onboarding/new account),
+        // create a minimal profile row so the subsequent update won't fail.
+        if (!profile) {
+          const createRes = await runMutation({
+            execute: () => profileService.upsertCandidateProfile({ user_id: userId }),
+            patchCache: (current, row) => mergeBaseProfileRow(current, row),
+            resync: true,
+          });
+          if (createRes.error) return { error: createRes.error };
+        }
+
+        const nextPath = versionedStoragePath(avatarPath(userId), STORAGE_BUCKETS.CANDIDATE_AVATARS);
         const result = await updateBasicInfo({ avatar_path: nextPath });
         if (!result.error) {
           notifyProfileMediaChanged({ userId, authorAvatar: nextPath });

@@ -17,7 +17,8 @@ import { getResumePathWithinGrace, touchLastActive } from '../utils/appLifecycle
 const ROLE_WAIT_MS = 20000;
 
 function resolveGuestDestination() {
-  return '/register';
+  // Direct guests to the login screen first (avoids showing Welcome as intermediate).
+  return '/login';
 }
 
 export default function SplashScreen() {

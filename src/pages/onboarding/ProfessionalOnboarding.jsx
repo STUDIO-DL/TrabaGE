@@ -52,7 +52,9 @@ export default function ProfessionalOnboarding() {
         STORAGE_KEY,
         JSON.stringify({ mode, profession, country, city, skills, savedAt: Date.now() }),
       );
-    } catch {}
+    } catch (err) {
+      /* ignore storage errors (quota/private mode) */
+    }
     setSaving(false);
     navigate('/personal/profile/edit-intro');
   };

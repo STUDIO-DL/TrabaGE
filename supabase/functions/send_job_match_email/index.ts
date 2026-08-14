@@ -120,10 +120,10 @@ serve(async (req) => {
       return jsonResponse({ ok: true, sent: false, reason: 'frequency_not_instant' }, 200);
     }
 
-    // Fetch job details
+    // Fetch job details including publisher (candidate_profiles) and company profile
     const { data: jobRow, error: jobErr } = await admin
       .from('jobs')
-      .select('id, title, description, city, country, work_mode, job_type, company_profiles(company_name)')
+      .select('id, title, description, city, country, work_mode, job_type, source_type, company_profiles(company_name), publisher:candidate_profiles!jobs_shared_by_user_id_fkey(full_name)')
       .eq('id', jobId)
       .maybeSingle();
 
@@ -135,9 +135,31 @@ serve(async (req) => {
     const modality = String(jobRow.work_mode ?? jobRow.job_type ?? '').trim();
     const url = `${Deno.env.get('TRABAGE_PUBLIC_URL') ?? 'https://trabage.org'}/personal/jobs/${jobId}`;
 
-    const subject = buildJobMatchSubject(jobTitle);
-    const html = buildJobMatchHtml({ name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '', jobTitle, company, location, modality, url });
-    const text = buildJobMatchText({ name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '', jobTitle, company, location, modality, url });
+    // Determine source type and publisher name from job row to decide display in email
+    const sourceType = jobRow.source_type ?? (jobRow.publisher ? 'user' : 'company');
+    const publisherName = (jobRow.publisher?.full_name) || null;
+
+    const subject = buildJobMatchSubject(jobTitle, { sourceType, company, publisherName });
+    const html = buildJobMatchHtml({
+      name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
+      jobTitle,
+      company,
+      location,
+      modality,
+      url,
+      sourceType,
+      publisherName,
+    });
+    const text = buildJobMatchText({
+      name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
+      jobTitle,
+      company,
+      location,
+      modality,
+      url,
+      sourceType,
+      publisherName,
+    });
 
     // Mark analytics entry BEFORE send to aid idempotency (we'll update if failed)
     const { data: trackData, error: trackError } = await admin

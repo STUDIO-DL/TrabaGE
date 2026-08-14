@@ -16,6 +16,8 @@ export default defineConfig(() => ({
           react: ['react', 'react-dom', 'react-router-dom'],
           supabase: ['@supabase/supabase-js'],
           telemetry: ['@sentry/react'],
+          recharts: ['recharts'],
+          tanstack: ['@tanstack/react-query'],
           icons: ['lucide-react'],
           cvGenerator: ['@react-pdf/renderer'],
         },
