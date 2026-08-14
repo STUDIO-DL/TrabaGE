@@ -266,6 +266,7 @@ function AppRoutes() {
 
               <Route element={<ProtectedRoute />}>
                 <Route path="/auth/set-password" element={<SetPassword />} />
+                <Route path="/onboarding" element={<OnboardingFlow />} />
                 <Route path="/search" element={<SearchResults />} />
 
                 <Route element={<RoleRoute role={ROLES.PERSONAL} />}>

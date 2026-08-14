@@ -6,6 +6,7 @@ import { notificationPreferencesService } from '../services/notificationPreferen
 
 const ROUTE_PREFETCH = {
   '/login': () => import('../pages/auth/Login'),
+  '/register': () => import('../pages/auth/Register'),
   '/welcome': () => import('../pages/Welcome'),
   '/onboarding': () => import('../pages/onboarding/OnboardingFlow'),
   '/personal/feed': () => import('../pages/candidate/Feed'),

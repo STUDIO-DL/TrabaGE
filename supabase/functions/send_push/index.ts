@@ -1,6 +1,13 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 import { isFcmConfigured, sendFcmNotification } from '../_shared/fcm.ts';
+import {
+  buildWebPushPayload,
+  isVapidConfigured,
+  loadWebPushSubscriptionsForUsers,
+  resolveInAppPushUrl,
+  sendWebPushToSubscriptions,
+} from '../_shared/webPush.ts';
 /** Production + local Vite origins. Extra origins via TRABAGE_ALLOWED_ORIGIN (comma-separated). */
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://trabage.org',
@@ -136,6 +143,132 @@ async function sendFcmToUserIds(
   return result;
 }
 
+function isPushTransportConfigured() {
+  return isFcmConfigured() || isVapidConfigured();
+}
+
+async function deliverPushToUser(
+  admin: ReturnType<typeof createClient>,
+  userId: string,
+  title: string,
+  body: string,
+  notificationType: string,
+  data: Record<string, unknown>,
+  appUrl: string,
+  options: { iosBadgeCount?: number } = {},
+) {
+  const stringData: Record<string, string> = {};
+  for (const [key, value] of Object.entries(data ?? {})) {
+    if (value != null) stringData[key] = String(value);
+  }
+  const destinationUrl = resolveInAppPushUrl(data);
+
+  const webSubscriptions = await loadWebPushSubscriptionsForUsers(admin, [userId]);
+
+  if (webSubscriptions.length > 0 && isVapidConfigured()) {
+    const payload = buildWebPushPayload(title, body, {
+      ...data,
+      type: notificationType,
+      link: destinationUrl,
+    }, {
+      notificationId: data.notification_id ? String(data.notification_id) : null,
+    });
+    const result = await sendWebPushToSubscriptions(admin, webSubscriptions, payload);
+    console.log('send_push_web_delivery', {
+      userId,
+      notificationType,
+      subscriptions_found: webSubscriptions.length,
+      subscriptions_sent: result.sent,
+      subscriptions_invalid: result.invalid,
+      subscriptions_failed: result.failed,
+    });
+    if (result.sent > 0) {
+      return { delivered: true, failed: result.failed, transport: 'web' as const };
+    }
+    if (result.failed > 0 || result.invalid > 0) {
+      return { delivered: false, failed: Math.max(result.failed, 1), transport: 'web' as const };
+    }
+  }
+
+  const fcmSubscriptions = await loadFcmTokensForUsers(admin, [userId]);
+  const fcmTokens = fcmSubscriptions
+    .filter((row) => row.user_id === userId)
+    .map((row) => row.fcm_token)
+    .filter(Boolean);
+
+  if (fcmTokens.length > 0 && isFcmConfigured()) {
+    const result = await sendFcmNotification({
+      title,
+      body,
+      data: stringData,
+      link: destinationUrl,
+      tokens: fcmTokens,
+      iosBadgeCount: options.iosBadgeCount,
+    }, appUrl);
+
+    if (result.invalidTokens?.length) {
+      await deactivateInvalidTokens(admin, result.invalidTokens);
+    }
+
+    console.log('send_push_fcm_delivery', {
+      userId,
+      notificationType,
+      subscriptions_found: fcmTokens.length,
+      subscriptions_sent: result.ok ? (result.recipients ?? fcmTokens.length) : 0,
+      subscriptions_invalid: result.invalidTokens?.length ?? 0,
+    });
+
+    if (result.ok) {
+      await admin
+        .from('push_subscriptions')
+        .update({ last_used_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('is_active', true);
+      return { delivered: true, failed: 0, transport: 'fcm' as const };
+    }
+
+    return { delivered: false, failed: 1, transport: 'fcm' as const };
+  }
+
+  console.log('send_push_no_subscriptions', { userId, notificationType });
+  return { delivered: false, failed: 1, transport: 'none' as const };
+}
+
+async function deliverPushToUsers(
+  admin: ReturnType<typeof createClient>,
+  userIds: string[],
+  title: string,
+  body: string,
+  notificationType: string,
+  data: Record<string, unknown>,
+  appUrl: string,
+) {
+  if (userIds.length === 0 || !isVapidConfigured()) {
+    return { sent: 0, failed: 0 };
+  }
+
+  const webSubscriptions = await loadWebPushSubscriptionsForUsers(admin, userIds);
+  if (webSubscriptions.length === 0) {
+    return { sent: 0, failed: 0 };
+  }
+
+  const payload = buildWebPushPayload(title, body, {
+    ...data,
+    type: notificationType,
+    link: resolveInAppPushUrl(data),
+  });
+  const result = await sendWebPushToSubscriptions(admin, webSubscriptions, payload);
+  console.log('send_push_web_batch', {
+    notificationType,
+    recipient_count: userIds.length,
+    subscriptions_found: webSubscriptions.length,
+    subscriptions_sent: result.sent,
+    subscriptions_invalid: result.invalid,
+    subscriptions_failed: result.failed,
+  });
+  return { sent: result.sent, failed: result.failed };
+}
+
 async function sendToRecipients(
   admin: ReturnType<typeof createClient>,
   recipientIds: string[],
@@ -146,11 +279,11 @@ async function sendToRecipients(
   options: { skipDedup?: boolean; notificationType?: string } = {},
 ) {
   const notificationType = String(options.notificationType ?? data?.type ?? 'system_update').trim();
-  const rawLink = data?.link ? String(data.link).trim() : '';
   let sent = 0;
   let failed = 0;
   let deduped = 0;
   let skipped = 0;
+
   const { data: allowedRecipients, error: preferencesError } = await admin.rpc('filter_push_recipients', {
     p_recipient_ids: recipientIds,
     p_type: notificationType,
@@ -158,13 +291,16 @@ async function sendToRecipients(
   if (preferencesError) {
     return { error: 'No se pudieron validar las preferencias', sent, failed, deduped, skipped };
   }
+
   const pushRecipients = Array.isArray(allowedRecipients) ? allowedRecipients.map(String) : [];
   skipped = recipientIds.length - pushRecipients.length;
-  const stringData: Record<string, string> = {};
-  for (const [key, value] of Object.entries(data ?? {})) {
-    if (value != null) stringData[key] = String(value);
-  }
+
   for (const userId of pushRecipients) {
+    const stringData: Record<string, string> = {};
+    for (const [key, value] of Object.entries(data ?? {})) {
+      if (value != null) stringData[key] = String(value);
+    }
+
     if (notificationType === 'new_message' && stringData.conversation_id) {
       const { data: isViewing, error: viewingError } = await admin.rpc('is_viewing_conversation', {
         p_user_id: userId,
@@ -175,6 +311,7 @@ async function sendToRecipients(
         continue;
       }
     }
+
     let iosBadgeCount: number | undefined;
     if (notificationType === 'new_message') {
       const { data: unreadCount } = await admin.rpc('get_total_unread_messages_count', {
@@ -182,6 +319,7 @@ async function sendToRecipients(
       });
       iosBadgeCount = Math.max(Number(unreadCount ?? 0), 1);
     }
+
     if (!options.skipDedup) {
       const dedupKey = buildDedupKey(userId, notificationType, data);
       const { data: existingLog } = await admin
@@ -195,47 +333,55 @@ async function sendToRecipients(
         deduped += 1;
         continue;
       }
-      const result = await sendFcmToUserIds(
+
+      const delivery = await deliverPushToUser(
         admin,
-        [userId],
+        userId,
         title,
         body,
-        stringData,
+        notificationType,
+        data,
         appUrl,
-        { iosBadgeCount, link: rawLink || undefined },
+        { iosBadgeCount },
       );
+
       await admin.from('push_send_log').upsert({
         dedup_key: dedupKey,
         user_id: userId,
         notification_type: notificationType,
-        status: result.ok ? 'sent' : 'failed',
-        error_message: result.ok ? null : result.error,
-        fcm_message_id: result.messageIds?.[0] ?? null,
+        status: delivery.delivered ? 'sent' : 'failed',
+        error_message: delivery.delivered ? null : `delivery_failed:${delivery.transport}`,
+        fcm_message_id: null,
       }, { onConflict: 'dedup_key' });
-      if (result.ok) {
+
+      if (delivery.delivered) {
         sent += 1;
       } else {
         failed += 1;
       }
       continue;
     }
-    const result = await sendFcmToUserIds(
+
+    const delivery = await deliverPushToUser(
       admin,
-      [userId],
+      userId,
       title,
       body,
-      stringData,
+      notificationType,
+      data,
       appUrl,
-      { iosBadgeCount, link: rawLink || undefined },
+      { iosBadgeCount },
     );
-    if (result.ok) {
+    if (delivery.delivered) {
       sent += 1;
     } else {
       failed += 1;
     }
   }
+
   return { sent, failed, deduped, skipped };
 }
+
 async function sendAdminBroadcast(
   admin: ReturnType<typeof createClient>,
   userClient: ReturnType<typeof createClient>,
@@ -303,19 +449,38 @@ async function sendAdminBroadcast(
     for (const [key, value] of Object.entries(notificationData)) {
       if (value != null) stringData[key] = String(value);
     }
-    const result = await sendFcmToUserIds(
+
+    const webResult = await deliverPushToUsers(
       admin,
       pushRecipients,
       title,
       body,
-      stringData,
+      String(notificationData.type),
+      notificationData,
       appUrl,
-      { link: stringData.link },
     );
-    if (result.ok) {
-      sent += result.recipients ?? pushRecipients.length;
-    } else {
-      failed += pushRecipients.length;
+    sent += webResult.sent;
+    failed += webResult.failed;
+
+    const webSubscriptions = await loadWebPushSubscriptionsForUsers(admin, pushRecipients);
+    const webUserIds = new Set(webSubscriptions.map((row) => row.user_id).filter(Boolean));
+    const fcmOnlyRecipients = pushRecipients.filter((userId) => !webUserIds.has(userId));
+
+    if (fcmOnlyRecipients.length > 0 && isFcmConfigured()) {
+      const result = await sendFcmToUserIds(
+        admin,
+        fcmOnlyRecipients,
+        title,
+        body,
+        stringData,
+        appUrl,
+        { link: stringData.link },
+      );
+      if (result.ok) {
+        sent += result.recipients ?? fcmOnlyRecipients.length;
+      } else {
+        failed += fcmOnlyRecipients.length;
+      }
     }
   }
   const { data: logRow, error: logError } = await admin
@@ -392,17 +557,36 @@ async function processScheduledNotifications(
       for (const [key, value] of Object.entries(notificationData)) {
         if (value != null) stringData[key] = String(value);
       }
-      const result = await sendFcmToUserIds(
+
+      const webResult = await deliverPushToUsers(
         admin,
         pushRecipients,
         row.title,
         row.body,
-        stringData,
+        String(notificationData.type ?? 'admin_broadcast'),
+        notificationData,
         appUrl,
-        { link: stringData.link },
       );
-      if (result.ok) sent += result.recipients ?? pushRecipients.length;
-      else failed += pushRecipients.length;
+      sent += webResult.sent;
+      failed += webResult.failed;
+
+      const webSubscriptions = await loadWebPushSubscriptionsForUsers(admin, pushRecipients);
+      const webUserIds = new Set(webSubscriptions.map((item) => item.user_id).filter(Boolean));
+      const fcmOnlyRecipients = pushRecipients.filter((userId) => !webUserIds.has(userId));
+
+      if (fcmOnlyRecipients.length > 0 && isFcmConfigured()) {
+        const result = await sendFcmToUserIds(
+          admin,
+          fcmOnlyRecipients,
+          row.title,
+          row.body,
+          stringData,
+          appUrl,
+          { link: stringData.link },
+        );
+        if (result.ok) sent += result.recipients ?? fcmOnlyRecipients.length;
+        else failed += fcmOnlyRecipients.length;
+      }
     }
     await admin
       .from('admin_push_broadcast_log')
@@ -502,8 +686,8 @@ serve(async (req) => {
   if (!supabaseUrl || !anonKey || !serviceKey) {
     return jsonResponse({ error: 'Supabase no configurado' }, 500);
   }
-  if (!isFcmConfigured()) {
-    return jsonResponse({ error: 'FCM no configurado' }, 500);
+  if (!isPushTransportConfigured()) {
+    return jsonResponse({ error: 'Push no configurado (FCM o VAPID requerido)' }, 500);
   }
   if (!authHeader) {
     return jsonResponse({ error: 'No autorizado' }, 401);

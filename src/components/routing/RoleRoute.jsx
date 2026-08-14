@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../hooks/useAuth';
-import { ROLE_HOME, ROLE_SETUP, normalizeRole } from '../../constants/roles';
+import { ROLE_HOME, ROLE_SETUP, normalizeRole, isPersonalRole } from '../../constants/roles';
+import { ONBOARDING_ROUTE, shouldShowCandidateOnboarding } from '../../constants/onboarding';
 import { getPreviewRole, isPreviewActive } from '../../constants/preview';
 import AuthLoadingScreen from '../auth/AuthLoadingScreen';
+import { profileService } from '../../services/profile.service';
+import { getOwnCandidateProfileKey } from '../../constants/profileQueryKeys';
 
 const ROLE_RESOLVE_TIMEOUT_MS = 20000;
 
@@ -13,13 +17,30 @@ const ROLE_RESOLVE_TIMEOUT_MS = 20000;
  * @param {string[]} [props.roles] - any of these roles allowed (e.g. business + organization)
  */
 export default function RoleRoute({ role: requiredRole, roles: requiredRoles }) {
-  const { role, isPreviewMode, loading, isAuthenticated, refreshAuthState, setupComplete } =
+  const { user, role, isPreviewMode, loading, isAuthenticated, refreshAuthState, setupComplete } =
     useAuth();
   const location = useLocation();
   const allowedRoles = requiredRoles ?? (requiredRole ? [requiredRole] : []);
   const previewActive = allowedRoles.includes('admin') ? false : isPreviewActive(isPreviewMode);
   const rawRole = role ?? (previewActive ? getPreviewRole() : null);
   const effectiveRole = normalizeRole(rawRole) ?? rawRole;
+  const shouldLoadCandidateProfile =
+    !previewActive && isAuthenticated && isPersonalRole(effectiveRole);
+  const candidateProfileKey =
+    getOwnCandidateProfileKey(user?.id) ?? ['profile', 'own', 'candidate', 'disabled'];
+  const candidateProfileQuery = useQuery({
+    queryKey: candidateProfileKey,
+    enabled: shouldLoadCandidateProfile && Boolean(user?.id),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await profileService.getCandidateProfile(user.id);
+      if (error) throw error;
+      return data ?? null;
+    },
+  });
+  const candidateProfile = candidateProfileQuery.data ?? null;
+  const candidateProfileLoading =
+    candidateProfileQuery.isLoading && shouldLoadCandidateProfile;
   const [roleWaitExpired, setRoleWaitExpired] = useState(false);
 
   useEffect(() => {
@@ -56,10 +77,25 @@ export default function RoleRoute({ role: requiredRole, roles: requiredRoles }) 
     return <Navigate to={ROLE_HOME[effectiveRole] || '/login'} replace />;
   }
 
-  // Gate users whose required profile data is incomplete into the setup
-  // assistant. Setup routes for business and organization both use CompanySetup.
   const setupPath = ROLE_SETUP[effectiveRole];
   const onSetupPath = location.pathname.startsWith('/setup/');
+
+  if (shouldLoadCandidateProfile && candidateProfileLoading) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (
+    shouldLoadCandidateProfile &&
+    !onSetupPath &&
+    !location.pathname.startsWith(ONBOARDING_ROUTE) &&
+    shouldShowCandidateOnboarding(candidateProfile)
+  ) {
+    return <Navigate to={ONBOARDING_ROUTE} replace state={{ from: location }} />;
+  }
+
+  // Gate users whose bootstrap identity is missing into the legacy setup
+  // assistant. Personal accounts only reach this as a technical fallback when
+  // profile provisioning failed or a legacy row has no minimum identity.
   if (!previewActive && setupPath && !setupComplete && !onSetupPath) {
     return <Navigate to={setupPath} replace />;
   }

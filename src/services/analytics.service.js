@@ -1,7 +1,7 @@
 import { supabase } from '../config/supabase';
 
 export const analyticsService = {
-  trackEvent: (userId, jobId, eventType, metadata = {}) =>
+  trackEvent: async (userId, jobId, eventType, metadata = {}) =>
     supabase.rpc('track_recommendation_event', {
       p_user_id: userId,
       p_job_id: jobId ?? null,
@@ -17,4 +17,7 @@ export const analyticsService = {
 
   trackApplicationSubmitted: (userId, jobId, metadata = {}) =>
     analyticsService.trackEvent(userId, jobId, 'application_submitted', metadata),
+
+  trackOnboardingEvent: (userId, eventType, metadata = {}) =>
+    analyticsService.trackEvent(userId, null, eventType, metadata),
 };

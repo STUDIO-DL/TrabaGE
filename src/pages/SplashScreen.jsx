@@ -5,7 +5,6 @@ import MobileScreenLayout from '../components/layout/MobileScreenLayout';
 import EquatorialGuineaMap from '../components/splash/EquatorialGuineaMap';
 import TrabaGEIconMark from '../components/splash/TrabaGEIconMark';
 import TrabaGEWordmark from '../components/splash/TrabaGEWordmark';
-import { getOnboardingComplete } from '../context/AuthContext';
 import { useAuth } from '../hooks/useAuth';
 import { useStartupPreload, runStartupPreload } from '../hooks/useStartupPreload';
 import {
@@ -18,9 +17,7 @@ import { getResumePathWithinGrace, touchLastActive } from '../utils/appLifecycle
 const ROLE_WAIT_MS = 20000;
 
 function resolveGuestDestination() {
-  // Original: completed onboarding → login.
-  // Only change: first visit goes to App Homepage, then Continuar → original onboarding.
-  return getOnboardingComplete() ? '/login' : '/welcome';
+  return '/register';
 }
 
 export default function SplashScreen() {

@@ -27,7 +27,8 @@
     "process-chat-backgrounds": "node scripts/process-chat-backgrounds.mjs",
     "test-fcm-push": "node scripts/test-fcm-push.mjs",
     "test-notification-delivery": "node scripts/test-notification-delivery.mjs",
-    "verify-push-readiness": "node scripts/verify-push-readiness.mjs"
+    "verify-push-readiness": "node scripts/verify-push-readiness.mjs",
+    "verify-vapid-parity": "node scripts/verify-vapid-parity.mjs"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

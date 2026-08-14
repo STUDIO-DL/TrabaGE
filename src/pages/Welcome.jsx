@@ -22,7 +22,6 @@ import {
   Users,
   ICON_SIZES,
 } from '../constants/icons';
-import { getOnboardingComplete } from '../context/AuthContext';
 import { useAuth } from '../hooks/useAuth';
 
 const AUDIENCES = [
@@ -122,17 +121,12 @@ export default function Welcome() {
     if (home) return <Navigate to={home} replace />;
   }
 
-  // Welcome is first-time only; after onboarding completes, never show it again.
-  if (getOnboardingComplete()) {
-    return <Navigate to="/login" replace />;
-  }
-
   const handleContinue = () => {
-    navigate('/onboarding');
+    navigate('/register');
   };
 
   const handleLogin = () => {
-    navigate('/onboarding');
+    navigate('/login');
   };
 
   return (

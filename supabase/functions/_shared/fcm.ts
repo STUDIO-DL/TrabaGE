@@ -187,14 +187,27 @@ async function sendToToken(
   accessToken: string,
   projectId: string,
 ): Promise<{ ok: boolean; messageId?: string; error?: string; invalid?: boolean; retryable?: boolean }> {
-  // Data-only payload: the SW / foreground handler displays the notification.
-  // Avoid top-level `notification` (browser auto-display + SW = duplicates on web).
+  // Include a notification payload for reliable Web Push delivery in background.
+  // The SW still receives `data` so clicks can route to the right in-app screen.
   const data = buildStringData(payload, absoluteUrl);
   const message: Record<string, unknown> = {
     token,
+    notification: {
+      title: payload.title,
+      body: payload.body,
+    },
     data,
     webpush: {
-      headers: absoluteUrl ? { Urgency: 'high' } : undefined,
+      headers: {
+        Urgency: 'high',
+      },
+      notification: {
+        title: payload.title,
+        body: payload.body,
+        icon: '/icons/icon-192.png',
+        badge: '/icons/icon-192.png',
+        data,
+      },
       fcm_options: absoluteUrl ? { link: absoluteUrl } : undefined,
     },
   };

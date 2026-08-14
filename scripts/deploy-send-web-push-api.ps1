@@ -5,7 +5,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $tokenPath = Join-Path $env:USERPROFILE ".supabase\access-token.txt"
-$functionName = "send_push"
+$functionName = "send_web_push"
 $functionDir = Resolve-Path (Join-Path $PSScriptRoot "..\supabase\functions\$functionName")
 $sharedDir = Resolve-Path (Join-Path $PSScriptRoot "..\supabase\functions\_shared")
 
@@ -39,7 +39,6 @@ try {
 
   $files = @(
     @{ Path = (Join-Path $functionDir "index.ts"); Name = "index.ts" },
-    @{ Path = (Join-Path $sharedDir "fcm.ts"); Name = "../_shared/fcm.ts" },
     @{ Path = (Join-Path $sharedDir "webPush.ts"); Name = "../_shared/webPush.ts" }
   )
 

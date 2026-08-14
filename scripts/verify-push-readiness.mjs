@@ -1,9 +1,6 @@
 /**
- * Local push readiness preflight.
- *
- * This does not log in, does not call send_push, and does not send a real push.
- * It checks that the client can ask OS permission, obtain an FCM token, register
- * it in Supabase, and that the service worker / edge-function wiring exists.
+ * Native Web Push readiness preflight (VAPID + Service Worker).
+ * Does not send a real push or call edge functions.
  */
 
 import fs from 'fs';
@@ -46,13 +43,7 @@ const env = loadEnvFile('.env.local');
 const requiredEnv = [
   'VITE_SUPABASE_URL',
   'VITE_SUPABASE_ANON_KEY',
-  'VITE_FIREBASE_API_KEY',
-  'VITE_FIREBASE_AUTH_DOMAIN',
-  'VITE_FIREBASE_PROJECT_ID',
-  'VITE_FIREBASE_STORAGE_BUCKET',
-  'VITE_FIREBASE_MESSAGING_SENDER_ID',
-  'VITE_FIREBASE_APP_ID',
-  'VITE_FIREBASE_VAPID_KEY',
+  'VITE_WEB_PUSH_VAPID_PUBLIC_KEY',
 ];
 
 for (const key of requiredEnv) {
@@ -60,103 +51,93 @@ for (const key of requiredEnv) {
 }
 
 const files = [
-  'src/config/firebase.js',
-  'src/config/fcm.js',
+  'src/config/webPush.js',
   'src/hooks/usePushPermission.js',
   'src/services/pushSubscriptions.service.js',
   'src/services/notificationPreferences.service.js',
-  'public/firebase-messaging-sw.js',
-  'netlify/functions/firebase-config.js',
+  'public/web-push-sw.js',
   'supabase/functions/send_push/index.ts',
+  'supabase/functions/send_web_push/index.ts',
+  'supabase/functions/_shared/webPush.ts',
   'vite.config.js',
-  'netlify.toml',
 ];
 
 for (const relativePath of files) {
   addCheck(`file ${relativePath}`, fileExists(relativePath), fileExists(relativePath) ? 'present' : 'missing');
 }
 
-const fcm = fileExists('src/config/fcm.js') ? readRelative('src/config/fcm.js') : '';
+const webPush = fileExists('src/config/webPush.js') ? readRelative('src/config/webPush.js') : '';
 const permissionHook = fileExists('src/hooks/usePushPermission.js')
   ? readRelative('src/hooks/usePushPermission.js')
   : '';
 const pushSubs = fileExists('src/services/pushSubscriptions.service.js')
   ? readRelative('src/services/pushSubscriptions.service.js')
   : '';
-const sw = fileExists('public/firebase-messaging-sw.js')
-  ? readRelative('public/firebase-messaging-sw.js')
-  : '';
+const sw = fileExists('public/web-push-sw.js') ? readRelative('public/web-push-sw.js') : '';
 const vite = fileExists('vite.config.js') ? readRelative('vite.config.js') : '';
-const netlify = fileExists('netlify.toml') ? readRelative('netlify.toml') : '';
 const sendPush = fileExists('supabase/functions/send_push/index.ts')
   ? readRelative('supabase/functions/send_push/index.ts')
   : '';
-const firebaseConfig = fileExists('src/config/firebase.js')
-  ? readRelative('src/config/firebase.js')
+const sendWebPush = fileExists('supabase/functions/send_web_push/index.ts')
+  ? readRelative('supabase/functions/send_web_push/index.ts')
   : '';
-const netlifyFirebaseConfig = fileExists('netlify/functions/firebase-config.js')
-  ? readRelative('netlify/functions/firebase-config.js')
+const sharedWebPush = fileExists('supabase/functions/_shared/webPush.ts')
+  ? readRelative('supabase/functions/_shared/webPush.ts')
   : '';
 
 addCheck(
   'client detects push support',
-  /Notification/.test(fcm) &&
-    /serviceWorker/.test(fcm) &&
-    /PushManager/.test(fcm) &&
-    /isSecureContext/.test(fcm),
+  /Notification/.test(webPush) &&
+    /serviceWorker/.test(webPush) &&
+    /PushManager/.test(webPush) &&
+    /isSecureContext/.test(webPush),
   'Notification + ServiceWorker + PushManager + secure context checks',
 );
 addCheck(
   'client asks OS permission',
-  /Notification\.requestPermission\(\)/.test(fcm),
+  /Notification\.requestPermission\(\)/.test(webPush),
   'permission prompt is wired',
 );
 addCheck(
-  'client obtains FCM token',
-  /getToken\(messaging/.test(fcm) && /VITE_FIREBASE_VAPID_KEY/.test(fcm),
-  'getToken uses the web push VAPID key',
+  'client subscribes with VAPID public key',
+  /pushManager\.subscribe/.test(webPush) && /VITE_WEB_PUSH_VAPID_PUBLIC_KEY/.test(webPush),
+  'PushManager.subscribe uses the native Web Push VAPID key',
 );
 addCheck(
-  'client loads Firebase config at runtime',
-  /\/firebase-config\.json/.test(firebaseConfig) &&
-    /fetch\(/.test(firebaseConfig) &&
-    /await getFirebaseApp\(\)/.test(fcm),
-  'Firebase app config is fetched at runtime instead of embedded in Vite output',
-);
-addCheck(
-  'client registers service worker for FCM',
-  /navigator\.serviceWorker\.register/.test(fcm) &&
-    /firebase-messaging-sw\.js/.test(fcm) &&
-    /\/sw\.js/.test(fcm),
+  'client registers service worker',
+  /navigator\.serviceWorker\.register/.test(webPush) &&
+    /web-push-sw\.js/.test(webPush) &&
+    /\/sw\.js/.test(webPush),
   'dev SW and production SW paths are wired',
 );
 addCheck(
-  'client saves FCM token',
-  /pushSubscriptionsService\.upsert/.test(fcm),
-  'token is persisted after permission is granted',
+  'client saves Web Push subscription',
+  /pushSubscriptionsService\.upsert/.test(webPush),
+  'subscription is persisted after permission is granted',
 );
 addCheck(
   'settings flow enables push after Allow',
-  /requestOsPushPermission/.test(permissionHook) &&
-    /setFcmPushEnabled\(true,\s*user\.id\)/.test(permissionHook),
-  'after granted permission the app enables and refreshes FCM',
+  /requestNotificationPermission/.test(permissionHook) &&
+    /setWebPushEnabled\(true/.test(permissionHook),
+  'after granted permission the app enables and refreshes Web Push',
 );
 addCheck(
-  'Supabase subscription RPC is wired',
-  /upsert_push_subscription/.test(pushSubs) && /p_fcm_token/.test(pushSubs),
-  'FCM token is sent to upsert_push_subscription',
+  'Supabase web subscription RPC is wired',
+  /upsert_web_push_subscription/.test(pushSubs) &&
+    /p_endpoint/.test(pushSubs) &&
+    /p_p256dh/.test(pushSubs) &&
+    /p_auth/.test(pushSubs),
+  'Web Push subscription is sent to upsert_web_push_subscription',
 );
 addCheck(
   'background service worker displays push',
   /addEventListener\(['"]push['"]/.test(sw) && /showNotification/.test(sw),
-  'background FCM Web Push payload creates an OS notification',
+  'push event creates an OS notification',
 );
 addCheck(
-  'messaging service worker has no Firebase API key',
-  !/AIza[0-9A-Za-z_-]{20,}/.test(sw) &&
-    !/firebase\.initializeApp/.test(sw) &&
-    !/firebase-app-compat/.test(sw),
-  'no hardcoded Firebase config or compat SDK bootstrap in public/firebase-messaging-sw.js',
+  'service worker resolves url and link',
+  /payload\.url/.test(sw) && /payload\.link/.test(sw),
+  'click target accepts url or legacy link field',
 );
 addCheck(
   'notification click opens the app',
@@ -164,33 +145,31 @@ addCheck(
   'click handler focuses or opens TrabaGE',
 );
 addCheck(
-  'production PWA imports FCM worker',
-  /importScripts:\s*\[['"]\/firebase-messaging-sw\.js['"]\]/.test(vite) &&
-    /globIgnores:\s*\[['"]\*\*\/firebase-messaging-sw\.js['"]\]/.test(vite),
-  'Workbox imports the FCM worker and keeps it out of precache',
+  'production PWA imports web push worker',
+  /importScripts:\s*\[['"]\/web-push-sw\.js['"]\]/.test(vite),
+  'Workbox imports the native web push worker',
 );
 addCheck(
-  'Netlify serves Firebase config from runtime env',
-  /from\s*=\s*"\/firebase-config\.json"/.test(netlify) &&
-    /to\s*=\s*"\/\.netlify\/functions\/firebase-config"/.test(netlify) &&
-    /VITE_FIREBASE_API_KEY/.test(netlifyFirebaseConfig) &&
-    /process\.env/.test(netlifyFirebaseConfig),
-  'runtime Function reads existing VITE_FIREBASE_* variables without committing values',
+  'send_push supports web push transport',
+  /loadWebPushSubscriptionsForUsers/.test(sendPush) &&
+    /isVapidConfigured/.test(sendPush) &&
+    /filter_push_recipients/.test(sendPush),
+  'edge function can deliver via VAPID and respects preferences',
 );
 addCheck(
-  'send_push can read active subscriptions',
-  /get_push_subscriptions_for_users/.test(sendPush) && /No hay tokens FCM activos/.test(sendPush),
-  'edge function has the subscription lookup path',
+  'send_web_push uses shared module',
+  /webPush\.ts/.test(sendWebPush) && /filter_push_recipients/.test(sendWebPush),
+  'standalone web push function shares delivery logic and preferences',
 );
 addCheck(
-  'send_push filters user preferences',
-  /filter_push_recipients/.test(sendPush),
-  'push_enabled and category preferences are checked server-side',
+  'shared web push payload includes url',
+  /url:/.test(sharedWebPush) && /resolveInAppPushUrl/.test(sharedWebPush),
+  'backend payload matches service worker contract',
 );
 
 const failed = checks.filter((check) => !check.pass);
 
-console.log('Push readiness preflight (no real push sent)');
+console.log('Web Push readiness preflight (no real push sent)');
 console.log('');
 
 for (const check of checks) {
@@ -206,4 +185,6 @@ if (failed.length > 0) {
 }
 
 console.log('Result: ready.');
-console.log('If the user taps Allow on a supported device/browser, TrabaGE can request permission, get an FCM token, store it, and receive/display pushes.');
+console.log(
+  'If the user taps Allow on a supported browser, TrabaGE can register a Web Push subscription and display OS notifications.',
+);

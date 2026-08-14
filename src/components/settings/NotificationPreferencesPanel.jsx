@@ -228,7 +228,7 @@ export default function NotificationPreferencesPanel({ accountType }) {
 
       // Self notifyUser is blocked by create_notification (no self in-app).
       // Use send_push self-path (same as scripts/test-fcm-push.mjs).
-      const { data: pushResult, error } = await supabase.functions.invoke('send_web_push', {
+      const { data: pushResult, error } = await supabase.functions.invoke('send_push', {
         body: {
           recipient_id: user.id,
           title: TEST_PUSH_TITLE,
