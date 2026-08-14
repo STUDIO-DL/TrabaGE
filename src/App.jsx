@@ -31,6 +31,9 @@ import { markAppBackground, markAppForeground, rememberLastPath, installNativeFi
 import { ScrollRestoration } from './hooks/useScrollRestoration';
 const Welcome = lazy(() => import('./pages/Welcome'));
 const OnboardingFlow = lazy(() => import('./pages/onboarding/OnboardingFlow'));
+const OnboardingChoice = lazy(() => import('./pages/onboarding/OnboardingChoice'));
+const StudentOnboarding = lazy(() => import('./pages/onboarding/StudentOnboarding'));
+const ProfessionalOnboarding = lazy(() => import('./pages/onboarding/ProfessionalOnboarding'));
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 const AuthConfirm = lazy(() => import('./pages/auth/AuthConfirm'));
 const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
@@ -241,6 +244,9 @@ function AppRoutes() {
             <Route element={<RouteSectionLayout />}>
               <Route path="/" element={<SplashScreen />} />
               <Route path="/welcome" element={<Welcome />} />
+              <Route path="/onboarding/choice" element={<OnboardingChoice />} />
+              <Route path="/onboarding/student" element={<StudentOnboarding />} />
+              <Route path="/onboarding/professional" element={<ProfessionalOnboarding />} />
               <Route path="/onboarding" element={<OnboardingFlow />} />
 
               <Route element={<GuestOnlyRoute />}>

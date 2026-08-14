@@ -11,6 +11,7 @@
     "create-admins": "node scripts/create-admins.mjs",
     "verify-admins": "node scripts/verify-admins.mjs",
     "test-login": "node scripts/test-login-flow.mjs",
+    "test:e2e": "playwright test",
     "verify-welcome-email-once": "node scripts/verify-welcome-email-once.mjs",
     "audit-welcome-email-callers": "node scripts/audit-welcome-email-callers.mjs",
     "qa:welcome-email-browser": "node scripts/qa-welcome-email-browser.mjs",

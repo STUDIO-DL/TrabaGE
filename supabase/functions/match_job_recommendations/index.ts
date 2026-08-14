@@ -430,5 +430,32 @@ serve(async (req) => {
     return jsonResponse({ error: 'No se pudieron crear recomendaciones' }, 500);
   }
 
+  // Attempt to invoke email delivery edge function for recent job_recommendation notifications
+  try {
+    // Find recent notifications created for this job (last 5 minutes)
+    const fiveMinsAgo = new Date(Date.now() - 5 * 60_000).toISOString();
+    const { data: recentNotifs } = await supabase
+      .from('notifications')
+      .select('id, recipient_id, metadata')
+      .eq('type', 'job_recommendation')
+      .eq("metadata->>'job_id'", String(jobId))
+      .gt('created_at', fiveMinsAgo);
+
+    if (Array.isArray(recentNotifs) && recentNotifs.length > 0) {
+      for (const row of recentNotifs) {
+        try {
+          // Invoke edge function as background task; ignore per-recipient failures here
+          await supabase.functions.invoke('send_job_match_email', {
+            body: { user_id: row.recipient_id, job_id: jobId, notification_id: row.id },
+          });
+        } catch (invokeErr) {
+          console.error('[match_job_recommendations] send_job_match_email invoke failed', invokeErr);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[match_job_recommendations] email_invoke_error', err);
+  }
+
   return jsonResponse(notifyResult ?? { in_app_count: 0, push_recipient_ids: [] });
 });

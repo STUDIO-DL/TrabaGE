@@ -17,6 +17,8 @@ import { asUserFacingError, ERROR_ACTION } from '../utils/userFacingError';
 import { versionedStoragePath } from '../utils/storagePaths';
 import { notifyProfileMediaChanged } from '../utils/profileMediaSync';
 
+let lastJobRecalcAt = 0;
+
 function friendlyProfileError(error, action = ERROR_ACTION.save_profile) {
   if (!error) return null;
   return asUserFacingError(error, { action });
@@ -58,9 +60,17 @@ export function useCandidateProfile() {
   const afterCandidateProfileChanged = useCallback(async () => {
     await invalidateProfileQueries();
     if (userId) {
-      jobMatchesService.recalculateForCandidate(userId).catch((recalcError) => {
-        reportError(recalcError, { area: 'candidate_match_recalculation', userId });
-      });
+      try {
+        const now = Date.now();
+        if (now - lastJobRecalcAt > 60_000) {
+          lastJobRecalcAt = now;
+          jobMatchesService.recalculateForCandidate(userId).catch((recalcError) => {
+            reportError(recalcError, { area: 'candidate_match_recalculation', userId });
+          });
+        }
+      } catch (err) {
+        reportError(err, { area: 'candidate_match_recalculation_guard', userId });
+      }
     }
   }, [invalidateProfileQueries, userId]);
 

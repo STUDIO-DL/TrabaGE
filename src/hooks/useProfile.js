@@ -55,11 +55,14 @@ export function useProfile(userId) {
     viewingOtherCompany,
   });
 
+  const profileStaleTime = isOwnCandidate ? 10 * 60_000 : 3 * 60_000;
+  const profileGcTime = isOwnCandidate ? 60 * 60_000 : 45 * 60_000;
+
   const query = useQuery({
     queryKey: queryKey ?? ['profile', 'disabled'],
     enabled: Boolean(queryKey) && Boolean(targetId) && !isPreviewMode && !isAccountDeleted(),
-    staleTime: 3 * 60_000,
-    gcTime: 45 * 60_000,
+    staleTime: profileStaleTime,
+    gcTime: profileGcTime,
     refetchOnMount: shouldRefetchProfileOnMount(queryKey, { isOwnCandidate }),
     queryFn: () =>
       fetchProfileForKey(targetId, {
