@@ -9,7 +9,7 @@ const OPTIONS = [
     title: 'Encontrar empleo',
     subtitle: 'Quiero descubrir oportunidades laborales.',
     Icon: () => (
-      <svg width="72" height="72" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="4" width="14" height="12" rx="1.5" stroke="#2B3A67" strokeWidth="1.2" fill="#F8FAFF" />
         <path d="M6 4.5V3.5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" stroke="#2B3A67" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
         <circle cx="19" cy="15" r="2" stroke="#2B3A67" strokeWidth="1.2" />
@@ -22,7 +22,7 @@ const OPTIONS = [
     title: 'Ofrecer mis servicios',
     subtitle: 'Quiero que otras personas puedan encontrarme.',
     Icon: () => (
-      <svg width="72" height="72" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="4" width="14" height="12" rx="1.5" stroke="#2B3A67" strokeWidth="1.2" fill="#F8FAFF" />
         <path d="M7.5 12.5l3 2 4-3" stroke="#2B3A67" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
@@ -33,7 +33,7 @@ const OPTIONS = [
     title: 'Ambas',
     subtitle: 'Quiero encontrar oportunidades y ofrecer mis servicios.',
     Icon: () => (
-      <svg width="72" height="72" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="4" width="14" height="12" rx="1.5" stroke="#2B3A67" strokeWidth="1.2" fill="#F8FAFF" />
         <path d="M7 12l3 2 5-4" stroke="#2B3A67" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
         <circle cx="19" cy="15" r="2" stroke="#2B3A67" strokeWidth="1.2" />
@@ -49,9 +49,9 @@ function OptionCard({ option, selected, onSelect }) {
       type="button"
       onClick={() => onSelect(option.id)}
       className={[
-        'w-[220px] min-h-[170px] rounded-xl p-4 text-left transition-shadow duration-150 flex flex-col items-center',
+        'w-full sm:w-[220px] rounded-xl p-3 text-left transition-transform transition-shadow duration-150 flex flex-col items-center',
         selected
-          ? 'bg-white border border-transparent shadow-[0_14px_30px_rgba(43,58,103,0.12)] translate-y-[-6px]'
+          ? 'bg-white border border-transparent shadow-[0_14px_30px_rgba(43,58,103,0.12)] -translate-y-1.5'
           : 'bg-white border border-app-border',
       ].join(' ')}
       aria-pressed={selected}
@@ -77,8 +77,8 @@ export default function OnboardingStep1() {
 
   return (
     <PageContainer title="" backButton bottomNav={false}>
-      <div className="max-w-[720px] mx-auto mt-10 p-6 rounded-2xl shadow-elevation-1 bg-app-card">
-        <div className="flex items-center justify-between mb-4">
+      <div className="max-w-[680px] mx-auto mt-8 p-4 sm:p-6 rounded-2xl shadow-elevation-1 bg-app-card">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex-1 mr-3">
             <div className="h-2 bg-[#EEF5FF] rounded-full overflow-hidden">
               <div className="h-full bg-primary-600" style={{ width: '12.5%' }} />
@@ -87,19 +87,21 @@ export default function OnboardingStep1() {
           <div className="text-caption text-app-muted">1/8</div>
         </div>
 
-        <div className="text-center mt-2">
+        <div className="text-center mt-1">
           <h2 className="text-lg font-semibold text-app-text">TrabaGE</h2>
-          <p className="text-body-small text-app-text font-semibold mt-3">¿Qué buscas en TrabaGE?</p>
-          <p className="text-caption text-app-muted mt-2">Elige cómo quieres aprovechar TrabaGE.</p>
+          <p className="text-body-small text-app-text font-semibold mt-2">¿Qué buscas en TrabaGE?</p>
+          <p className="text-caption text-app-muted mt-1">Elige cómo quieres aprovechar TrabaGE.</p>
         </div>
 
-        <div className="mt-6 flex justify-center gap-5 flex-wrap">
+        <div className="mt-5 flex flex-col sm:flex-row sm:justify-center sm:gap-5 gap-3">
           {OPTIONS.map((opt) => (
-            <OptionCard key={opt.id} option={opt} selected={selected === opt.id} onSelect={setSelected} />
+            <div key={opt.id} className="w-full sm:w-auto">
+              <OptionCard option={opt} selected={selected === opt.id} onSelect={setSelected} />
+            </div>
           ))}
         </div>
 
-        <div className="mt-6">
+        <div className="mt-5">
           <Button
             fullWidth
             disabled={!selected}
