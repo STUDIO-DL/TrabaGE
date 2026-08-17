@@ -104,22 +104,19 @@ export default function PublishSharedOpportunity() {
     }
 
     if (
-      String(form.contactWhatsApp ?? '').trim().length >
-      CONTACT_MAX
+      String(form.contactWhatsApp ?? '').trim().length > CONTACT_MAX
     ) {
       return `El WhatsApp no puede superar ${CONTACT_MAX} caracteres.`;
     }
 
     if (
-      String(form.contactPhone ?? '').trim().length >
-      CONTACT_MAX
+      String(form.contactPhone ?? '').trim().length > CONTACT_MAX
     ) {
       return `El teléfono no puede superar ${CONTACT_MAX} caracteres.`;
     }
 
     if (
-      String(form.contactEmail ?? '').trim().length >
-      CONTACT_MAX
+      String(form.contactEmail ?? '').trim().length > CONTACT_MAX
     ) {
       return `El email no puede superar ${CONTACT_MAX} caracteres.`;
     }
@@ -429,4 +426,4 @@ export default function PublishSharedOpportunity() {
       </form>
     </FormPageLayout>
   );
-  }
+    }
