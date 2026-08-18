@@ -6,9 +6,6 @@ import { getCompanyDisplayName } from '../utils/companyProfile';
 import { reportError } from '../utils/logger';
 import { enrichJobMatchingFields } from '../utils/inferJobMatchingFields';
 import { JOB_SOURCE } from '../constants/jobSource';
-import { storageService } from './storage.service';
-import { versionedStoragePath } from '../utils/storagePaths';
-import { STORAGE_BUCKETS } from '../constants/storage';
 
 const ACTIVE_JOB_SELECT = [
   'id',
@@ -33,6 +30,118 @@ const ACTIVE_JOB_SELECT = [
   'company_profiles(company_name, logo_path, verified_status, is_verified, verification_status, sector, country)',
   'publisher:candidate_profiles!jobs_shared_by_user_id_fkey(full_name, avatar_path)',
 ].join(', ');
+
+function isRelationshipSelectError(error) {
+  return ['PGRST200', 'PGRST201'].includes(error?.code);
+}
+
+function isSchemaColumnError(error) {
+  const message = String(error?.message ?? '').toLowerCase();
+  return (
+    ['PGRST204', '42703'].includes(error?.code) ||
+    message.includes('schema cache') ||
+    message.includes('could not find') ||
+    message.includes('column')
+  );
+}
+
+function appendApplicationUrlToContact(contactMethod, applicationUrl) {
+  const contact = String(contactMethod ?? '').trim();
+  const url = String(applicationUrl ?? '').trim();
+
+  if (!url) return contact || null;
+  if (contact.toLowerCase().includes(url.toLowerCase())) return contact;
+
+  return [contact, `Enlace: ${url}`].filter(Boolean).join('\n');
+}
+
+function createJobId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+      const random = Math.floor(Math.random() * 16);
+      const value = char === 'x' ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    });
+  }
+
+  return '10000000-1000-4000-8000-100000000000'.replace(
+    /[018]/g,
+    (character) =>
+      (
+        Number(character) ^
+        (crypto.getRandomValues(new Uint8Array(1))[0] &
+          (15 >> (Number(character) / 4)))
+      ).toString(16),
+  );
+}
+
+async function attachJobProfiles(job) {
+  if (!job) return { data: job, error: null };
+
+  if (job.source_type === JOB_SOURCE.USER && job.shared_by_user_id) {
+    const { data: publisher, error } = await supabase
+      .from('candidate_profiles_public')
+      .select('user_id, full_name, avatar_path, headline')
+      .eq('user_id', job.shared_by_user_id)
+      .maybeSingle();
+
+    if (error) {
+      reportError(error, {
+        area: 'shared_opportunity_public_publisher',
+        jobId: job.id,
+        sharedByUserId: job.shared_by_user_id,
+      });
+
+      return {
+        data: {
+          ...job,
+          publisher: null,
+          company_profiles: null,
+        },
+        error: null,
+      };
+    }
+
+    return {
+      data: {
+        ...job,
+        publisher: publisher ?? null,
+        company_profiles: null,
+      },
+      error: null,
+    };
+  }
+
+  if (job.company_profiles !== undefined) {
+    return { data: job, error: null };
+  }
+
+  if (job.company_id) {
+    const { data: company, error } = await supabase
+      .from('company_profiles')
+      .select('*')
+      .eq('user_id', job.company_id)
+      .maybeSingle();
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    return {
+      data: {
+        ...job,
+        company_profiles: company ?? null,
+      },
+      error: null,
+    };
+  }
+
+  return { data: job, error: null };
+}
 
 function mapJobError(error) {
   if (!error) return null;
@@ -154,14 +263,23 @@ export const jobsService = {
     };
   },
 
-  getJobById: (id) =>
-    supabase
+  getJobById: async (id) => {
+    const result = await supabase
       .from('jobs')
-      .select(
-        '*, company_profiles(*), publisher:candidate_profiles!jobs_shared_by_user_id_fkey(full_name, avatar_path, headline)',
-      )
+      .select('*')
       .eq('id', id)
-      .single(),
+      .maybeSingle();
+
+    if (result.error || !result.data) return result;
+
+    const profiles = await attachJobProfiles(result.data);
+
+    return {
+      ...result,
+      data: profiles.data,
+      error: profiles.error,
+    };
+  },
 
   getApplicationCount: (jobId) =>
     supabase
@@ -200,9 +318,18 @@ export const jobsService = {
     requirements,
     city,
     contactMethod,
-    imageFile,
+    applicationUrl,
   }) => {
-    const basePayload = enrichJobMatchingFields({
+    const normalizedApplicationUrl =
+      String(applicationUrl ?? '').trim() || null;
+
+    const contactMethodWithUrl = appendApplicationUrlToContact(
+      contactMethod,
+      normalizedApplicationUrl,
+    );
+
+    const minimalPayload = {
+      id: createJobId(),
       source_type: JOB_SOURCE.USER,
       shared_by_user_id: userId,
       company_id: null,
@@ -210,16 +337,28 @@ export const jobsService = {
       description: String(description ?? '').trim() || null,
       requirements: String(requirements ?? '').trim() || null,
       city: String(city ?? '').trim() || null,
-      contact_method: String(contactMethod ?? '').trim() || null,
+      contact_method: contactMethodWithUrl,
       status: 'active',
-      salary_negotiable: true,
-    });
+    };
 
-    const insertResult = await supabase
+    let insertResult = await supabase
       .from('jobs')
-      .insert(basePayload)
-      .select()
-      .single();
+      .insert(minimalPayload);
+
+    let savedPayload = minimalPayload;
+
+    if (isSchemaColumnError(insertResult.error)) {
+      const fallbackPayload = enrichJobMatchingFields({
+        ...minimalPayload,
+        salary_negotiable: true,
+      });
+
+      insertResult = await supabase
+        .from('jobs')
+        .insert(fallbackPayload);
+
+      savedPayload = fallbackPayload;
+    }
 
     if (insertResult.error) {
       return {
@@ -228,36 +367,8 @@ export const jobsService = {
       };
     }
 
-    let job = insertResult.data;
-
-    if (imageFile && job?.id) {
-      const upload = await storageService.uploadJobOpportunityImage(
-        userId,
-        job.id,
-        imageFile,
-      );
-
-      if (!upload.error) {
-        const imagePath = versionedStoragePath(
-          upload.path,
-          STORAGE_BUCKETS.POST_IMAGES,
-        );
-
-        const updateResult = await supabase
-          .from('jobs')
-          .update({ image_path: imagePath })
-          .eq('id', job.id)
-          .select()
-          .single();
-
-        if (!updateResult.error) {
-          job = updateResult.data;
-        }
-      }
-    }
-
     return {
-      data: job,
+      data: savedPayload,
       error: null,
     };
   },

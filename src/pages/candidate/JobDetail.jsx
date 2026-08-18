@@ -36,6 +36,7 @@ import {
 } from '../../constants/jobSource';
 import { AvatarType } from '../../constants/avatarDefaults';
 import { resolveJobOpportunityImageUrl } from '../../utils/storagePaths';
+import { safeExternalUrl } from '../../utils/safeUrl';
 
 function JobSection({ title, children }) {
   if (!children) return null;
@@ -70,6 +71,16 @@ function JobMetadataLine({ children }) {
       {children}
     </p>
   );
+}
+
+function getSharedOpportunityUrl(job) {
+  const directUrl = safeExternalUrl(job?.application_url);
+  if (directUrl) return directUrl;
+
+  const match = String(job?.contact_method ?? '').match(/https:\/\/[^\s]+/i);
+  if (!match) return null;
+
+  return safeExternalUrl(match[0].replace(/[)\].,;:]+$/, ''));
 }
 
 function SimilarJobAlertToggle({
@@ -261,6 +272,7 @@ export default function JobDetail() {
   const opportunityImage = job?.image_path
     ? resolveJobOpportunityImageUrl(job.image_path)
     : null;
+  const applicationUrl = getSharedOpportunityUrl(job);
 
   const shareTitle = shared
     ? publisherName
@@ -494,6 +506,19 @@ export default function JobDetail() {
             <p className="whitespace-pre-line">
               {job.contact_method}
             </p>
+          </JobSection>
+        ) : null}
+
+        {shared && applicationUrl ? (
+          <JobSection title="Enlace">
+            <a
+              href={applicationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-touch items-center rounded-radius-md bg-primary-600 px-space-base py-space-sm text-button font-semibold text-white hover:bg-primary-700"
+            >
+              Abrir enlace
+            </a>
           </JobSection>
         ) : null}
 

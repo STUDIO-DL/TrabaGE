@@ -6,7 +6,6 @@ import EmptyState from '../../components/common/EmptyState';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import Textarea from '../../components/ui/Textarea';
-import FileUpload from '../../components/ui/FileUpload';
 import Card from '../../components/ui/Card';
 import { FormPageSkeleton } from '../../components/common/Skeleton';
 import { useAuth } from '../../hooks/useAuth';
@@ -17,10 +16,12 @@ import { isSharedOpportunityProfileComplete } from '../../utils/profileRequireme
 import { exitGuestToAuth, GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
 import { ROLES } from '../../constants/roles';
+import { normalizeHttpsUrl } from '../../utils/safeUrl';
 
 const DESCRIPTION_MAX = 5000;
 const TITLE_MAX = 180;
 const CONTACT_MAX = 240;
+const URL_MAX = 2048;
 
 const EMPTY_FORM = {
   title: '',
@@ -30,6 +31,7 @@ const EMPTY_FORM = {
   contactWhatsApp: '',
   contactPhone: '',
   contactEmail: '',
+  applicationUrl: '',
 };
 
 export default function PublishSharedOpportunity() {
@@ -39,8 +41,6 @@ export default function PublishSharedOpportunity() {
   const { showToast } = useNotificationContext();
 
   const [form, setForm] = useState(EMPTY_FORM);
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -52,28 +52,6 @@ export default function PublishSharedOpportunity() {
   const setField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
     setError('');
-  };
-
-  const handleImageUpload = (file, uploadError) => {
-    if (uploadError) {
-      setError(uploadError);
-      return;
-    }
-
-    if (!file) return;
-
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
-    setError('');
-  };
-
-  const clearImage = () => {
-    if (imagePreview) {
-      URL.revokeObjectURL(imagePreview);
-    }
-
-    setImageFile(null);
-    setImagePreview(null);
   };
 
   const validate = () => {
@@ -97,6 +75,7 @@ export default function PublishSharedOpportunity() {
       form.contactWhatsApp,
       form.contactPhone,
       form.contactEmail,
+      form.applicationUrl,
     ].some((value) => String(value ?? '').trim().length > 0);
 
     if (!hasContact) {
@@ -119,6 +98,17 @@ export default function PublishSharedOpportunity() {
       String(form.contactEmail ?? '').trim().length > CONTACT_MAX
     ) {
       return `El email no puede superar ${CONTACT_MAX} caracteres.`;
+    }
+
+    if (String(form.applicationUrl ?? '').trim().length > URL_MAX) {
+      return `El enlace no puede superar ${URL_MAX} caracteres.`;
+    }
+
+    if (
+      String(form.applicationUrl ?? '').trim() &&
+      !normalizeHttpsUrl(form.applicationUrl)
+    ) {
+      return 'Introduce un enlace válido que empiece por https://.';
     }
 
     return '';
@@ -187,14 +177,15 @@ export default function PublishSharedOpportunity() {
         city: form.location,
         contactMethod,
         requirements: form.requirements,
-        imageFile,
+        applicationUrl: normalizeHttpsUrl(form.applicationUrl),
       });
 
     setLoading(false);
 
     if (saveError) {
       setError(
-        getUserErrorMessage(saveError, ERROR_ACTION.publish_job),
+        saveError.message ||
+          getUserErrorMessage(saveError, ERROR_ACTION.publish_job),
       );
       return;
     }
@@ -392,36 +383,16 @@ export default function PublishSharedOpportunity() {
             />
           </div>
 
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-gray-900">
-              Imagen (opcional)
-            </p>
-
-            {imagePreview ? (
-              <div className="space-y-2">
-                <img
-                  src={imagePreview}
-                  alt="Vista previa"
-                  className="max-h-48 w-full rounded-radius-md object-cover"
-                />
-
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={clearImage}
-                >
-                  Quitar imagen
-                </Button>
-              </div>
-            ) : (
-              <FileUpload
-                accept="image/*"
-                fileType="image"
-                label="Subir imagen"
-                onUpload={handleImageUpload}
-              />
-            )}
-          </div>
+          <Input
+            type="url"
+            label="Enlace (opcional)"
+            value={form.applicationUrl}
+            onChange={(e) =>
+              setField('applicationUrl', e.target.value)
+            }
+            placeholder="https://..."
+            maxLength={URL_MAX}
+          />
         </Card>
       </form>
     </FormPageLayout>
