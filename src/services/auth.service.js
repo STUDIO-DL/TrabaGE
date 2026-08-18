@@ -56,6 +56,7 @@ function isExistingUnconfirmedUser(user) {
 const SESSION_DETECT_WAIT_MS = 250;
 const AUTH_STORAGE_KEY = 'trabage-auth';
 const VERIFIED_ACCOUNT_EMAIL_KEY = 'trabage_verified_account_email';
+const SESSION_REFRESH_MARGIN_SECONDS = 60;
 
 async function waitForInitialSessionDetection(ms = SESSION_DETECT_WAIT_MS) {
   await new Promise((resolve) => setTimeout(resolve, ms));
@@ -82,6 +83,28 @@ function readPersistedAuthSession() {
   }
 
   return null;
+}
+
+function shouldRefreshSession(session) {
+  if (!session?.refresh_token) return false;
+  const expiresAt = Number(session.expires_at || 0);
+  if (!expiresAt) return false;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return expiresAt - nowSeconds <= SESSION_REFRESH_MARGIN_SECONDS;
+}
+
+async function getFreshSession() {
+  const result = await supabase.auth.getSession();
+  const session = result.data?.session ?? null;
+
+  if (!result.error && shouldRefreshSession(session)) {
+    const refreshed = await supabase.auth.refreshSession();
+    if (!refreshed.error) {
+      return refreshed;
+    }
+  }
+
+  return result;
 }
 
 function rememberVerifiedAccountEmail(email) {
@@ -115,7 +138,7 @@ async function restoreVerifiedSessionFromStorage() {
 }
 
 async function getVerifiedSessionFromClient() {
-  const { data, error } = await supabase.auth.getSession();
+  const { data, error } = await getFreshSession();
   if (error) {
     return { session: null, user: null, error };
   }
@@ -1355,7 +1378,7 @@ export const authService = {
       return configError();
     }
 
-    return supabase.auth.getSession();
+    return getFreshSession();
   },
 
   getUserRole: (userId) =>

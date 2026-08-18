@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import { jobsService } from '../services/jobs.service';
 import { getUserErrorMessage, ERROR_ACTION } from '../utils/userFacingError';
-import { isSharedOpportunity } from '../constants/jobSource';
+import { isJobOwner } from '../constants/jobSource';
 
 export function useJobs(filters = {}) {
   const [jobs, setJobs] = useState([]);
@@ -30,7 +30,11 @@ export function useJobs(filters = {}) {
     fetchJobs();
   }, [fetchJobs]);
 
-  return { jobs, loading, error, refetch: fetchJobs };
+  const removeJob = useCallback((jobId) => {
+    setJobs((current) => current.filter((job) => job.id !== jobId));
+  }, []);
+
+  return { jobs, loading, error, refetch: fetchJobs, removeJob };
 }
 
 export function useJob(jobId, { viewerId = null } = {}) {
@@ -42,10 +46,7 @@ export function useJob(jobId, { viewerId = null } = {}) {
     if (!jobId) return;
     setLoading(true);
     jobsService.getJobById(jobId).then(({ data, error: fetchError }) => {
-      const isOwner =
-        viewerId &&
-        (data?.company_id === viewerId ||
-          (isSharedOpportunity(data) && data?.shared_by_user_id === viewerId));
+      const isOwner = isJobOwner(data, viewerId);
       const visible = data && (data.status === 'active' || isOwner);
       setJob(visible ? data : null);
       setError(fetchError ? getUserErrorMessage(fetchError, ERROR_ACTION.load_jobs) : null);

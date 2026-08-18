@@ -91,6 +91,13 @@ function readInitialAuthCache() {
   return readAuthResumeCache();
 }
 
+function isSessionFreshEnough(session) {
+  const expiresAt = Number(session?.expires_at || 0);
+  if (!expiresAt) return false;
+  const nowSeconds = Math.floor(Date.now() / 1000);
+  return expiresAt - nowSeconds > 60;
+}
+
 /** Best-effort session from Supabase persist key so cold start within grace keeps routes mounted. */
 function readOptimisticSession(cache) {
   if (typeof window === 'undefined' || !cache?.userId) return null;
@@ -103,6 +110,7 @@ function readOptimisticSession(cache) {
       parsed?.session ??
       (parsed?.access_token && parsed?.user ? parsed : null);
     if (!session?.access_token || !session?.user?.id) return null;
+    if (!isSessionFreshEnough(session)) return null;
     if (session.user.id !== cache.userId) return null;
     if (!isEmailVerified(session.user)) return null;
     return session;

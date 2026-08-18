@@ -15,6 +15,7 @@ export default function SavedJobs() {
     actionLoadingId,
     toggleSavedJob,
     isSaved,
+    refetch,
   } = useSavedJobs({ loadJobs: true });
 
   const handleRemove = async (jobId) => {
@@ -45,6 +46,7 @@ export default function SavedJobs() {
               saved={isSaved(job.id)}
               saving={actionLoadingId === job.id}
               onSaveToggle={() => handleRemove(job.id)}
+              onDeleted={refetch}
             />
           ))
         )}

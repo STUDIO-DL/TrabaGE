@@ -3,6 +3,7 @@ import { postsService } from './posts.service';
 import { supabase } from '../config/supabase';
 import { reportError } from '../utils/logger';
 import { rankDiscoverPeople } from '../utils/discoverPeopleEligibility';
+import { authService } from './auth.service';
 
 const FALLBACK_POOL = 120;
 
@@ -61,7 +62,7 @@ async function loadFollowedPersonalIds(userId) {
 async function recommendPeopleClientFallback({ limit = 20, offset = 0 } = {}) {
   const {
     data: { session },
-  } = await supabase.auth.getSession();
+  } = await authService.getSession();
   const me = session?.user?.id;
   if (!me) {
     return { data: [], error: { message: 'Authentication required' } };

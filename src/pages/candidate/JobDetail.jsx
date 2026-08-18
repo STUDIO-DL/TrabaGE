@@ -32,11 +32,15 @@ import { ROLES } from '../../constants/roles';
 import {
   getSharedPublisherAvatar,
   getSharedPublisherName,
+  isJobOwner,
   isSharedOpportunity,
 } from '../../constants/jobSource';
 import { AvatarType } from '../../constants/avatarDefaults';
 import { resolveJobOpportunityImageUrl } from '../../utils/storagePaths';
 import { safeExternalUrl } from '../../utils/safeUrl';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { TOAST } from '../../utils/copyLabels';
+import { rolePath } from '../../constants/roles';
 
 function JobSection({ title, children }) {
   if (!children) return null;
@@ -168,9 +172,11 @@ export default function JobDetail() {
 
   const [applicationCount, setApplicationCount] = useState(0);
   const [application, setApplication] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const company = job?.company_profiles;
   const shared = isSharedOpportunity(job);
+  const owner = isJobOwner(job, user?.id);
   const publisherName = getSharedPublisherName(job);
 
   useEffect(() => {
@@ -261,6 +267,25 @@ export default function JobDetail() {
     if (!result.ok) {
       showToast(result.message, 'error');
     }
+  };
+
+  const handleDelete = async () => {
+    if (!job?.id || !owner) return;
+
+    const ok = window.confirm('¿Eliminar esta oferta? Esta acción no se puede deshacer.');
+    if (!ok) return;
+
+    setDeleting(true);
+    const { error: deleteError } = await jobsService.deleteJob(job.id);
+    setDeleting(false);
+
+    if (deleteError) {
+      showToast(getSupabaseErrorMessage(deleteError), 'error');
+      return;
+    }
+
+    showToast(TOAST.jobDeleted, 'success');
+    navigate(rolePath(role || ROLES.PERSONAL, '/jobs'), { replace: true });
   };
 
   const hasActiveApplication =

@@ -30,10 +30,6 @@ const ACTIVE_JOB_SELECT = [
   'company_profiles(company_name, logo_path, verified_status, is_verified, verification_status, sector, country)',
 ].join(', ');
 
-function isRelationshipSelectError(error) {
-  return ['PGRST200', 'PGRST201'].includes(error?.code);
-}
-
 function isSchemaColumnError(error) {
   const message = String(error?.message ?? '').toLowerCase();
   return (
@@ -196,6 +192,14 @@ function mapJobError(error) {
   if (!error) return null;
 
   const message = error.message?.toLowerCase?.() || '';
+
+  if (message.includes('rate limit')) {
+    return {
+      ...error,
+      message:
+        'Has alcanzado el límite de publicaciones. Inténtalo de nuevo más tarde.',
+    };
+  }
 
   if (message.includes('violates row-level security')) {
     return {

@@ -109,7 +109,7 @@ export default function Jobs() {
     [filters, query],
   );
 
-  const { jobs, loading, error, refetch } = useJobs(effectiveFilters);
+  const { jobs, loading, error, refetch, removeJob } = useJobs(effectiveFilters);
   const { profile } = useProfile();
   const { showToast } = useNotificationContext();
   const { isSaved, toggleSavedJob, actionLoadingId } = useSavedJobs();
@@ -240,6 +240,7 @@ export default function Jobs() {
                 saved={isSaved(job.id)}
                 saving={actionLoadingId === job.id}
                 onSaveToggle={() => handleSaveToggle(job.id)}
+                onDeleted={removeJob}
               />
             ))}
           </section>
@@ -271,6 +272,7 @@ export default function Jobs() {
                 saved={isSaved(job.id)}
                 saving={actionLoadingId === job.id}
                 onSaveToggle={() => handleSaveToggle(job.id)}
+                onDeleted={removeJob}
               />
             ))
           )}

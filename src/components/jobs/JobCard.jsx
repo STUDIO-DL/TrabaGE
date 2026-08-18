@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AppIcon from '../common/AppIcon';
 import ContentActionMenu from '../common/ContentActionMenu';
@@ -11,9 +12,15 @@ import { getWorkModeLabel } from '../../constants/workModes';
 import {
   getSharedPublisherAvatar,
   getSharedPublisherName,
+  isJobOwner,
   isSharedOpportunity,
 } from '../../constants/jobSource';
 import { formatSalary, hasSalaryDisplay } from '../../utils/formatSalary';
+import { useAuth } from '../../hooks/useAuth';
+import { useNotificationContext } from '../../context/NotificationContext';
+import { jobsService } from '../../services/jobs.service';
+import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
+import { TOAST } from '../../utils/copyLabels';
 
 function JobLocationLine({ city, workMode }) {
   if (!city && !workMode) return null;
@@ -58,12 +65,18 @@ export default function JobCard({
   saved = false,
   onSaveToggle,
   saving = false,
+  onDeleted,
 }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { showToast } = useNotificationContext();
+  const [removed, setRemoved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  if (!job) return null;
+  if (!job || removed) return null;
 
   const shared = isSharedOpportunity(job);
+  const owner = isJobOwner(job, user?.id);
   const company = job.company_profiles;
   const publisherName = getSharedPublisherName(job);
   const avatarType = shared ? AvatarType.PERSONAL : avatarTypeFromCompanyProfile(company);
@@ -89,6 +102,24 @@ export default function JobCard({
     event.preventDefault();
     event.stopPropagation();
     onSaveToggle?.();
+  };
+
+  const handleDelete = async () => {
+    const ok = window.confirm('¿Eliminar esta oferta? Esta acción no se puede deshacer.');
+    if (!ok) return;
+
+    setDeleting(true);
+    const { error } = await jobsService.deleteJob(job.id);
+    setDeleting(false);
+
+    if (error) {
+      showToast(getSupabaseErrorMessage(error), 'error');
+      return;
+    }
+
+    setRemoved(true);
+    onDeleted?.(job.id);
+    showToast(TOAST.jobDeleted, 'success');
   };
 
   const stopCardNavigation = (event) => {
@@ -163,6 +194,8 @@ export default function JobCard({
             shareText="Encontré esta oferta de empleo en TrabaGE."
             targetType={REPORT_TARGET_TYPES.JOB}
             targetId={job.id}
+            onDelete={owner ? handleDelete : undefined}
+            deleteLabel={deleting ? 'Eliminando...' : 'Eliminar oferta'}
           />
           <button
             type="button"
