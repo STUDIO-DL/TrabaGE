@@ -473,14 +473,12 @@ export default function JobDetail() {
               </JobMetadataLine>
             ) : null}
 
-            {!shared ? (
-              <JobMetadataLine>
-                {formatSalary(
-                  job.salary,
-                  job.salary_negotiable,
-                )}
-              </JobMetadataLine>
-            ) : null}
+            <JobMetadataLine>
+              {formatSalary(
+                job.salary,
+                job.salary_negotiable,
+              )}
+            </JobMetadataLine>
 
             {job.created_at ? (
               <p className="flex items-center gap-space-xs text-body-small text-app-muted">

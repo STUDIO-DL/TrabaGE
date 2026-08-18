@@ -13,6 +13,7 @@ import {
   getSharedPublisherName,
   isSharedOpportunity,
 } from '../../constants/jobSource';
+import { formatSalary, hasSalaryDisplay } from '../../utils/formatSalary';
 
 function JobLocationLine({ city, workMode }) {
   if (!city && !workMode) return null;
@@ -143,6 +144,12 @@ export default function JobCard({
           )}
 
           <JobLocationLine city={job.city} workMode={job.work_mode} />
+
+          {hasSalaryDisplay(job.salary, job.salary_negotiable) ? (
+            <p className="truncate text-caption leading-tight text-app-subtle">
+              {formatSalary(job.salary, job.salary_negotiable)}
+            </p>
+          ) : null}
         </div>
 
         <div

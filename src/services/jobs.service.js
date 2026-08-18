@@ -28,7 +28,6 @@ const ACTIVE_JOB_SELECT = [
   'contact_method',
   'image_path',
   'company_profiles(company_name, logo_path, verified_status, is_verified, verification_status, sector, country)',
-  'publisher:candidate_profiles!jobs_shared_by_user_id_fkey(full_name, avatar_path)',
 ].join(', ');
 
 function isRelationshipSelectError(error) {
@@ -77,6 +76,56 @@ function createJobId() {
           (15 >> (Number(character) / 4)))
       ).toString(16),
   );
+}
+
+async function attachPublishersToJobs(jobs) {
+  if (!jobs?.length) return { data: jobs ?? [], error: null };
+
+  const sharedUserIds = [
+    ...new Set(
+      jobs
+        .filter(
+          (job) =>
+            job.source_type === JOB_SOURCE.USER && job.shared_by_user_id,
+        )
+        .map((job) => job.shared_by_user_id),
+    ),
+  ];
+
+  if (!sharedUserIds.length) {
+    return { data: jobs, error: null };
+  }
+
+  const { data: publishers, error } = await supabase
+    .from('candidate_profiles_public')
+    .select('user_id, full_name, avatar_path, headline')
+    .in('user_id', sharedUserIds);
+
+  if (error) {
+    reportError(error, {
+      area: 'shared_opportunity_public_publishers_batch',
+      sharedUserIds,
+    });
+  }
+
+  const publisherByUserId = Object.fromEntries(
+    (publishers ?? []).map((publisher) => [publisher.user_id, publisher]),
+  );
+
+  return {
+    data: jobs.map((job) => {
+      if (job.source_type !== JOB_SOURCE.USER || !job.shared_by_user_id) {
+        return job;
+      }
+
+      return {
+        ...job,
+        publisher: publisherByUserId[job.shared_by_user_id] ?? null,
+        company_profiles: null,
+      };
+    }),
+    error: null,
+  };
 }
 
 async function attachJobProfiles(job) {
@@ -249,13 +298,25 @@ export const jobsService = {
 
     const result = await query;
 
-    if (!filters.salaryMin) {
+    if (result.error) {
       return result;
+    }
+
+    const withPublishers = await attachPublishersToJobs(result.data ?? []);
+
+    if (withPublishers.error) {
+      return { ...result, data: null, error: withPublishers.error };
+    }
+
+    const jobs = withPublishers.data ?? [];
+
+    if (!filters.salaryMin) {
+      return { ...result, data: jobs };
     }
 
     return {
       ...result,
-      data: (result.data ?? []).filter(
+      data: jobs.filter(
         (job) =>
           job.salary_negotiable ||
           extractSalaryNumber(job.salary) >= Number(filters.salaryMin),
@@ -319,6 +380,8 @@ export const jobsService = {
     city,
     contactMethod,
     applicationUrl,
+    salary,
+    salaryNegotiable = false,
   }) => {
     const normalizedApplicationUrl =
       String(applicationUrl ?? '').trim() || null;
@@ -338,6 +401,8 @@ export const jobsService = {
       requirements: String(requirements ?? '').trim() || null,
       city: String(city ?? '').trim() || null,
       contact_method: contactMethodWithUrl,
+      salary: String(salary ?? '').trim() || null,
+      salary_negotiable: Boolean(salaryNegotiable),
       status: 'active',
     };
 
@@ -395,7 +460,19 @@ export const jobsService = {
       );
     }
 
-    return query;
+    const result = await query;
+
+    if (result.error) {
+      return result;
+    }
+
+    const withPublishers = await attachPublishersToJobs(result.data ?? []);
+
+    return {
+      ...result,
+      data: withPublishers.data,
+      error: withPublishers.error ?? result.error,
+    };
   },
 
   updateJob: async (id, data) => {

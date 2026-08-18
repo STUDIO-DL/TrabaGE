@@ -17,6 +17,7 @@ import { exitGuestToAuth, GUEST_MODE_MESSAGE } from '../../utils/guestMode';
 import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
 import { ROLES } from '../../constants/roles';
 import { normalizeHttpsUrl } from '../../utils/safeUrl';
+import { normalizeSalaryInput } from '../../utils/formatSalary';
 
 const DESCRIPTION_MAX = 5000;
 const TITLE_MAX = 180;
@@ -28,6 +29,8 @@ const EMPTY_FORM = {
   location: '',
   description: '',
   requirements: '',
+  salary: '',
+  salaryNegotiable: false,
   contactWhatsApp: '',
   contactPhone: '',
   contactEmail: '',
@@ -178,6 +181,8 @@ export default function PublishSharedOpportunity() {
         contactMethod,
         requirements: form.requirements,
         applicationUrl: normalizeHttpsUrl(form.applicationUrl),
+        salary: normalizeSalaryInput(form.salary) || null,
+        salaryNegotiable: form.salaryNegotiable,
       });
 
     setLoading(false);
@@ -346,6 +351,53 @@ export default function PublishSharedOpportunity() {
             rows={4}
             maxLength={DESCRIPTION_MAX}
           />
+
+          <Input
+            label="Salario (opcional)"
+            value={form.salary}
+            onChange={(e) => setField('salary', e.target.value)}
+            onBlur={(e) => {
+              const normalized = normalizeSalaryInput(e.target.value);
+              if (normalized !== form.salary) setField('salary', normalized);
+            }}
+            placeholder="Ej. 500.000 - 800.000 XAF"
+          />
+
+          <div className="flex items-center justify-between gap-3 rounded-radius-md border border-app-border bg-app-surface px-space-md py-space-sm">
+            <div className="min-w-0">
+              <p className="text-body-small font-medium text-app-text">
+                Salario negociable
+              </p>
+              <p className="text-caption text-app-subtle">
+                Indica que la remuneración puede acordarse con la persona
+                interesada
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.salaryNegotiable}
+              aria-label="Salario negociable"
+              onClick={() =>
+                setField('salaryNegotiable', !form.salaryNegotiable)
+              }
+              className={[
+                'relative h-7 w-12 shrink-0 rounded-full p-0.5 transition-all duration-200 ease-out',
+                'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-300 focus-visible:ring-offset-2',
+                form.salaryNegotiable
+                  ? 'bg-primary-600 shadow-[0_8px_18px_rgba(37,99,235,0.24)]'
+                  : 'bg-slate-200',
+                'active:scale-95',
+              ].join(' ')}
+            >
+              <span
+                className={[
+                  'block h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 ease-out',
+                  form.salaryNegotiable ? 'translate-x-5' : 'translate-x-0',
+                ].join(' ')}
+              />
+            </button>
+          </div>
 
           <div className="space-y-2">
             <p className="text-sm font-medium text-gray-900">
