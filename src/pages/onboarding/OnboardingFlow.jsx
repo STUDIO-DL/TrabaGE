@@ -10,9 +10,9 @@ import {
   MapPin,
   Plus,
   Search,
-  Wrench,
+  Settings,
 } from '../../constants/icons';
-import { Rocket } from 'lucide-react';
+import { Handshake } from 'lucide-react';
 import AppAvatar from '../../components/common/AppAvatar';
 import AppIcon from '../../components/common/AppIcon';
 import AuthLoadingScreen from '../../components/auth/AuthLoadingScreen';
@@ -49,12 +49,6 @@ import { avatarPath, STORAGE_BUCKETS } from '../../constants/storage';
 import { versionedStoragePath } from '../../utils/storagePaths';
 import { queryClient } from '../../config/queryClient';
 
-const GOAL_ICONS = {
-  employment: Briefcase,
-  services: Wrench,
-  both: Rocket,
-};
-
 const STUDY_STAGE_EMOJI = {
   'Formación profesional': '🎓',
   'Grado / Universidad': '📚',
@@ -78,34 +72,29 @@ function addUnique(list, value) {
 
 function SegmentedProgress({ step, total }) {
   return (
-    <div className="flex flex-1 gap-[3px]" aria-hidden>
-      {Array.from({ length: total }).map((_, index) => (
-        <span
-          key={index}
-          className={[
-            'h-[3px] flex-1 rounded-full transition-colors duration-300',
-            index < step ? 'bg-primary-600' : 'bg-slate-200',
-          ].join(' ')}
-        />
-      ))}
+    <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-slate-200" aria-hidden>
+      <span
+        className="block h-full rounded-full bg-primary-600 transition-[width] duration-300"
+        style={{ width: `${Math.max(0, Math.min(step / total, 1)) * 100}%` }}
+      />
     </div>
   );
 }
 
 function Header({ step, total, onBack }) {
   return (
-    <header className="shrink-0 px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-0.5">
+    <header className="shrink-0 px-5 pt-[max(0.8rem,env(safe-area-inset-top))] pb-1">
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={onBack}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-app-border bg-white text-app-text transition hover:border-primary-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-app-text transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
           aria-label="Atrás"
         >
           <AppIcon icon={ArrowLeft} size={18} aria-hidden />
         </button>
         <SegmentedProgress step={step} total={total} />
-        <span className="w-10 shrink-0 text-right text-xs font-semibold tabular-nums text-app-muted">
+        <span className="w-10 shrink-0 text-right text-xs font-medium tabular-nums text-app-text">
           {step} / {total}
         </span>
       </div>
@@ -136,17 +125,56 @@ function ScreenShell({ title, subtitle, children, compact = false, scrollable = 
   );
 }
 
-function GoalCard({ selected, icon, title, description, onClick }) {
+function GoalIllustration({ goal }) {
+  if (goal === 'employment') {
+    return (
+      <span className="relative mx-auto block h-16 w-16" aria-hidden>
+        <span className="absolute left-1 top-3 flex h-10 w-12 items-center justify-center rounded-md border-2 border-[#2B3A67] bg-[#F8FAFF] text-[#2B3A67] shadow-sm">
+          <AppIcon icon={Briefcase} size={34} strokeWidth={1.7} />
+        </span>
+        <span className="absolute bottom-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-[#DBEAFE] text-[#2B3A67]">
+          <AppIcon icon={Search} size={26} strokeWidth={2.1} />
+        </span>
+      </span>
+    );
+  }
+
+  if (goal === 'services') {
+    return (
+      <span className="relative mx-auto block h-16 w-16" aria-hidden>
+        <span className="absolute left-2 top-0 flex h-11 w-11 items-center justify-center rounded-full bg-[#DBEAFE] text-[#2563EB]">
+          <AppIcon icon={Settings} size={38} strokeWidth={1.8} />
+        </span>
+        <span className="absolute bottom-0 left-1/2 flex h-9 w-11 -translate-x-1/2 items-center justify-center rounded-full bg-[#FEF3C7] text-[#2B3A67] ring-2 ring-white">
+          <AppIcon icon={Handshake} size={31} strokeWidth={1.9} />
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <span className="relative mx-auto block h-16 w-16" aria-hidden>
+      <span className="absolute left-2 top-2 flex h-10 w-12 items-center justify-center rounded-md border-2 border-[#2B3A67] bg-[#F8FAFF] text-[#2B3A67] shadow-sm">
+        <AppIcon icon={Briefcase} size={33} strokeWidth={1.7} />
+      </span>
+      <span className="absolute bottom-0 left-1/2 flex h-8 w-11 -translate-x-1/2 items-center justify-center rounded-full bg-[#FEF3C7] text-[#2B3A67] ring-2 ring-white">
+        <AppIcon icon={Handshake} size={30} strokeWidth={1.9} />
+      </span>
+    </span>
+  );
+}
+
+function GoalCard({ selected, goal, title, description, onClick }) {
   return (
     <button
       type="button"
       aria-pressed={selected}
       onClick={onClick}
       className={[
-        'relative flex min-h-0 flex-1 flex-col items-center justify-start rounded-xl border px-2 py-3 text-center transition',
+        'relative flex min-h-[178px] flex-1 flex-col items-center justify-start rounded-md border px-2.5 py-4 text-center transition',
         selected
-          ? 'border-primary-600 bg-primary-50/80 shadow-[0_4px_12px_rgba(37,99,235,0.1)]'
-          : 'border-app-border bg-white hover:border-primary-200',
+          ? 'border-primary-500 bg-white shadow-[0_16px_28px_rgba(43,58,103,0.16)] -translate-y-1'
+          : 'border-slate-200 bg-white shadow-[0_12px_24px_rgba(15,23,42,0.10)] hover:border-primary-200 hover:-translate-y-0.5',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
       ].join(' ')}
     >
@@ -155,9 +183,11 @@ function GoalCard({ selected, icon, title, description, onClick }) {
           <AppIcon icon={Check} size={10} aria-hidden />
         </span>
       ) : null}
-      <AppIcon icon={icon} size={22} className="text-primary-700" aria-hidden />
-      <span className="mt-2 block text-[11px] font-bold leading-tight text-app-text">{title}</span>
-      <span className="mt-1 block text-[10px] leading-snug text-app-muted">{description}</span>
+      <GoalIllustration goal={goal} />
+      <span className="mt-3 block text-[11px] font-bold leading-tight text-app-text">{title}</span>
+      <span className="mt-1.5 block max-w-[6.6rem] text-[10px] leading-snug text-app-muted">
+        {description}
+      </span>
     </button>
   );
 }
@@ -267,13 +297,13 @@ function BottomActions({
   }
 
   return (
-    <footer className="shrink-0 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5">
+    <footer className="shrink-0 px-8 pb-[max(1rem,env(safe-area-inset-bottom))] pt-1.5">
       <Button
         type="button"
         fullWidth
         loading={loading}
         onClick={onNext}
-        className="!h-9 !rounded-lg !text-[13px] !font-semibold"
+        className="!h-10 !rounded-md !text-[12px] !font-semibold shadow-[0_10px_20px_rgba(37,99,235,0.22)]"
       >
         {nextLabel}
         <AppIcon icon={ArrowRight} size={16} aria-hidden />
@@ -282,7 +312,7 @@ function BottomActions({
         <button
           type="button"
           onClick={onSkip}
-          className="mt-2 block w-full py-1.5 text-center text-xs font-bold text-app-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+          className="mt-2 block w-full py-1.5 text-center text-[11px] font-medium text-app-text underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
         >
           Omitir
         </button>
@@ -298,12 +328,12 @@ function GoalScreen({ data, save }) {
       subtitle="Elige cómo quieres aprovechar TrabaGE."
       compact
     >
-      <div className="flex h-full min-h-0 gap-2">
+      <div className="mx-auto flex w-full max-w-[366px] gap-2.5 pt-3">
         {TRABAGE_GOALS.map((goal) => (
           <GoalCard
             key={goal.value}
             selected={data.trabage_goal === goal.value}
-            icon={GOAL_ICONS[goal.value]}
+            goal={goal.value}
             title={goal.title}
             description={goal.description}
             onClick={() => save({ trabage_goal: goal.value })}

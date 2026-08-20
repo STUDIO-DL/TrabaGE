@@ -20,7 +20,7 @@ import { ROLES, rolePath } from '../../constants/roles';
 import { useNotificationContext } from '../../context/NotificationContext';
 import { jobsService } from '../../services/jobs.service';
 import { companyService } from '../../services/company.service';
-import { isCompanyRequiredComplete } from '../../utils/profileRequirements';
+import { isCompanyJobPublishReady } from '../../utils/profileRequirements';
 import { exitGuestToAuth } from '../../utils/guestMode';
 import { normalizeSalaryInput } from '../../utils/formatSalary';
 import { getUserErrorMessage, ERROR_ACTION } from '../../utils/userFacingError';
@@ -106,7 +106,7 @@ export default function PublishJob() {
   const { showToast } = useNotificationContext();
   const profileCheckPending = !isPreviewMode && (profileLoading || !profileFetched);
   const profileIncomplete =
-    !isPreviewMode && profileFetched && !isCompanyRequiredComplete(profile);
+    !isPreviewMode && profileFetched && !isCompanyJobPublishReady(profile);
   const [editForm, setEditForm] = useState(EMPTY_JOB_FORM);
   const {
     values: draftForm,
@@ -182,8 +182,8 @@ export default function PublishJob() {
       return;
     }
 
-    if (status === 'active' && !isCompanyRequiredComplete(profile)) {
-      setError('Completa el perfil de tu empresa antes de publicar ofertas.');
+    if (status === 'active' && !isCompanyJobPublishReady(profile)) {
+      setError('Añade el nombre y la descripción de tu empresa antes de publicar ofertas.');
       return;
     }
 

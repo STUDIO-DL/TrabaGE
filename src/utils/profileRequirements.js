@@ -73,6 +73,18 @@ export function isCompanyRequiredComplete(profile) {
   return getCompanyRequiredMissing(profile).length === 0;
 }
 
+export function getCompanyJobPublishMissing(profile) {
+  if (!profile) return ['company_name', 'description'];
+  const missing = [];
+  if (!hasText(profile.company_name)) missing.push('company_name');
+  if (!hasText(profile.description)) missing.push('description');
+  return missing;
+}
+
+export function isCompanyJobPublishReady(profile) {
+  return getCompanyJobPublishMissing(profile).length === 0;
+}
+
 /**
  * Minimum profile fields a personal user needs before publishing
  * shared job opportunities ("Oportunidades compartidas").
