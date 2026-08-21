@@ -102,7 +102,7 @@ export function summarizeCompletionSections(sections) {
 export function isPersonalCompletionSufficient(sections, percent) {
   const byKey = Object.fromEntries(asArray(sections).map((s) => [s.key, s.done]));
   return (
-    percent >= 55 &&
+    percent >= 50 &&
     Boolean(byKey.full_name) &&
     Boolean(byKey.headline || byKey.about) &&
     Boolean(byKey.experience || byKey.education || byKey.skills)

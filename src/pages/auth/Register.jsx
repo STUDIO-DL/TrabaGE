@@ -128,7 +128,11 @@ export default function Register() {
   } = useAuth();
   const fromOAuth = location.state?.fromOAuth === true;
   const oauthCompletion = fromOAuth && isAuthenticated && Boolean(user?.id);
-  const accountKind = ACCOUNT_KINDS.PERSONAL;
+  const requestedAccountKind = location.state?.accountKind;
+  const accountKind = Object.values(ACCOUNT_KINDS).includes(requestedAccountKind)
+    ? requestedAccountKind
+    : ACCOUNT_KINDS.PERSONAL;
+  const businessCreation = location.state?.businessCreation === true && accountKind === ACCOUNT_KINDS.BUSINESS;
 
   const [typeValues, setTypeValues] = useState(() => {
     const initial = {};
@@ -142,6 +146,7 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [confirmedAge, setConfirmedAge] = useState(false);
+  const [legalRepresentative, setLegalRepresentative] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -165,7 +170,8 @@ export default function Register() {
     setTypeValues((prev) => ({ ...prev, [key]: value }));
   };
 
-  const legalConfirmationsComplete = acceptedTerms && confirmedAge;
+  const legalConfirmationsComplete =
+    acceptedTerms && confirmedAge && (!businessCreation || legalRepresentative);
 
   const validateLegalConfirmations = () => {
     if (!acceptedTerms) {
@@ -175,6 +181,11 @@ export default function Register() {
 
     if (!confirmedAge) {
       setError(getErrorMessage('confirmAge'));
+      return false;
+    }
+
+    if (businessCreation && !legalRepresentative) {
+      setError('Confirma que eres representante legal de la empresa.');
       return false;
     }
 
@@ -324,9 +335,10 @@ export default function Register() {
     return <AuthLoadingScreen />;
   }
 
-  if (isAuthenticated && !isPreviewMode && role && !oauthCompletion) {
+  if (isAuthenticated && !isPreviewMode && role && !oauthCompletion && !businessCreation) {
     const home = getHomePath();
     if (home) return <Navigate to={home} replace />;
+
   }
 
   // Hydrating role after login/OAuth — show loader, not the register form.
@@ -467,6 +479,20 @@ export default function Register() {
                 />
                 <span className="text-[10px] leading-snug text-[#64748B]">Confirmo que tengo 18+ años</span>
               </label>
+
+              {businessCreation ? (
+                <label className="flex cursor-pointer items-start gap-2">
+                  <input
+                    type="checkbox"
+                    checked={legalRepresentative}
+                    onChange={(e) => setLegalRepresentative(e.target.checked)}
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 rounded border-[#E2E8F0] text-primary-600 focus:ring-primary-500"
+                  />
+                  <span className="text-[10px] leading-snug text-[#64748B]">
+                    Confirmo que soy representante legal de esta empresa.
+                  </span>
+                </label>
+              ) : null}
             </div>
 
             {error ? (
@@ -489,13 +515,15 @@ export default function Register() {
 
           <AuthDivider compact />
 
-          <GoogleAuthButton
-            onClick={handleGoogleRegister}
-            label="Continuar con Google"
-            disabled={!legalConfirmationsComplete}
-            loading={googleLoading}
-            compact
-          />
+          {!businessCreation ? (
+            <GoogleAuthButton
+              onClick={handleGoogleRegister}
+              label="Continuar con Google"
+              disabled={!legalConfirmationsComplete}
+              loading={googleLoading}
+              compact
+            />
+          ) : null}
         </>
       )}
     </AuthEntryLayout>

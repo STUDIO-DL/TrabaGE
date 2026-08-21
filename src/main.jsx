@@ -17,6 +17,25 @@ initWebPush();
 initConnectivityListeners();
 
 if (typeof window !== 'undefined') {
+  const isEditableTarget = (target) =>
+    target instanceof Element &&
+    (target.matches('input, textarea, select, [contenteditable="true"], [contenteditable=""]') ||
+      Boolean(target.closest('input, textarea, select, [contenteditable="true"], [contenteditable=""]')));
+
+  document.addEventListener('contextmenu', (event) => {
+    if (!isEditableTarget(event.target)) event.preventDefault();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && ['+', '-', '=', '0'].includes(event.key)) {
+      event.preventDefault();
+    }
+  });
+
+  window.addEventListener('wheel', (event) => {
+    if (event.ctrlKey) event.preventDefault();
+  }, { passive: false });
+
   window.addEventListener('unhandledrejection', (event) => {
     reportError(event.reason instanceof Error ? event.reason : new Error(String(event.reason || 'unhandledrejection')), {
       area: 'unhandled_rejection',

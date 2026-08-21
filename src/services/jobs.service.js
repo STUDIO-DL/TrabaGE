@@ -23,9 +23,13 @@ const ACTIVE_JOB_SELECT = [
   'created_at',
   'company_id',
   'application_deadline',
+  'application_url',
   'source_type',
   'shared_by_user_id',
   'contact_method',
+  'contact_email',
+  'contact_whatsapp',
+  'contact_phone',
   'image_path',
   'company_profiles(company_name, logo_path, verified_status, is_verified, verification_status, sector, country)',
 ].join(', ');
@@ -383,7 +387,11 @@ export const jobsService = {
     requirements,
     city,
     contactMethod,
+    contactWhatsApp,
+    contactPhone,
+    contactEmail,
     applicationUrl,
+    applicationDeadline,
     salary,
     salaryNegotiable = false,
   }) => {
@@ -405,6 +413,11 @@ export const jobsService = {
       requirements: String(requirements ?? '').trim() || null,
       city: String(city ?? '').trim() || null,
       contact_method: contactMethodWithUrl,
+      contact_whatsapp: String(contactWhatsApp ?? '').trim() || null,
+      contact_phone: String(contactPhone ?? '').trim() || null,
+      contact_email: String(contactEmail ?? '').trim() || null,
+      application_url: normalizedApplicationUrl,
+      application_deadline: applicationDeadline || null,
       salary: String(salary ?? '').trim() || null,
       salary_negotiable: Boolean(salaryNegotiable),
       status: 'active',
@@ -552,29 +565,27 @@ export const jobsService = {
     jobsService.updateJob(id, { status }),
 
   notifyJobPublished: async (job) => {
-    if (!job?.id || !job.company_id) {
+    if (!job?.id) {
       return { error: null };
     }
 
-    if (job.source_type === JOB_SOURCE.USER) {
-      return { error: null };
-    }
+    let notifyResult = { error: null };
 
-    const { data: companyProfile } = await supabase
-      .from('company_profiles')
-      .select('company_name')
-      .eq('user_id', job.company_id)
-      .maybeSingle();
+    if (job.source_type !== JOB_SOURCE.USER && job.company_id) {
+      const { data: companyProfile } = await supabase
+        .from('company_profiles')
+        .select('company_name')
+        .eq('user_id', job.company_id)
+        .maybeSingle();
 
-    const companyName = getCompanyDisplayName(
-      companyProfile,
-      { warnIfMissing: true },
-    );
+      const companyName = getCompanyDisplayName(
+        companyProfile,
+        { warnIfMissing: true },
+      );
 
-    const citySuffix = job.city ? ` - ${job.city}` : '';
+      const citySuffix = job.city ? ` - ${job.city}` : '';
 
-    const notifyResult =
-      await notificationsService.notifyFollowers({
+      notifyResult = await notificationsService.notifyFollowers({
         targetType: FOLLOWS_TARGET.BUSINESS,
         targetId: job.company_id,
         type: 'new_job',
@@ -584,6 +595,7 @@ export const jobsService = {
         message: `${job.title}${citySuffix}`,
         link: `/personal/jobs/${job.id}`,
       });
+    }
 
     jobRecommendationsService
       .processNewJob(job)

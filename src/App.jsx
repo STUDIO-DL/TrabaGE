@@ -44,6 +44,7 @@ const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const SetPassword = lazy(() => import('./pages/auth/SetPassword'));
 const CandidateSetup = lazy(() => import('./pages/setup/CandidateSetup'));
 const CompanySetup = lazy(() => import('./pages/setup/CompanySetup'));
+const CreateBusinessAccount = lazy(() => import('./pages/business/CreateBusinessAccount'));
 
 const CandidateFeed = lazy(() => import('./pages/candidate/Feed'));
 const CandidateJobs = lazy(() => import('./pages/candidate/Jobs'));
@@ -294,6 +295,7 @@ function AppRoutes() {
                   <Route path="/personal/profile/saved" element={<SavedPosts />} />
                   <Route path="/personal/profile/professional-panel" element={<ProfessionalPanel />} />
                   <Route path="/personal/profile/edit-intro" element={<EditIntro />} />
+                  <Route path="/personal/business/create" element={<CreateBusinessAccount />} />
                   <Route path="/personal/settings" element={<CandidateSettings />} />
                   <Route path="/personal/settings/appearance" element={<CandidateAppearance />} />
                   <Route path="/personal/settings/notifications" element={<CandidateNotificationSettings />} />

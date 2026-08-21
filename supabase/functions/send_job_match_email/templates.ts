@@ -10,9 +10,10 @@ export function buildJobMatchSubject(jobTitle: string, opts: { sourceType?: stri
   return `Nueva oportunidad para ti en TrabaGE — ${title}`;
 }
 
-export function buildJobMatchText({ name, jobTitle, company, location, modality, url, sourceType, publisherName }: {
+export function buildJobMatchText({ name, jobTitle, description, company, location, modality, url, sourceType, publisherName }: {
   name: string;
   jobTitle: string;
+  description?: string;
   company: string;
   location: string;
   modality: string;
@@ -26,12 +27,13 @@ export function buildJobMatchText({ name, jobTitle, company, location, modality,
     ? `${jobTitle}\npublicada por ${publisherName}`
     : jobTitle;
 
-  return `Hola ${name || ''},\n\nHemos encontrado una oportunidad que coincide con tu perfil.\n\n${header}\n${location || ''}\n${modality || ''}\n\nVer oferta: ${url}\n\nPuedes gestionar tus preferencias desde la configuración de tu cuenta en TrabaGE.`;
+  return `Hola ${name || ''},\n\nHemos encontrado una oportunidad que coincide con tu perfil.\n\n${header}\n${location || ''}\n${modality || ''}\n\n${description || ''}\n\nVer oferta: ${url}\n\nPuedes gestionar tus preferencias desde la configuración de tu cuenta en TrabaGE.`;
 }
 
-export function buildJobMatchHtml({ name, jobTitle, company, location, modality, url, sourceType, publisherName }: {
+export function buildJobMatchHtml({ name, jobTitle, description, company, location, modality, url, sourceType, publisherName }: {
   name: string;
   jobTitle: string;
+  description?: string;
   company: string;
   location: string;
   modality: string;
@@ -43,6 +45,7 @@ export function buildJobMatchHtml({ name, jobTitle, company, location, modality,
   const safeCompany = company || '';
   const safeLocation = location || '';
   const safeModality = modality || '';
+  const safeDescription = description || '';
   const safeUrl = url || '#';
 
   const headerLine = sourceType === 'company' && safeCompany
@@ -57,6 +60,7 @@ export function buildJobMatchHtml({ name, jobTitle, company, location, modality,
     <p>Hemos encontrado una oportunidad que coincide con tu perfil:</p>
     <h2 style="margin:6px 0 2px;font-size:18px">${jobTitle}</h2>
     <p style="margin:0 0 8px">${headerLine}</p>
+    ${safeDescription ? `<p style="margin:12px 0;color:#444">${safeDescription}</p>` : ''}
     <p style="margin:18px 0"><a href="${safeUrl}" style="background:#2563EB;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none;display:inline-block">Ver oferta</a></p>
     <p style="color:#666;font-size:13px">Puedes gestionar tus preferencias de notificaciones desde la configuración de tu cuenta.</p>
   </div>

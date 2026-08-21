@@ -143,6 +143,7 @@ serve(async (req) => {
     const html = buildJobMatchHtml({
       name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
       jobTitle,
+      description: String(jobRow.description ?? '').trim(),
       company,
       location,
       modality,
@@ -153,6 +154,7 @@ serve(async (req) => {
     const text = buildJobMatchText({
       name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? '',
       jobTitle,
+      description: String(jobRow.description ?? '').trim(),
       company,
       location,
       modality,

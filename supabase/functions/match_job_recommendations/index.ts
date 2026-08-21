@@ -345,7 +345,8 @@ serve(async (req) => {
     return jsonResponse({ error: 'Job not found' }, 404);
   }
 
-  if (job.company_id !== callerId) {
+  const isOwner = job.company_id === callerId || job.shared_by_user_id === callerId;
+  if (!isOwner) {
     const { data: role } = await supabase
       .from('user_roles')
       .select('role')

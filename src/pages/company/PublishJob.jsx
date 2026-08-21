@@ -183,7 +183,7 @@ export default function PublishJob() {
     }
 
     if (status === 'active' && !isCompanyJobPublishReady(profile)) {
-      setError('Añade el nombre y la descripción de tu empresa antes de publicar ofertas.');
+      setError('Añade el nombre, la descripción y los servicios de tu empresa antes de publicar ofertas.');
       return;
     }
 

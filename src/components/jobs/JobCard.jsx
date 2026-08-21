@@ -191,7 +191,7 @@ export default function JobCard({
           <ContentActionMenu
             shareUrl={generateJobUrl(job.id)}
             shareTitle={shareTitle}
-            shareText="Encontré esta oferta de empleo en TrabaGE."
+            shareText={`Encontré esta oportunidad en TrabaGE: ${job?.description || ''}`}
             targetType={REPORT_TARGET_TYPES.JOB}
             targetId={job.id}
             onDelete={owner ? handleDelete : undefined}

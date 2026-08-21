@@ -78,6 +78,9 @@ export function getCompanyJobPublishMissing(profile) {
   const missing = [];
   if (!hasText(profile.company_name)) missing.push('company_name');
   if (!hasText(profile.description)) missing.push('description');
+  if (!Array.isArray(profile.company_services ?? profile.services) || !(profile.company_services ?? profile.services).length) {
+    missing.push('services');
+  }
   return missing;
 }
 

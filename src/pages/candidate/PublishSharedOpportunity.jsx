@@ -35,6 +35,7 @@ const EMPTY_FORM = {
   contactPhone: '',
   contactEmail: '',
   applicationUrl: '',
+  applicationDeadline: '',
 };
 
 export default function PublishSharedOpportunity() {
@@ -114,6 +115,10 @@ export default function PublishSharedOpportunity() {
       return 'Introduce un enlace válido que empiece por https://.';
     }
 
+    if (form.applicationDeadline && form.applicationDeadline < new Date().toISOString().slice(0, 10)) {
+      return 'La fecha límite no puede estar en el pasado.';
+    }
+
     return '';
   };
 
@@ -179,8 +184,12 @@ export default function PublishSharedOpportunity() {
         description: form.description,
         city: form.location,
         contactMethod,
+        contactWhatsApp: form.contactWhatsApp,
+        contactPhone: form.contactPhone,
+        contactEmail: form.contactEmail,
         requirements: form.requirements,
         applicationUrl: normalizeHttpsUrl(form.applicationUrl),
+        applicationDeadline: form.applicationDeadline || null,
         salary: normalizeSalaryInput(form.salary) || null,
         salaryNegotiable: form.salaryNegotiable,
       });
@@ -195,6 +204,7 @@ export default function PublishSharedOpportunity() {
       return;
     }
 
+    void jobsService.notifyJobPublished(data);
     showToast('Oportunidad compartida publicada', 'success');
     navigate(`/personal/jobs/${data.id}`);
   };
@@ -444,6 +454,14 @@ export default function PublishSharedOpportunity() {
             }
             placeholder="https://..."
             maxLength={URL_MAX}
+          />
+
+          <Input
+            type="date"
+            label="Fecha límite (opcional)"
+            value={form.applicationDeadline}
+            onChange={(e) => setField('applicationDeadline', e.target.value)}
+            min={new Date().toISOString().slice(0, 10)}
           />
         </Card>
       </form>

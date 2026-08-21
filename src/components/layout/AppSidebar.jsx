@@ -7,7 +7,7 @@ import { useUnreadNotificationsCount } from '../../hooks/useUnreadNotificationsC
 import { ICON_SIZES } from '../../constants/icons';
 import { NavIcon } from './NavIcons';
 import AppIcon from '../common/AppIcon';
-import { Plus } from '../../constants/icons';
+import { Building2, Plus } from '../../constants/icons';
 
 /**
  * Desktop (lg+) primary navigation — LinkedIn-style left rail.
@@ -98,6 +98,17 @@ export default function AppSidebar({ className = '' }) {
           );
         })}
       </nav>
+      {role === ROLES.PERSONAL ? (
+        <div className="border-t border-app-divider p-space-sm">
+          <Link
+            to="/personal/business/create"
+            className="flex items-center gap-space-sm rounded-radius-md px-space-sm py-2 text-body-small font-semibold text-app-muted transition-colors hover:bg-app-surface hover:text-primary-600"
+          >
+            <Building2 className="h-4 w-4 shrink-0" aria-hidden />
+            <span>Para empresas</span>
+          </Link>
+        </div>
+      ) : null}
     </aside>
   );
 }

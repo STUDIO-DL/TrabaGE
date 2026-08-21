@@ -87,6 +87,17 @@ function getSharedOpportunityUrl(job) {
   return safeExternalUrl(match[0].replace(/[)\].,;:]+$/, ''));
 }
 
+function getLegacyContact(job, label) {
+  const match = String(job?.contact_method ?? '').match(
+    new RegExp(`${label}\\s*:\\s*([^\\n]+)`, 'i'),
+  );
+  return match?.[1]?.trim() || null;
+}
+
+function getContactValue(job, field, label) {
+  return String(job?.[field] ?? '').trim() || getLegacyContact(job, label);
+}
+
 function SimilarJobAlertToggle({
   userId,
   job,
@@ -298,6 +309,9 @@ export default function JobDetail() {
     ? resolveJobOpportunityImageUrl(job.image_path)
     : null;
   const applicationUrl = getSharedOpportunityUrl(job);
+  const contactWhatsApp = getContactValue(job, 'contact_whatsapp', 'WhatsApp');
+  const contactPhone = getContactValue(job, 'contact_phone', 'Teléfono');
+  const contactEmail = getContactValue(job, 'contact_email', 'Email');
 
   const shareTitle = shared
     ? publisherName
@@ -354,7 +368,7 @@ export default function JobDetail() {
         <ContentActionMenu
           shareUrl={generateJobUrl(id)}
           shareTitle={shareTitle}
-          shareText="Encontré esta oferta de empleo en TrabaGE."
+          shareText={`Encontré esta oportunidad en TrabaGE: ${job?.description || ''}`}
           targetType={REPORT_TARGET_TYPES.JOB}
           targetId={id}
         />
@@ -521,14 +535,45 @@ export default function JobDetail() {
                 Fecha límite: {job.application_deadline}
               </JobMetadataLine>
             ) : null}
+
+            {shared && job.application_deadline ? (
+              <JobMetadataLine>
+                Fecha límite: {job.application_deadline}
+              </JobMetadataLine>
+            ) : null}
           </div>
         </section>
 
-        {shared && job.contact_method ? (
+        {shared && (contactWhatsApp || contactPhone || contactEmail) ? (
           <JobSection title="Contacto">
-            <p className="whitespace-pre-line">
-              {job.contact_method}
-            </p>
+            <div className="flex flex-wrap gap-space-sm">
+              {contactWhatsApp ? (
+                <a
+                  href={`https://wa.me/${contactWhatsApp.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-touch items-center rounded-radius-md bg-green-600 px-space-base py-space-sm text-button font-semibold text-white hover:bg-green-700"
+                >
+                  WhatsApp
+                </a>
+              ) : null}
+              {contactPhone ? (
+                <a
+                  href={`tel:${contactPhone}`}
+                  className="inline-flex min-h-touch items-center rounded-radius-md bg-app-surface px-space-base py-space-sm text-button font-semibold text-app-text ring-1 ring-inset ring-app-border"
+                >
+                  Llamar
+                </a>
+              ) : null}
+              {contactEmail ? (
+                <a
+                  href={`mailto:${contactEmail}`}
+                  className="inline-flex min-h-touch items-center rounded-radius-md bg-app-surface px-space-base py-space-sm text-button font-semibold text-app-text ring-1 ring-inset ring-app-border"
+                >
+                  Enviar email
+                </a>
+              ) : null}
+            </div>
           </JobSection>
         ) : null}
 
