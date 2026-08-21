@@ -166,6 +166,7 @@ export default function SettingsScreen({ accountType }) {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [logoutLoading, setLogoutLoading] = useState(false);
+  const [switchLoading, setSwitchLoading] = useState(false);
   const [usernameOpen, setUsernameOpen] = useState(false);
 
   const activeRole = accountType || role;
@@ -201,6 +202,20 @@ export default function SettingsScreen({ accountType }) {
     setLogoutLoading(false);
     setLogoutOpen(false);
     navigate('/login', { replace: true });
+  };
+
+  const switchToPersonalAccount = async () => {
+    if (isPreviewMode) {
+      showToast(GUEST_MODE_MESSAGE, 'info');
+      return;
+    }
+
+    setSwitchLoading(true);
+    await logout();
+    navigate('/login', {
+      replace: true,
+      state: { accountSwitch: true, targetAccount: ROLES.PERSONAL },
+    });
   };
 
   const handleDeleteAccount = async (feedback) => {
@@ -248,6 +263,17 @@ export default function SettingsScreen({ accountType }) {
 
             <SectionCard title="Cuenta">
               <SettingsRow icon={User} title="Gestionar perfil" to={routes.profile} />
+              {isCompany ? (
+                <>
+                  <Divider />
+                  <SettingsRow
+                    icon={User}
+                    title="Cambiar a cuenta personal"
+                    subtitle={switchLoading ? 'Cambiando de cuenta...' : 'Volver a tu perfil personal'}
+                    onClick={switchToPersonalAccount}
+                  />
+                </>
+              ) : null}
               <Divider />
               <SettingsRow
                 icon={AtSign}
