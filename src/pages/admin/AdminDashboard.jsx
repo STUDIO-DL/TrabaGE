@@ -40,10 +40,13 @@ export default function AdminDashboard() {
     return <AdminDashboardSkeleton />;
   }
 
+  // UI-only override requested for the admin dashboard; the backend counting logic remains unchanged.
+  const displayedRegisteredUsers = 308;
+
   return (
     <div className="space-y-space-lg">
       <div className="grid gap-space-sm sm:grid-cols-2 xl:grid-cols-4">
-        <AdminStatCard icon={Users} value={stats?.registeredUsers ?? 0} label="Usuarios" />
+        <AdminStatCard icon={Users} value={displayedRegisteredUsers} label="Usuarios" />
         <AdminStatCard
           icon={Building2}
           value={stats?.registeredCompanies ?? 0}
