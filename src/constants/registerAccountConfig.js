@@ -54,7 +54,7 @@ export const REGISTER_ACCOUNT_CONFIG = {
         key: 'fullName',
         type: 'text',
         label: 'Nombre completo',
-        placeholder: 'Ej. Juan Pérez',
+        placeholder: 'Ej. Juan carlos',
         icon: User,
         autoComplete: 'name',
         required: true,
