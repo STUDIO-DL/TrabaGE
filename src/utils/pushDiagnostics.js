@@ -21,7 +21,7 @@ export async function getPushDiagnostics() {
     if (configured && !endpoint) blockers.push('No hay una suscripción Web Push en este dispositivo.');
   } catch (error) { reportError(error, { area: 'push_diagnostics_web_push' }); blockers.push('No se pudo leer el estado de Web Push.'); }
   const readyForTestPush = configured && permission === 'granted' && Boolean(endpoint) && blockers.length === 0;
-  return { configured, permission, permissionGranted: permission === 'granted', fcmToken: endpoint, boundUserId: endpoint ? 'session' : null, pushActive: Boolean(endpoint), serviceWorkerActive, serviceWorkerScript, secureContext, isLocalhost, blockers, readyForTestPush };
+  return { configured, permission, permissionGranted: permission === 'granted', pushEndpoint: endpoint, boundUserId: endpoint ? 'session' : null, pushActive: Boolean(endpoint), serviceWorkerActive, serviceWorkerScript, secureContext, isLocalhost, blockers, readyForTestPush };
 }
 
 export function getPushDiagnosticUserMessage(diagnostics) {

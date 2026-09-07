@@ -1,66 +1,49 @@
-# Push notifications (Firebase Cloud Messaging)
+# Push notifications (Web Push / VAPID)
 
-TrabaGE uses **Firebase Cloud Messaging (FCM)** as the sole push transport for native OS notifications. Push works for installed PWAs and, where the browser allows it (notably Chrome on Android / desktop), for users who have not installed the app.
+TrabaGE uses the native **Web Push API with VAPID** as the sole push transport for OS notifications — no Firebase/FCM dependency. Push works for installed PWAs and, where the browser allows it (Chrome/Edge on Android and desktop), for users who have not installed the app. Not supported on iOS Safari browser tabs (only installed iOS PWAs, per platform limitations).
 
-Architecture: **PWA -> Firebase Messaging SDK -> Supabase `push_subscriptions` -> Edge `send_push` -> FCM HTTP v1 -> Device**
+Architecture: **PWA -> `PushManager.subscribe()` -> Supabase `push_subscriptions` -> Edge `send_push` -> `web-push` (VAPID) -> Push service -> Device**
 
 | Layer | Location |
 |-------|----------|
-| Client SDK | `src/config/firebase.js`, `src/config/fcm.js`, `firebase` |
-| Runtime Firebase config | `/firebase-config.json` -> Netlify Function `netlify/functions/firebase-config.js` |
-| Device registry | `push_subscriptions.fcm_token` + RPCs |
+| Client subscribe/permission | `src/config/webPush.js` |
+| Permission prompt UI | `src/components/common/PushPermissionPrompt.jsx` |
+| Subscription persistence | `src/services/pushSubscriptions.service.js` -> RPC `upsert_web_push_subscription` / `deactivate_web_push_subscription` |
+| Service worker (`push` + `notificationclick`) | `public/web-push-sw.js` (imported into `/sw.js` via Workbox `importScripts`) |
+| Device registry | `push_subscriptions` (`endpoint`, `p256dh`, `auth`) |
 | Preferences | `notification_preferences` + `filter_push_recipients` |
-| Sender | Edge function `send_push` (FCM HTTP v1) |
+| Sender | Edge function `send_push` (`supabase/functions/_shared/webPush.ts`, `npm:web-push`) |
 | Admin broadcasts | `admin_push_broadcast_log`, `scheduled_push_notifications` |
 
-## 1. Firebase Console setup
+## 1. Generate a VAPID key pair
 
-1. Go to Firebase Console -> project **trabage-b2ea9** (or your project).
-2. Add a **Web** app and copy `firebaseConfig` into Netlify / `.env.local` as `VITE_FIREBASE_*`.
-3. Project settings -> Cloud Messaging -> Web Push certificates -> Generate key pair -> `VITE_FIREBASE_VAPID_KEY`.
-4. Project settings -> Service accounts -> Generate new private key -> store as Supabase secrets only:
-   - `FIREBASE_PROJECT_ID`
-   - `FIREBASE_CLIENT_EMAIL`
-   - `FIREBASE_PRIVATE_KEY`
-5. Confirm service worker URL in production: `https://trabage.org/sw.js` (Workbox + `/firebase-messaging-sw.js` via `importScripts`). Dev uses `/firebase-messaging-sw.js` directly.
-6. Confirm runtime config URL: `https://trabage.org/firebase-config.json`. It must return the public Firebase Web config from Netlify environment variables.
+```bash
+npx web-push generate-vapid-keys
+```
+
+This gives you a public and a private key (URL-safe base64). Keep the private key secret.
 
 ## 2. Environment variables
 
 ### Netlify (frontend)
 
 ```env
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project
-VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=...
-VITE_FIREBASE_APP_ID=1:...:web:...
-VITE_FIREBASE_VAPID_KEY=...
-VITE_APP_URL=https://trabage.org
+VITE_WEB_PUSH_VAPID_PUBLIC_KEY=<public-key>
 ```
 
-If your Netlify plan uses scoped environment variables, make sure these public Firebase Web variables are available to **Builds** and **Functions** so `/firebase-config.json` can read them at runtime.
+This is the public half of the key pair — safe to expose to the client.
 
 ### Supabase Edge Function secrets (`send_push`)
 
 ```bash
-FIREBASE_PROJECT_ID=your-project
-FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-APP_URL=https://trabage.org
+supabase secrets set VAPID_PUBLIC_KEY=<public-key> VAPID_PRIVATE_KEY=<private-key> VAPID_SUBJECT="mailto:contacto@trabage.org"
 ```
 
-Never put the service account private key in Netlify or frontend env.
+`VAPID_PUBLIC_KEY` **must exactly match** `VITE_WEB_PUSH_VAPID_PUBLIC_KEY` — a mismatch causes every push to fail. Never put `VAPID_PRIVATE_KEY` in Netlify or any frontend env. Verify parity with `node scripts/verify-vapid-parity.mjs`.
 
 ## 3. Database
 
-Apply migration **134_fcm_push_transport.sql** then **135_remove_onesignal_leftovers.sql** (`supabase db push`):
-
-- Adds `push_subscriptions.fcm_token` (unique when present) and FCM RPCs
-- Drops legacy OneSignal columns / `set_onesignal_player_id`
-- Requires `fcm_token` on all push subscription rows
-- Adds `push_send_log.fcm_message_id`
+`push_subscriptions` (`endpoint`, `p256dh`, `auth`, `is_active`, `last_used_at`) was introduced by `supabase/migrations/134_fcm_push_transport.sql` and extended for the VAPID transport by `137_web_push_vapid_transport.sql` / `140_push_test_web_subscriptions.sql`. A legacy `fcm_token` column remains for backward compatibility but is unused by current client code.
 
 ## 4. Deploy
 
@@ -70,34 +53,33 @@ supabase functions deploy send_push
 # or: scripts/deploy-send-push-api.ps1
 ```
 
-Set Netlify `VITE_FIREBASE_*` and redeploy the frontend.
+Set Netlify `VITE_WEB_PUSH_VAPID_PUBLIC_KEY` and redeploy the frontend.
 
 ## 5. Device flow
 
-1. User logs in -> `initFcm()` at boot (`main.jsx`).
-2. Client fetches `/firebase-config.json` and initializes Firebase in the app bundle.
-3. After permission grant -> `getToken({ vapidKey, serviceWorkerRegistration })`.
-4. Token is upserted via `upsert_push_subscription(p_fcm_token)`.
-5. Logout / disable -> `deleteToken` + `deactivate_push_subscription`.
-6. Sends load active tokens with `get_push_subscriptions_for_users` and call FCM HTTP v1 **per token**.
-7. Invalid tokens (`UNREGISTERED`, etc.) are deactivated.
+1. User grants notification permission -> `requestNotificationPermission()` (`src/config/webPush.js`).
+2. `registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey })` creates the browser subscription.
+3. Subscription (`endpoint`/`p256dh`/`auth`) is upserted via `upsert_web_push_subscription`.
+4. Logout / disable -> `deactivate_web_push_subscription`.
+5. `send_push` loads active subscriptions and calls `webpush.sendNotification` per subscription.
+6. Invalid subscriptions (HTTP 404/410 from the push service) are deactivated automatically.
 
 ## 6. Service workers
 
 | Env | Worker |
 |-----|--------|
-| Production | `/sw.js` (VitePWA Workbox + `importScripts('/firebase-messaging-sw.js')`) |
-| Development | `/firebase-messaging-sw.js` (VitePWA disabled in DEV) |
+| Production | `/sw.js` (VitePWA Workbox + `importScripts('/web-push-sw.js')`) |
+| Development | `/web-push-sw.js` directly (VitePWA disabled in DEV) |
 
-`public/firebase-messaging-sw.js` intentionally contains no `firebase.initializeApp(...)`, Firebase API key, or Firebase compat import. The app passes the active service worker registration to `getToken(...)`; the worker handles background FCM Web Push payloads through the native `push` event and displays the OS notification.
+`public/web-push-sw.js` listens for the native `push` event, parses the JSON payload, and shows the OS notification; `notificationclick` focuses/opens the app at the payload's `url`.
 
 ## 7. Verification
 
 1. Login on Chrome (desktop or Android PWA).
 2. Enable push in settings / accept the soft prompt.
-3. Confirm `push_subscriptions` has `fcm_token` for your user.
-4. Run `npm run test-fcm-push` or use the DEV test button in notification settings.
-5. Expect an **OS-level** notification (not only in-app bell).
+3. Confirm `push_subscriptions` has an active row (`endpoint`/`p256dh`/`auth`) for your user.
+4. Run the DEV "Enviar notificación push de prueba" button in notification settings.
+5. Expect an **OS-level** notification (not only the in-app bell). Check Supabase Edge Function logs for `send_push_web_delivery` — `subscriptions_sent: 0` with `isVapidConfigured()` false means the VAPID secrets are missing or mismatched.
 
 ## 8. Preference filtering
 

@@ -132,7 +132,7 @@ export const PRIVACY_ARTICLES = [
         items: [
           'Supabase: autenticación, base de datos y almacenamiento. Más info: https://supabase.com/privacy',
           'Google OAuth: inicio de sesión con Google (cuentas personales). Más info: https://policies.google.com/privacy',
-          'Firebase Cloud Messaging: notificaciones push.',
+          'Servicio de notificaciones push del navegador (Web Push): entrega de notificaciones push a tu dispositivo.',
           'Resend: correos transaccionales (verificación de cuenta, bienvenida, avisos).',
           'Formspree: formulario de contacto del Centro de Ayuda.',
           'Sentry: monitorización de errores técnicos. Más info: https://sentry.io/privacy/',
@@ -150,7 +150,7 @@ export const PRIVACY_ARTICLES = [
     blocks: [
       {
         type: 'p',
-        text: 'Podemos enviarte notificaciones push (por ejemplo, vía Firebase Cloud Messaging) sobre ofertas relevantes, cambios en postulaciones, actividad de cuenta y avisos de seguridad.',
+        text: 'Podemos enviarte notificaciones push (vía el servicio de notificaciones push de tu navegador) sobre ofertas relevantes, cambios en postulaciones, actividad de cuenta y avisos de seguridad.',
       },
       {
         type: 'p',

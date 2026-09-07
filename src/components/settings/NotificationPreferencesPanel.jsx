@@ -208,7 +208,7 @@ export default function NotificationPreferencesPanel({ accountType }) {
       if (import.meta.env.DEV) {
         console.info('[TrabaGE] push diagnostics', {
           permission: diagnostics.permission,
-          fcmToken: diagnostics.fcmToken ? `${String(diagnostics.fcmToken).slice(0, 12)}…` : null,
+          pushEndpoint: diagnostics.pushEndpoint ? `${String(diagnostics.pushEndpoint).slice(0, 12)}…` : null,
           boundUserId: diagnostics.boundUserId,
           pushActive: diagnostics.pushActive,
           serviceWorkerActive: diagnostics.serviceWorkerActive,
@@ -314,7 +314,7 @@ export default function NotificationPreferencesPanel({ accountType }) {
 
         {!isWebPushConfigured() ? (
           <div className="mt-4 rounded-radius-lg border border-amber-100 bg-amber-50 px-4 py-3 text-caption leading-relaxed text-warning-800">
-            Push del sistema no disponible en este entorno. Configura <code className="font-mono">VITE_FIREBASE_*</code> y <code className="font-mono">VITE_FIREBASE_VAPID_KEY</code> en <code className="font-mono">.env.local</code> y reinicia el servidor. Las notificaciones in-app seguirán funcionando.
+            Push del sistema no disponible en este entorno. Configura <code className="font-mono">VITE_WEB_PUSH_VAPID_PUBLIC_KEY</code> en <code className="font-mono">.env.local</code> y reinicia el servidor. Las notificaciones in-app seguirán funcionando.
           </div>
         ) : null}
 

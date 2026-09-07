@@ -1,6 +1,10 @@
 /**
- * Compare frontend VAPID public key with Supabase Edge Function secret names.
- * Never prints private keys.
+ * Compare frontend VAPID public key with the Supabase Edge Function secret.
+ * Never prints private keys or raw secret values.
+ *
+ * The Supabase Management API never returns raw secret values — only a
+ * SHA-256 digest of each one. So parity is checked by hashing the frontend
+ * key locally and comparing that hash to the digest the API returns.
  *
  * Usage:
  *   node scripts/verify-vapid-parity.mjs
@@ -8,6 +12,7 @@
  * Requires scripts/supabase-login.cmd (access token in ~/.supabase/access-token.txt)
  */
 
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -82,11 +87,12 @@ if (!fs.existsSync(tokenPath)) {
 
 const token = fs.readFileSync(tokenPath, 'utf8').trim();
 const secrets = await fetchBackendSecrets(token);
-const backendPublic = normalizeKey(secrets.VAPID_PUBLIC_KEY);
+// The Management API returns a SHA-256 digest of each secret, not its raw value.
+const backendPublicDigest = normalizeKey(secrets.VAPID_PUBLIC_KEY);
 const hasPrivate = Boolean(normalizeKey(secrets.VAPID_PRIVATE_KEY));
 const hasSubject = Boolean(normalizeKey(secrets.VAPID_SUBJECT));
 
-console.log(`Backend VAPID_PUBLIC_KEY: ${fingerprint(backendPublic)}`);
+console.log(`Backend VAPID_PUBLIC_KEY digest: ${backendPublicDigest || '(missing)'}`);
 console.log(`Backend VAPID_PRIVATE_KEY: ${hasPrivate ? 'present' : 'missing'}`);
 console.log(`Backend VAPID_SUBJECT: ${hasSubject ? 'present' : 'missing'}`);
 console.log('');
@@ -96,7 +102,7 @@ if (!frontendKey) {
   process.exit(1);
 }
 
-if (!backendPublic) {
+if (!backendPublicDigest) {
   console.log('Result: blocked — backend VAPID_PUBLIC_KEY secret missing.');
   process.exit(1);
 }
@@ -106,7 +112,8 @@ if (!hasPrivate || !hasSubject) {
   process.exit(1);
 }
 
-if (frontendKey === backendPublic) {
+const frontendKeyDigest = crypto.createHash('sha256').update(frontendKey).digest('hex');
+if (frontendKeyDigest === backendPublicDigest) {
   console.log('Result: OK — frontend and backend public keys match.');
   process.exit(0);
 }

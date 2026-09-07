@@ -12,13 +12,7 @@ Use this list before inviting real users. Items marked **OPS** require Dashboard
   - `VITE_SUPABASE_ANON_KEY`
   - `VITE_APP_URL=https://trabage.org`
   - `VITE_APP_ENV=production` (also set in `netlify.toml`)
-  - `VITE_FIREBASE_API_KEY`
-  - `VITE_FIREBASE_AUTH_DOMAIN`
-  - `VITE_FIREBASE_PROJECT_ID`
-  - `VITE_FIREBASE_STORAGE_BUCKET`
-  - `VITE_FIREBASE_MESSAGING_SENDER_ID`
-  - `VITE_FIREBASE_APP_ID`
-  - `VITE_FIREBASE_VAPID_KEY`
+  - `VITE_WEB_PUSH_VAPID_PUBLIC_KEY` (public half of the VAPID key pair — see section 5)
   - `VITE_SENTRY_DSN` (recommended)
 - [ ] Trigger a fresh production deploy after setting env vars
 - [ ] Smoke test: `/`, `/login`, `/register`, install PWA, dark mode
@@ -63,7 +57,7 @@ Windows: `scripts\deploy-all-edge-functions.cmd`
 - [ ] **OPS** Secrets set:
   - `SUPABASE_SERVICE_ROLE_KEY`
   - `SUPABASE_URL` / `SUPABASE_ANON_KEY` (if not auto-injected)
-  - `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
+  - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (must match `VITE_WEB_PUSH_VAPID_PUBLIC_KEY`)
   - `TRABAGE_ALLOWED_ORIGIN=https://trabage.org`
   - `RESEND_API_KEY`, `RESEND_AUTH_FROM_EMAIL`, `RESEND_WELCOME_FROM_EMAIL`, `RESEND_FROM_NAME`
   - `SEND_EMAIL_HOOK_SECRET`
@@ -80,19 +74,20 @@ Windows: `scripts\deploy-all-edge-functions.cmd`
 - [ ] **OPS** Welcome email after signup (outbox + function; account type from **068**)
 - [ ] **OPS** Account deletion path still works (no orphaned private files)
 
-## 5. Firebase Cloud Messaging
+## 5. Web Push (VAPID)
 
-- [ ] **OPS** Web app registered + `VITE_FIREBASE_*` / VAPID on Netlify
-- [ ] **OPS** Service account secrets on `send_push`
-- [ ] Permission prompt works on Android Chrome + desktop PWA
-- [ ] FCM token stored in `push_subscriptions.fcm_token`
-- [ ] `send_push` delivers OS notification (see `docs/PUSH_FCM.md`)
+- [ ] **OPS** VAPID key pair generated (`npx web-push generate-vapid-keys`)
+- [ ] **OPS** `VITE_WEB_PUSH_VAPID_PUBLIC_KEY` set on Netlify (public key)
+- [ ] **OPS** `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` set on `send_push` Edge Function secrets
+- [ ] Permission prompt works on Android Chrome + desktop PWA (not supported on iOS Safari)
+- [ ] Subscription stored in `push_subscriptions` (`endpoint`/`p256dh`/`auth`)
+- [ ] `send_push` delivers OS notification (`node scripts/verify-vapid-parity.mjs` to check key parity)
 
 ## 6. PWA
 
 - [ ] `manifest.json` installs (name TrabaGE, icons 192/512 + maskable)
 - [ ] Service worker prompt update (`registerType: prompt`; banner «Actualizar ahora» / «Más tarde»; no reload mid-session)
-- [ ] FCM messaging SW imported into Workbox (`importScripts: ['/firebase-messaging-sw.js']`)
+- [ ] Web-push SW imported into Workbox (`importScripts: ['/web-push-sw.js']`)
 - [ ] Offline navigate fallback to `index.html` (configured in `vite.config.js`)
 
 ## 7. Observability
@@ -102,8 +97,8 @@ Windows: `scripts\deploy-all-edge-functions.cmd`
 
 ## 8. Security gate (must pass)
 
-- [ ] No `SERVICE_ROLE` / SMTP / Firebase private key in frontend bundle
-- [ ] Migration **065–076** + **133** applied on remote (FCM transport, public views, admin/feed fixes, job matches revoke, profile persistence)
+- [ ] No `SERVICE_ROLE` / SMTP / VAPID private key in frontend bundle
+- [ ] Migration **065–076** + **133–137** applied on remote (web push VAPID transport, public views, admin/feed fixes, job matches revoke, profile persistence)
 - [ ] Admin routes unreachable for non-admin (RLS + RoleRoute)
 - [ ] CSP + HSTS headers live on Netlify
 

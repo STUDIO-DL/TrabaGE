@@ -1,14 +1,14 @@
 /**
- * Send a test FCM push to the logged-in user via send_push edge function.
+ * Send a test web push (VAPID) to the logged-in user via send_push edge function.
  *
  * Usage:
  *   npm run test-fcm-push
  *   TEST_LOGIN_EMAIL=user@example.com TEST_LOGIN_PASSWORD=secret npm run test-fcm-push
  *
  * Prerequisites:
- * - .env.local with VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY + VITE_FIREBASE_*
- * - Firebase service account secrets deployed on send_push edge function
- * - User has granted push permission and has push_subscriptions.fcm_token row
+ * - .env.local with VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY + VITE_WEB_PUSH_VAPID_PUBLIC_KEY
+ * - VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY / VAPID_SUBJECT secrets deployed on send_push edge function
+ * - User has granted push permission and has an active push_subscriptions row (endpoint/p256dh/auth)
  * - For browser invoke from localhost: send_push CORS allowlist includes localhost:5173
  */
 

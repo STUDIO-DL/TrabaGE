@@ -30,7 +30,7 @@ export default defineConfig(() => ({
       registerType: 'prompt',
       injectRegister: false,
       devOptions: { enabled: false },
-      // Keep FCM messaging SW out of Workbox precache — it is imported into /sw.js.
+      // Keep the web-push SW out of Workbox precache — it is imported into /sw.js.
       includeAssets: ['robots.txt', 'sitemap.xml', 'favicon.ico', 'icons/*.png', 'manifest.json'],
       manifest: false,
       workbox: {
@@ -39,7 +39,7 @@ export default defineConfig(() => ({
         cleanupOutdatedCaches: true,
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/\.netlify\//],
-        // Single SW architecture: Workbox PWA + FCM push handlers in /sw.js
+        // Single SW architecture: Workbox PWA + web-push handlers in /sw.js
         importScripts: ['/web-push-sw.js'],
         globPatterns: [
           'index.html',
@@ -50,7 +50,6 @@ export default defineConfig(() => ({
           'assets/*.css',
           'icons/*.png',
         ],
-        globIgnores: ['**/firebase-messaging-sw.js'],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/icons/'),

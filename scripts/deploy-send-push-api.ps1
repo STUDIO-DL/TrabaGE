@@ -39,7 +39,6 @@ try {
 
   $files = @(
     @{ Path = (Join-Path $functionDir "index.ts"); Name = "index.ts" },
-    @{ Path = (Join-Path $sharedDir "fcm.ts"); Name = "../_shared/fcm.ts" },
     @{ Path = (Join-Path $sharedDir "webPush.ts"); Name = "../_shared/webPush.ts" }
   )
 
