@@ -71,7 +71,7 @@ export default function OnboardingStep1() {
 
   const handleNext = () => {
     if (!selected) return;
-    try { localStorage.setItem('onboarding_choice', selected); } catch (e) {}
+    try { localStorage.setItem('onboarding_choice', selected); } catch { /* private mode */ }
     navigate('/onboarding/step-2');
   };
 
