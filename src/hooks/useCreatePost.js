@@ -2,20 +2,15 @@ import { useState } from 'react';
 import { postsService } from '../services/posts.service';
 import { topicsService } from '../services/topics.service';
 import { notificationsService } from '../services/notifications.service';
-import { companyService } from '../services/company.service';
-import { FOLLOWS_TARGET } from '../services/follows.service';
 import { storageService } from '../services/storage.service';
 import { postImagePath } from '../constants/storage';
-import { isEmployerRole, isOrganizationRole } from '../constants/roles';
 import { authorTypeFromRole } from '../constants/authorTypes';
 import { useAuth } from './useAuth';
 import { useNotificationContext } from '../context/NotificationContext';
 import { GUEST_MODE_MESSAGE } from '../utils/guestMode';
-import { getCompanyDisplayName } from '../utils/companyProfile';
 import { validateFile } from '../utils/validateFile';
 import { getSupabaseErrorMessage } from '../utils/supabaseErrors';
 import { TOAST } from '../utils/copyLabels';
-import { DEEP_LINK_PATHS } from '../utils/deepLinks';
 import { getConnectivityState } from '../utils/connectivity';
 
 export function useCreatePost() {
@@ -142,30 +137,11 @@ export function useCreatePost() {
       setUploadPhase(null);
     }
 
-    if (isEmployerRole(role)) {
-      const { data: companyProfile } = await companyService.getCompanyProfile(user.id);
-      const companyName = getCompanyDisplayName(companyProfile, { role, user, warnIfMissing: true });
-      if (!companyName) {
-        setLoading(false);
-        return { ok: true, post: savedPost };
-      }
-      const preview = trimmedContent.slice(0, 120);
-      const targetType = isOrganizationRole(role)
-        ? FOLLOWS_TARGET.ORGANIZATION
-        : FOLLOWS_TARGET.BUSINESS;
-
-      void notificationsService.notifyFollowers({
-        targetType,
-        targetId: user.id,
-        type: 'new_post',
-        title: companyName ? `Nueva publicación de ${companyName}` : 'Nueva publicación',
-        message: preview || 'Nueva actualización',
-        link: DEEP_LINK_PATHS.post(savedPost.id),
-        postId: savedPost.id,
-        actorId: user.id,
-        actorType: targetType,
-      });
-    }
+    const preview = trimmedContent.slice(0, 120);
+    void notificationsService.notifyPostRecommendation(savedPost.id, {
+      actorId: user.id,
+      preview,
+    });
 
     showToast(TOAST.postCreated, 'success');
     setUploadPhase(null);

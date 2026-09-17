@@ -51,3 +51,9 @@ jobs:
           else
             echo "Missing PWA artifacts (dist/sw.js or workbox-*.js)"; exit 1
           fi
+          if [ ! -f dist/web-push-sw.js ]; then
+            echo "Missing dist/web-push-sw.js"; exit 1
+          fi
+          if ! grep -q 'web-push-sw.js' dist/sw.js; then
+            echo "dist/sw.js does not import web-push-sw.js"; exit 1
+          fi

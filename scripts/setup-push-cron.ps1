@@ -36,6 +36,7 @@ if (-not $DbPassword -or -not $ServiceRoleKey) {
 }
 
 $pushUrl = "https://$ProjectRef.supabase.co/functions/v1/send_push"
+$webPushUrl = "https://$ProjectRef.supabase.co/functions/v1/send_web_push"
 $pushAuth = "Bearer $ServiceRoleKey"
 
 function Escape-Sql([string]$value) {
@@ -46,8 +47,10 @@ $vaultSql = @"
 DO `$`$
 DECLARE
   v_url TEXT := '$(Escape-Sql $pushUrl)';
+  v_web_url TEXT := '$(Escape-Sql $webPushUrl)';
   v_auth TEXT := '$(Escape-Sql $pushAuth)';
   v_url_id UUID;
+  v_web_url_id UUID;
   v_auth_id UUID;
 BEGIN
   SELECT id INTO v_url_id FROM vault.secrets WHERE name = 'push_cron_url' LIMIT 1;
@@ -55,6 +58,13 @@ BEGIN
     PERFORM vault.create_secret(v_url, 'push_cron_url');
   ELSE
     PERFORM vault.update_secret(v_url_id, v_url);
+  END IF;
+
+  SELECT id INTO v_web_url_id FROM vault.secrets WHERE name = 'send_web_push_url' LIMIT 1;
+  IF v_web_url_id IS NULL THEN
+    PERFORM vault.create_secret(v_web_url, 'send_web_push_url');
+  ELSE
+    PERFORM vault.update_secret(v_web_url_id, v_web_url);
   END IF;
 
   SELECT id INTO v_auth_id FROM vault.secrets WHERE name = 'push_cron_auth' LIMIT 1;
@@ -100,7 +110,8 @@ BEGIN
       ),
       body := jsonb_build_object(
         'process_scheduled', true,
-        'process_message_pushes', true
+        'process_message_pushes', true,
+        'process_notification_pushes', true
       )
     );
     $cron$
@@ -116,7 +127,7 @@ $$;
 $encodedPassword = [Uri]::EscapeDataString($DbPassword)
 $dbUrl = "postgresql://postgres.${ProjectRef}:$encodedPassword@aws-1-eu-west-2.pooler.supabase.com:5432/postgres"
 
-Write-Host "1) Upserting vault secrets push_cron_url / push_cron_auth..."
+Write-Host "1) Upserting vault secrets push_cron_url / send_web_push_url / push_cron_auth..."
 & $supabaseExe db query --db-url $dbUrl $vaultSql
 if ($LASTEXITCODE -ne 0) { throw "Vault upsert failed" }
 

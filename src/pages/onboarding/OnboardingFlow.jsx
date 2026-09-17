@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -42,7 +42,6 @@ import { onboardingService } from '../../services/onboarding.service';
 import { bootstrapProfile } from '../../services/profileBootstrap';
 import { profileService } from '../../services/profile.service';
 import { validateFile } from '../../utils/validateFile';
-import { withDevDiagnostics } from '../../utils/devDiagnostics';
 import { getSupabaseErrorMessage } from '../../utils/supabaseErrors';
 import { storageService } from '../../services/storage.service';
 import { avatarPath, STORAGE_BUCKETS } from '../../constants/storage';
@@ -64,6 +63,10 @@ function joinList(values, fallback) {
   return list.length ? list.join(' · ') : fallback;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function addUnique(list, value) {
   const text = String(value || '').trim();
   if (!text) return list;
@@ -81,7 +84,7 @@ function SegmentedProgress({ step, total }) {
   );
 }
 
-function Header({ step, total, onBack }) {
+const Header = memo(function Header({ step, total, onBack }) {
   return (
     <header className="shrink-0 px-5 pt-[max(0.8rem,env(safe-area-inset-top))] pb-1">
       <div className="flex items-center gap-3">
@@ -100,7 +103,7 @@ function Header({ step, total, onBack }) {
       </div>
     </header>
   );
-}
+});
 
 function ScreenShell({ title, subtitle, children, compact = false, scrollable = false }) {
   return (
@@ -258,7 +261,7 @@ function SearchBox({ value, onChange, placeholder }) {
   );
 }
 
-function BottomActions({
+const BottomActions = memo(function BottomActions({
   onNext,
   onSkip,
   onCompleteProfile,
@@ -319,7 +322,7 @@ function BottomActions({
       ) : null}
     </footer>
   );
-}
+});
 
 function GoalScreen({ data, save }) {
   return (
@@ -947,13 +950,27 @@ function renderStepBody(step, ctx) {
 export default function OnboardingFlow() {
   const navigate = useNavigate();
   const { user, role, getHomePath, loading: authLoading, isPreviewMode } = useAuth();
-  const bootstrapAttemptedRef = useRef(false);
-  const [bootstrapError, setBootstrapError] = useState('');
+  const userTouchedRef = useRef(false);
+  const draftRef = useRef({});
+  const stepRef = useRef(1);
+  const profileRef = useRef(null);
+  const persistTimerRef = useRef(null);
+  const persistChainRef = useRef(Promise.resolve());
+  const onNextRef = useRef(() => {});
+  const onSkipRef = useRef(() => {});
+  const onCompleteProfileRef = useRef(() => {});
+  const onBackRef = useRef(() => {});
+  const stableNext = useCallback(() => onNextRef.current(), []);
+  const stableSkip = useCallback(() => onSkipRef.current(), []);
+  const stableCompleteProfile = useCallback(() => onCompleteProfileRef.current(), []);
+  const stableBack = useCallback(() => onBackRef.current(), []);
 
   const profileQuery = useQuery({
     queryKey: getOwnCandidateProfileKey(user?.id) ?? ['profile', 'onboarding', 'disabled'],
     enabled: Boolean(user?.id) && !isPreviewMode && isPersonalRole(role),
-    staleTime: 0,
+    staleTime: 60_000,
+    placeholderData: (previousData) => previousData,
+    retry: 3,
     queryFn: async () => {
       const { data, error } = await profileService.getCandidateProfile(user.id);
       if (error) throw error;
@@ -962,180 +979,218 @@ export default function OnboardingFlow() {
   });
 
   const profile = profileQuery.data ?? null;
-  const loading = profileQuery.isLoading;
-  const loadError = profileQuery.error ?? null;
+  const refetchProfile = profileQuery.refetch;
+  profileRef.current = profile;
 
+  const [draft, setDraft] = useState(() => getOnboardingData(profileQuery.data));
+  const [step, setStep] = useState(() => {
+    const initialData = getOnboardingData(profileQuery.data);
+    return getOnboardingCurrentStep(profileQuery.data, initialData);
+  });
   const [saving, setSaving] = useState(false);
   const [avatarError, setAvatarError] = useState('');
   const [avatarUploading, setAvatarUploading] = useState(false);
 
-  const data = useMemo(() => getOnboardingData(profile), [profile]);
-  const total = getOnboardingTotalSteps(data);
-  const rawStep = getOnboardingCurrentStep(profile, data);
-  const step = Math.min(rawStep, total);
+  draftRef.current = draft;
+  stepRef.current = step;
 
-  const refetch = profileQuery.refetch;
+  const data = draft;
+  const total = getOnboardingTotalSteps(data);
+  const currentStep = Math.min(Math.max(step, 1), total);
 
   useEffect(() => {
-    if (!user?.id || profile || loading || isPreviewMode || bootstrapAttemptedRef.current) return;
-    bootstrapAttemptedRef.current = true;
-    setBootstrapError('');
-    void bootstrapProfile({ user, role: ROLES.PERSONAL })
-      .then(({ error }) => {
-        if (error) {
-          setBootstrapError(
-            withDevDiagnostics(getSupabaseErrorMessage(error, 'No se pudo preparar tu perfil.'), error),
-          );
-          bootstrapAttemptedRef.current = false;
+    if (!profile || userTouchedRef.current) return;
+    const serverData = getOnboardingData(profile);
+    setDraft(serverData);
+    draftRef.current = serverData;
+    const serverStep = getOnboardingCurrentStep(profile, serverData);
+    setStep(serverStep);
+    stepRef.current = serverStep;
+  }, [profile]);
+
+  useEffect(() => {
+    if (!user?.id || profile || isPreviewMode || !isPersonalRole(role)) return undefined;
+    let cancelled = false;
+
+    const provision = async () => {
+      for (let attempt = 0; attempt < 6 && !cancelled && !profileRef.current; attempt += 1) {
+        const { error } = await bootstrapProfile({ user, role: ROLES.PERSONAL });
+        if (cancelled) return;
+        if (!error) {
+          await refetchProfile();
           return;
         }
-        void refetch();
-      })
-      .catch((err) => {
-        setBootstrapError(
-          withDevDiagnostics(getSupabaseErrorMessage(err, 'No se pudo preparar tu perfil.'), err),
-        );
-        bootstrapAttemptedRef.current = false;
-      });
-  }, [user, profile, loading, isPreviewMode, refetch]);
+        await sleep(Math.min(700 * 2 ** attempt, 5000));
+      }
+    };
+
+    void provision();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, profile, isPreviewMode, role, refetchProfile]);
 
   useEffect(() => {
-    if (!user?.id || !profile || step === rawStep) return;
-    void onboardingService.setCurrentStep(user.id, profile, step);
-  }, [profile, rawStep, step, user?.id]);
-
-  useEffect(() => {
-    if (!user?.id || !profile || isOnboardingCompleted(profile)) return;
+    if (!user?.id || isOnboardingCompleted(profile)) return;
     onboardingService.track(user.id, 'onboarding_screen_viewed', {
-      screen: step,
-      step,
+      screen: currentStep,
+      step: currentStep,
       user_type: data.user_type || 'unknown',
     });
-  }, [data.user_type, profile, step, user?.id]);
+  }, [data.user_type, profile, currentStep, user?.id]);
 
-  if ((authLoading || loading || !role) && !isPreviewMode) {
-    return <AuthLoadingScreen />;
-  }
+  useEffect(() => {
+    return () => {
+      if (persistTimerRef.current) window.clearTimeout(persistTimerRef.current);
+    };
+  }, []);
 
-  if (!isPersonalRole(role)) {
-    return <Navigate to={getHomePath() || '/login'} replace />;
-  }
+  const waitForProfile = async () => {
+    if (profileRef.current) return profileRef.current;
+    if (!user?.id) return null;
 
-  if ((loadError || bootstrapError) && !profile) {
-    const message = bootstrapError || withDevDiagnostics(getSupabaseErrorMessage(loadError), loadError);
-    return (
-      <div className="flex min-h-dvh items-center justify-center px-6 text-center">
-        <div className="max-w-md">
-          <p className="text-app-text">{message}</p>
-          <Button
-            type="button"
-            className="mt-4"
-            onClick={() => {
-              bootstrapAttemptedRef.current = false;
-              setBootstrapError('');
-              void refetch();
-            }}
-          >
-            Reintentar
-          </Button>
-        </div>
-      </div>
-    );
-  }
+    await bootstrapProfile({ user, role: ROLES.PERSONAL });
+    for (let attempt = 0; attempt < 8 && !profileRef.current; attempt += 1) {
+      const { data, error } = await profileService.getCandidateProfile(user.id);
+      if (!error && data) {
+        queryClient.setQueryData(getOwnCandidateProfileKey(user.id), data);
+        profileRef.current = data;
+        break;
+      }
+      await sleep(350 * (attempt + 1));
+    }
+    return profileRef.current;
+  };
 
-  if (!profile && !loading) {
-    return <AuthLoadingScreen />;
-  }
+  const flushPersist = () => {
+    const run = async () => {
+      try {
+        if (!user?.id) return;
+        const profileRow = await waitForProfile();
+        if (!profileRow) return;
 
-  if (profile && isOnboardingCompleted(profile)) {
-    return <Navigate to={getHomePath() || '/personal/feed'} replace />;
-  }
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+          const result = await onboardingService.saveStep(
+            user.id,
+            profileRef.current || profileRow,
+            draftRef.current,
+            stepRef.current,
+          );
+          if (!result.error) {
+            if (result.data) profileRef.current = result.data;
+            return;
+          }
+          await sleep(300 * (attempt + 1));
+        }
+      } catch {
+        // Keep the local wizard moving; the next flush retries the save.
+      }
+    };
 
-  const persist = async (patch, nextStep = step) => {
-    if (!user?.id || !profile) return;
-    setSaving(true);
-    const result = await onboardingService.saveStep(user.id, profile, patch, nextStep);
-    setSaving(false);
-    if (!result.error) {
-      onboardingService.track(user.id, 'onboarding_option_selected', {
-        screen: step,
-        step,
+    persistChainRef.current = persistChainRef.current.then(run, run);
+    return persistChainRef.current;
+  };
+
+  const scheduleFlush = () => {
+    if (persistTimerRef.current) window.clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = window.setTimeout(() => {
+      persistTimerRef.current = null;
+      void flushPersist();
+    }, 180);
+  };
+
+  const persist = (patch, nextStep = stepRef.current) => {
+    userTouchedRef.current = true;
+    setDraft((current) => {
+      const merged = { ...current, ...patch };
+      draftRef.current = merged;
+      return merged;
+    });
+    if (nextStep !== stepRef.current) {
+      const clamped = Math.min(Math.max(nextStep, 1), getOnboardingTotalSteps({ ...draftRef.current }));
+      stepRef.current = clamped;
+      setStep(clamped);
+    }
+    if (patch && Object.keys(patch).length) {
+      onboardingService.track(user?.id, 'onboarding_option_selected', {
+        screen: stepRef.current,
+        step: stepRef.current,
         option: Object.keys(patch).join(','),
-        user_type: patch.user_type || data.user_type || 'unknown',
+        user_type: patch.user_type || draftRef.current.user_type || 'unknown',
       });
-      await refetch();
+    }
+    scheduleFlush();
+  };
+
+  const goToStep = (nextStep) => {
+    userTouchedRef.current = true;
+    const clamped = Math.min(Math.max(nextStep, 1), total);
+    stepRef.current = clamped;
+    setStep(clamped);
+    scheduleFlush();
+  };
+
+  const finishOnboarding = async (redirectTo) => {
+    if (!user?.id) return;
+    setSaving(true);
+    try {
+      await flushPersist();
+      const profileRow = await waitForProfile();
+      if (!profileRow) return;
+      const latest = draftRef.current;
+      if (Array.isArray(latest.skills)) await onboardingService.addSkills(user.id, latest.skills);
+      if (Array.isArray(latest.services)) await onboardingService.addServices(user.id, latest.services);
+      const result = await onboardingService.complete(user.id, profileRef.current || profileRow);
+      if (!result.error) navigate(redirectTo, { replace: true });
+    } finally {
+      setSaving(false);
     }
   };
 
-  const goToStep = async (nextStep) => {
-    if (!user?.id || !profile) return;
-    setSaving(true);
-    await onboardingService.setCurrentStep(user.id, profile, Math.min(Math.max(nextStep, 1), total));
-    setSaving(false);
-    await refetch();
-  };
-
-  const finishOnboarding = async () => {
-    if (!user?.id || !profile) return;
-    setSaving(true);
-    if (Array.isArray(data.skills)) await onboardingService.addSkills(user.id, data.skills);
-    if (Array.isArray(data.services)) await onboardingService.addServices(user.id, data.services);
-    const result = await onboardingService.complete(user.id, profile);
-    setSaving(false);
-    if (!result.error) navigate('/personal/feed', { replace: true });
-  };
-
-  const completeProfile = async () => {
-    if (!user?.id || !profile) return;
-    setSaving(true);
-    if (Array.isArray(data.skills)) await onboardingService.addSkills(user.id, data.skills);
-    if (Array.isArray(data.services)) await onboardingService.addServices(user.id, data.services);
-    const result = await onboardingService.complete(user.id, profile);
-    setSaving(false);
-    if (!result.error) navigate(ROLE_PROFILE[ROLES.PERSONAL], { replace: true });
-  };
-
-  const next = async () => {
-    if (!user?.id || !profile) return;
-    onboardingService.track(user.id, 'onboarding_screen_completed', {
-      screen: step,
-      step,
+  const next = () => {
+    onboardingService.track(user?.id, 'onboarding_screen_completed', {
+      screen: currentStep,
+      step: currentStep,
       user_type: data.user_type || 'unknown',
     });
-    if (step >= total) {
-      await finishOnboarding();
+    if (currentStep >= total) {
+      void finishOnboarding('/personal/feed');
       return;
     }
-    await goToStep(step + 1);
+    goToStep(currentStep + 1);
   };
 
-  const skip = async () => {
-    if (!user?.id || !profile) return;
+  const completeProfile = () => {
+    void finishOnboarding(ROLE_PROFILE[ROLES.PERSONAL]);
+  };
+
+  const skip = () => {
     const skipped = Array.isArray(data.skipped_steps) ? data.skipped_steps : [];
-    onboardingService.track(user.id, 'onboarding_skipped', {
-      screen: step,
-      step,
+    onboardingService.track(user?.id, 'onboarding_skipped', {
+      screen: currentStep,
+      step: currentStep,
       user_type: data.user_type || 'unknown',
     });
-    await persist({ skipped_steps: [...new Set([...skipped, step])] }, Math.min(step + 1, total));
+    persist({ skipped_steps: [...new Set([...skipped, currentStep])] }, Math.min(currentStep + 1, total));
   };
 
-  const back = async () => {
-    if (!user?.id || !profile) {
-      navigate(-1);
-      return;
-    }
-    onboardingService.track(user.id, 'onboarding_back_pressed', {
-      screen: step,
-      step,
+  const back = () => {
+    onboardingService.track(user?.id, 'onboarding_back_pressed', {
+      screen: currentStep,
+      step: currentStep,
       user_type: data.user_type || 'unknown',
     });
-    if (step <= 1) {
+    if (currentStep <= 1) {
       navigate(getHomePath() || '/personal/feed', { replace: true });
       return;
     }
-    await goToStep(step - 1);
+    goToStep(currentStep - 1);
   };
+
+  onNextRef.current = next;
+  onSkipRef.current = skip;
+  onCompleteProfileRef.current = completeProfile;
+  onBackRef.current = back;
 
   const locate = () => {
     const fallback = {
@@ -1144,15 +1199,15 @@ export default function OnboardingFlow() {
       location_method: 'manual_fallback',
     };
     if (!navigator.geolocation) {
-      void persist(fallback);
+      persist(fallback);
       return;
     }
     navigator.geolocation.getCurrentPosition(
       () => {
-        void persist({ ...fallback, location_method: 'browser' });
+        persist({ ...fallback, location_method: 'browser' });
       },
       () => {
-        void persist(fallback);
+        persist(fallback);
       },
       { enableHighAccuracy: false, timeout: 5000, maximumAge: 600000 },
     );
@@ -1167,10 +1222,15 @@ export default function OnboardingFlow() {
     }
     setAvatarUploading(true);
     try {
+      const profileRow = await waitForProfile();
+      if (!user?.id || !profileRow) {
+        setAvatarError('No se pudo preparar tu perfil. Inténtalo de nuevo.');
+        return;
+      }
       const { error: uploadError } = await storageService.uploadAvatar(
         user.id,
         file,
-        profile?.avatar_path,
+        profileRow?.avatar_path,
       );
       if (uploadError) {
         setAvatarError(getSupabaseErrorMessage(uploadError));
@@ -1180,13 +1240,13 @@ export default function OnboardingFlow() {
         avatarPath(user.id),
         STORAGE_BUCKETS.CANDIDATE_AVATARS,
       );
-      const result = await onboardingService.saveStep(user.id, profile, { avatar_path: nextPath });
+      const result = await onboardingService.saveStep(user.id, profileRow, { avatar_path: nextPath });
       if (result.error) {
         setAvatarError(getSupabaseErrorMessage(result.error));
         return;
       }
       queryClient.setQueryData(getOwnCandidateProfileKey(user.id), result.data);
-      await refetch();
+      persist({ avatar_path: nextPath });
     } catch (err) {
       setAvatarError(getSupabaseErrorMessage(err));
     } finally {
@@ -1194,7 +1254,19 @@ export default function OnboardingFlow() {
     }
   };
 
-  const body = renderStepBody(step, {
+  if ((authLoading || !role) && !isPreviewMode) {
+    return <AuthLoadingScreen />;
+  }
+
+  if (!isPersonalRole(role)) {
+    return <Navigate to={getHomePath() || '/login'} replace />;
+  }
+
+  if (profile && isOnboardingCompleted(profile) && !userTouchedRef.current) {
+    return <Navigate to={getHomePath() || '/personal/feed'} replace />;
+  }
+
+  const body = renderStepBody(currentStep, {
     data,
     profile,
     persist,
@@ -1208,15 +1280,15 @@ export default function OnboardingFlow() {
   return (
     <div className="min-h-dvh bg-[#F8FAFC] md:flex md:items-center md:justify-center md:p-4">
       <div className="mx-auto flex h-dvh max-h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white text-app-text md:h-[min(780px,100dvh)] md:rounded-2xl md:border md:border-[#E2E8F0] md:shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
-        <Header step={step} total={total} onBack={back} />
+        <Header step={currentStep} total={total} onBack={stableBack} />
         <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{body}</main>
         <BottomActions
-          onNext={next}
-          onSkip={skip}
-          onCompleteProfile={completeProfile}
-          loading={saving}
-          final={step >= total}
-          showSkip={step < total}
+          onNext={stableNext}
+          onSkip={stableSkip}
+          onCompleteProfile={stableCompleteProfile}
+          loading={saving && currentStep >= total}
+          final={currentStep >= total}
+          showSkip={currentStep < total}
         />
       </div>
     </div>

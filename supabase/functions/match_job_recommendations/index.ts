@@ -3,7 +3,8 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': Deno.env.get('TRABAGE_ALLOWED_ORIGIN') ?? 'https://trabage.org',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers':
+    'authorization, x-client-info, apikey, content-type, x-job-match-webhook-secret',
   'Vary': 'Origin',
 };
 
@@ -296,44 +297,48 @@ function calculateJobMatch(candidate: Record<string, unknown>, job: Record<strin
   return Math.min(100, Math.max(0, score));
 }
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+function extractBearerToken(authHeader: string) {
+  const trimmed = authHeader.trim();
+  if (trimmed.toLowerCase().startsWith('bearer ')) {
+    return trimmed.slice(7).trim();
   }
+  return trimmed;
+}
 
-  if (req.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed' }, 405);
-  }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
-  const authHeader = req.headers.get('Authorization');
-
-  if (!supabaseUrl || !serviceKey || !anonKey) {
-    return jsonResponse({ error: 'Supabase no configurado' }, 500);
-  }
-
-  if (!authHeader) {
-    return jsonResponse({ error: 'No autorizado' }, 401);
-  }
-
-  const userClient = createClient(supabaseUrl, anonKey, {
-    global: { headers: { Authorization: authHeader } },
+async function completeOutbox(
+  supabase: ReturnType<typeof createClient>,
+  outboxId: string | null | undefined,
+  status: 'done' | 'failed' | 'pending' | 'processing',
+  errorMessage?: string,
+) {
+  if (!outboxId) return;
+  await supabase.rpc('complete_job_match_outbox', {
+    p_outbox_id: outboxId,
+    p_status: status,
+    p_error_message: errorMessage ?? null,
   });
-  const { data: authData, error: authError } = await userClient.auth.getUser();
-  const callerId = authData.user?.id;
+}
 
-  if (authError || !callerId) {
-    return jsonResponse({ error: 'No autorizado' }, 403);
-  }
+async function invokeJobMatchEmail(
+  supabase: ReturnType<typeof createClient>,
+  serviceKey: string,
+  payload: { user_id: string; job_id: string; notification_id?: string },
+) {
+  await supabase.functions.invoke('send_job_match_email', {
+    body: payload,
+    headers: {
+      'x-trabage-service-role': serviceKey,
+    },
+  });
+}
 
-  const supabase = createClient(supabaseUrl, serviceKey);
-
-  const { job_id: jobId } = await req.json();
-  if (!jobId) {
-    return jsonResponse({ error: 'job_id required' }, 400);
-  }
+async function processJobMatch(
+  supabase: ReturnType<typeof createClient>,
+  serviceKey: string,
+  jobId: string,
+  options: { outboxId?: string | null; requireActive?: boolean } = {},
+) {
+  const { outboxId = null, requireActive = false } = options;
 
   const { data: job, error: jobError } = await supabase
     .from('jobs')
@@ -342,20 +347,13 @@ serve(async (req) => {
     .single();
 
   if (jobError || !job) {
-    return jsonResponse({ error: 'Job not found' }, 404);
+    await completeOutbox(supabase, outboxId, 'failed', 'Job not found');
+    return { error: 'Job not found', status: 404 };
   }
 
-  const isOwner = job.company_id === callerId || job.shared_by_user_id === callerId;
-  if (!isOwner) {
-    const { data: role } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', callerId)
-      .maybeSingle();
-
-    if (role?.role !== 'admin') {
-      return jsonResponse({ error: 'No autorizado' }, 403);
-    }
+  if (requireActive && job.status !== 'active') {
+    await completeOutbox(supabase, outboxId, 'done');
+    return { in_app_count: 0, push_recipient_ids: [], skipped: 'job_not_active' };
   }
 
   const { data: candidates, error: candidatesError } = await supabase
@@ -365,7 +363,8 @@ serve(async (req) => {
     .eq('setup_complete', true);
 
   if (candidatesError) {
-    return jsonResponse({ error: 'No se pudieron cargar candidatos elegibles' }, 500);
+    await completeOutbox(supabase, outboxId, 'failed', candidatesError.message);
+    return { error: 'No se pudieron cargar candidatos elegibles', status: 500 };
   }
 
   const candidateIds = (candidates ?? []).map((candidate) => candidate.user_id).filter(Boolean);
@@ -419,7 +418,8 @@ serve(async (req) => {
     .filter((item) => item.score >= MATCH_THRESHOLD);
 
   if (!matches.length) {
-    return jsonResponse({ in_app_count: 0, push_recipient_ids: [] });
+    await completeOutbox(supabase, outboxId, 'done');
+    return { in_app_count: 0, push_recipient_ids: [] };
   }
 
   const { data: notifyResult, error: notifyError } = await supabase.rpc('notify_job_recommendations', {
@@ -428,12 +428,11 @@ serve(async (req) => {
   });
 
   if (notifyError) {
-    return jsonResponse({ error: 'No se pudieron crear recomendaciones' }, 500);
+    await completeOutbox(supabase, outboxId, 'failed', notifyError.message);
+    return { error: 'No se pudieron crear recomendaciones', status: 500 };
   }
 
-  // Attempt to invoke email delivery edge function for recent job_recommendation notifications
   try {
-    // Find recent notifications created for this job (last 5 minutes)
     const fiveMinsAgo = new Date(Date.now() - 5 * 60_000).toISOString();
     const { data: recentNotifs } = await supabase
       .from('notifications')
@@ -445,9 +444,10 @@ serve(async (req) => {
     if (Array.isArray(recentNotifs) && recentNotifs.length > 0) {
       for (const row of recentNotifs) {
         try {
-          // Invoke edge function as background task; ignore per-recipient failures here
-          await supabase.functions.invoke('send_job_match_email', {
-            body: { user_id: row.recipient_id, job_id: jobId, notification_id: row.id },
+          await invokeJobMatchEmail(supabase, serviceKey, {
+            user_id: row.recipient_id,
+            job_id: jobId,
+            notification_id: row.id,
           });
         } catch (invokeErr) {
           console.error('[match_job_recommendations] send_job_match_email invoke failed', invokeErr);
@@ -458,5 +458,133 @@ serve(async (req) => {
     console.error('[match_job_recommendations] email_invoke_error', err);
   }
 
-  return jsonResponse(notifyResult ?? { in_app_count: 0, push_recipient_ids: [] });
+  await completeOutbox(supabase, outboxId, 'done');
+  return notifyResult ?? { in_app_count: 0, push_recipient_ids: [] };
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  if (req.method !== 'POST') {
+    return jsonResponse({ error: 'Method not allowed' }, 405);
+  }
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? '';
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const bearer = extractBearerToken(authHeader);
+  const webhookSecret = Deno.env.get('JOB_MATCH_WEBHOOK_SECRET')?.trim() ?? '';
+  const headerSecret = req.headers.get('x-job-match-webhook-secret')?.trim() ?? '';
+
+  if (!supabaseUrl || !serviceKey || !anonKey) {
+    return jsonResponse({ error: 'Supabase no configurado' }, 500);
+  }
+
+  const authorizedByServiceRole = Boolean(serviceKey) && bearer === serviceKey;
+  const authorizedByWebhook = Boolean(webhookSecret) && headerSecret === webhookSecret;
+  const isInternal = authorizedByServiceRole || authorizedByWebhook;
+
+  let callerId: string | null = null;
+
+  if (!isInternal) {
+    if (!authHeader) {
+      return jsonResponse({ error: 'No autorizado' }, 401);
+    }
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: authData, error: authError } = await userClient.auth.getUser();
+    callerId = authData.user?.id ?? null;
+
+    if (authError || !callerId) {
+      return jsonResponse({ error: 'No autorizado' }, 403);
+    }
+  }
+
+  const supabase = createClient(supabaseUrl, serviceKey);
+  const body = await req.json().catch(() => ({}));
+  const processOutbox = body?.process_outbox === true;
+
+  if (processOutbox) {
+    if (!isInternal) {
+      return jsonResponse({ error: 'No autorizado' }, 403);
+    }
+
+    const safeLimit = Math.min(Math.max(Number(body?.limit) || 5, 1), 20);
+    const { data: rows, error: claimError } = await supabase.rpc('claim_job_match_outbox_batch', {
+      p_limit: safeLimit,
+    });
+
+    if (claimError) {
+      return jsonResponse({ error: claimError.message }, 500);
+    }
+
+    const results: Record<string, unknown>[] = [];
+    for (const row of rows ?? []) {
+      const result = await processJobMatch(supabase, serviceKey, row.job_id, {
+        outboxId: row.outbox_id,
+        requireActive: true,
+      });
+      results.push({ job_id: row.job_id, outbox_id: row.outbox_id, ...result });
+    }
+
+    return jsonResponse({ processed: results.length, results });
+  }
+
+  const jobId = String(body?.job_id ?? '').trim();
+  let outboxId = body?.outbox_id ? String(body.outbox_id) : null;
+
+  if (!jobId) {
+    return jsonResponse({ error: 'job_id required' }, 400);
+  }
+
+  if (!outboxId) {
+    const { data: outboxRow } = await supabase
+      .from('job_match_outbox')
+      .select('id')
+      .eq('job_id', jobId)
+      .in('status', ['pending', 'failed'])
+      .maybeSingle();
+    outboxId = outboxRow?.id ?? null;
+  }
+
+  if (!isInternal) {
+    const { data: job, error: jobError } = await supabase
+      .from('jobs')
+      .select('company_id, shared_by_user_id')
+      .eq('id', jobId)
+      .single();
+
+    if (jobError || !job) {
+      return jsonResponse({ error: 'Job not found' }, 404);
+    }
+
+    const isOwner = job.company_id === callerId || job.shared_by_user_id === callerId;
+    if (!isOwner) {
+      const { data: role } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', callerId)
+        .maybeSingle();
+
+      if (role?.role !== 'admin') {
+        return jsonResponse({ error: 'No autorizado' }, 403);
+      }
+    }
+  }
+
+  const result = await processJobMatch(supabase, serviceKey, jobId, {
+    outboxId,
+    requireActive: isInternal,
+  });
+
+  if ('status' in result && typeof result.status === 'number') {
+    return jsonResponse({ error: result.error ?? 'Error' }, result.status);
+  }
+
+  return jsonResponse(result);
 });

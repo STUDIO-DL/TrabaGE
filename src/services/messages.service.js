@@ -1,7 +1,7 @@
 import { supabase } from '../config/supabase';
 import { executeWrite } from '../utils/supabaseMutation';
 import { getDisplayName } from '../utils/displayIdentity';
-import { ROLES, isEmployerRole } from '../constants/roles';
+import { ROLES, isEmployerRole, rolePath } from '../constants/roles';
 import { avatarTypeFromRole } from '../constants/avatarDefaults';
 import { isOrganizationProfile } from '../utils/orgLabels';
 import { isMessageActive } from '../constants/messageTtl';
@@ -35,9 +35,30 @@ async function dispatchMessagePushNotification(conversationId, senderId, message
     const recipient = (participants ?? []).find((participant) => participant.user_id !== senderId);
     if (!recipient?.user_id || !message?.id) return;
 
+    const { data: summaries } = await messagesService.getParticipantSummaries([
+      senderId,
+      recipient.user_id,
+    ]);
+    const senderSummary = (summaries ?? []).find((item) => item.userId === senderId);
+    const recipientSummary = (summaries ?? []).find((item) => item.userId === recipient.user_id);
+    const senderName = senderSummary?.name || 'Alguien';
+    const isReply = Boolean(message.reply_to_message_id);
+    const preview = String(message.content ?? '').trim().slice(0, 80);
+    const title = isReply ? `${senderName} ha respondido a tu mensaje` : 'Nuevo mensaje';
+    const body = isReply
+      ? 'Tienes una nueva respuesta en TrabaGE.'
+      : preview
+        ? `${senderName}: ${preview}`
+        : `${senderName} te ha enviado un mensaje.`;
+
     await notificationsService.dispatchNewMessagePush({
       messageId: message.id,
       recipientId: recipient.user_id,
+      conversationId,
+      senderId,
+      title,
+      body,
+      link: rolePath(recipientSummary?.role ?? ROLES.PERSONAL, `/messages/${conversationId}`),
     });
   } catch (error) {
     reportError(error, { area: 'message_push_dispatch', conversationId, messageId: message?.id });

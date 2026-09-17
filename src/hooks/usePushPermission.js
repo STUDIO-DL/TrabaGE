@@ -5,6 +5,7 @@ import {
   getNotificationPermissionStatus,
   initWebPush,
   onPushPermissionChange,
+  onPushSubscriptionChange,
   requestNotificationPermission,
   setWebPushEnabled,
 } from '../config/webPush';
@@ -74,15 +75,26 @@ export async function requestOsPushPermission(userId) {
 export function usePushPermission() {
   const { user } = useAuth();
 
-  // Idempotent: shares initPromise with main.jsx boot call; safe to await from push flows.
   useEffect(() => {
     void initWebPush();
   }, []);
 
   useEffect(() => {
-    if (user?.id && isOsPushPermissionGranted()) {
-      void bindWebPushUser(user.id);
-    }
+    if (!user?.id) return undefined;
+
+    const sync = () => {
+      if (isOsPushPermissionGranted()) {
+        void bindWebPushUser(user.id);
+      }
+    };
+
+    sync();
+    const unsubscribePermission = onPushPermissionChange(sync);
+    const unsubscribeSubscription = onPushSubscriptionChange(sync);
+    return () => {
+      unsubscribePermission();
+      unsubscribeSubscription();
+    };
   }, [user?.id]);
 }
 
@@ -129,10 +141,12 @@ export function usePushForegroundSync(onSync) {
 
     const unsubscribeForeground = subscribePushForegroundSync(handler);
     const unsubscribePermission = onPushPermissionChange(handler);
+    const unsubscribeSubscription = onPushSubscriptionChange(handler);
 
     return () => {
       unsubscribeForeground();
       unsubscribePermission();
+      unsubscribeSubscription();
     };
   }, [onSync]);
 }

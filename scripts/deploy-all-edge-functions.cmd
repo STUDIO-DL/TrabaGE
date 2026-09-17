@@ -29,6 +29,12 @@ if errorlevel 1 exit /b 1
 call scripts\supabase.cmd functions deploy match_job_recommendations
 if errorlevel 1 exit /b 1
 
+call scripts\supabase.cmd functions deploy send_job_match_email
+if errorlevel 1 exit /b 1
+
+call scripts\supabase.cmd functions deploy send_job_match_digest
+if errorlevel 1 exit /b 1
+
 call scripts\supabase.cmd functions deploy process_matching_recalc
 if errorlevel 1 exit /b 1
 

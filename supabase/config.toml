@@ -426,6 +426,14 @@ verify_jwt = false
 [functions.send_profile_completion_reminder]
 verify_jwt = false
 
+# Cron / service-role invokes job-match digest batches (no end-user JWT).
+[functions.send_job_match_digest]
+verify_jwt = false
+
+# Database trigger / pg_net dispatches OS Web Push without a user JWT.
+[functions.send_web_push]
+verify_jwt = false
+
 # Experimental features may be deprecated any time
 [experimental]
 # Configures Postgres storage engine to use OrioleDB (S3)

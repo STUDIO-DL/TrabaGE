@@ -40,6 +40,7 @@ const POST_TYPES = new Set([
   'new_post',
   'company_update',
   'post_interaction',
+  'post_recommendation',
 ]);
 
 const COMPANY_PROFILE_LINK_RE = /\/companies\/[^/?#]+/i;

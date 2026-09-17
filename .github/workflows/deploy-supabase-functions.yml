@@ -43,5 +43,8 @@ jobs:
           if [ -z "$SUPABASE_PROJECT_REF" ]; then
             echo "Missing SUPABASE_PROJECT_REF secret"; exit 1
           fi
-          # Deploy the single function we've added. Add more calls if needed.
-          supabase functions deploy send_job_match_email --project-ref "$SUPABASE_PROJECT_REF" --debug
+          supabase functions deploy match_job_recommendations --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy send_job_match_email --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy send_job_match_digest --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt
+          supabase functions deploy send_push --project-ref "$SUPABASE_PROJECT_REF"
+          supabase functions deploy send_web_push --project-ref "$SUPABASE_PROJECT_REF" --no-verify-jwt

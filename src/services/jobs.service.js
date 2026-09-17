@@ -597,6 +597,7 @@ export const jobsService = {
       });
     }
 
+    // Optimistic client fallback; backend job_match_outbox trigger is source of truth.
     jobRecommendationsService
       .processNewJob(job)
       .catch((error) => {

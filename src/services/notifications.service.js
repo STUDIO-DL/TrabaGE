@@ -9,25 +9,32 @@ async function sendPushBatch(recipientIds, title, body, data = {}) {
 
   for (let i = 0; i < recipientIds.length; i += PUSH_BATCH_SIZE) {
     const batch = recipientIds.slice(i, i + PUSH_BATCH_SIZE);
-    try {
-      const { data: responseData, error } = await supabase.functions.invoke(PUSH_FUNCTION, {
-        body: {
-          recipient_ids: batch,
-          title,
-          body,
-          data,
-        },
-      });
-
-      if (error || responseData?.error) {
-        reportError(error ?? new Error(responseData?.error ?? 'Push send failed'), {
-          area: 'push_notification_batch',
-          recipients: batch.length,
-          response: responseData ?? null,
+    let lastError = null;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const { data: responseData, error } = await supabase.functions.invoke(PUSH_FUNCTION, {
+          body: {
+            recipient_ids: batch,
+            title,
+            body,
+            data,
+          },
         });
+
+        if (!error && !responseData?.error) {
+          lastError = null;
+          break;
+        }
+        lastError = error ?? new Error(responseData?.error ?? 'Push send failed');
+      } catch (error) {
+        lastError = error;
       }
-    } catch (error) {
-      reportError(error, { area: 'push_notification_batch', recipients: batch.length });
+      if (attempt < 2) {
+        await new Promise((resolve) => setTimeout(resolve, 400 * (2 ** attempt)));
+      }
+    }
+    if (lastError) {
+      reportError(lastError, { area: 'push_notification_batch', recipients: batch.length });
     }
   }
 }
@@ -212,38 +219,67 @@ export const notificationsService = {
   /**
    * Sends OS push for a new internal message.
    * In-app row is created by notify_new_message trigger; this only dispatches push.
+   * The sender cannot read the recipient's notification row (RLS), so the payload
+   * is built from the message itself. send_push verifies the trigger row as admin.
    */
-  dispatchNewMessagePush: async ({ messageId, recipientId }) => {
-    if (!messageId || !recipientId) return;
+  dispatchNewMessagePush: async ({
+    messageId,
+    recipientId,
+    conversationId,
+    senderId,
+    title,
+    body,
+    link,
+  }) => {
+    if (!messageId || !recipientId || !conversationId) return;
 
-    const { data: notification, error } = await supabase
-      .from('notifications')
-      .select('title, body, metadata')
-      .eq('recipient_id', recipientId)
-      .eq('type', 'new_message')
-      .eq('metadata->>message_id', String(messageId))
-      .maybeSingle();
-
-    if (error) {
-      reportError(error, { area: 'message_push_lookup', messageId, recipientId });
-      return;
-    }
-
-    if (!notification) return;
-
-    const metadata = notification.metadata ?? {};
-    const pushData = {
-      type: 'new_message',
-      link: metadata.link ?? '',
-      conversation_id: metadata.conversation_id ?? '',
-      message_id: metadata.message_id ?? messageId,
-    };
+    const pushTitle = String(title ?? '').trim() || 'Nuevo mensaje';
+    const pushBody = String(body ?? '').trim() || 'Tienes un mensaje nuevo en TrabaGE.';
+    const pushLink = String(link ?? '').trim() || `/personal/messages/${conversationId}`;
 
     await sendPushBatch(
       [recipientId],
-      notification.title,
-      notification.body ?? '',
-      pushData,
+      pushTitle,
+      pushBody,
+      {
+        type: 'new_message',
+        link: pushLink,
+        conversation_id: conversationId,
+        message_id: messageId,
+        ...(senderId ? { sender_id: senderId } : {}),
+      },
     );
+  },
+
+  /**
+   * In-app + Web Push for people who follow the author or would find the post relevant.
+   */
+  notifyPostRecommendation: async (postId, { actorId, preview } = {}) => {
+    if (!postId) return { data: null, error: new Error('Publicación requerida') };
+
+    const { data: recipientIds, error } = await supabase.rpc('notify_post_recommendations', {
+      p_post_id: postId,
+    });
+
+    if (error) {
+      reportError(error, { area: 'post_recommendation_notify', postId });
+      return { data: null, error };
+    }
+
+    const ids = recipientIds ?? [];
+    if (ids.length > 0) {
+      const title = 'Este post podría interesarte';
+      const body = String(preview ?? '').trim() || 'Hay una publicación nueva en TrabaGE.';
+      await sendPushBatch(ids, title, body, {
+        type: 'post_recommendation',
+        post_id: postId,
+        link: `/post/${postId}`,
+        target_type: 'post',
+        target_id: postId,
+        ...(actorId ? { actor_id: actorId } : {}),
+      });
+    }
+
+    return { data: { notified: ids.length }, error: null };
   },
 };

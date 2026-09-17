@@ -11,6 +11,15 @@ test('resolves a notification target from app metadata', () => {
   assert.equal(target, '/messages/abc123');
 });
 
+test('resolves a recommended post to the publication', () => {
+  const target = resolvePushNavigationTarget({
+    type: 'post_recommendation',
+    metadata: { post_id: 'post-42', link: '/post/post-42' },
+  }, 'https://trabage.org');
+
+  assert.equal(target, '/post/post-42');
+});
+
 test('prefers the canonical post route over legacy company links', () => {
   const target = resolvePushNavigationTarget({
     type: 'new_post',

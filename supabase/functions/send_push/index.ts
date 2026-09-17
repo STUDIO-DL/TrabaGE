@@ -10,6 +10,7 @@ import {
 /** Production + local Vite origins. Extra origins via TRABAGE_ALLOWED_ORIGIN (comma-separated). */
 const DEFAULT_ALLOWED_ORIGINS = [
   'https://trabage.org',
+  'https://www.trabage.org',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ];
@@ -51,6 +52,7 @@ function buildDedupKey(userId: string, notificationType: string, data: Record<st
     String(data.follower_id ?? '') ||
     String(data.target_id ?? '') ||
     String(data.request_id ?? '') ||
+    String(data.notification_id ?? '') ||
     'general';
   return `${notificationType}:${userId}:${suffix}`;
 }
@@ -198,14 +200,45 @@ async function sendToRecipients(
       const dedupKey = buildDedupKey(userId, notificationType, data);
       const { data: existingLog } = await admin
         .from('push_send_log')
-        .select('id')
+        .select('id, status, created_at')
         .eq('dedup_key', dedupKey)
-        .eq('status', 'sent')
-        .gte('created_at', new Date(Date.now() - DEDUP_WINDOW_MS).toISOString())
         .maybeSingle();
-      if (existingLog) {
+      const logAgeMs = existingLog?.created_at
+        ? Date.now() - new Date(String(existingLog.created_at)).getTime()
+        : Number.POSITIVE_INFINITY;
+      if (existingLog?.status === 'sent') {
         deduped += 1;
         continue;
+      }
+      if (existingLog?.status === 'pending' && logAgeMs < 2 * 60 * 1000) {
+        deduped += 1;
+        continue;
+      }
+      if (existingLog) {
+        const { data: reclaimed, error: reclaimError } = await admin
+          .from('push_send_log')
+          .update({ status: 'pending', error_message: null, created_at: new Date().toISOString() })
+          .eq('id', existingLog.id)
+          .in('status', ['failed', 'pending'])
+          .select('id')
+          .maybeSingle();
+        if (reclaimError || !reclaimed) {
+          deduped += 1;
+          continue;
+        }
+      } else {
+        const { error: claimError } = await admin.from('push_send_log').insert({
+          dedup_key: dedupKey,
+          user_id: userId,
+          notification_type: notificationType,
+          status: 'pending',
+          error_message: null,
+          fcm_message_id: null,
+        });
+        if (claimError) {
+          deduped += 1;
+          continue;
+        }
       }
 
       const delivery = await deliverPushToUser(
@@ -218,14 +251,10 @@ async function sendToRecipients(
         appUrl,
       );
 
-      await admin.from('push_send_log').upsert({
-        dedup_key: dedupKey,
-        user_id: userId,
-        notification_type: notificationType,
+      await admin.from('push_send_log').update({
         status: delivery.delivered ? 'sent' : 'failed',
         error_message: delivery.delivered ? null : `delivery_failed:${delivery.transport}`,
-        fcm_message_id: null,
-      }, { onConflict: 'dedup_key' });
+      }).eq('dedup_key', dedupKey);
 
       if (delivery.delivered) {
         sent += 1;
@@ -440,18 +469,30 @@ async function processScheduledNotifications(
     sent: sentTotal,
   });
 }
-/** Server-side backup: push for new_message rows that never got a successful send. */
-async function processPendingMessagePushes(
+/** Server-side backup: push for notification rows that never got a successful send. */
+async function processPendingNotificationPushes(
   admin: ReturnType<typeof createClient>,
   appUrl: string,
 ) {
-  const { data: pending, error } = await admin.rpc('claim_pending_message_pushes', {
+  let pending: Array<Record<string, unknown>> | null = null;
+  let error: { message?: string } | null = null;
+  const generic = await admin.rpc('claim_pending_notification_pushes', {
     p_limit: 40,
     p_lookback_minutes: 10,
   });
+  if (generic.error) {
+    const fallback = await admin.rpc('claim_pending_message_pushes', {
+      p_limit: 40,
+      p_lookback_minutes: 10,
+    });
+    pending = fallback.data;
+    error = fallback.error;
+  } else {
+    pending = generic.data;
+  }
   if (error) {
     return {
-      error: 'No se pudieron reclamar pushes de mensajes pendientes',
+      error: 'No se pudieron reclamar pushes pendientes',
       details: error.message,
     };
   }
@@ -460,23 +501,26 @@ async function processPendingMessagePushes(
   let deduped = 0;
   let skipped = 0;
   for (const row of pending ?? []) {
-    const messageId = String(row.message_id ?? '');
-    if (!messageId || !row.recipient_id) continue;
+    const recipientId = String(row.recipient_id ?? '');
+    if (!recipientId) continue;
+    const metadata = (row.metadata ?? {}) as Record<string, unknown>;
+    const notificationType = String(row.type ?? metadata.type ?? 'system_update').trim() || 'system_update';
     const data: Record<string, unknown> = {
-      type: 'new_message',
-      message_id: messageId,
-      conversation_id: row.conversation_id ?? undefined,
-      link: row.link ?? undefined,
+      ...metadata,
+      type: notificationType,
       notification_id: row.notification_id ?? undefined,
+      message_id: row.message_id ?? metadata.message_id ?? undefined,
+      conversation_id: row.conversation_id ?? metadata.conversation_id ?? undefined,
+      link: row.link ?? metadata.link ?? undefined,
     };
     const result = await sendToRecipients(
       admin,
-      [String(row.recipient_id)],
-      String(row.title ?? 'Nuevo mensaje'),
+      [recipientId],
+      String(row.title ?? 'TrabaGE'),
       String(row.body ?? ''),
       data,
       appUrl,
-      { notificationType: 'new_message' },
+      { notificationType },
     );
     if (result.error) {
       failed += 1;
@@ -528,7 +572,7 @@ serve(async (req) => {
     'https://trabage.org'
   ).replace(/\/$/, '');
   const isServiceRole = authHeader.replace('Bearer ', '').trim() === serviceKey;
-  if (payloadBody.process_scheduled === true || payloadBody.process_message_pushes === true) {
+  if (payloadBody.process_scheduled === true || payloadBody.process_message_pushes === true || payloadBody.process_notification_pushes === true) {
     if (!isServiceRole && !(await isAdminUser(admin, (await userClient.auth.getUser()).data.user?.id ?? ''))) {
       return jsonResponse({ error: 'No autorizado' }, 403);
     }
@@ -541,8 +585,9 @@ serve(async (req) => {
         return jsonResponse({ error: scheduledBody.error ?? 'Error procesando programados', ...response }, scheduledResult.status);
       }
     }
-    if (payloadBody.process_message_pushes === true) {
-      const messageResult = await processPendingMessagePushes(admin, appUrl);
+    if (payloadBody.process_message_pushes === true || payloadBody.process_notification_pushes === true) {
+      const messageResult = await processPendingNotificationPushes(admin, appUrl);
+      response.notification_pushes = messageResult;
       response.message_pushes = messageResult;
       if (messageResult.error) {
         return jsonResponse({ error: messageResult.error, ...response }, 500);
@@ -550,13 +595,16 @@ serve(async (req) => {
     }
     return jsonResponse(response);
   }
-  const { data: authData, error: authError } = await userClient.auth.getUser();
-  const callerId = authData.user?.id;
-  if (authError || !callerId) {
-    return jsonResponse({ error: 'No autorizado' }, 403);
+  let callerId = null;
+  if (!isServiceRole) {
+    const { data: authData, error: authError } = await userClient.auth.getUser();
+    callerId = authData.user?.id ?? null;
+    if (authError || !callerId) {
+      return jsonResponse({ error: 'No autorizado' }, 403);
+    }
   }
   if (payloadBody.admin_broadcast === true) {
-    if (!(await isAdminUser(admin, callerId))) {
+    if (!callerId || !(await isAdminUser(admin, callerId))) {
       return jsonResponse({ error: 'No autorizado' }, 403);
     }
     return sendAdminBroadcast(admin, userClient, callerId, payloadBody, appUrl);
@@ -586,13 +634,13 @@ serve(async (req) => {
   if (!notificationType) {
     return jsonResponse({ error: 'No autorizado' }, 403);
   }
-  const isSelfOnly = uniqueExternalIds.every((id) => id === callerId);
+  const isSelfOnly = Boolean(callerId) && uniqueExternalIds.every((id) => id === callerId);
   // If the payload claims an actor / follower / sender, it must be the caller.
   const claimedActor = data?.actor_id ?? data?.follower_id ?? data?.sender_id;
-  if (claimedActor && String(claimedActor) !== callerId) {
+  if (!isServiceRole && claimedActor && String(claimedActor) !== callerId) {
     return jsonResponse({ error: 'No autorizado' }, 403);
   }
-  if (!isSelfOnly) {
+  if (!isServiceRole && !isSelfOnly) {
     let notificationQuery = admin
       .from('notifications')
       .select('recipient_id')

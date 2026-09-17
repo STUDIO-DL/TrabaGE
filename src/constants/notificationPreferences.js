@@ -52,7 +52,7 @@ export const NOTIFICATION_TYPE_MAP = {
     'company_verified',
     'user_verified',
   ],
-  activity_post_interactions: ['new_post', 'company_update'],
+  activity_post_interactions: ['new_post', 'company_update', 'post_recommendation'],
   messages_new: ['new_message', 'conversation_update'],
   system_updates: [
     'system_update',
@@ -93,8 +93,8 @@ const CANDIDATE_NOTIFICATION_GROUPS = [
     items: [
       {
         key: 'activity_post_interactions',
-        title: 'Publicaciones de cuentas seguidas',
-        description: 'Nuevas publicaciones de cuentas Business u organizaciones que sigues.',
+        title: 'Publicaciones que te pueden interesar',
+        description: 'Posts de cuentas que sigues y recomendaciones del tipo “este post podría interesarte”.',
         notificationTypes: NOTIFICATION_TYPE_MAP.activity_post_interactions,
       },
     ],
@@ -127,6 +127,20 @@ const COMPANY_NOTIFICATION_GROUPS = [
         title: 'Nuevos seguidores',
         description: 'Cuando un candidato empieza a seguir tu empresa.',
         notificationTypes: NOTIFICATION_TYPE_MAP.companies_new_followers,
+      },
+    ],
+  },
+  {
+    id: 'posts',
+    title: 'Publicaciones',
+    description: 'Contenido de cuentas que sigues y recomendaciones de posts.',
+    icon: Sparkles,
+    items: [
+      {
+        key: 'activity_post_interactions',
+        title: 'Publicaciones que te pueden interesar',
+        description: 'Cuando hay un post de cuentas que sigues o que encaja con tu perfil.',
+        notificationTypes: NOTIFICATION_TYPE_MAP.activity_post_interactions,
       },
     ],
   },
@@ -200,7 +214,7 @@ export const NOTIFICATION_MASTER_CARD = {
   icon: Bell,
   title: 'Recibir notificaciones',
   description:
-    'Activa avisos in-app y push en este dispositivo para ofertas, postulaciones, mensajes y novedades de cuentas que sigues.',
+    'Activa avisos in-app y push en este navegador para ofertas, postulaciones, mensajes y novedades. No hace falta instalar la app (en iPhone sí hay que añadirla a la pantalla de inicio).',
 };
 
 export const NOTIFICATION_SAVED_COPY = {

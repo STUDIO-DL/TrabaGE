@@ -379,11 +379,7 @@ export function AuthProvider({ children }) {
       void notificationPreferencesService.getOrCreate(currentUser.id);
 
       if (isWebPushConfigured()) {
-        void bindWebPushUser(currentUser.id, {
-          role: userRole,
-          city: candidateResult?.data?.city ?? companyResult?.data?.city ?? null,
-          sector: candidateResult?.data?.sector ?? companyResult?.data?.sector ?? null,
-        });
+        void bindWebPushUser(currentUser.id);
       }
 
       if (userRole && userRole !== ROLES.ADMIN) {

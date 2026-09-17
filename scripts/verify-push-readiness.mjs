@@ -104,11 +104,17 @@ addCheck(
   'PushManager.subscribe uses the native Web Push VAPID key',
 );
 addCheck(
-  'client registers service worker',
-  /navigator\.serviceWorker\.register/.test(webPush) &&
+  'client registers service worker on boot',
+  /export async function initWebPush/.test(webPush) &&
+    /navigator\.serviceWorker\.register/.test(webPush) &&
     /web-push-sw\.js/.test(webPush) &&
     /\/sw\.js/.test(webPush),
-  'dev SW and production SW paths are wired',
+  'initWebPush registers the dev or production worker',
+);
+addCheck(
+  'client rotates stale VAPID subscriptions',
+  /unsubscribe/.test(webPush) && /applicationServerKey/.test(webPush),
+  'existing subscriptions are replaced when the VAPID key changes',
 );
 addCheck(
   'client saves Web Push subscription',
@@ -157,6 +163,12 @@ addCheck(
   'edge function can deliver via VAPID and respects preferences',
 );
 addCheck(
+  'send_push backs up undelivered notifications',
+  /claim_pending_notification_pushes/.test(sendPush) &&
+    /process_notification_pushes/.test(sendPush),
+  'cron/admin path retries Web Push when the sender client did not invoke send_push',
+);
+addCheck(
   'send_web_push uses shared module',
   /webPush\.ts/.test(sendWebPush) && /filter_push_recipients/.test(sendWebPush),
   'standalone web push function shares delivery logic and preferences',
@@ -165,6 +177,32 @@ addCheck(
   'shared web push payload includes url',
   /url:/.test(sharedWebPush) && /resolveInAppPushUrl/.test(sharedWebPush),
   'backend payload matches service worker contract',
+);
+addCheck(
+  'shared web push retries transient failures',
+  /RETRYABLE_STATUS/.test(sharedWebPush) && /TTL:\s*86400/.test(sharedWebPush),
+  'web-push retries 429/5xx and uses a 24h TTL',
+);
+addCheck(
+  'shared web push uses absolute icon urls',
+  /assetUrl\('\/icons\/icon-192\.png'\)/.test(sharedWebPush),
+  'icons resolve against APP_URL so they work without an open tab',
+);
+addCheck(
+  'send_web_push trusts service role for any recipient',
+  /trusted/.test(sendWebPush) && /forbidden_target/.test(sendWebPush),
+  'database/cron can dispatch without the sender user JWT',
+);
+addCheck(
+  'client retries subscription register',
+  /withRetry/.test(webPush) && /pushManager\.subscribe/.test(webPush),
+  'subscribe and persist retry on transient browser/network errors',
+);
+addCheck(
+  'immediate notification insert dispatch exists',
+  fileExists('supabase/migrations/150_web_push_reliable_browser_delivery.sql') &&
+    /dispatch_notification_web_push/.test(readRelative('supabase/migrations/150_web_push_reliable_browser_delivery.sql')),
+  'INSERT on notifications triggers send_web_push via pg_net',
 );
 
 const failed = checks.filter((check) => !check.pass);

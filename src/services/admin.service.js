@@ -495,6 +495,7 @@ export const adminService = {
       body: {
         process_scheduled: true,
         process_message_pushes: true,
+        process_notification_pushes: true,
       },
     });
     if (error) return { data: null, error };

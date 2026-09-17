@@ -4,21 +4,25 @@ import AppIcon from './AppIcon';
 import Button from '../ui/Button';
 import { Bell, Download, X, ICON_SIZES } from '../../constants/icons';
 import { NOTIFICATION_PERMISSION_STATUS } from '../../constants/notificationPreferences';
-import { isWebPushConfigured } from '../../config/webPush';
+import { isPushSupported, isWebPushConfigured } from '../../config/webPush';
 import { useAuth } from '../../hooks/useAuth';
-import { isPwaInstalled, useInstallPrompt } from '../../hooks/useInstallPrompt';
+import { isPwaInstalled } from '../../hooks/useInstallPrompt';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import {
+  getOsPushPermissionStatus,
   isOsPushPermissionDenied,
   usePushPermissionActions,
 } from '../../hooks/usePushPermission';
 import { ROLES } from '../../constants/roles';
 import { iosNeedsHomeScreenForPush } from '../../utils/deviceHints';
+import {
+  isHiddenPushPromptRoute,
+  shouldShowPushPermissionPrompt,
+  wasPushPromptDismissedRecently,
+} from '../../utils/pushPromptVisibility';
 
 const DISMISS_KEY = 'trabage_notification_setup_guide_at';
-const PUSH_PROMPT_KEY = 'trabage_push_prompt_dismissed_at';
 const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
-const PUSH_PROMPT_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 const SHOW_DELAY_MS = 4500;
 
 function readTimestamp(key) {
@@ -47,42 +51,22 @@ function isPushPromptLikelyVisible({
   setupComplete,
   prefsLoading,
   pushEnabled,
-  permissionStatus,
 }) {
-  if (
-    loading ||
-    !isAuthenticated ||
-    isPreviewMode ||
-    !userId ||
-    role === ROLES.ADMIN ||
-    !setupComplete ||
-    !isWebPushConfigured() ||
-    isOsPushPermissionDenied() ||
-    prefsLoading ||
-    pushEnabled ||
-    permissionStatus === NOTIFICATION_PERMISSION_STATUS.GRANTED
-  ) {
-    return false;
-  }
-
-  const pushDismissedAt = readTimestamp(PUSH_PROMPT_KEY);
-  if (pushDismissedAt && Date.now() - pushDismissedAt < PUSH_PROMPT_COOLDOWN_MS) {
-    return false;
-  }
-
-  return true;
-}
-
-function shouldHideOnRoute(pathname) {
-  return (
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/register') ||
-    pathname.startsWith('/auth/') ||
-    pathname.startsWith('/welcome') ||
-    pathname.startsWith('/onboarding') ||
-    pathname.startsWith('/setup') ||
-    pathname.startsWith('/admin')
-  );
+  return shouldShowPushPermissionPrompt({
+    loading,
+    isAuthenticated,
+    isPreviewMode,
+    userId,
+    role,
+    setupComplete,
+    prefsLoading,
+    pushEnabled,
+    osPermission: getOsPushPermissionStatus(),
+    isConfigured: isWebPushConfigured(),
+    isSupported: isPushSupported(),
+    dismissedRecently: wasPushPromptDismissedRecently(),
+    hiddenRoute: typeof window !== 'undefined' && isHiddenPushPromptRoute(window.location.pathname),
+  });
 }
 
 /**
@@ -96,19 +80,14 @@ export default function NotificationSetupGuide() {
     role,
   });
   const { requestPermission, getPermissionStatus } = usePushPermissionActions();
-  const { canInstall } = useInstallPrompt();
   const [visible, setVisible] = useState(false);
   const [activating, setActivating] = useState(false);
 
-  const pushReady =
-    preferences.push_enabled === true ||
-    preferences.permission_status === NOTIFICATION_PERMISSION_STATUS.GRANTED ||
-    getPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.GRANTED;
-
-  const needsPushStep = !pushReady && !isOsPushPermissionDenied();
-  // iOS: always guide home-screen. Elsewhere: only if the Chromium install chip is not available.
-  const showInstallInGuide =
-    iosNeedsHomeScreenForPush() || (needsPushStep && !isPwaInstalled() && !canInstall);
+  const thisDeviceGranted = getPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.GRANTED;
+  const pushReady = preferences.push_enabled === true && thisDeviceGranted;
+  const needsPushStep = !pushReady && !isOsPushPermissionDenied() && isPushSupported() && isWebPushConfigured();
+  // Installing is only required for iOS Safari Web Push. Chrome/Android/desktop work in the tab.
+  const showInstallInGuide = iosNeedsHomeScreenForPush();
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -128,7 +107,7 @@ export default function NotificationSetupGuide() {
         !setupComplete ||
         status.loading ||
         wasDismissedRecently() ||
-        shouldHideOnRoute(window.location.pathname) ||
+        isHiddenPushPromptRoute(window.location.pathname) ||
         (!needsPushStep && !showInstallInGuide)
       ) {
         setVisible(false);
@@ -165,7 +144,6 @@ export default function NotificationSetupGuide() {
       window.removeEventListener('popstate', evaluate);
     };
   }, [
-    canInstall,
     isAuthenticated,
     isPreviewMode,
     loading,
@@ -236,7 +214,7 @@ export default function NotificationSetupGuide() {
                 <p className="text-caption font-medium text-app-text">Paso 1</p>
                 <p className="mt-0.5 text-caption leading-relaxed text-app-subtle">
                   Activa las notificaciones para recibir mensajes, ofertas de empleo y novedades
-                  importantes.
+                  importantes. No hace falta instalar la app.
                 </p>
                 <Button
                   type="button"
@@ -261,9 +239,8 @@ export default function NotificationSetupGuide() {
                   {needsPushStep ? 'Paso 2' : 'Recomendado'}
                 </p>
                 <p className="mt-0.5 text-caption leading-relaxed text-app-subtle">
-                  {iosNeedsHomeScreenForPush()
-                    ? 'Instala TrabaGE en tu pantalla de inicio desde Safari (Compartir → Añadir a pantalla de inicio) para una mejor experiencia.'
-                    : 'Instala TrabaGE en tu dispositivo para disfrutar de una mejor experiencia (opcional pero recomendado).'}
+                  En iPhone, añade TrabaGE a la pantalla de inicio desde Safari (Compartir → Añadir
+                  a pantalla de inicio) para poder recibir avisos con Safari cerrado.
                 </p>
               </div>
             </li>

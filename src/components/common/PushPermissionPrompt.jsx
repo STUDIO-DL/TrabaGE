@@ -3,44 +3,21 @@ import { useEffect, useState } from 'react';
 import AppIcon from './AppIcon';
 import Button from '../ui/Button';
 import { Bell, X, ICON_SIZES } from '../../constants/icons';
-import { NOTIFICATION_PERMISSION_STATUS } from '../../constants/notificationPreferences';
-import { isWebPushConfigured } from '../../config/webPush';
+import { isPushSupported, isWebPushConfigured } from '../../config/webPush';
 import { useAuth } from '../../hooks/useAuth';
 import { isPwaInstalled } from '../../hooks/useInstallPrompt';
 import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 import {
-  isOsPushPermissionDenied,
+  getOsPushPermissionStatus,
   usePushPermissionActions,
 } from '../../hooks/usePushPermission';
-import { ROLES } from '../../constants/roles';
 import { iosNeedsHomeScreenForPush } from '../../utils/deviceHints';
-
-const DISMISS_KEY = 'trabage_push_prompt_dismissed_at';
-const DISMISS_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
-
-function wasDismissedRecently() {
-  try {
-    const raw = localStorage.getItem(DISMISS_KEY);
-    if (!raw) return false;
-    const dismissedAt = Number(raw);
-    if (!Number.isFinite(dismissedAt)) return false;
-    return Date.now() - dismissedAt < DISMISS_COOLDOWN_MS;
-  } catch {
-    return false;
-  }
-}
-
-function shouldHideOnRoute(pathname) {
-  return (
-    pathname.startsWith('/login') ||
-    pathname.startsWith('/register') ||
-    pathname.startsWith('/auth/') ||
-    pathname.startsWith('/welcome') ||
-    pathname.startsWith('/onboarding') ||
-    pathname.startsWith('/setup') ||
-    pathname.startsWith('/admin')
-  );
-}
+import {
+  PUSH_PROMPT_DISMISS_KEY,
+  isHiddenPushPromptRoute,
+  shouldShowPushPermissionPrompt,
+  wasPushPromptDismissedRecently,
+} from '../../utils/pushPromptVisibility';
 
 export default function PushPermissionPrompt() {
   const { user, isAuthenticated, isPreviewMode, setupComplete, role, loading } = useAuth();
@@ -54,29 +31,24 @@ export default function PushPermissionPrompt() {
   const needsIosInstallHint = iosNeedsHomeScreenForPush();
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
 
     const evaluate = () => {
-      if (
-        loading ||
-        !isAuthenticated ||
-        isPreviewMode ||
-        !user?.id ||
-        role === ROLES.ADMIN ||
-        !setupComplete ||
-        !isWebPushConfigured() ||
-        isOsPushPermissionDenied() ||
-        status.loading ||
-        preferences.push_enabled ||
-        preferences.permission_status === NOTIFICATION_PERMISSION_STATUS.GRANTED ||
-        wasDismissedRecently() ||
-        shouldHideOnRoute(window.location.pathname)
-      ) {
-        setVisible(false);
-        return;
-      }
-
-      setVisible(true);
+      setVisible(shouldShowPushPermissionPrompt({
+        loading,
+        isAuthenticated,
+        isPreviewMode,
+        userId: user?.id,
+        role,
+        setupComplete,
+        prefsLoading: status.loading,
+        pushEnabled: preferences.push_enabled,
+        osPermission: getOsPushPermissionStatus(),
+        isConfigured: isWebPushConfigured(),
+        isSupported: isPushSupported(),
+        dismissedRecently: wasPushPromptDismissedRecently(),
+        hiddenRoute: isHiddenPushPromptRoute(window.location.pathname),
+      }));
     };
 
     evaluate();
@@ -86,7 +58,6 @@ export default function PushPermissionPrompt() {
     isAuthenticated,
     isPreviewMode,
     loading,
-    preferences.permission_status,
     preferences.push_enabled,
     role,
     setupComplete,
@@ -96,7 +67,7 @@ export default function PushPermissionPrompt() {
 
   const dismiss = () => {
     try {
-      localStorage.setItem(DISMISS_KEY, String(Date.now()));
+      localStorage.setItem(PUSH_PROMPT_DISMISS_KEY, String(Date.now()));
     } catch {
       // Ignore storage failures.
     }
@@ -107,7 +78,7 @@ export default function PushPermissionPrompt() {
     setActivating(true);
     try {
       const alreadyGranted =
-        getPermissionStatus() === NOTIFICATION_PERMISSION_STATUS.GRANTED;
+        getPermissionStatus() === 'granted';
 
       const granted = alreadyGranted || (await requestPermission());
 
@@ -139,12 +110,13 @@ export default function PushPermissionPrompt() {
         <div className="min-w-0 flex-1">
           <p className="text-[14px] font-semibold text-app-text">Activa las notificaciones</p>
           <p className="mt-1 text-[12px] leading-relaxed text-app-muted">
-            Recibe avisos sobre mensajes, ofertas de empleo y novedades importantes.
+            Recibe avisos sobre mensajes, ofertas de empleo y novedades importantes. No hace falta
+            instalar la app: basta con permitir notificaciones en este navegador.
           </p>
           {needsIosInstallHint && !isPwaInstalled() ? (
             <p className="mt-2 text-[12px] leading-relaxed text-app-muted">
-              En iPhone, para recibir avisos con la app cerrada, añade TrabaGE a tu pantalla de
-              inicio desde el menú Compartir de Safari.
+              En iPhone sí es necesario añadir TrabaGE a la pantalla de inicio desde el menú
+              Compartir de Safari.
             </p>
           ) : null}
           <div className="mt-3 flex flex-wrap gap-2">

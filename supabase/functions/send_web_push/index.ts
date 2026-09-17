@@ -10,6 +10,7 @@ import {
 
 const allowedOrigins = new Set([
   'https://trabage.org',
+  'https://www.trabage.org',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
 ]);
@@ -30,6 +31,22 @@ const json = (body: unknown, status = 200, headers: Record<string, string> = {})
 
 const text = (value: unknown, max: number) => String(value ?? '').trim().slice(0, max);
 
+function buildDedupKey(userId: string, notificationType: string, data: Record<string, unknown> = {}) {
+  const suffix =
+    String(data.message_id ?? '') ||
+    String(data.conversation_id ?? '') ||
+    String(data.job_id ?? '') ||
+    String(data.application_id ?? '') ||
+    String(data.post_id ?? '') ||
+    String(data.comment_id ?? '') ||
+    String(data.follower_id ?? '') ||
+    String(data.target_id ?? '') ||
+    String(data.request_id ?? '') ||
+    String(data.notification_id ?? '') ||
+    'general';
+  return `${notificationType}:${userId}:${suffix}`;
+}
+
 serve(async (request) => {
   const headers = cors(request.headers.get('origin'));
   if (request.method === 'OPTIONS') return new Response('ok', { headers });
@@ -46,7 +63,7 @@ serve(async (request) => {
   const trusted = bearer === serviceRole;
   if (!trusted && !bearer) return json({ error: 'unauthorized' }, 401, headers);
 
-  let auth: any = { user: null };
+  let auth: { user: { id?: string } | null } = { user: null };
   if (!trusted) {
     try {
       const res = await admin.auth.getUser(bearer);
@@ -55,6 +72,7 @@ serve(async (request) => {
       console.error('[send_web_push] auth_lookup_error', e);
       return json({ error: 'unauthorized' }, 401, headers);
     }
+    if (!auth.user?.id) return json({ error: 'unauthorized' }, 401, headers);
   }
 
   const input = await request.json().catch(() => null);
@@ -64,7 +82,11 @@ serve(async (request) => {
     return json({ error: 'forbidden_target' }, 403, headers);
   }
 
-  const notificationType = text(input?.data?.type ?? input?.type ?? 'system_update', 80) || 'system_update';
+  const data = {
+    ...((input?.data ?? {}) as Record<string, unknown>),
+    ...(input?.notification_id ? { notification_id: input.notification_id } : {}),
+  };
+  const notificationType = text(data.type ?? input?.type ?? 'system_update', 80) || 'system_update';
   const { data: allowedRecipients, error: preferencesError } = await admin.rpc('filter_push_recipients', {
     p_recipient_ids: recipients,
     p_type: notificationType,
@@ -74,7 +96,6 @@ serve(async (request) => {
   }
 
   const pushRecipients = Array.isArray(allowedRecipients) ? allowedRecipients.map(String) : [];
-  const data = (input?.data ?? {}) as Record<string, unknown>;
   const conversationId = data.conversation_id ? String(data.conversation_id) : '';
 
   const finalRecipients: string[] = [];
@@ -89,34 +110,93 @@ serve(async (request) => {
     finalRecipients.push(userId);
   }
 
-  const subscriptions = await loadWebPushSubscriptionsForUsers(admin, finalRecipients);
-  const payload = buildWebPushPayload(
-    text(input?.title, 120) || 'TrabaGE',
-    text(input?.body, 240),
-    {
-      ...data,
-      type: notificationType,
-      link: resolveInAppPushUrl(data),
-    },
-    { notificationId: text(input?.notification_id, 80) || null },
-  );
+  let sent = 0;
+  let failed = 0;
+  let invalid = 0;
+  let deduped = 0;
 
-  const result = await sendWebPushToSubscriptions(admin, subscriptions, payload);
+  for (const userId of finalRecipients) {
+    const dedupKey = buildDedupKey(userId, notificationType, data);
+    const { data: existingLog } = await admin
+      .from('push_send_log')
+      .select('id, status, created_at')
+      .eq('dedup_key', dedupKey)
+      .maybeSingle();
+    const logAgeMs = existingLog?.created_at
+      ? Date.now() - new Date(String(existingLog.created_at)).getTime()
+      : Number.POSITIVE_INFINITY;
+    if (existingLog?.status === 'sent') {
+      deduped += 1;
+      continue;
+    }
+    if (existingLog?.status === 'pending' && logAgeMs < 2 * 60 * 1000) {
+      deduped += 1;
+      continue;
+    }
+    if (existingLog) {
+      const { data: reclaimed, error: reclaimError } = await admin
+        .from('push_send_log')
+        .update({ status: 'pending', error_message: null, created_at: new Date().toISOString() })
+        .eq('id', existingLog.id)
+        .in('status', ['failed', 'pending'])
+        .select('id')
+        .maybeSingle();
+      if (reclaimError || !reclaimed) {
+        deduped += 1;
+        continue;
+      }
+    } else {
+      const claimed = await admin.from('push_send_log').insert({
+        dedup_key: dedupKey,
+        user_id: userId,
+        notification_type: notificationType,
+        status: 'pending',
+        error_message: null,
+        fcm_message_id: null,
+      });
+      if (claimed.error) {
+        deduped += 1;
+        continue;
+      }
+    }
+
+    const subscriptions = await loadWebPushSubscriptionsForUsers(admin, [userId]);
+    const payload = buildWebPushPayload(
+      text(input?.title, 120) || 'TrabaGE',
+      text(input?.body, 240),
+      {
+        ...data,
+        type: notificationType,
+        link: resolveInAppPushUrl(data),
+      },
+      { notificationId: text(input?.notification_id ?? data.notification_id, 80) || null },
+    );
+    const result = await sendWebPushToSubscriptions(admin, subscriptions, payload);
+    sent += result.sent;
+    failed += result.failed;
+    invalid += result.invalid;
+    await admin.from('push_send_log').update({
+      status: result.sent > 0 ? 'sent' : 'failed',
+      error_message: result.sent > 0 ? null : `delivery_failed:web:${result.failed}:${result.invalid}`,
+    }).eq('dedup_key', dedupKey);
+  }
+
   console.log('send_web_push_delivery', {
     notificationType,
     recipient_count: finalRecipients.length,
-    subscriptions_found: subscriptions.length,
-    subscriptions_sent: result.sent,
-    subscriptions_invalid: result.invalid,
-    subscriptions_failed: result.failed,
+    sent,
+    invalid,
+    failed,
+    deduped,
   });
 
   return json({
     ok: true,
-    targeted: subscriptions.length,
-    sent: result.sent,
-    invalid: result.invalid,
-    failed: result.failed,
+    targeted: finalRecipients.length,
+    sent,
+    invalid,
+    failed,
+    deduped,
     skipped_preferences: recipients.length - pushRecipients.length,
     skipped_active_chat: pushRecipients.length - finalRecipients.length,
   }, 200, headers);

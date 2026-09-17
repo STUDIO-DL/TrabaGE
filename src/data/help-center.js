@@ -203,12 +203,12 @@ export const helpCategories = [
       {
         question: '¿Cómo activo o desactivo las notificaciones push?',
         answer:
-          'Accede a "Configuración" > "Notificaciones". Desde allí podrás personalizar qué tipos de avisos recibir y por qué canal (en la plataforma, correo electrónico o push en el dispositivo). También puedes gestionar los permisos de notificaciones desde la configuración de tu navegador o dispositivo.',
+          'Accede a "Configuración" > "Notificaciones". Desde allí podrás personalizar qué tipos de avisos recibir y por qué canal (en la plataforma, correo electrónico o push en el dispositivo). No hace falta instalar la app: en Chrome, Android y el ordenador basta con permitir notificaciones en el navegador. En iPhone, Safari solo entrega avisos si añades TrabaGE a la pantalla de inicio. También puedes gestionar los permisos desde la configuración de tu navegador o dispositivo.',
       },
       {
         question: '¿Por qué no estoy recibiendo notificaciones?',
         answer:
-          'Si no recibes notificaciones, comprueba lo siguiente:\n\n1. Verifica que las notificaciones estén activadas en tu configuración de cuenta en TrabaGE.\n2. Comprueba que tu navegador o dispositivo tenga permiso concedido para mostrar notificaciones de TrabaGE.\n3. Asegúrate de que tu dirección de correo electrónico esté verificada y sea correcta.\n4. Revisa la carpeta de spam o correo no deseado de tu cliente de correo.\n\nSi el problema persiste, contacta con soporte.',
+          'Si no recibes notificaciones, comprueba lo siguiente:\n\n1. Verifica que las notificaciones estén activadas en tu configuración de cuenta en TrabaGE.\n2. Comprueba que tu navegador o dispositivo tenga permiso concedido para mostrar notificaciones de TrabaGE. No es necesario instalar la app, salvo en iPhone.\n3. Entra al menos una vez en TrabaGE con ese navegador después de pulsar Permitir, para que el dispositivo quede registrado.\n4. Asegúrate de que tu dirección de correo electrónico esté verificada y sea correcta.\n5. Revisa la carpeta de spam o correo no deseado de tu cliente de correo.\n\nSi el problema persiste, contacta con soporte.',
       },
       {
         question: '¿Puedo elegir recibir notificaciones solo por correo electrónico?',
@@ -277,7 +277,7 @@ export const helpCategories = [
       {
         question: '¿Puedo instalar TrabaGE en mi móvil?',
         answer:
-          'Sí. TrabaGE funciona como aplicación web progresiva (PWA). Desde el navegador de tu móvil, puedes añadir TrabaGE a la pantalla de inicio para acceder como una app nativa, con notificaciones push si las activas.',
+          'Sí. TrabaGE funciona como aplicación web progresiva (PWA). Desde el navegador de tu móvil, puedes añadir TrabaGE a la pantalla de inicio para acceder como una app nativa. Las notificaciones push también funcionan sin instalarla en Chrome, Android y el ordenador; en iPhone, Safari las entrega solo si la app está en la pantalla de inicio.',
       },
       {
         question: '¿Cómo funciona la búsqueda global?',
